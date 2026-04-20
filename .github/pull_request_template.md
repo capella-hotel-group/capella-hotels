@@ -4,5 +4,5 @@ Fix #<gh-issue-id>
 
 URL for testing:
 
-- Before: https://main--{repo}--{owner}.aem.live/
-- After: https://<branch>--{repo}--{owner}.aem.live/
+- Before: https://main--capella-hotels--capella-hotel-group.aem.live/
+- After: https://main--capella-hotels--capella-hotel-group.aem.live/
