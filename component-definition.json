@@ -167,10 +167,7 @@
                 "template": {
                   "name": "Text with Image",
                   "model": "text-with-image",
-                  "filter": "render-block",
-                  "map": {
-                    "variation": "classList"
-                  }
+                  "filter": "render-block"                  
                 }
               }
             }

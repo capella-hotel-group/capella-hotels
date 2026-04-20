@@ -265,7 +265,7 @@
       },
       {
         "component": "select",
-        "name": "variation",
+        "name": "classes",
         "label": "Image Position",
         "valueType": "string",
         "multi": true,
