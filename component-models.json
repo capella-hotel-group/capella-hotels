@@ -216,53 +216,67 @@
     ]
   },
   {
-    "id": "hero-banner",
+    "id": "text-with-image",
     "fields": [
       {
-        "component": "select",
-        "name": "mediaType",
-        "label": "Media Type",
+        "component": "text",
+        "name": "sectionTitle",
+        "label": "Section Title",
         "valueType": "string",
-        "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
-        ]
+        "required": true
       },
       {
-        "component": "reference",
-        "name": "mediaAsset",
-        "label": "Media Asset",
-        "valueType": "string"
-      },
-      {
-        "component": "reference",
-        "name": "logo1",
-        "label": "Logo 1",
-        "valueType": "string"
-      },
-      {
-        "component": "reference",
-        "name": "logo2",
-        "label": "Logo 2",
+        "component": "text",
+        "name": "subTitle",
+        "label": "Sub Title",
         "valueType": "string"
       },
       {
         "component": "richtext",
         "name": "description",
         "label": "Description",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "alt",
+        "label": "Alt Text",
         "valueType": "string"
       },
       {
-        "component": "text-input",
-        "name": "ctaLabel",
-        "label": "CTA Label",
+        "component": "text",
+        "name": "ctaText",
+        "label": "CTA Text",
         "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "select",
+        "name": "variation",
+        "label": "Image Position",
+        "options": [
+          {
+            "name": "Image on Right",
+            "value": "image-right"
+          },
+          {
+            "name": "Image on Left",
+            "value": "image-left"
+          }
+        ]
       }
     ]
   }
