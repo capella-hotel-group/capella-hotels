@@ -170,9 +170,9 @@
                   "filter": "render-block",
                   "classes": "",
                   "ctaRow": {
-                    "ctaText": "",
-                    "ctaLink": ""
-                  }
+                   "ctaText": "linkText",
+                   "ctaLink": "linkUrl"
+                 }
                 }
               }
             }
