@@ -214,5 +214,70 @@
         "valueType": "string"
       }
     ]
+  },
+  {
+    "id": "text-with-image",
+    "fields": [
+      {
+        "component": "text",
+        "name": "sectionTitle",
+        "label": "Section Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "subTitle",
+        "label": "Sub Title",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "alt",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctaText",
+        "label": "CTA Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "select",
+        "name": "variation",
+        "label": "Image Position",
+        "options": [
+          {
+            "label": "Image on Left",
+            "value": "image-left"
+          },
+          {
+            "label": "Image on Right",
+            "value": "image-right"
+          }
+        ]
+      }
+    ]
   }
 ]
