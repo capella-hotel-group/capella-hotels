@@ -267,6 +267,7 @@
         "component": "select",
         "name": "variation",
         "label": "Image Position",
+        "valueType": "string",
         "options": [
           {
             "name": "Image on Right",
