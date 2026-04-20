@@ -214,5 +214,56 @@
         "valueType": "string"
       }
     ]
+  },
+  {
+    "id": "hero-banner",
+    "fields": [
+      {
+        "component": "select",
+        "name": "mediaType",
+        "label": "Media Type",
+        "valueType": "string",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "mediaAsset",
+        "label": "Media Asset",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "logo1",
+        "label": "Logo 1",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "logo2",
+        "label": "Logo 2",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string"
+      },
+      {
+        "component": "text-input",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "valueType": "string"
+      }
+    ]
   }
 ]
