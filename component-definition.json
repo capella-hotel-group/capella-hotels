@@ -166,7 +166,28 @@
                 "resourceType": "core/franklin/components/block/v1/block",
                 "template": {
                   "name": "Text with Image",
-                  "model": "text-with-image"
+                  "model": "text-with-image",
+                  "filter": "render-block",
+                  "map": {
+                    "variation": "classList",
+                    "ctaText": "ctaRow/linkText",
+                    "ctaLink": "ctaRow/linkUrl"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Hero Banner",
+          "id": "hero-banner",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Hero Banner",
+                  "model": "hero-banner"
                 }
               }
             }
