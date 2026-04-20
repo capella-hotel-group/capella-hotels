@@ -306,18 +306,6 @@
         "valueType": "string"
       },
       {
-        "component": "reference",
-        "name": "logo1",
-        "label": "Logo 1",
-        "valueType": "string"
-      },
-      {
-        "component": "reference",
-        "name": "logo2",
-        "label": "Logo 2",
-        "valueType": "string"
-      },
-      {
         "component": "richtext",
         "name": "description",
         "label": "Description",
