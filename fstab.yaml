@@ -1,5 +1,5 @@
 mountpoints:
   /:
-    url: "https://author-p130360-e1272151.adobeaemcloud.com/bin/franklin.delivery/adobe-rnd/aem-boilerplate-xwalk/main"
+    url: "https://author-p152536-e1620746.adobeaemcloud.com/bin/franklin.delivery/capella-hotel-group/capella-hotels/main"
     type: "markup"
     suffix: ".html"
