@@ -167,7 +167,8 @@
                 "template": {
                   "name": "Text with Image",
                   "model": "text-with-image",
-                  "filter": "render-block"                  
+                  "filter": "render-block",
+                  "classes": ""                  
                 }
               }
             }
