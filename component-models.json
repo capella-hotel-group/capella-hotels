@@ -268,12 +268,8 @@
         "name": "classes",
         "label": "Image Position",
         "valueType": "string",
-        "multi": true,
+        "multi": false,
         "options": [
-          {
-            "name": "Default",
-            "value": ""
-          },
           {
             "name": "Image on Right",
             "value": "image-right"
