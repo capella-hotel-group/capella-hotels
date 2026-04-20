@@ -169,9 +169,7 @@
                   "model": "text-with-image",
                   "filter": "render-block",
                   "map": {
-                    "variation": "classList",
-                    "ctaText": "ctaRow/linkText",
-                    "ctaLink": "ctaRow/linkUrl"
+                    "variation": "classList"
                   }
                 }
               }
