@@ -252,16 +252,23 @@
         "valueType": "string"
       },
       {
-        "component": "text",
-        "name": "ctaText",
-        "label": "CTA Text",
-        "valueType": "string"
-      },
-      {
-        "component": "aem-content",
-        "name": "ctaLink",
-        "label": "CTA Link",
-        "valueType": "string"
+        "component": "container",
+        "name": "ctaRow",
+        "label": "CTA",
+        "fields": [
+          {
+            "component": "text",
+            "name": "ctaText",
+            "label": "CTA Text",
+            "valueType": "string"
+          },
+          {
+            "component": "aem-content",
+            "name": "ctaLink",
+            "label": "CTA Link",
+            "valueType": "string"
+          }
+        ]
       },
       {
         "component": "select",
