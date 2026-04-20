@@ -258,7 +258,7 @@
         "valueType": "string"
       },
       {
-        "component": "text",
+        "component": "aem-content",
         "name": "ctaLink",
         "label": "CTA Link",
         "valueType": "string"
@@ -269,12 +269,12 @@
         "label": "Image Position",
         "options": [
           {
-            "label": "Image on Left",
-            "value": "image-left"
+            "name": "Image on Right",
+            "value": "image-right"
           },
           {
-            "label": "Image on Right",
-            "value": "image-right"
+            "name": "Image on Left",
+            "value": "image-left"
           }
         ]
       }
