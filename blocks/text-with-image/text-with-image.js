@@ -1,33 +1,21 @@
 export default function decorate(block) {
   const rows = [...block.children];
 
-  const sectionTitle = rows[0]?.firstElementChild?.textContent?.trim() || '';
-  const subTitle = rows[1]?.firstElementChild?.textContent?.trim() || '';
-  const descriptionEl = rows[2]?.firstElementChild;
-  const pictureEl = rows[3]?.querySelector('picture');
-  const altText = rows[4]?.firstElementChild?.textContent?.trim() || '';
-  const ctaText = rows[5]?.firstElementChild?.textContent?.trim() || '';
-  const ctaLinkEl = rows[6]?.querySelector('a');
+  // row 0: title, row 1: description, row 2: image, row 3: cta
+  const titleText = rows[0]?.firstElementChild?.textContent?.trim() || '';
+  const descriptionEl = rows[1]?.firstElementChild;
+  const pictureEl = rows[2]?.querySelector('picture');
+  const ctaLinkEl = rows[3]?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || '';
-
-  if (pictureEl && altText) {
-    const img = pictureEl.querySelector('img');
-    if (img) img.setAttribute('alt', altText);
-  }
+  const ctaText = ctaLinkEl?.textContent?.trim() || 'Read More';
 
   const textCol = document.createElement('div');
   textCol.className = 'text-col';
 
-  if (sectionTitle) {
+  if (titleText) {
     const h3 = document.createElement('h3');
-    h3.textContent = sectionTitle;
+    h3.textContent = titleText;
     textCol.append(h3);
-  }
-
-  if (subTitle) {
-    const bq = document.createElement('blockquote');
-    bq.textContent = subTitle;
-    textCol.append(bq);
   }
 
   if (descriptionEl) {
@@ -37,7 +25,7 @@ export default function decorate(block) {
     textCol.append(desc);
   }
 
-  if (ctaText && ctaHref) {
+  if (ctaHref) {
     const cta = document.createElement('a');
     cta.className = 'cta-link';
     cta.href = ctaHref;
