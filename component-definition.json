@@ -168,11 +168,7 @@
                   "name": "Text with Image",
                   "model": "text-with-image",
                   "filter": "render-block",
-                  "classes": "",
-                  "ctaRow": {
-                   "ctaText": "linkText",
-                   "ctaLink": "linkUrl"
-                 }
+                  "classes": ""
                 }
               }
             }
