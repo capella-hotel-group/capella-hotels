@@ -51,7 +51,8 @@
         "cards",
         "columns",
         "fragment",
-        "text-with-image"
+        "text-with-image",
+        "hero-banner"
       ]
     }
   ]
