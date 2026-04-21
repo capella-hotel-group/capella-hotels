@@ -1,1 +1,87 @@
-/* hero-banner styles */
+.hero-banner {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Media — full cover */
+.hero-banner .media {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-banner .media picture,
+.hero-banner .media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-banner .media img,
+.hero-banner .media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Gradient overlay */
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 55%) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Content — bottom left */
+.hero-banner .content {
+  position: absolute;
+  bottom: 80px;
+  left: 60px;
+  right: 60px;
+  z-index: 2;
+  color: #fff;
+  max-width: 700px;
+}
+
+.hero-banner .description {
+  font-size: clamp(14px, 1.5vw, 18px);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+/* CTA button */
+.hero-banner .cta-btn {
+  display: inline-block;
+  margin-top: 24px;
+  background: transparent;
+  border: 1px solid #fff;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 32px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.hero-banner .cta-btn:hover {
+  background: #fff;
+  color: #000;
+}
+
+@media (width <= 767px) {
+  .hero-banner {
+    min-height: 70vh;
+  }
+
+  .hero-banner .content {
+    bottom: 40px;
+    left: 20px;
+    right: 20px;
+  }
+}
