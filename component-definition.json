@@ -184,6 +184,7 @@
                 "template": {
                   "name": "Hero Banner",
                   "model": "hero-banner",
+                  "filter": "render-block",
                   "classes": ""
                 }
               }
