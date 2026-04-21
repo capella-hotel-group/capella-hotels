@@ -220,16 +220,10 @@
     "fields": [
       {
         "component": "text",
-        "name": "sectionTitle",
-        "label": "Section Title",
+        "name": "title",
+        "label": "Title",
         "valueType": "string",
         "required": true
-      },
-      {
-        "component": "text",
-        "name": "subTitle",
-        "label": "Sub Title",
-        "valueType": "string"
       },
       {
         "component": "richtext",
@@ -246,77 +240,9 @@
         "required": true
       },
       {
-        "component": "text",
-        "name": "alt",
-        "label": "Alt Text",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "ctaText",
-        "label": "CTA Text",
-        "valueType": "string"
-      },
-      {
         "component": "aem-content",
-        "name": "ctaLink",
+        "name": "cta",
         "label": "CTA Link",
-        "valueType": "string"
-      },
-      {
-        "component": "select",
-        "name": "classes",
-        "label": "Image Position",
-        "valueType": "string",
-        "multi": false,
-        "options": [
-          {
-            "name": "Image on Right",
-            "value": "image-right"
-          },
-          {
-            "name": "Image on Left",
-            "value": "image-left"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "hero-banner",
-    "fields": [
-      {
-        "component": "select",
-        "name": "mediaType",
-        "label": "Media Type",
-        "valueType": "string",
-        "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
-        ]
-      },
-      {
-        "component": "reference",
-        "name": "mediaAsset",
-        "label": "Media Asset",
-        "valueType": "string"
-      },
-      {
-        "component": "richtext",
-        "name": "description",
-        "label": "Description",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "ctaLabel",
-        "label": "CTA Label",
         "valueType": "string"
       }
     ]
