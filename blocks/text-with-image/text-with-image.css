@@ -7,7 +7,7 @@
     display: grid;
     grid-template-columns: calc(50% - 160px) 100px calc(50% + 60px);
     grid-template-areas: "text . image";
-    align-items: stretch;
+    align-items: center;
     max-width: 1600px;
     margin: 0 auto;
     padding: 0 30px;
