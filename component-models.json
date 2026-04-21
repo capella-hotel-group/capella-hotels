@@ -287,9 +287,10 @@
     "fields": [
       {
         "component": "select",
-        "name": "mediaType",
+        "name": "classes",
         "label": "Media Type",
         "valueType": "string",
+        "multi": false,
         "options": [
           {
             "name": "Image",
