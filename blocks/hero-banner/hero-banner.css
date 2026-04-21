@@ -52,8 +52,6 @@
 
 .hero-banner .cta-link {
     display: inline-block;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
