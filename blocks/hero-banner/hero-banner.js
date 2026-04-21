@@ -1,33 +1,37 @@
 export default function decorate(block) {
   const rows = [...block.children];
 
-  // row 0: mediaAsset, row 1: description, row 2: ctaLabel
-  const mediaEl = rows[0]?.firstElementChild;
+  // row 0: mediaAsset (picture), row 1: description, row 2: ctaLabel
+  const imageContainer = rows[0]?.firstElementChild;
   const descriptionEl = rows[1]?.firstElementChild;
-  const ctaText = rows[2]?.firstElementChild?.textContent?.trim() || '';
+  const ctaLinkEl = rows[2]?.querySelector('a');
+  const ctaHref = ctaLinkEl?.getAttribute('href') || '';
+  const ctaText = ctaLinkEl?.textContent?.trim()
+    || rows[2]?.firstElementChild?.textContent?.trim()
+    || '';
 
-  const mediaWrapper = document.createElement('div');
-  mediaWrapper.className = 'media';
-  if (mediaEl) mediaWrapper.append(...mediaEl.childNodes);
+  const textCol = document.createElement('div');
+  textCol.className = 'text-col';
 
-  const content = document.createElement('div');
-  content.className = 'content';
-
-  if (descriptionEl?.innerHTML) {
+  if (descriptionEl) {
     const desc = document.createElement('div');
     desc.className = 'description';
     desc.innerHTML = descriptionEl.innerHTML;
-    content.append(desc);
+    textCol.append(desc);
   }
 
   if (ctaText) {
-    const cta = document.createElement('button');
-    cta.className = 'cta-btn';
-    cta.type = 'button';
+    const cta = document.createElement('a');
+    cta.className = 'cta-link';
+    if (ctaHref) cta.href = ctaHref;
     cta.textContent = ctaText;
-    content.append(cta);
+    textCol.append(cta);
   }
 
+  const imageCol = document.createElement('div');
+  imageCol.className = 'image-col';
+  if (imageContainer) imageCol.innerHTML = imageContainer.innerHTML;
+
   block.innerHTML = '';
-  block.append(mediaWrapper, content);
+  block.append(textCol, imageCol);
 }
