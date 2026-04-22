@@ -22,11 +22,34 @@
       "id": "text-with-image",
       "fields": [
         {
+          "component": "select",
+          "name": "classes",
+          "label": "Variation",
+          "valueType": "string",
+          "multi": false,
+          "options": [
+            {
+              "name": "Image on Right",
+              "value": "image-right"
+            },
+            {
+              "name": "Image on Left",
+              "value": "image-left"
+            }
+          ]
+        },
+        {
           "component": "text",
           "name": "title",
           "label": "Title",
           "valueType": "string",
           "required": true
+        },
+        {
+          "component": "text",
+          "name": "blockquote",
+          "label": "Sub Title",
+          "valueType": "string"
         },
         {
           "component": "richtext",
@@ -43,13 +66,32 @@
           "required": true
         },
         {
-          "component": "aem-content",
+          "component": "text",
+          "name": "altText",
+          "label": "Alt Text",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
           "name": "cta",
+          "label": "CTA Text",
+          "valueType": "string"
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
           "label": "CTA Link",
           "valueType": "string"
         }
       ]
     }
   ],
-  "filters": []
+  "filters": [
+    {
+      "id": "section",
+      "components": [
+        "text-with-image"
+      ]
+    }
+  ]
 }
