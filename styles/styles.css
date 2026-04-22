@@ -9,7 +9,6 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-
 :root {
   /* colors */
   --background-color: white;
@@ -20,13 +19,13 @@
   --link-hover-color: #1d3ecf;
 
   /* fonts */
-  --body-font-family: roboto, roboto-fallback, sans-serif;
-  --heading-font-family: roboto-condensed, roboto-condensed-fallback, sans-serif;
+  --body-font-family: calibre, calibre-fallback, sans-serif;
+  --heading-font-family: goudy-wtc, goudy-wtc-fallback, serif;
 
   /* body sizes */
   --body-font-size-m: 22px;
   --body-font-size-s: 19px;
-  --body-font-size-xs: 17px;
+  --body-font-size-xs: 16px;
 
   /* heading sizes */
   --heading-font-size-xxl: 55px;
@@ -38,22 +37,30 @@
 
   /* nav height */
   --nav-height: 64px;
+
+  /* header */
+  --header-height: 70px;
+  --header-padding-x: 40px;
+  --header-cta-bg: #8c7b6e;
+  --header-cta-hover-bg: #7a6a5e;
+  --header-nav-gap: 32px;
+  --header-letter-spacing: 0.12em;
 }
 
 /* fallback fonts */
 @font-face {
-  font-family: roboto-condensed-fallback;
-  size-adjust: 88.82%;
-  src: local('Arial');
-}
-
-@font-face {
-  font-family: roboto-fallback;
+  font-family: calibre-fallback;
   size-adjust: 99.529%;
   src: local('Arial');
 }
 
-@media (width >= 900px) {
+@font-face {
+  font-family: goudy-wtc-fallback;
+  size-adjust: 97%;
+  src: local('Georgia');
+}
+
+@media (width >=900px) {
   :root {
     /* body sizes */
     --body-font-size-m: 18px;
@@ -68,6 +75,10 @@
     --heading-font-size-s: 20px;
     --heading-font-size-xs: 18px;
   }
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -112,12 +123,29 @@ h6 {
   scroll-margin: 40px;
 }
 
-h1 { font-size: var(--heading-font-size-xxl); }
-h2 { font-size: var(--heading-font-size-xl); }
-h3 { font-size: var(--heading-font-size-l); }
-h4 { font-size: var(--heading-font-size-m); }
-h5 { font-size: var(--heading-font-size-s); }
-h6 { font-size: var(--heading-font-size-xs); }
+h1 {
+  font-size: var(--heading-font-size-xxl);
+}
+
+h2 {
+  font-size: var(--heading-font-size-xl);
+}
+
+h3 {
+  font-size: var(--heading-font-size-l);
+}
+
+h4 {
+  font-size: var(--heading-font-size-m);
+}
+
+h5 {
+  font-size: var(--heading-font-size-s);
+}
+
+h6 {
+  font-size: var(--heading-font-size-xs);
+}
 
 p,
 dl,
@@ -142,7 +170,7 @@ pre {
   white-space: pre;
 }
 
-main > div {
+main>div {
   margin: 40px 16px;
 }
 
@@ -228,22 +256,22 @@ main img {
 }
 
 /* sections */
-main > .section {
+main>.section {
   margin: 40px 0;
 }
 
-main > .section > div {
+main>.section>div {
   max-width: 1200px;
   margin: auto;
   padding: 0 24px;
 }
 
-main > .section:first-of-type {
+main>.section:first-of-type {
   margin-top: 0;
 }
 
-@media (width >= 900px) {
-  main > .section > div {
+@media (width >=900px) {
+  main>.section>div {
     padding: 0 32px;
   }
 }
