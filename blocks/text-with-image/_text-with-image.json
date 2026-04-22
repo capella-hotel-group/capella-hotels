@@ -67,7 +67,7 @@
         },
         {
           "component": "text",
-          "name": "altText",
+          "name": "alt",
           "label": "Alt Text",
           "valueType": "string"
         },
@@ -86,12 +86,5 @@
       ]
     }
   ],
-  "filters": [
-    {
-      "id": "section",
-      "components": [
-        "text-with-image"
-      ]
-    }
-  ]
+  "filters": []
 }
