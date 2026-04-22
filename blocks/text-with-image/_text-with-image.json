@@ -67,7 +67,7 @@
         },
         {
           "component": "text",
-          "name": "altText",
+          "name": "alt",
           "label": "Alt Text",
           "valueType": "string"
         },

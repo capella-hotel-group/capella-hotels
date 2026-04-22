@@ -19,7 +19,8 @@
       "text-with-image",
       "hero-banner",
       "section-intro"
-    ]
+    ],
+    "maxCells": 8
   },
   {
     "id": "cards",
