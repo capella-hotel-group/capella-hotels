@@ -42,12 +42,5 @@
             ]
         }
     ],
-    "filters": [
-        {
-            "id": "section",
-            "components": [
-                "section-intro"
-            ]
-        }
-    ]
+    "filters": []
 }

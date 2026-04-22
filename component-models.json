@@ -256,38 +256,6 @@
     ]
   },
   {
-    "id": "text-with-image",
-    "fields": [
-      {
-        "component": "text",
-        "name": "title",
-        "label": "Title",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "richtext",
-        "name": "description",
-        "label": "Description",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "reference",
-        "name": "image",
-        "label": "Image",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "aem-content",
-        "name": "cta",
-        "label": "CTA Link",
-        "valueType": "string"
-      }
-    ]
-  },
-  {
     "id": "section-intro",
     "fields": [
       {
@@ -307,6 +275,73 @@
         "component": "richtext",
         "name": "description",
         "label": "Description",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "text-with-image",
+    "fields": [
+      {
+        "component": "select",
+        "name": "classes",
+        "label": "Variation",
+        "valueType": "string",
+        "multi": false,
+        "options": [
+          {
+            "name": "Image on Right",
+            "value": "image-right"
+          },
+          {
+            "name": "Image on Left",
+            "value": "image-left"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "blockquote",
+        "label": "Sub Title",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "altText",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "cta",
+        "label": "CTA Text",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "CTA Link",
         "valueType": "string"
       }
     ]
