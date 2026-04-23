@@ -108,6 +108,7 @@
     .text-with-image {
         grid-template-columns: calc(50% - 100px) 60px calc(50% + 40px);
     }
+
     .text-with-image.image-left {
         grid-template-columns: calc(50% + 40px) 60px calc(50% - 100px);
     }
@@ -118,6 +119,7 @@
     .text-with-image {
         grid-template-columns: calc(70% - 100px) 40px calc(30% + 60px);
     }
+
     .text-with-image.image-left {
         grid-template-columns: calc(30% + 60px) 40px calc(70% - 100px);
     }
