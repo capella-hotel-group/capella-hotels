@@ -194,20 +194,14 @@
     "fields": [
       {
         "component": "select",
-        "name": "classes",
+        "name": "mediaType",
         "label": "Media Type",
         "valueType": "string",
         "multi": false,
         "required": true,
         "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
+          { "name": "Image", "value": "image" },
+          { "name": "Video", "value": "video" }
         ]
       },
       {
@@ -218,15 +212,33 @@
         "required": true
       },
       {
-        "component": "richtext",
-        "name": "description",
-        "label": "Description",
-        "valueType": "string"
+        "component": "reference",
+        "name": "mediaAssetMobile",
+        "label": "Media Asset (Mobile Video)",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            { "var": "mediaType" },
+            "video"
+          ]
+        }
       },
       {
         "component": "text",
         "name": "ctaLabel",
         "label": "CTA Label",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            { "var": "mediaType" },
+            "video"
+          ]
+        }
+      },
+      {
+        "component": "richtext",
+        "name": "content",
+        "label": "Content",
         "valueType": "string"
       }
     ]
