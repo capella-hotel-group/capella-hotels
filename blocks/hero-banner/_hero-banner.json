@@ -23,7 +23,7 @@
       "fields": [
         {
           "component": "select",
-          "name": "classes",
+          "name": "media",
           "label": "Media Type",
           "valueType": "string",
           "multi": false,
@@ -41,15 +41,33 @@
           "required": true
         },
         {
-          "component": "richtext",
-          "name": "description",
-          "label": "Description",
-          "valueType": "string"
+          "component": "reference",
+          "name": "mediaAssetMobile",
+          "label": "Media Asset (Mobile Video)",
+          "valueType": "string",
+          "condition": {
+            "===": [
+              { "var": "media" },
+              "video"
+            ]
+          }
         },
         {
           "component": "text",
           "name": "ctaLabel",
           "label": "CTA Label",
+          "valueType": "string",
+          "condition": {
+            "===": [
+              { "var": "media" },
+              "video"
+            ]
+          }
+        },
+        {
+          "component": "richtext",
+          "name": "content",
+          "label": "Content",
           "valueType": "string"
         }
       ]
