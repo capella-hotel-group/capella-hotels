@@ -2,7 +2,7 @@
 
 .section-intro h2 {
   font-size: 3.125em;
-  font-family: goudy-wtc, serif;
+  font-family: var(--heading-font-family);
   font-weight: 300;
   margin: 0 0 85px;
   text-transform: uppercase;
@@ -39,7 +39,7 @@
 
 .section-intro .subtext {
   font-size: 2rem;
-  font-family: goudy-wtc, serif;
+  font-family: var(--heading-font-family);
   font-weight: 300;
   width: 36.3636%;
   line-height: 1.2;
@@ -48,6 +48,8 @@
 .section-intro .subtext p {
   margin: 0;
   padding: 0;
+  font-family: var(--heading-font-family);
+  font-weight: 300;
 }
 
 @media (width <= 767px) {
@@ -66,8 +68,7 @@
 }
 
 .section-intro .desc {
-  font-family: calibre, sans-serif;
-  font-weight: 400;
+  font-family: var(--body-font-family);
   color: #919191;
   line-height: 1.2;
   font-size: 1.063rem;
@@ -79,6 +80,9 @@
 .section-intro .desc p {
   margin: 0;
   padding: 0;
+  font-family: var(--body-font-family);
+
+  /* font-weight: 300; */
 }
 
 @media (width <= 1020px) {
