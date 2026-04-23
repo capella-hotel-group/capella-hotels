@@ -15,6 +15,7 @@
 
 .text-with-image.image-left {
     grid-template-areas: "image . text";
+    grid-template-columns: calc(50% + 60px) 100px calc(50% - 160px);
 }
 
 /* Text column */
@@ -107,12 +108,18 @@
     .text-with-image {
         grid-template-columns: calc(50% - 100px) 60px calc(50% + 40px);
     }
+    .text-with-image.image-left {
+        grid-template-columns: calc(50% + 40px) 60px calc(50% - 100px);
+    }
 }
 
 /* Tablet */
 @media (width <=1024px) {
     .text-with-image {
         grid-template-columns: calc(70% - 100px) 40px calc(30% + 60px);
+    }
+    .text-with-image.image-left {
+        grid-template-columns: calc(30% + 60px) 40px calc(70% - 100px);
     }
 
     .text-with-image .text-col h3 {
