@@ -23,7 +23,7 @@
       "fields": [
         {
           "component": "select",
-          "name": "mediaType",
+          "name": "media",
           "label": "Media Type",
           "valueType": "string",
           "multi": false,
@@ -47,7 +47,7 @@
           "valueType": "string",
           "condition": {
             "===": [
-              { "var": "mediaType" },
+              { "var": "media" },
               "video"
             ]
           }
@@ -59,7 +59,7 @@
           "valueType": "string",
           "condition": {
             "===": [
-              { "var": "mediaType" },
+              { "var": "media" },
               "video"
             ]
           }
