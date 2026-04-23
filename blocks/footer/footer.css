@@ -15,10 +15,10 @@ footer {
   width: 50%;
   color: #fff;
   font-family: var(--body-font-family);
-  font-size: var(--body-font-size-xs);
+  font-size: 16px;
   font-weight: 300;
-  line-height: 1.2;
-  letter-spacing: var(--header-letter-spacing, 0.12em);
+  line-height: 19.2px;
+  letter-spacing: 0.16px;
   margin: 0 0 12px;
   padding: 0;
 }
@@ -32,10 +32,10 @@ footer {
 .footer-item a{
   color: #fff;
   font-family: var(--body-font-family);
-  font-size: var(--body-font-size-xs);
+  font-size: 16px;
   font-weight: 300;
-  line-height: 1.2;
-  letter-spacing: var(--header-letter-spacing, 0.12em);
+  line-height: 19.2px;
+  letter-spacing: 0.16px;
   text-decoration: none;
   overflow-wrap: break-word;
   transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);

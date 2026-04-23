@@ -19,8 +19,8 @@
   --link-hover-color: #1d3ecf;
 
   /* fonts */
-  --body-font-family: calibre, calibre-fallback, sans-serif;
-  --heading-font-family: goudy-wtc, goudy-wtc-fallback, serif;
+  --body-font-family: "Calibre", "Arial", sans-serif;
+  --heading-font-family: "Goudy Regular", serif;
 
   /* body sizes */
   --body-font-size-m: 22px;
