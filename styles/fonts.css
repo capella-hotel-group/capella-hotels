@@ -50,15 +50,8 @@
 
 @font-face {
     font-family: calibre;
-    src: url("../fonts/calibre-regular.woff2") format("woff2");
+    src: url("../fonts/Calibre-Regular.woff2") format("woff2");
     font-weight: 400;
-    font-style: normal
-}
-
-@font-face {
-    font-family: calibre;
-    src: url("../fonts/calibre-medium.woff2") format("woff2");
-    font-weight: 500;
     font-style: normal
 }
 
