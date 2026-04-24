@@ -219,6 +219,20 @@
       },
       {
         "component": "reference",
+        "name": "logo",
+        "label": "Logo",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "media"
+            },
+            "image"
+          ]
+        }
+      },
+      {
+        "component": "reference",
         "name": "mediaAssetMobile",
         "label": "Media Asset (Mobile Video)",
         "valueType": "string",
