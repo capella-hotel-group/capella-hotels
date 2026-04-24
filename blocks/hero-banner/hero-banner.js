@@ -133,12 +133,14 @@ function initScrollSnap(block) {
 }
 
 // ─── Decorate ─────────────────────────────────────────────────────────────────
+// Rows: 0=media type, 1=mediaAsset, 2=logo(image)|mediaAssetMobile(video),
+//       3=mediaAssetMobile(video), 4=ctaLabel(video), 5=content
 export default function decorate(block) {
   const rows = [...block.children];
   const isVideo = rows[0]?.firstElementChild?.textContent?.trim().toLowerCase() === 'video';
 
   const desktopHref = rows[1]?.querySelector('a')?.getAttribute('href') || '';
-  const mobileHref = rows[2]?.querySelector('a')?.getAttribute('href') || '';
+  const mobileHref = isVideo ? rows[3]?.querySelector('a')?.getAttribute('href') || '' : '';
   const desktopSrc = isVideo ? resolveDAMUrl(desktopHref) : '';
   const mobileSrc = isVideo ? resolveDAMUrl(mobileHref || desktopHref) : '';
 
@@ -163,16 +165,25 @@ export default function decorate(block) {
   const overlay = document.createElement('div');
   overlay.className = 'hero-banner-overlay';
 
-  const contentEl = rows[4]?.firstElementChild;
-  if (contentEl) {
-    // Extract span.icon → scroll indicator (moves node out of contentEl)
-    const scrollIcon = contentEl.querySelector('span.icon');
-    if (scrollIcon) {
-      const iconWrapper = document.createElement('div');
-      iconWrapper.className = 'hero-banner-scroll-icon';
-      iconWrapper.append(scrollIcon);
-      overlay.append(iconWrapper);
+  // Logo (image variant only)
+  if (!isVideo) {
+    const logoPic = rows[2]?.querySelector('picture');
+    if (logoPic) {
+      const logoWrapper = document.createElement('div');
+      logoWrapper.className = 'hero-banner-logo';
+      logoWrapper.append(logoPic);
+      overlay.append(logoWrapper);
     }
+  }
+
+  const contentEl = rows[5]?.firstElementChild;
+  if (contentEl) {
+    // Extract span.icon → scroll indicator; fallback to CSS SVG background if absent
+    const iconWrapper = document.createElement('div');
+    iconWrapper.className = 'hero-banner-scroll-icon';
+    const scrollIcon = contentEl.querySelector('span.icon');
+    if (scrollIcon) iconWrapper.append(scrollIcon);
+    overlay.append(iconWrapper);
 
     const content = document.createElement('div');
     content.className = 'hero-banner-content';
@@ -185,7 +196,7 @@ export default function decorate(block) {
 
   // CTA opens modal (video only)
   if (isVideo) {
-    const ctaText = rows[3]?.firstElementChild?.textContent?.trim() || '';
+    const ctaText = rows[4]?.firstElementChild?.textContent?.trim() || '';
     if (ctaText) {
       const cta = document.createElement('button');
       cta.className = 'hero-banner-cta';
