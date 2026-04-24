@@ -23,9 +23,9 @@ const ENV_CONFIG = [
   },
   {
     env: 'rde',
-    publishUrl: 'https://publish-p152536-e2003150.adobeaemcloud.com',
+    publishUrl: 'https://publish-p152536-e1620746.adobeaemcloud.com',
     hostnames: [
-      'author-p152536-e2003150.adobeaemcloud.com',
+      'author-p152536-e1620746.adobeaemcloud.com',
       'main--capella-hotel-group-poc--capella-hotel-group.aem.live',
       'main--capella-hotel-group-poc--capella-hotel-group.aem.page',
     ],
@@ -33,7 +33,7 @@ const ENV_CONFIG = [
   {
     // Fallback: unknown hostname → warn and use RDE publish
     env: 'rde',
-    publishUrl: 'https://publish-p152536-e2003150.adobeaemcloud.com',
+    publishUrl: 'https://publish-p152536-e1620746.adobeaemcloud.com',
     hostnames: [],
   },
 ];
