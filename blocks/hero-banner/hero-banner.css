@@ -58,8 +58,10 @@
     flex-direction: column;
     justify-content: flex-end;
     align-items: flex-start;
-    padding: 0 60px 80px;
-    background: linear-gradient(to top, rgb(0 0 0 / 50%) 0%, transparent 60%);
+
+    /* padding: 0 60px 80px; */
+
+    /* background: linear-gradient(to top, rgb(0 0 0 / 50%) 0%, transparent 60%); */
 }
 
 .hero-banner .hero-banner-content {
@@ -69,7 +71,7 @@
     width: 100%;
     padding: 0 20px;
     color: #fff;
-    font-family: var(--heading-light-font-family);
+    font-family: var(--heading-font-family);
     font-size: 1.625rem;
     line-height: 1.2em;
     text-align: center;
@@ -104,7 +106,7 @@
 
 @media (width <= 767px) {
     .hero-banner .hero-banner-cta {
-        right: calc(50% - 48px);
+        right: 20px;
     }
 }
 
@@ -115,17 +117,41 @@
 /* Scroll indicator (span.icon extracted from content) */
 .hero-banner .hero-banner-scroll-icon {
     position: absolute;
-    bottom: 32px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 3;
-    color: #fff;
-    animation: hero-banner-bounce 2s ease-in-out infinite;
+    width: 60px;
+    animation: hero-banner-scroll-hint 3s ease-out infinite;
 }
 
-@keyframes hero-banner-bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(8px); }
+.hero-banner .hero-banner-scroll-icon .icon,
+.hero-banner .hero-banner-scroll-icon img {
+    width: 60px;
+    height: 40px;
+}
+
+@media (width <= 767px) {
+    .hero-banner .hero-banner-scroll-icon {
+        bottom: 110px;
+    }
+}
+
+@keyframes hero-banner-scroll-hint {
+    0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    60% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(14px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(14px);
+    }
 }
 
 /* ─── Modal ────────────────────────────────────────────────────────────────── */
@@ -171,7 +197,7 @@
 /* ─── Mobile ───────────────────────────────────────────────────────────────── */
 @media (width <= 767px) {
     .hero-banner .hero-banner-overlay {
-        padding: 0 20px 60px;
+        padding: 0;
     }
 
     .hero-banner-modal-inner {
