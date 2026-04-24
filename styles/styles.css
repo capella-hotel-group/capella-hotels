@@ -197,7 +197,8 @@ a:hover {
 } */
 
 /* buttons */
-a.button:any-link,
+
+/* a.button:any-link,
 button {
   box-sizing: border-box;
   display: inline-block;
@@ -239,7 +240,7 @@ button.secondary {
   background-color: unset;
   border: 2px solid currentcolor;
   color: var(--text-color);
-}
+} */
 
 main img {
   max-width: 100%;
