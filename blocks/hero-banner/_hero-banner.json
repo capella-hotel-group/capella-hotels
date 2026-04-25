@@ -10,7 +10,7 @@
             "template": {
               "name": "Hero Banner",
               "model": "hero-banner",
-              "classes": ""
+              "classes":""
             }
           }
         }
@@ -58,7 +58,10 @@
           "label": "Media Asset (Mobile Video)",
           "valueType": "string",
           "condition": {
-            "===": [{ "var": "media" }, "video"]
+            "===": [
+              { "var": "media" },
+              "video"
+            ]
           }
         },
         {
@@ -67,7 +70,10 @@
           "label": "CTA Label",
           "valueType": "string",
           "condition": {
-            "===": [{ "var": "media" }, "video"]
+            "===": [
+              { "var": "media" },
+              "video"
+            ]
           }
         },
         {
