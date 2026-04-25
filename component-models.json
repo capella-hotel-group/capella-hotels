@@ -200,14 +200,8 @@
         "multi": false,
         "required": true,
         "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
+          { "name": "Image", "value": "image" },
+          { "name": "Video", "value": "video" }
         ]
       },
       {
@@ -219,28 +213,12 @@
       },
       {
         "component": "reference",
-        "name": "logo",
-        "label": "Logo",
-        "valueType": "string",
-        "condition": {
-          "===": [
-            {
-              "var": "media"
-            },
-            "image"
-          ]
-        }
-      },
-      {
-        "component": "reference",
         "name": "mediaAssetMobile",
         "label": "Media Asset (Mobile Video)",
         "valueType": "string",
         "condition": {
           "===": [
-            {
-              "var": "media"
-            },
+            { "var": "media" },
             "video"
           ]
         }
@@ -252,9 +230,7 @@
         "valueType": "string",
         "condition": {
           "===": [
-            {
-              "var": "media"
-            },
+            { "var": "media" },
             "video"
           ]
         }
