@@ -202,12 +202,6 @@
         "options": [
           { "name": "Image", "value": "image" },
           { "name": "Video", "value": "video" }
-
-
-
-
-
-
         ]
       },
       {
@@ -239,8 +233,6 @@
         "condition": {
           "===": [
             { "var": "media" },
-
-
             "video"
           ]
         }
@@ -253,8 +245,6 @@
         "condition": {
           "===": [
             { "var": "media" },
-
-
             "video"
           ]
         }
