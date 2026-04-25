@@ -202,6 +202,12 @@
         "options": [
           { "name": "Image", "value": "image" },
           { "name": "Video", "value": "video" }
+
+
+
+
+
+
         ]
       },
       {
@@ -213,12 +219,28 @@
       },
       {
         "component": "reference",
+        "name": "logo",
+        "label": "Logo",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "media"
+            },
+            "image"
+          ]
+        }
+      },
+      {
+        "component": "reference",
         "name": "mediaAssetMobile",
         "label": "Media Asset (Mobile Video)",
         "valueType": "string",
         "condition": {
           "===": [
             { "var": "media" },
+
+
             "video"
           ]
         }
@@ -231,6 +253,8 @@
         "condition": {
           "===": [
             { "var": "media" },
+
+
             "video"
           ]
         }
