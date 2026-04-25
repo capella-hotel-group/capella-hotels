@@ -1,105 +1,234 @@
+/* ─── Full-page masthead ───────────────────────────────────────────────────── */
 .hero-banner {
-    display: grid;
-    grid-template-columns: 1fr 40px 600px;
-    grid-template-areas: "text . image";
-    align-items: start;
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 0 30px;
-    margin-bottom: 80px;
-}
+    --content-bottom: 110px;
 
-/* Text column */
-.hero-banner .text-col {
-    grid-area: text;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-top: 10px;
-}
-
-.hero-banner .text-col h3 {
-    font-size: clamp(32px, 4vw, 56px);
-    font-weight: 400;
-    letter-spacing: 0.03em;
-    color: #000;
-    text-transform: uppercase;
-    line-height: 1.05;
-    margin: 0;
-}
-
-.hero-banner .description blockquote {
-    font-size: clamp(16px, 1.8vw, 22px);
-    font-weight: 500;
-    line-height: 1.4;
+    position: relative;
+    width: 100%;
+    height: 100vh; /* fallback */
+    height: 100svh;
+    overflow: hidden;
     margin: 0;
     padding: 0;
-    border: none;
-    font-style: normal;
-    color: inherit;
 }
 
-.hero-banner .description p {
-    color: #919191;
-    line-height: 1.75;
-    font-size: 16px;
-    margin: 0;
-}
-
-.hero-banner .description p:empty {
-    display: none;
-}
-
-.hero-banner .cta-link {
-    display: inline-block;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    color: #232323;
-    letter-spacing: 1px;
-}
-
-.hero-banner .cta-link:hover {
-    opacity: 0.6;
-}
-
-/* Image column */
-.hero-banner .image-col {
-    grid-area: image;
-    overflow: hidden;
-}
-
-.hero-banner .image-col picture {
-    display: block;
+/* ─── Background video ─────────────────────────────────────────────────────── */
+.hero-banner .hero-banner-video {
+    position: absolute;
+    inset: 0;
     width: 100%;
-}
-
-.hero-banner .image-col img {
-    display: block;
-    width: 100%;
-    height: auto;
+    height: 100%;
     object-fit: cover;
-    aspect-ratio: 1;
+    z-index: 0;
 }
 
-/* Tablet */
-@media (width <=1024px) {
-    .hero-banner {
-        grid-template-columns: 1fr 30px 280px;
+/* Loading placeholder — fades out on video loadeddata */
+.hero-banner .hero-banner-placeholder {
+    position: absolute;
+    inset: 0;
+    background: #111;
+    z-index: 1;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+.hero-banner .hero-banner-placeholder.hidden {
+    opacity: 0;
+}
+
+/* ─── Background image (image variant) ────────────────────────────────────── */
+.hero-banner .hero-banner-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-banner .hero-banner-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ─── Logo (image variant) ─────────────────────────────────────────────────── */
+
+/* Logo zone fills from top to just above content — logo centered inside */
+.hero-banner .hero-banner-logo {
+    position: absolute;
+    inset: 0 0 calc(var(--content-bottom) );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+}
+
+@media (width <= 767px) {
+    .hero-banner .hero-banner-logo {
+        inset: 0; /* content hidden on mobile → logo centers in full box */
     }
 }
 
-/* Mobile */
-@media (width <=767px) {
-    .hero-banner {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "image"
-            "text";
-        gap: 24px;
-        padding: 0 20px;
-        margin-bottom: 40px;
+.hero-banner .hero-banner-logo picture {
+    display: block;
+    max-width: 200px;
+}
+
+.hero-banner .hero-banner-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* ─── Content overlay ──────────────────────────────────────────────────────── */
+.hero-banner .hero-banner-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
+
+.hero-banner .hero-banner-content {
+    position: absolute;
+    bottom: var(--content-bottom);
+    left: 0;
+    width: 100%;
+    padding: 0 20px;
+    color: #fff;
+    font-family: var(--heading-font-family);
+    font-size: 1.625rem;
+    line-height: 1.2em;
+    text-align: center;
+    z-index: 2;
+}
+
+@media (width <= 767px) {
+    .hero-banner .hero-banner-content {
+        font-size: 1.5rem;
+        visibility: hidden;
+    }
+}
+
+/* CTA — opens modal */
+.hero-banner .hero-banner-cta {
+    position: absolute;
+    bottom: 20px;
+    right: 30px;
+    display: block;
+    padding: 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #fff;
+    cursor: pointer;
+    font-family: var(--body-font-family);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+@media (width <= 767px) {
+    .hero-banner .hero-banner-cta {
+        right: 20px;
+    }
+}
+
+.hero-banner .hero-banner-cta:hover {
+    opacity: 0.7;
+}
+
+/* Scroll indicator (span.icon extracted from content; SVG fallback when absent) */
+.hero-banner .hero-banner-scroll-icon {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: 60px;
+    height: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cpolyline points='1.3,1.2 20,12.4 38.7,1.2' fill='none' stroke='%23fff' stroke-width='2.25'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 40px 14px;
+    animation: hero-banner-scroll-hint 3s ease-out infinite;
+}
+
+/* Hide fallback background when real icon is present */
+.hero-banner .hero-banner-scroll-icon:has(.icon) {
+    background-image: none;
+}
+
+.hero-banner .hero-banner-scroll-icon .icon,
+.hero-banner .hero-banner-scroll-icon img {
+    width: 60px;
+    height: 40px;
+}
+
+@media (width <= 767px) {
+    .hero-banner .hero-banner-scroll-icon {
+        bottom: 110px;
+    }
+}
+
+@keyframes hero-banner-scroll-hint {
+    0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    60% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(14px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(14px);
+    }
+}
+
+/* ─── Modal ────────────────────────────────────────────────────────────────── */
+.hero-banner-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgb(0 0 0 / 85%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-banner-modal-inner {
+    position: relative;
+    width: min(90vw, 1280px);
+    aspect-ratio: 16 / 9;
+}
+
+.hero-banner-modal-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.hero-banner-modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+}
+
+.hero-banner-modal-close:hover {
+    opacity: 0.7;
+}
+
+/* ─── Mobile ───────────────────────────────────────────────────────────────── */
+@media (width <= 767px) {
+    .hero-banner-modal-inner {
+        width: 95vw;
     }
 }
