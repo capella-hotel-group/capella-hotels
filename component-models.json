@@ -27,6 +27,13 @@
         "name": "nav",
         "multi": true,
         "label": "Header"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "footer",
+        "multi": true,
+        "label": "Footer"
       }
     ]
   },
