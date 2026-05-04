@@ -389,8 +389,13 @@ function buildMobilePanel(navItems, langList) {
 export default async function decorate(block) {
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : '/nav';
+  const hide = () => {
+    const headerEl = block.closest('header') ?? block.closest('.header-wrapper') ?? block;
+    headerEl.style.display = 'none';
+  };
+
   const fragment = await loadFragment(navPath);
-  if (!fragment) return;
+  if (!fragment) { hide(); return; }
 
   const sections = [...fragment.children];
 
@@ -406,7 +411,7 @@ export default async function decorate(block) {
   // Parse section 2: logo picture
   const logoPicture = sections[2]?.querySelector('picture');
 
-  if (!langList) return;
+  if (!langList || !navItems.length) { hide(); return; }
 
   const langZone = buildLangZone(langList);
 

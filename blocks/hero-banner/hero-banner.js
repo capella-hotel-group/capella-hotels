@@ -54,7 +54,6 @@ function buildModal(desktopSrc, mobileSrc) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'hero-banner-modal-close';
   closeBtn.setAttribute('aria-label', 'Close video');
-  closeBtn.innerHTML = '&times;';
 
   inner.append(closeBtn, modalVideo);
   overlay.append(inner);
@@ -64,6 +63,7 @@ function buildModal(desktopSrc, mobileSrc) {
   const close = () => {
     modalVideo.pause();
     overlay.remove();
+    document.body.style.overflow = '';
     document.removeEventListener('keydown', keyHandler);
   };
   keyHandler = (e) => { if (e.key === 'Escape') close(); };
@@ -181,9 +181,24 @@ export default function decorate(block) {
     // Extract span.icon → scroll indicator; fallback to CSS SVG background if absent
     const iconWrapper = document.createElement('div');
     iconWrapper.className = 'hero-banner-scroll-icon';
+    iconWrapper.setAttribute('role', 'button');
+    iconWrapper.setAttribute('tabindex', '0');
+    iconWrapper.setAttribute('aria-label', 'Scroll to next section');
     const scrollIcon = contentEl.querySelector('span.icon');
     if (scrollIcon) iconWrapper.append(scrollIcon);
     overlay.append(iconWrapper);
+
+    const scrollToNext = () => {
+      const nextSection = block.closest('.hero-banner-wrapper')?.nextElementSibling
+        ?? block.closest('div')?.nextElementSibling;
+      if (nextSection) {
+        nextSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: block.offsetHeight, behavior: 'smooth' });
+      }
+    };
+    iconWrapper.addEventListener('click', scrollToNext);
+    iconWrapper.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') scrollToNext(); });
 
     const content = document.createElement('div');
     content.className = 'hero-banner-content';
@@ -202,7 +217,10 @@ export default function decorate(block) {
       cta.className = 'hero-banner-cta';
       cta.type = 'button';
       cta.textContent = ctaText;
-      cta.addEventListener('click', () => document.body.append(buildModal(desktopSrc, mobileSrc)));
+      cta.addEventListener('click', () => {
+        document.body.style.overflow = 'hidden';
+        document.body.append(buildModal(desktopSrc, mobileSrc));
+      });
       overlay.append(cta);
     }
   }
