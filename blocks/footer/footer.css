@@ -1,6 +1,7 @@
 footer {
   background-color: rgb(153 158 163);
   font-size: 1rem;
+  position: relative;
 }
 
 .footer-inner {
