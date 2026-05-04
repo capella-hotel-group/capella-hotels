@@ -177,10 +177,12 @@ main > div {
     z-index: 2;
     background: var(--background-color);
 }
+
 main:has(.hero-banner) {
     padding-top: 100vh;
     padding-top: 100svh;
 }
+
 main > .section:has(.hero-banner) {
     position: fixed;
     top: 0;
@@ -190,6 +192,7 @@ main > .section:has(.hero-banner) {
     height: 100svh;
     z-index: 0;
 }
+
 input,
 textarea,
 select,
