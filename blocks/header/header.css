@@ -11,6 +11,21 @@ header {
   height: 70px;
 }
 
+/* Hide header shell entirely when a hero-banner is on the page
+   until the block is loaded (and already moved into <main>).
+   Prevents the header background/shadow from flashing at the top
+   before JS repositions it behind the hero-banner. */
+body:has(.hero-banner) header {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.2s ease;
+}
+
 /* ── Three-zone flex layout ──────────────────────────────── */
 .header-inner {
   position: relative;
