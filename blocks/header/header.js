@@ -210,9 +210,12 @@ function buildNavZone(navItems) {
   nav.className = 'header-nav';
   nav.setAttribute('aria-label', 'Primary navigation');
 
-  navItems.forEach((srcItem) => {
+  navItems.forEach((srcItem, i) => {
+    const side = i < Math.ceil(navItems.length / 2) ? 'left' : 'right';
     if (srcItem.querySelector(':scope > ul')) {
-      nav.append(buildDropdown(srcItem));
+      const wrapper = buildDropdown(srcItem);
+      wrapper.querySelector('.header-nav-drop-trigger').dataset.navSide = side;
+      nav.append(wrapper);
     } else {
       const directP = srcItem.querySelector(':scope > p');
       const srcA = directP?.querySelector('a');
@@ -220,6 +223,7 @@ function buildNavZone(navItems) {
       a.className = 'header-nav-link';
       a.href = srcA?.href ?? '#';
       a.textContent = (srcA?.textContent ?? directP?.textContent)?.trim() ?? '';
+      a.dataset.navSide = side;
       moveInstrumentation(srcA ?? srcItem, a);
       nav.append(a);
     }
@@ -274,7 +278,7 @@ function buildMobilePanel(navItems, langList) {
   const menuCard = document.createElement('div');
   menuCard.className = 'header-mobile-menu';
 
-  // Track all accordion { toggle, listEl, expandedClass } for mutual exclusion
+  // Track all accordion { toggle, list } for mutual exclusion via data-open
   const accordions = [];
 
   navItems.filter((li) => li.textContent?.trim()).forEach((srcItem) => {
@@ -315,8 +319,7 @@ function buildMobilePanel(navItems, langList) {
         });
       });
 
-      const expandedClass = `is-${label.toLowerCase().replace(/\s+/g, '-')}-expanded`;
-      accordions.push({ toggle, list, expandedClass });
+      accordions.push({ toggle, list });
       panel.append(list);
     } else {
       // Plain link
@@ -339,21 +342,21 @@ function buildMobilePanel(navItems, langList) {
   [...langList.querySelectorAll('li')].forEach((srcItem) => {
     const li = document.createElement('li');
     li.textContent = srcItem.textContent?.trim() ?? '';
-    li.addEventListener('click', () => panel.classList.remove('is-lang-expanded'));
+    li.addEventListener('click', () => { langUl.dataset.open = 'false'; });
     langUl.append(li);
   });
 
-  accordions.push({ toggle: langToggle, list: langUl, expandedClass: 'is-lang-expanded' });
+  accordions.push({ toggle: langToggle, list: langUl });
   panel.append(langUl);
 
   // Wire up mutual exclusion for all accordions
-  accordions.forEach(({ toggle, expandedClass }) => {
+  accordions.forEach(({ toggle, list }) => {
     toggle.addEventListener('click', () => {
-      const isOpen = panel.classList.contains(expandedClass);
+      const isOpen = list.dataset.open === 'true';
       // Close all
-      accordions.forEach(({ expandedClass: cls }) => panel.classList.remove(cls));
+      accordions.forEach(({ list: l }) => { l.dataset.open = 'false'; });
       // Open this one if it was closed
-      if (!isOpen) panel.classList.add(expandedClass);
+      if (!isOpen) list.dataset.open = 'true';
     });
   });
 
@@ -367,7 +370,7 @@ function buildMobilePanel(navItems, langList) {
   closeBtn.setAttribute('aria-label', 'Close navigation menu');
   closeBtn.addEventListener('click', () => {
     panel.classList.remove('is-open');
-    accordions.forEach(({ expandedClass: cls }) => panel.classList.remove(cls));
+    accordions.forEach(({ list: l }) => { l.dataset.open = 'false'; });
     document.body.style.overflow = '';
   });
 
