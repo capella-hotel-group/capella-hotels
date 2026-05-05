@@ -243,3 +243,9 @@
         width: 95vw;
     }
 }
+
+
+/* Authoring: cap height to prevent layout issues in the Universal Editor */
+.adobe-ue-edit .hero-banner {
+    max-height: 1080px;
+}
