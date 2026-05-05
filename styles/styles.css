@@ -183,6 +183,11 @@ main:has(.hero-banner) {
     padding-top: 100svh;
 }
 
+/* Authoring: cap height to prevent layout issues in the Universal Editor */
+.adobe-ue-edit  main:has(.hero-banner) {
+    padding-top: 1080px;
+}
+
 main > .section:has(.hero-banner) {
     position: fixed;
     top: 0;
