@@ -20,8 +20,8 @@
 
     /* fonts */
     --body-font-family: "Calibre", "Arial", sans-serif;
-    --heading-font-family: "Goudy Regular", serif;
-    --heading-light-font-family: "Goudy Light", serif;
+    --heading-font-family: "Goudy Regular", "Times", "Times New Roman", serif;
+    --heading-light-font-family: "Goudy Light", "Times", "Times New Roman", serif;
 
     /* body sizes */
     --body-font-size-m: 22px;
