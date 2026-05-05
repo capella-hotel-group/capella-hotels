@@ -105,7 +105,7 @@ function buildDropdown(srcItem) {
   wrapper.className = 'header-nav-item';
 
   const trigger = document.createElement('button');
-  trigger.className = 'header-nav-link header-nav-drop-trigger';
+  trigger.className = 'header-nav-drop-trigger';
   trigger.setAttribute('aria-expanded', 'false');
   trigger.setAttribute('aria-haspopup', 'true');
   trigger.textContent = label;
