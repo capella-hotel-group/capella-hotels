@@ -43,6 +43,7 @@
 
 .section-intro .section-intro-text {
     display: flex;
+    gap: 10px;
 }
 
 /* .section-intro .section-intro-text > div {
@@ -67,6 +68,7 @@
 @media (width <=767px) {
     .section-intro .section-intro-text {
         flex-direction: column;
+        gap: 0px;
     }
 }
 
