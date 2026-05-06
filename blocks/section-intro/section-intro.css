@@ -1,15 +1,14 @@
 /* section-intro styles */
 .section-intro-wrapper {
     max-width: 1366px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
     position: relative;
     margin-bottom: 60px;
 }
 
 .section-intro {
     width: 91.66%;
-    margin-left: auto;
+    margin-inline-start: auto;
     position: relative;
 }
 
@@ -75,7 +74,7 @@
     .section-intro .subtext {
         width: 100%;
         font-size: 1.375rem;
-        padding-right: 35px;
+        padding-inline-end: 35px;
         margin-bottom: 35px;
     }
 }
@@ -108,8 +107,8 @@
 @media (width <=767px) {
     .section-intro .desc {
         width: 100%;
-        margin-left: 0;
-        padding-left: 55px;
-        padding-right: 35px;
+        margin-inline-start: 0;
+        padding-inline-start: 55px;
+        padding-inline-end: 35px;
     }
 }

@@ -311,3 +311,21 @@ main .section.highlight {
   margin: 0;
   padding: 40px 0;
 } */
+
+/* ── RTL / Arabic overrides ──────────────────────────────── */
+
+[dir="rtl"] body {
+    line-height: 1.8;
+    letter-spacing: 0;
+    word-spacing: 0;
+}
+
+/* Directional icons — flip horizontally in RTL */
+[dir="rtl"] [class*="icon-arrow"],
+[dir="rtl"] [class*="icon-chevron"],
+[dir="rtl"] [class*="icon-back"],
+[dir="rtl"] [class*="icon-forward"],
+[dir="rtl"] [class*="icon-next"],
+[dir="rtl"] [class*="icon-prev"] {
+    transform: scaleX(-1);
+}

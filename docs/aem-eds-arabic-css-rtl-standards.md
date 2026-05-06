@@ -2,7 +2,7 @@
 
 > **Scope:** CSS/RTL Styling Rules + Arabic Site Standards  
 > **Stack:** AEM Edge Delivery Services + Universal Editor (Xwalk)  
-> **Version:** 1.0
+> **Version:** 1.1 — Added BCP 47 Language Tags section
 
 ---
 
@@ -21,7 +21,32 @@
    - 2.3 [Number & Date Format](#23-number--date-format)
    - 2.4 [Image & Media Rules](#24-image--media-rules)
    - 2.5 [QA / Testing Checklist](#25-qa--testing-checklist)
+3. [BCP 47 Language Tags](#3-bcp-47-language-tags)
+   - 3.1 [Tag Structure & Rules](#31-tag-structure--rules)
+   - 3.2 [Arabic Tags — All Regions](#32-arabic-tags--all-regions)
+   - 3.3 [Other RTL Languages](#33-other-rtl-languages)
+   - 3.4 [Top 50 LTR Tags for Reference](#34-top-50-ltr-tags-for-reference)
+   - 3.5 [Usage in AEM EDS](#35-usage-in-aem-eds)
+   - 3.6 [BCP 47 Checklist](#36-bcp-47-checklist)
 
+Follow this naming convention consistently across all environments:
+ 
+  ```
+  /content/{site-name}/{lang-tag}/{section}/{page}
+  
+  Examples:
+    /content/mysite/en/products/solar-panels
+    /content/mysite/ar/products/solar-panels        ← same slug, Arabic language
+    /content/mysite/ar-sa/products/solar-panels     ← Saudi-specific variant
+    /content/mysite/fr-ca/products/solar-panels     ← French Canada
+  ```
+  
+  **Rules:**
+  - Folder name must be **lowercase** and match the BCP 47 tag: `ar`, `ar-sa`, `fr-ca`
+  - Hyphens in BCP 47 tags become hyphens in path: `ar-SA` → folder `ar-sa`
+  - Never use underscores in folder names (`ar_SA` is wrong — that is `og:locale` format)
+  - Page slug (last segment) should be the **same across all languages** — only the language segment changes
+  - Do not use English slugs for Arabic pages (e.g. `/ar/about` is fine; `/ar/about-us-english` is not)
 ---
 
 ## 1. CSS / RTL Styling Rules
@@ -431,6 +456,213 @@ Run all checks below before deploying any Arabic page to production.
 
 ---
 
+## 3. BCP 47 Language Tags
+
+### 3.1 Tag Structure & Rules
+
+BCP 47 tags follow the pattern `language-Script-REGION`. Only `language` is required; `Script` and `REGION` are optional subtags.
+
+```
+language  = ISO 639-1 two-letter code (lowercase)     e.g. ar, en, fr
+Script    = ISO 15924 four-letter code (Title case)    e.g. Arab, Latn, Cyrl
+REGION    = ISO 3166-1 two-letter code (UPPERCASE)     e.g. SA, AE, US
+```
+
+**Key rules:**
+
+- Always write language in **lowercase**: `ar`, `en`, `fr`
+- Always write region in **UPPERCASE**: `SA`, `AE`, `US`
+- Always write script in **Title case**: `Arab`, `Latn`, `Hant`
+- Use the **most specific tag** needed — no more, no less
+- Omit region when the site targets all speakers of a language (e.g. `ar` not `ar-SA` for the language root)
+- Use region only when content or format genuinely differs per country
+
+---
+
+### 3.2 Arabic Tags — All Regions
+
+All Arabic tags require `dir="rtl"` on `<html>`.
+
+| BCP 47 Tag | Region | `og:locale` | Notes |
+|---|---|---|---|
+| `ar` | Generic | `ar` | Language root — use for AEM MSM root & generic hreflang |
+| `ar-SA` | Saudi Arabia | `ar_SA` | Largest digital market, most commonly used |
+| `ar-AE` | UAE | `ar_AE` | Dubai/Abu Dhabi — high-value digital market |
+| `ar-EG` | Egypt | `ar_EG` | MSA base dialect — most universally understood |
+| `ar-KW` | Kuwait | `ar_KW` | |
+| `ar-QA` | Qatar | `ar_QA` | |
+| `ar-BH` | Bahrain | `ar_BH` | |
+| `ar-OM` | Oman | `ar_OM` | |
+| `ar-JO` | Jordan | `ar_JO` | |
+| `ar-LB` | Lebanon | `ar_LB` | |
+| `ar-IQ` | Iraq | `ar_IQ` | |
+| `ar-SY` | Syria | `ar_SY` | |
+| `ar-YE` | Yemen | `ar_YE` | |
+| `ar-MA` | Morocco | `ar_MA` | Maghreb — dialect differs significantly |
+| `ar-DZ` | Algeria | `ar_DZ` | Maghreb |
+| `ar-TN` | Tunisia | `ar_TN` | Maghreb |
+| `ar-LY` | Libya | `ar_LY` | |
+| `ar-SD` | Sudan | `ar_SD` | |
+| `ar-PS` | Palestine | `ar_PS` | |
+
+> **Note:** `og:locale` uses underscore (`ar_SA`), not hyphen — Open Graph spec differs from BCP 47.
+
+---
+
+### 3.3 Other RTL Languages
+
+| BCP 47 Tag | Language | Region | `dir` | Script |
+|---|---|---|---|---|
+| `he-IL` | Hebrew | Israel | `rtl` | `Hebr` |
+| `fa-IR` | Persian / Farsi | Iran | `rtl` | `Arab` |
+| `ur-PK` | Urdu | Pakistan | `rtl` | `Arab` |
+| `ur-IN` | Urdu | India | `rtl` | `Arab` |
+
+RTL detection in `scripts/scripts.js` must cover all four language codes:
+
+```js
+const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
+```
+
+---
+
+### 3.4 Top 50 LTR Tags for Reference
+
+| # | Tag | Language — Region |
+|---|---|---|
+| 1 | `en` | English — Generic |
+| 2 | `en-US` | English — United States |
+| 3 | `en-GB` | English — United Kingdom |
+| 4 | `en-AU` | English — Australia |
+| 5 | `en-CA` | English — Canada |
+| 6 | `en-IN` | English — India |
+| 7 | `zh-CN` | Chinese Simplified — China |
+| 8 | `zh-TW` | Chinese Traditional — Taiwan |
+| 9 | `zh-HK` | Chinese Traditional — Hong Kong |
+| 10 | `fr-FR` | French — France |
+| 11 | `fr-CA` | French — Canada |
+| 12 | `fr-BE` | French — Belgium |
+| 13 | `de-DE` | German — Germany |
+| 14 | `de-AT` | German — Austria |
+| 15 | `de-CH` | German — Switzerland |
+| 16 | `es-ES` | Spanish — Spain |
+| 17 | `es-MX` | Spanish — Mexico |
+| 18 | `es-AR` | Spanish — Argentina |
+| 19 | `es-US` | Spanish — United States |
+| 20 | `pt-BR` | Portuguese — Brazil |
+| 21 | `pt-PT` | Portuguese — Portugal |
+| 22 | `it-IT` | Italian — Italy |
+| 23 | `nl-NL` | Dutch — Netherlands |
+| 24 | `nl-BE` | Dutch — Belgium |
+| 25 | `pl-PL` | Polish — Poland |
+| 26 | `ru-RU` | Russian — Russia |
+| 27 | `sv-SE` | Swedish — Sweden |
+| 28 | `da-DK` | Danish — Denmark |
+| 29 | `fi-FI` | Finnish — Finland |
+| 30 | `nb-NO` | Norwegian — Norway |
+| 31 | `cs-CZ` | Czech — Czech Republic |
+| 32 | `ro-RO` | Romanian — Romania |
+| 33 | `hu-HU` | Hungarian — Hungary |
+| 34 | `el-GR` | Greek — Greece |
+| 35 | `tr-TR` | Turkish — Turkey |
+| 36 | `uk-UA` | Ukrainian — Ukraine |
+| 37 | `ja-JP` | Japanese — Japan |
+| 38 | `ko-KR` | Korean — South Korea |
+| 39 | `hi-IN` | Hindi — India |
+| 40 | `vi-VN` | Vietnamese — Vietnam |
+| 41 | `th-TH` | Thai — Thailand |
+| 42 | `id-ID` | Indonesian — Indonesia |
+| 43 | `ms-MY` | Malay — Malaysia |
+| 44 | `fil-PH` | Filipino — Philippines |
+| 45 | `bn-BD` | Bengali — Bangladesh |
+| 46 | `ta-IN` | Tamil — India |
+| 47 | `bg-BG` | Bulgarian — Bulgaria |
+| 48 | `sk-SK` | Slovak — Slovakia |
+| 49 | `ca-ES` | Catalan — Spain |
+| 50 | `af-ZA` | Afrikaans — South Africa |
+
+---
+
+### 3.5 Usage in AEM EDS
+
+**AEM Page Properties → Advanced → Language:**
+Set the ISO language code here. AEM renders this as `<html lang="...">` on the page.
+
+```
+/content/mysite/en/   → Language: en
+/content/mysite/ar/   → Language: ar
+/content/mysite/ar-sa/→ Language: ar-SA  (if market-specific)
+```
+
+**`hreflang` pattern — single Arabic market:**
+
+```html
+<link rel="alternate" hreflang="en"        href="https://example.com/en/page">
+<link rel="alternate" hreflang="ar"        href="https://example.com/ar/page">
+<link rel="alternate" hreflang="x-default" href="https://example.com/en/page">
+```
+
+**`hreflang` pattern — multiple Arabic markets:**
+
+```html
+<link rel="alternate" hreflang="ar-SA"     href="https://example.com/ar-sa/page">
+<link rel="alternate" hreflang="ar-AE"     href="https://example.com/ar-ae/page">
+<link rel="alternate" hreflang="ar-EG"     href="https://example.com/ar-eg/page">
+<link rel="alternate" hreflang="ar"        href="https://example.com/ar/page">
+<link rel="alternate" hreflang="en"        href="https://example.com/en/page">
+<link rel="alternate" hreflang="x-default" href="https://example.com/en/page">
+```
+
+**`og:locale` — note the underscore:**
+
+```html
+<!-- BCP 47 uses hyphen: ar-SA -->
+<!-- Open Graph uses underscore: ar_SA -->
+<meta property="og:locale"           content="ar_SA">
+<meta property="og:locale:alternate" content="ar_AE">
+<meta property="og:locale:alternate" content="en_US">
+```
+
+**RTL detection in `scripts/scripts.js` — full tag support:**
+
+```js
+// Handles both generic (ar) and region-specific (ar-SA) tags
+const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
+
+function applyDirection() {
+  const lang = (
+    document.documentElement.lang ||
+    document.querySelector('meta[name="lang"]')?.content ||
+    window.location.pathname.split('/')[1]
+  ).split('-')[0]; // strip region: "ar-SA" → "ar"
+
+  if (RTL_LANGS.includes(lang)) {
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.body.classList.add('is-rtl');
+  }
+}
+
+applyDirection();
+```
+
+> **Important:** Always call `.split('-')[0]` before checking against `RTL_LANGS` — this ensures `ar-SA`, `ar-AE`, and `ar-EG` all correctly resolve to `ar` and trigger RTL.
+
+---
+
+### 3.6 BCP 47 Checklist
+
+- [ ] `<html lang>` uses correct BCP 47 tag — set via AEM Page Properties → Advanced → Language
+- [ ] Generic tag (`ar`) used at language root level — not region-specific
+- [ ] Region tag (`ar-SA`, `ar-AE`) used only when content genuinely differs per market
+- [ ] `hreflang` covers every language/region variant of the page including `x-default`
+- [ ] `og:locale` uses underscore format (`ar_SA`) — not hyphen
+- [ ] RTL detection in `scripts.js` strips region suffix before checking language code
+- [ ] `canonical` URL is unique per language — never shared across `ar` and `en`
+- [ ] AEM language copy path matches the BCP 47 tag: `/content/mysite/ar/` for `lang="ar"`
+- [ ] No mismatch between `<html lang>` and `hreflang` values on the same page
+
+---
+
 ## Quick Reference
 
 ### CSS Property Decision Tree
@@ -470,9 +702,20 @@ Need to flip an icon?
 ### Mandatory HTML Attributes
 
 ```html
+<!-- Arabic page -->
 <html lang="ar" dir="rtl">
 <meta charset="UTF-8">
-<link rel="alternate" hreflang="ar" href="...">
-<link rel="alternate" hreflang="en" href="...">
+<meta property="og:locale" content="ar_SA">
+<link rel="alternate" hreflang="ar"        href="...">
+<link rel="alternate" hreflang="en"        href="...">
 <link rel="alternate" hreflang="x-default" href="...">
 ```
+
+### BCP 47 vs og:locale — Format Difference
+
+| Context | Format | Example |
+|---|---|---|
+| `<html lang>` | hyphen | `ar-SA` |
+| `hreflang` | hyphen | `ar-SA` |
+| `og:locale` | underscore | `ar_SA` |
+| AEM Page Properties | hyphen | `ar-SA` |
