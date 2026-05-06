@@ -68,7 +68,7 @@
 @media (width <=767px) {
     .section-intro .section-intro-text {
         flex-direction: column;
-        gap: 0px;
+        gap: 0;
     }
 }
 
