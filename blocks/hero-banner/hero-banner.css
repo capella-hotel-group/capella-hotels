@@ -92,7 +92,7 @@
 .hero-banner .hero-banner-content {
     position: absolute;
     bottom: var(--content-bottom);
-    left: 0;
+    inset-inline-start: 0;
     width: 100%;
     padding: 0 20px;
     color: #fff;
@@ -114,7 +114,7 @@
 .hero-banner .hero-banner-cta {
     position: absolute;
     bottom: 20px;
-    right: 30px;
+    inset-inline-end: 30px;
     display: block;
     padding: 0;
     background: none;
@@ -130,7 +130,7 @@
 
 @media (width <= 767px) {
     .hero-banner .hero-banner-cta {
-        right: 20px;
+        inset-inline-end: 20px;
     }
 }
 

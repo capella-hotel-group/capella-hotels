@@ -46,6 +46,41 @@ export function moveInstrumentation(from, to) {
   );
 }
 
+const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
+
+// Maps URL path slugs to valid BCP 47 language tags.
+// URL slugs may differ from ISO 639-1 codes (e.g. "jp" → "ja", "zh-cn" → "zh-CN").
+const LANG_MAP = {
+  en: 'en',
+  'zh-cn': 'zh-CN',
+  jp: 'ja',
+  ar: 'ar',
+};
+
+/**
+ * Detects the page language from the URL path and normalizes it to a BCP 47 tag.
+ * Skips the "global" segment, falls back to "en".
+ * @returns {string} BCP 47 language tag
+ */
+function getPageLang() {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const slug = segments.find((s) => s !== 'global' && /^[a-z]{2,5}(-[a-z]{2,4})?$/i.test(s));
+  return LANG_MAP[slug?.toLowerCase()] || slug || 'en';
+}
+
+/**
+ * Sets dir="rtl" and body.is-rtl for RTL languages.
+ * Must run before any block decoration.
+ * @param {string} lang BCP 47 language tag
+ */
+function applyDirection(lang) {
+  const primary = lang.split('-')[0];
+  if (RTL_LANGS.includes(primary)) {
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.body.classList.add('is-rtl');
+  }
+}
+
 /**
  * load fonts.css and set a session storage flag
  */
@@ -90,7 +125,9 @@ export function decorateMain(main) {
  * @param {Element} doc The container element
  */
 async function loadEager(doc) {
-  document.documentElement.lang = 'en';
+  const lang = getPageLang();
+  document.documentElement.lang = lang;
+  applyDirection(lang);
   decorateTemplateAndTheme();
   const main = doc.querySelector('main');
   if (main) {

@@ -63,7 +63,7 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
   content: '▼';
   display: inline-block;
   font-size: 0.5rem;
-  padding-left: 5px;
+  padding-inline-start: 5px;
 }
 
 .header-lang-trigger:hover {
@@ -73,7 +73,7 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
 .header-lang-dropdown {
   position: absolute;
   top: var(--site-header-height, 45px);
-  left: 0;
+  inset-inline-start: 0;
   z-index: 99;
   margin: 0;
   padding: 8px 0;
@@ -291,7 +291,7 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
   color: #919191;
   padding: 0 0 15px;
   margin-bottom: 15px;
-  text-align: left;
+  text-align: start;
   transition: color 0.4s linear;
   will-change: color;
 }
@@ -347,7 +347,7 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
   width: 30px;
   height: 30px;
   position: absolute;
-  right: 35px;
+  inset-inline-end: 35px;
   top: 30px;
   cursor: pointer;
   background: none;
@@ -423,7 +423,7 @@ header .header-cta {
   text-transform: uppercase;
   color: #242f3a;
   padding: 0;
-  text-align: left;
+  text-align: start;
 }
 
 .header-menu-toggle:hover {
@@ -481,7 +481,7 @@ header .header-cta {
   text-transform: uppercase;
   color: var(--text-color);
   text-decoration: none;
-  text-align: left;
+  text-align: start;
 }
 
 .header-mobile-nav-link:hover {
@@ -501,7 +501,7 @@ header .header-cta {
   color: #242f3a;
   padding: 0;
   margin: 0;
-  text-align: left;
+  text-align: start;
 }
 
 .header-mobile-nav-toggle:hover {
@@ -589,7 +589,7 @@ header .header-cta {
   color: var(--text-color);
   padding: 0;
   margin: 0;
-  text-align: left;
+  text-align: start;
 }
 
 .header-mobile-lang-toggle:hover {
@@ -628,7 +628,7 @@ header .header-cta {
   text-transform: uppercase;
   color: #242f3a;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 }
 
 .header-mobile-lang-list li:hover {
@@ -860,7 +860,7 @@ header nav[aria-expanded='true'] .nav-sections {
 
 header nav .nav-sections ul {
   list-style: none;
-  padding-left: 0;
+  padding-inline-start: 0;
   font-size: var(--body-font-size-s);
 }
 
@@ -889,7 +889,7 @@ header nav .nav-sections ul>li>ul>li {
 
   header nav .nav-sections .nav-drop {
     position: relative;
-    padding-right: 16px;
+    padding-inline-end: 16px;
     cursor: pointer;
   }
 
@@ -898,7 +898,7 @@ header nav .nav-sections ul>li>ul>li {
     display: inline-block;
     position: absolute;
     top: 0.5em;
-    right: 2px;
+    inset-inline-end: 2px;
     transform: rotate(135deg);
     width: 6px;
     height: 6px;
@@ -932,7 +932,7 @@ header nav .nav-sections ul>li>ul>li {
   header nav .nav-sections .default-content-wrapper>ul>li[aria-expanded='true']>ul {
     display: block;
     position: absolute;
-    left: -24px;
+    inset-inline-start: -24px;
     width: 200px;
     top: 150%;
     padding: 16px;
@@ -944,11 +944,11 @@ header nav .nav-sections ul>li>ul>li {
     content: '';
     position: absolute;
     top: -8px;
-    left: 16px;
+    inset-inline-start: 16px;
     width: 0;
     height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
+    border-inline-start: 8px solid transparent;
+    border-inline-end: 8px solid transparent;
     border-bottom: 8px solid var(--light-color);
   }
 
