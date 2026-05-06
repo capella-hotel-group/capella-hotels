@@ -210,12 +210,19 @@ function buildNavZone(navItems) {
   nav.className = 'header-nav';
   nav.setAttribute('aria-label', 'Primary navigation');
 
+  const navLeft = document.createElement('div');
+  navLeft.className = 'header-nav-left';
+
+  const navRight = document.createElement('div');
+  navRight.className = 'header-nav-right';
+
   navItems.forEach((srcItem, i) => {
-    const side = i < Math.ceil(navItems.length / 2) ? 'left' : 'right';
+    const side = i % 2 === 0 ? 'left' : 'right';
+    const target = side === 'left' ? navLeft : navRight;
     if (srcItem.querySelector(':scope > ul')) {
       const wrapper = buildDropdown(srcItem);
       wrapper.querySelector('.header-nav-drop-trigger').dataset.navSide = side;
-      nav.append(wrapper);
+      target.append(wrapper);
     } else {
       const directP = srcItem.querySelector(':scope > p');
       const srcA = directP?.querySelector('a');
@@ -225,10 +232,11 @@ function buildNavZone(navItems) {
       a.textContent = (srcA?.textContent ?? directP?.textContent)?.trim() ?? '';
       a.dataset.navSide = side;
       moveInstrumentation(srcA ?? srcItem, a);
-      nav.append(a);
+      target.append(a);
     }
   });
 
+  nav.append(navLeft, navRight);
   return nav;
 }
 

@@ -135,14 +135,36 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
 
 /* ── Center: Brand navigation ────────────────────────────── */
 .header-nav {
-  display: contents;
+  position: relative;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 200px 1fr;
+  align-items: center;
+  pointer-events: none;
+}
 
-  /* children participate directly in parent flex */
+.header-nav-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  padding-inline-end: 20px;
+  pointer-events: auto;
+  grid-column: 1;
+}
+
+.header-nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  padding-inline-start: 20px;
+  pointer-events: auto;
+  grid-column: 3;
 }
 
 .header-nav-link,
 .header-nav-drop-trigger {
-  position: absolute;
   font-family: var(--body-font-family);
   font-size: 0.875rem;
   font-weight: 400;
@@ -154,14 +176,7 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
   border: none;
   cursor: pointer;
   padding: 0;
-}
-
-[data-nav-side="left"] {
-  left: calc(50% - 250px);
-}
-
-[data-nav-side="right"] {
-  right: calc(50% - 250px);
+  position: relative;
 }
 
 .header-nav-link::after,
@@ -208,27 +223,16 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
 
 /* Emblem — absolutely centered, independent of nav link count */
 .header-nav-dropdown {
-  position: absolute;
+  position: fixed;
   top: var(--site-header-height, 70px);
   left: 0;
   width: 100%;
   z-index: 99;
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.header-nav-dropdown::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2500px;
-  height: 100%;
   background-color: #efefef;
   box-shadow: 0 3px 5px 0 rgb(168 168 168 / 50%);
-  pointer-events: none;
+  transition: grid-template-rows 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .header-nav-dropdown.is-open {
@@ -326,7 +330,7 @@ body:has(.hero-banner) header:has(.header[data-block-status="loaded"]) {
   font-size: 18px;
   letter-spacing: 0.16px;
   line-height: 21.6px;
-  color: var(--text-color);
+  color: #242f3a;
   text-decoration: none;
 }
 
