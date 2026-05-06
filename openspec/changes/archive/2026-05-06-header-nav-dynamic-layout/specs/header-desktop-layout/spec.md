@@ -1,23 +1,4 @@
-## Purpose
-
-Specifies the three-zone desktop layout of `.header-inner`: language selector (left), brand nav + emblem (center), CTA (right). Covers grid structure and nav item positioning.
-
-## Requirements
-
-### Requirement: Header inner zone layout
-The `.header-inner` element SHALL use CSS Grid with three columns (`1fr auto 1fr`) so that the language zone (col 1), nav zone (col 2), and CTA zone (col 3) are independently anchored. Removing either the language zone or the CTA zone SHALL NOT affect the position of the remaining zone.
-
-#### Scenario: Both lang and CTA present
-- **WHEN** both `.header-lang` and `.header-cta` are rendered
-- **THEN** lang SHALL be left-aligned in col 1, nav SHALL be centered in col 2, CTA SHALL be right-aligned in col 3
-
-#### Scenario: Lang zone absent
-- **WHEN** `.header-lang` is not rendered
-- **THEN** nav SHALL remain centered and CTA SHALL remain right-aligned
-
-#### Scenario: CTA zone absent
-- **WHEN** `.header-cta` is not rendered
-- **THEN** lang SHALL remain left-aligned and nav SHALL remain centered
+## MODIFIED Requirements
 
 ### Requirement: Desktop nav item positioning by index
 Nav items SHALL be positioned relative to the emblem based on their index in the nav list, not their content type. Items at **even index** (`i % 2 === 0`: 0, 2, 4, …) SHALL be assigned `data-nav-side="left"` and appended to `.header-nav-left`; items at **odd index** (`i % 2 === 1`: 1, 3, 5, …) SHALL be assigned `data-nav-side="right"` and appended to `.header-nav-right`. This produces an alternating left/right assignment (item 0 → left, item 1 → right, item 2 → left, …). Positioning SHALL be determined by flex group membership, not by absolute CSS coordinates.
