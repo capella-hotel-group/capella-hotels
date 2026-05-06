@@ -108,7 +108,6 @@
     .section-intro .desc {
         width: 100%;
         margin-inline-start: 0;
-        padding-inline-start: 55px;
-        padding-inline-end: 35px;
+        padding-inline: 55px 35px;
     }
 }

@@ -46,7 +46,7 @@ export function moveInstrumentation(from, to) {
   );
 }
 
-const RTL_LANGS = ['ar', 'he', 'fa', 'ur', 'qa'];
+const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 
 // Maps URL path slugs to valid BCP 47 language tags.
 // URL slugs may differ from ISO 639-1 codes (e.g. "jp" → "ja", "zh-cn" → "zh-CN").
@@ -74,7 +74,8 @@ function getPageLang() {
  * @param {string} lang BCP 47 language tag
  */
 function applyDirection(lang) {
-  if (RTL_LANGS.includes(lang)) {
+  const primary = lang.split('-')[0];
+  if (RTL_LANGS.includes(primary)) {
     document.documentElement.setAttribute('dir', 'rtl');
     document.body.classList.add('is-rtl');
   }
