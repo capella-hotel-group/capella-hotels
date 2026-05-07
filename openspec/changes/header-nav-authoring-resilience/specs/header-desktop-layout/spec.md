@@ -1,26 +1,18 @@
-## Purpose
+## ADDED Requirements
 
-Specifies the three-zone desktop layout of `.header-inner`: language selector (left), brand nav + emblem (center), CTA (right). Covers grid structure and nav item positioning.
+### Requirement: Authoring guide for nav document structure
+The repository SHALL contain `docs/header-nav-authoring-guide.md` documenting the correct HTML structure for the `/nav` document, with explicit ✅/❌ examples for each structural rule.
 
-## Requirements
+#### Scenario: Guide exists in repo
+- **WHEN** a developer or author needs to understand the `/nav` document structure
+- **THEN** `docs/header-nav-authoring-guide.md` SHALL exist and cover: Languages list, Destinations sub-categories (single nested list), Experiences (item in main list with `<p>` wrapper), CTA section, Logo section
 
-### Requirement: Header inner zone layout
-The `.header-inner` element SHALL use CSS Grid with three columns (`1fr auto 1fr`) so that the language zone (col 1), nav zone (col 2), and CTA zone (col 3) are independently anchored. Removing either the language zone or the CTA zone SHALL NOT affect the position of the remaining zone.
+---
 
-#### Scenario: Both lang and CTA present
-- **WHEN** both `.header-lang` and `.header-cta` are rendered
-- **THEN** lang SHALL be left-aligned in col 1, nav SHALL be centered in col 2, CTA SHALL be right-aligned in col 3
-
-#### Scenario: Lang zone absent
-- **WHEN** `.header-lang` is not rendered
-- **THEN** nav SHALL remain centered and CTA SHALL remain right-aligned
-
-#### Scenario: CTA zone absent
-- **WHEN** `.header-cta` is not rendered
-- **THEN** lang SHALL remain left-aligned and nav SHALL remain centered
+## MODIFIED Requirements
 
 ### Requirement: Desktop nav item positioning by index
-Nav items SHALL be collected from **all** `<ul>` elements directly under `sections[0]` (not only the first `<ul>`), then positioned relative to the emblem based on their index. Items at **even index** (`i % 2 === 0`: 0, 2, 4, …) SHALL be assigned `data-nav-side="left"` and appended to `.header-nav-left`; items at **odd index** (`i % 2 === 1`: 1, 3, 5, …) SHALL be assigned `data-nav-side="right"` and appended to `.header-nav-right`. This produces an alternating left/right assignment (item 0 → left, item 1 → right, item 2 → left, …). Positioning SHALL be determined by flex group membership, not by absolute CSS coordinates.
+Nav items SHALL be collected from **all** `<ul>` elements directly under `sections[0]` (not only the first `<ul>`), then positioned relative to the emblem based on their index. Items at even index (`i % 2 === 0`) SHALL be assigned `data-nav-side="left"` and appended to `.header-nav-left`; items at odd index SHALL be assigned `data-nav-side="right"` and appended to `.header-nav-right`.
 
 If no lang list or no nav items are found after collecting, the system SHALL log a `console.warn` with a `[header]` prefix and hide the header block.
 
@@ -45,6 +37,10 @@ If no lang list or no nav items are found after collecting, the system SHALL log
 - **WHEN** `sections[0]` contains no language nested list
 - **THEN** `console.warn('[header] Nav structure invalid: missing language list. Check /nav document.')` SHALL be logged
 - **THEN** the header block SHALL be hidden
+
+---
+
+## ADDITIONAL Requirements (discovered during implementation)
 
 ### Requirement: AEM EDS default-content-wrapper compatibility
 `decorate()` SHALL locate the nav content root via `sections[0].querySelector('.default-content-wrapper') ?? sections[0]` before querying `':scope > ul'`. This is required because `decorateSections()` in `aem.js` wraps all section children inside a `div.default-content-wrapper` after fragment decoration.
@@ -84,10 +80,3 @@ A language list item without an `<a>` tag (e.g. `<li>English</li>`) SHALL render
 #### Scenario: Language item is plain text
 - **WHEN** a language `<li>` contains only text content and no `<a>` element
 - **THEN** the rendered dropdown item SHALL be an `<a href="#">` wrapping the text
-
-### Requirement: Authoring guide for nav document structure
-The repository SHALL contain `docs/header-nav-authoring-guide.md` documenting the correct HTML structure for the `/nav` document, with explicit ✅/❌ examples for each structural rule.
-
-#### Scenario: Guide exists in repo
-- **WHEN** a developer or author needs to understand the `/nav` document structure
-- **THEN** `docs/header-nav-authoring-guide.md` SHALL exist and cover: Languages list, Destinations sub-categories (single nested list), Experiences (item in main list with `<p>` wrapper), CTA section, Logo section

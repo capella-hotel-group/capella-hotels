@@ -19,27 +19,35 @@ function closeLangDropdown(trigger, dropdown) {
  */
 function buildLangZone(sourceList) {
   const sourceItems = [...sourceList.querySelectorAll('li')];
-  const firstLabel = sourceItems[0]?.textContent?.trim() ?? 'ENGLISH';
+
+  // Find the option whose href best matches the current page path
+  const currentPath = window.location.pathname;
+  const activeItem = sourceItems.find((item) => {
+    const href = item.querySelector('a')?.getAttribute('href');
+    return href && currentPath.startsWith(href);
+  }) ?? sourceItems[0];
+  const activeLabel = (activeItem?.querySelector('a')?.textContent ?? activeItem?.textContent)?.trim() ?? 'ENGLISH';
 
   const trigger = document.createElement('button');
   trigger.className = 'header-lang-trigger';
   trigger.setAttribute('aria-expanded', 'false');
   trigger.setAttribute('aria-haspopup', 'listbox');
-  trigger.textContent = firstLabel;
+  trigger.textContent = activeLabel;
 
   const dropdown = document.createElement('ul');
   dropdown.className = 'header-lang-dropdown';
   dropdown.setAttribute('role', 'listbox');
   moveInstrumentation(sourceList, dropdown);
 
-  sourceItems.forEach((srcItem, i) => {
+  sourceItems.forEach((srcItem) => {
     const srcA = srcItem.querySelector('a');
     const label = (srcA?.textContent ?? srcItem.textContent)?.trim() ?? '';
+    const isActive = srcItem === activeItem;
 
     const item = document.createElement('li');
     item.setAttribute('role', 'option');
     item.setAttribute('tabindex', '0');
-    if (i === 0) item.setAttribute('aria-selected', 'true');
+    if (isActive) item.setAttribute('aria-selected', 'true');
     moveInstrumentation(srcItem, item);
 
     if (srcA) {
@@ -49,7 +57,10 @@ function buildLangZone(sourceList) {
       moveInstrumentation(srcA, a);
       item.append(a);
     } else {
-      item.textContent = label;
+      const a = document.createElement('a');
+      a.href = '#';
+      a.textContent = label;
+      item.append(a);
     }
 
     item.addEventListener('click', () => {
@@ -99,7 +110,10 @@ function buildLangZone(sourceList) {
  */
 function buildDropdown(srcItem) {
   const label = srcItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
-  const subItems = [...(srcItem.querySelector(':scope > ul')?.querySelectorAll(':scope > li') ?? [])];
+  const subUls = [...srcItem.querySelectorAll(':scope > ul')];
+  // eslint-disable-next-line no-console
+  if (subUls.length > 1) console.warn(`[header] "${label}": multiple nested lists detected — merge applied. Fix authoring in /nav.`);
+  const subItems = subUls.flatMap((ul) => [...ul.querySelectorAll(':scope > li')]);
 
   const wrapper = document.createElement('div');
   wrapper.className = 'header-nav-item';
@@ -225,7 +239,7 @@ function buildNavZone(navItems) {
       target.append(wrapper);
     } else {
       const directP = srcItem.querySelector(':scope > p');
-      const srcA = directP?.querySelector('a');
+      const srcA = directP?.querySelector('a') ?? srcItem.querySelector(':scope > a');
       const a = document.createElement('a');
       a.className = 'header-nav-link';
       a.href = srcA?.href ?? '#';
@@ -291,11 +305,11 @@ function buildMobilePanel(navItems, langList) {
 
   navItems.filter((li) => li.textContent?.trim()).forEach((srcItem) => {
     const directP = srcItem.querySelector(':scope > p');
-    const srcA = directP?.querySelector('a');
+    const srcA = directP?.querySelector('a') ?? srcItem.querySelector(':scope > a');
     const label = (srcA?.textContent ?? directP?.textContent)?.trim() ?? '';
-    const subUl = srcItem.querySelector(':scope > ul');
+    const subUls = [...srcItem.querySelectorAll(':scope > ul')];
 
-    if (subUl) {
+    if (subUls.length) {
       // Accordion toggle for items with sub-categories (e.g. Destinations)
       const toggle = document.createElement('button');
       toggle.className = 'header-mobile-nav-toggle';
@@ -306,7 +320,7 @@ function buildMobilePanel(navItems, langList) {
       const list = document.createElement('ul');
       list.className = 'header-mobile-nav-list';
 
-      [...subUl.querySelectorAll(':scope > li')].forEach((catItem) => {
+      subUls.flatMap((ul) => [...ul.querySelectorAll(':scope > li')]).forEach((catItem) => {
         const catLabel = catItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
         const catLinks = [...(catItem.querySelector(':scope > ul')?.querySelectorAll('li') ?? [])];
 
@@ -410,9 +424,12 @@ export default async function decorate(block) {
 
   const sections = [...fragment.children];
 
-  // Parse section 0: extract language list and nav items
-  const outerList = sections[0]?.querySelector('ul');
-  const topLevelItems = outerList ? [...outerList.querySelectorAll(':scope > li')] : [];
+  // Parse section 0: collect top-level nav items from ALL <ul> siblings.
+  // AEM EDS wraps section children in div.default-content-wrapper — target that first.
+  const navContent = sections[0]?.querySelector('.default-content-wrapper') ?? sections[0];
+  const topLevelItems = navContent
+    ? [...navContent.querySelectorAll(':scope > ul')].flatMap((ul) => [...ul.querySelectorAll(':scope > li')])
+    : [];
   const langList = topLevelItems[0]?.querySelector('ul'); // nested ul inside Languages li
   const navItems = topLevelItems.slice(1); // Destinations, Experiences, …
 
@@ -422,7 +439,18 @@ export default async function decorate(block) {
   // Parse section 2: logo picture
   const logoPicture = sections[2]?.querySelector('picture');
 
-  if (!langList || !navItems.length) { hide(); return; }
+  if (!langList) {
+    // eslint-disable-next-line no-console
+    console.warn('[header] Nav structure invalid: missing language list. Check /nav document.');
+    hide();
+    return;
+  }
+  if (!navItems.length) {
+    // eslint-disable-next-line no-console
+    console.warn('[header] Nav structure invalid: no nav items found. Check /nav document.');
+    hide();
+    return;
+  }
 
   const langZone = buildLangZone(langList);
 
