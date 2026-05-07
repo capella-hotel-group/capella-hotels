@@ -49,23 +49,38 @@ export function moveInstrumentation(from, to) {
 const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 
 // Maps URL path slugs to valid BCP 47 language tags.
-// URL slugs may differ from ISO 639-1 codes (e.g. "jp" → "ja", "zh-cn" → "zh-CN").
+// Only needed for slugs that differ from the BCP 47 primary (e.g. "jp" → "ja").
 const LANG_MAP = {
-  en: 'en',
   'zh-cn': 'zh-CN',
   jp: 'ja',
-  ar: 'ar',
 };
+
+// Valid ISO 639-1 language primaries supported by this site.
+// Used to distinguish language codes (ar, en) from market/country codes (qa, sa, ae).
+const VALID_LANG_PRIMARIES = new Set([
+  'ar', 'en', 'fr', 'de', 'ja', 'ko', 'zh',
+  'he', 'fa', 'ur', 'it', 'es', 'pt', 'ru',
+  'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',
+]);
 
 /**
  * Detects the page language from the URL path and normalizes it to a BCP 47 tag.
- * Skips the "global" segment, falls back to "en".
+ * Checks LANG_MAP aliases first, then validates primary against VALID_LANG_PRIMARIES.
+ * Skips market/country codes (qa, sa, ae) that are not valid language primaries.
+ * Falls back to "en".
  * @returns {string} BCP 47 language tag
  */
 function getPageLang() {
   const segments = window.location.pathname.split('/').filter(Boolean);
-  const slug = segments.find((s) => s !== 'global' && /^[a-z]{2,5}(-[a-z]{2,4})?$/i.test(s));
-  return LANG_MAP[slug?.toLowerCase()] || slug || 'en';
+  const match = segments.find((s) => {
+    const lower = s.toLowerCase();
+    return LANG_MAP[lower] || VALID_LANG_PRIMARIES.has(lower.split('-')[0]);
+  });
+  if (!match) return 'en';
+  const lower = match.toLowerCase();
+  if (LANG_MAP[lower]) return LANG_MAP[lower];
+  const parts = lower.split('-');
+  return parts.length > 1 ? `${parts[0]}-${parts[1].toUpperCase()}` : parts[0];
 }
 
 /**
