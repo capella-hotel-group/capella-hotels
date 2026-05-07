@@ -1,193 +1,201 @@
 # Header Nav — Authoring Guide
 
-> **Audience:** Content authors using Universal Editor / SharePoint  
+> **Audience:** Content authors  
 > **Block:** `header`  
 > **Source document:** `/nav`
 
-The header block reads its content from a `/nav` document. This guide defines the correct structure for each section.
-
 ---
 
-## Document Structure — 3 Sections
+## 1. Document Structure
 
-The `/nav` document must have **exactly 3 sections** in this order:
+The `/nav` document must have exactly **3 sections** in order:
 
 | Section | Content |
 |---|---|
-| Section 1 | Nav list (Languages + nav items) |
-| Section 2 | CTA link (Book Your Stay) |
-| Section 3 | Logo image |
+| 1 | Navigation list |
+| 2 | CTA link |
+| 3 | Logo image |
 
 ---
 
-## Section 1 — Nav List
+## 2. Correct Navigation Structure
 
-One flat list. First item is always Languages. Remaining items are nav entries.
+```html
+<div>
+  <ul>
 
+    <!-- SECTION 1: Languages — always first -->
+    <li>
+      <p>Languages</p>
+      <ul>
+        <li><a href="/global/en">English</a></li>
+        <li><a href="/global/zh-cn">简体中文</a></li>
+        <li><a href="/global/jp">日本語</a></li>
+      </ul>
+    </li>
+
+    <!-- Nav item with sub-categories -->
+    <li>
+      <p>Destinations</p>
+      <ul>
+        <li>
+          <p>Capella Hotels and Resorts</p>
+          <ul>
+            <li><a href="/global/en">Bangkok</a></li>
+            <li>Kyoto</li>
+          </ul>
+        </li>
+        <li>
+          <p>Capella Residencies</p>
+          <ul>
+            <li>Singapore</li>
+          </ul>
+        </li>
+        <li>
+          <p>Patina Hotels and Resorts</p>
+          <ul>
+            <li>Maldives</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Plain nav item (no sub-categories) -->
+    <li>
+      <p><a href="/global/en/experiences">Experiences</a></p>
+    </li>
+
+  </ul>
+</div>
 ```
-Main list
-  ├── Languages        ← always first
-  ├── Destinations     ← nav item with sub-categories
-  ├── Experiences      ← plain nav item
-  └── ...
+
+```html
+<!-- SECTION 2: CTA -->
+<div>
+  <p><a href="/book">Book Your Stay</a></p>
+</div>
+```
+
+```html
+<!-- SECTION 3: Logo -->
+<div>
+  <p>
+    <picture>
+      <img src="./logo.svg" alt="" width="48" height="79">
+    </picture>
+  </p>
+</div>
 ```
 
 ---
 
-### Rule 1 — Languages item
+## 3. Rules
 
-First item in the list. Contains a **nested list** of language options. Each language is an `<a>` link.
+### Rule 1 — Languages is always first, must have a nested list
 
-✅ **Correct**
+✅ Correct
 ```html
 <li>
   <p>Languages</p>
   <ul>
     <li><a href="/global/en">English</a></li>
-    <li><a href="/global/zh-cn">简体中文</a></li>
-    <li><a href="/global/jp">日本語</a></li>
   </ul>
 </li>
 ```
 
-❌ **Wrong — missing nested list**
+❌ Wrong — Languages missing or has no nested list → **header is hidden**
 ```html
 <li>
   <p>Languages</p>
-  <!-- no nested list → header will be hidden with a warning -->
+  <!-- no nested list -->
 </li>
 ```
 
 ---
 
-### Rule 2 — Destinations (nav item with sub-categories)
+### Rule 2 — Destinations: one nested list, sub-categories as list items
 
-One `<li>` with **one nested list**. Sub-category groups are `<li>` items inside that single list.
-
-✅ **Correct — one nested list, sub-categories as list items**
+✅ Correct — one `<ul>`, sub-categories inside as `<li>`
 ```html
 <li>
   <p>Destinations</p>
   <ul>
-    <li>
-      <p>Capella Hotels and Resorts</p>
-      <ul>
-        <li><a href="/global/en">Bangkok</a></li>
-        <li>Kyoto</li>
-      </ul>
-    </li>
-    <li>
-      <p>Capella Residencies</p>
-      <ul>
-        <li>Singapore</li>
-      </ul>
-    </li>
-    <li>
-      <p>Patina Hotels and Resorts</p>
-      <ul>
-        <li>Maldives</li>
-      </ul>
-    </li>
-  </ul>
-</li>
-```
-
-❌ **Wrong — three separate nested lists**
-```html
-<li>
-  <p>Destinations</p>
-  <ul>
-    <li><p>Capella Hotels and Resorts</p>...</li>
-  </ul>
-  <ul>                                          <!-- ← separate list -->
+    <li><p>Capella Hotels</p>...</li>
     <li><p>Capella Residencies</p>...</li>
-  </ul>
-  <ul>                                          <!-- ← separate list -->
-    <li><p>Patina Hotels and Resorts</p>...</li>
+    <li><p>Patina Hotels</p>...</li>
   </ul>
 </li>
 ```
 
-> **Note:** The block will attempt to merge multiple nested lists and log a warning in the browser console. Fix the authoring to avoid this.
+⚠️ Wrong — multiple separate `<ul>` siblings → parser merges them and logs a warning
+```html
+<li>
+  <p>Destinations</p>
+  <ul><li><p>Capella Hotels</p>...</li></ul>
+  <ul><li><p>Capella Residencies</p>...</li></ul>
+  <ul><li><p>Patina Hotels</p>...</li></ul>
+</li>
+```
 
 ---
 
-### Rule 3 — Plain nav item (e.g. Experiences)
+### Rule 3 — Plain nav items stay inside the main list, use `<p>` wrapper
 
-A plain nav link — **no sub-categories**. Must be a `<li>` **inside the main list**, containing a `<p>`.
-
-✅ **Correct — item in main list with `<p>` wrapper**
+✅ Correct
 ```html
-<!-- Plain text label -->
-<li>
-  <p>Experiences</p>
-</li>
-
-<!-- Or linked label -->
-<li>
-  <p><a href="/global/en/experiences">Experiences</a></p>
-</li>
-```
-
-❌ **Wrong — item in a separate list outside the main list**
-```html
-</ul>               <!-- ← main list closed -->
-<ul>                <!-- ← NEW list — items here will be partially recovered but not guaranteed -->
-  <li>Experiences</li>
+<ul>
+  <li><p>Languages</p>...</li>
+  <li><p><a href="/experiences">Experiences</a></p></li>
 </ul>
 ```
 
-❌ **Wrong — no `<p>` wrapper**
+⚠️ Wrong — item in a separate `<ul>` outside main list → parser recovers but fix authoring
 ```html
-<li>
-  <a href="/experiences">Experiences</a>  <!-- ← missing <p> wrapper → link lost -->
-</li>
+<ul><li>Languages...</li></ul>
+<ul><li><a href="/experiences">Experiences</a></li></ul>
 ```
 
-❌ **Wrong — extra text outside the link**
+❌ Wrong — no `<p>` wrapper and no `<a>` → label is lost
 ```html
-<li>
-  <p><a href="/experiences">Experiences</a>(extra text)</p>  <!-- ← label will include the extra text -->
-</li>
+<li>Experiences</li>
 ```
 
 ---
 
-## Section 2 — CTA Link
+### Rule 4 — Keep link text clean
 
-A single paragraph containing an anchor.
-
-✅ **Correct**
+✅ Correct
 ```html
-<p><a href="/book">Book Your Stay</a></p>
+<li><p><a href="/experiences">Experiences</a></p></li>
 ```
 
-> The `<strong>` wrapper around `<a>` is accepted but not required.
-
----
-
-## Section 3 — Logo Image
-
-A single paragraph containing a `<picture>` element.
-
-✅ **Correct**
+❌ Wrong — extra text becomes part of the nav label
 ```html
-<p>
-  <picture>
-    <img src="./logo.svg" alt="" width="48" height="79">
-  </picture>
-</p>
+<li><p><a href="/experiences">Experiences</a>(Experience)</p></li>
 ```
 
 ---
 
-## Common Mistakes Summary
+## 4. Common Mistakes
 
 | Mistake | Effect | Fix |
 |---|---|---|
-| Languages list missing | Header hidden, `[header] Nav structure invalid` warning in console | Add nested `<ul>` under Languages item |
-| Destinations has multiple `<ul>` siblings | Partial merge applied, warning logged | Move all sub-categories into one `<ul>` |
-| Experiences in a separate `<ul>` outside main list | Partial recovery applied | Move Experiences `<li>` into the main `<ul>` |
-| Plain nav item missing `<p>` wrapper | Link is lost | Wrap content in `<p>` |
-| Extra text next to link | Extra text appears in nav label | Keep link text clean |
-| No nav items at all | Header hidden, `[header] Nav structure invalid` warning in console | Ensure main list has items after Languages |
+| Languages not first | Header hidden | Move Languages to top |
+| Languages has no nested `<ul>` | Header hidden + console warning | Add nested `<ul>` with language links |
+| Multiple `<ul>` under Destinations | Warning logged, merge applied | Merge into one `<ul>` |
+| Plain nav item in separate `<ul>` | Warning logged, partial recovery | Move into main `<ul>` |
+| Nav item has no `<p>` and no `<a>` | Label lost | Wrap with `<p>` |
+| Extra text next to link | Extra text in nav label | Keep link text clean |
+| No nav items after Languages | Header hidden + console warning | Add at least one nav item |
+
+---
+
+## 5. Pre-publish Checklist
+
+- [ ] Only ONE root `<ul>` in Section 1
+- [ ] Languages is first item with a nested `<ul>`
+- [ ] Destinations has only ONE nested `<ul>` (sub-categories as `<li>` inside it)
+- [ ] Every nav item label is wrapped in `<p>`
+- [ ] No extra text outside `<a>` tags
+- [ ] Section 2 has a single `<p><a>` CTA link
+- [ ] Section 3 has a single `<picture>` logo
