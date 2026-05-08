@@ -25,14 +25,14 @@
         "component": "text",
         "valueType": "string",
         "name": "nav",
-        "multi": true,
+        "multi": false,
         "label": "Header"
       },
       {
         "component": "text",
         "valueType": "string",
         "name": "footer",
-        "multi": true,
+        "multi": false,
         "label": "Footer"
       }
     ]
@@ -152,6 +152,46 @@
             "value": "highlight"
           }
         ]
+      }
+    ]
+  },
+  {
+    "id": "awards-carousel",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "valueType": "string",
+        "label": "Carousel Title"
+      }
+    ]
+  },
+  {
+    "id": "carousel-cards",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "alt",
+        "label": "Alt Text"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Card Title"
+      },
+      {
+        "component": "richtext",
+        "valueType": "string",
+        "name": "description",
+        "label": "Card Description"
       }
     ]
   },
