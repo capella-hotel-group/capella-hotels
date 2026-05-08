@@ -26,14 +26,14 @@
           "component": "text",
           "valueType": "string",
           "name": "nav",
-          "multi": true,
+          "multi": false,
           "label": "Header"
         },
         {
           "component": "text",
           "valueType": "string",
           "name": "footer",
-          "multi": true,
+          "multi": false,
           "label": "Footer"
         }
       ]
