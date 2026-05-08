@@ -22,6 +22,12 @@
     ]
   },
   {
+    "id": "awards-carousel",
+    "components": [
+      "carousel-cards"
+    ]
+  },
+  {
     "id": "cards",
     "components": [
       "card"
