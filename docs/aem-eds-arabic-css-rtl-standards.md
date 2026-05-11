@@ -527,6 +527,7 @@ const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 ---
 
 ### 3.4 Top 50 LTR Tags for Reference
+<!-- https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry?utm_source=chatgpt.com -->
 
 | # | Tag | Language — Region |
 |---|---|---|

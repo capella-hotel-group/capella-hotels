@@ -7,6 +7,46 @@ if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
   document.documentElement.classList.add('no-touch');
 }
 
+// Known site segments — update when new sites are added.
+const SUPPORTED_SITES = ['global', 'bangkok', 'sanya', 'test-pages'];
+
+// Raw lang slugs that differ from their BCP 47 primary (mirrors scripts.js LANG_MAP).
+const LANG_SLUG_MAP = { jp: true, 'zh-cn': true };
+
+// Minimal set of valid language primaries (mirrors scripts.js VALID_LANG_PRIMARIES).
+const VALID_LANG_PRIMARIES_SET = new Set([
+  'ar', 'en', 'fr', 'de', 'ja', 'ko', 'zh',
+  'he', 'fa', 'ur', 'it', 'es', 'pt', 'ru',
+  'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',
+]);
+
+/**
+ * Parses `window.location.pathname` to extract the raw site and lang segments,
+ * then returns the fallback nav/footer base path (without the endpoint).
+ *
+ * Examples:
+ *   /global/ar/page   → /global/ar
+ *   /global/jp/page   → /global/jp  (raw slug, NOT normalized to 'ja')
+ *   /bangkok/page     → /bangkok    (English — no lang segment)
+ *   /ar/page          → /ar         (no site)
+ *   /page             → ''          (root English)
+ *
+ * @returns {string} base path prefix, e.g. '/global/ar' or '/bangkok' or ''
+ */
+function getFragmentBasePath() {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const siteIdx = segments.findIndex((s) => SUPPORTED_SITES.includes(s));
+  const site = siteIdx !== -1 ? segments[siteIdx] : '';
+
+  const afterSite = siteIdx !== -1 ? segments.slice(siteIdx + 1) : segments;
+  const rawLang = afterSite[0]?.toLowerCase() ?? '';
+  const isLang = rawLang && (LANG_SLUG_MAP[rawLang] || VALID_LANG_PRIMARIES_SET.has(rawLang.split('-')[0]));
+  const lang = (isLang && rawLang !== 'en') ? rawLang : '';
+
+  const parts = [site, lang].filter(Boolean);
+  return parts.length ? `/${parts.join('/')}` : '';
+}
+
 function closeLangDropdown(trigger, dropdown) {
   trigger.setAttribute('aria-expanded', 'false');
   dropdown.classList.remove('is-open');
@@ -413,13 +453,15 @@ function buildMobilePanel(navItems, langList) {
  */
 export default async function decorate(block) {
   const navMeta = getMetadata('nav');
-  const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : '/nav';
+  const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : null;
   const hide = () => {
     const headerEl = block.closest('header') ?? block.closest('.header-wrapper') ?? block;
     headerEl.style.display = 'none';
   };
 
-  const fragment = await loadFragment(navPath);
+  // Option 1: metadata-driven path. Option 2: compute from URL site + lang segments.
+  let fragment = navPath ? await loadFragment(navPath) : null;
+  if (!fragment) fragment = await loadFragment(`${getFragmentBasePath()}/nav`);
   if (!fragment) { hide(); return; }
 
   const sections = [...fragment.children];
@@ -454,13 +496,15 @@ export default async function decorate(block) {
 
   const langZone = buildLangZone(langList);
 
-  // Emblem: direct <img> absolutely centered, wrapped in <a> to navigate home
+  // Emblem: direct <img> absolutely centered, wrapped in <a> to navigate home.
   // Use the active language root path so the link stays in the current locale.
+  // Fallback: URL-derived base path (/{site}/{lang}/) if langList hrefs don't match.
   const currentPath = window.location.pathname;
   const activeLangHref = [...langList.querySelectorAll('li a')]
     .map((a) => a.getAttribute('href'))
     .filter(Boolean)
-    .find((href) => currentPath.startsWith(href)) ?? '/';
+    .find((href) => currentPath.startsWith(href))
+    ?? `${getFragmentBasePath()}/`;
 
   const emblemImg = document.createElement('img');
   emblemImg.src = (logoPicture?.querySelector('img')?.src) ?? '/icons/capella-emblem.svg';
