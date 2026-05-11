@@ -454,11 +454,22 @@ export default async function decorate(block) {
 
   const langZone = buildLangZone(langList);
 
-  // Emblem: direct <img> absolutely centered
-  const emblem = document.createElement('img');
+  // Emblem: direct <img> absolutely centered, wrapped in <a> to navigate home
+  // Use the active language root path so the link stays in the current locale.
+  const currentPath = window.location.pathname;
+  const activeLangHref = [...langList.querySelectorAll('li a')]
+    .map((a) => a.getAttribute('href'))
+    .filter(Boolean)
+    .find((href) => currentPath.startsWith(href)) ?? '/';
+
+  const emblemImg = document.createElement('img');
+  emblemImg.src = (logoPicture?.querySelector('img')?.src) ?? '/icons/capella-emblem.svg';
+  emblemImg.alt = 'Capella Hotels — Home';
+  const emblem = document.createElement('a');
   emblem.className = 'header-emblem';
-  emblem.src = (logoPicture?.querySelector('img')?.src) ?? '/icons/capella-emblem.svg';
-  emblem.alt = '';
+  emblem.href = activeLangHref;
+  emblem.setAttribute('aria-label', 'Capella Hotels — Home');
+  emblem.append(emblemImg);
 
   const mobileToggle = buildMobileToggle();
   const mobileCta = buildMobileCta(ctaAnchor);
