@@ -1,10 +1,10 @@
 ## Why
 
-`getPageLang()` dùng regex `^[a-z]{2,5}$` để detect lang segment từ URL — regex này không phân biệt được ISO 639-1 language codes (`ar`, `en`) với ISO 3166-1 country/market codes (`qa`, `sa`, `ae`). Kết quả: URL như `/qa/ar/page` bị detect là lang `"qa"` thay vì `"ar"`, RTL không được set, Arabic page vỡ layout. Ngoài ra, full BCP 47 tags như `ar-MA`, `ur-IN` cũng không được handle đúng với `LANG_MAP` hiện tại.
+`getPageLang()` uses a regex `^[a-z]{2,5}$` to detect the lang segment from the URL — this regex cannot distinguish ISO 639-1 language codes (`ar`, `en`) from ISO 3166-1 country/market codes (`qa`, `sa`, `ae`). Result: URLs like `/qa/ar/page` are detected as lang `"qa"` instead of `"ar"`, RTL is not set, and Arabic pages break layout. Additionally, full BCP 47 tags like `ar-MA`, `ur-IN` are not handled correctly by the current `LANG_MAP`.
 
 ## What Changes
 
-- **`scripts/scripts.js`**: Thay regex-based detection trong `getPageLang()` bằng validation dựa trên `VALID_LANG_PRIMARIES` set (ISO 639-1 language codes). Segment được accept khi và chỉ khi primary code (`ar` của `ar-MA`) có trong set. URL aliases (`jp` → `ja`) vẫn được xử lý qua `LANG_MAP`. BCP 47 region suffix được normalize về đúng casing (`ar-ma` → `ar-MA`).
+- **`scripts/scripts.js`**: Replace regex-based detection in `getPageLang()` with validation against a `VALID_LANG_PRIMARIES` set (ISO 639-1 language codes). A segment is accepted if and only if its primary code (the `ar` in `ar-MA`) is in the set. URL aliases (`jp` → `ja`) continue to be handled via `LANG_MAP`. BCP 47 region suffixes are normalized to correct casing (`ar-ma` → `ar-MA`).
 
 ## Capabilities
 
@@ -12,11 +12,11 @@
 <!-- none -->
 
 ### Modified Capabilities
-- `rtl-direction-setup`: Requirement thay đổi — lang detection phải validate primary language code qua `VALID_LANG_PRIMARIES` set thay vì regex shape-matching. Phải handle full BCP 47 tags với region suffix (`ar-MA`, `ur-IN`). Phải skip market/country codes (`qa`, `sa`, `ae`) không có trong set.
+- `rtl-direction-setup`: Requirement changed — lang detection must validate the primary language code against the `VALID_LANG_PRIMARIES` set instead of regex shape-matching. Must handle full BCP 47 tags with region suffix (`ar-MA`, `ur-IN`). Must skip market/country codes (`qa`, `sa`, `ae`) not present in the set.
 
 ## Impact
 
-- **`scripts/scripts.js`**: Chỉ hàm `getPageLang()` thay đổi. `applyDirection()` không đổi vì đã có `.split('-')[0]` đúng.
-- **Behavior**: Trang có URL `/qa/ar/` trước đây bị detect sai (`"qa"`) — sau fix sẽ đúng (`"ar"`). Breaking theo chiều tốt.
-- **Extensibility**: Thêm ngôn ngữ mới = thêm 1 entry vào `VALID_LANG_PRIMARIES` và optionally `LANG_MAP` cho aliases.
-- **No CSS changes**: Không có thay đổi CSS, không có thay đổi HTML structure.
+- **`scripts/scripts.js`**: Only `getPageLang()` changes. `applyDirection()` is unchanged because `.split('-')[0]` already handles this correctly.
+- **Behavior**: Pages with URL `/qa/ar/` were previously detected incorrectly (`"qa"`) — after the fix they will be correct (`"ar"`). A breaking change in the right direction.
+- **Extensibility**: Adding a new language = adding one entry to `VALID_LANG_PRIMARIES` and optionally to `LANG_MAP` for aliases.
+- **No CSS changes**: No CSS changes, no HTML structure changes.

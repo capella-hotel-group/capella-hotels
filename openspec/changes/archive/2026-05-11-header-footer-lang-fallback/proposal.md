@@ -1,28 +1,28 @@
 ## Why
 
-Header và footer hiện tại chỉ load fragment từ metadata (`getMetadata('nav')` / `getMetadata('footer')`). Nếu author không set meta trên page hoặc fragment fetch thất bại, header/footer sẽ bị ẩn hoàn toàn. Cần một cơ chế fallback tự động tính đúng path — bao gồm cả site segment (`global`, `bangkok`, `sanya`) và lang segment raw từ URL (`jp`, `zh-cn`, `ar`) — để đảm bảo header/footer luôn hiển thị đúng.
+Header and footer currently only load their fragment from metadata (`getMetadata('nav')` / `getMetadata('footer')`). If an author does not set the meta tag on a page, or if the fragment fetch fails, the header/footer will be completely hidden. An automatic fallback mechanism is needed that correctly computes the path — including the site segment (`global`, `bangkok`, `sanya`) and the raw lang segment from the URL (`jp`, `zh-cn`, `ar`) — to ensure the header/footer always renders correctly.
 
 ## What Changes
 
-- **`blocks/header/header.js`**: Sau khi Option 1 (metadata path) trả về `null`, tự parse URL để lấy site segment và lang segment, build fallback path và thử load lại.
-- **`blocks/footer/footer.js`**: Tương tự — thêm cùng fallback logic.
-- **Emblem href**: Cũng dùng cùng URL-parsed lang segment làm fallback thay vì hardcode `/`.
-- Path fallback theo rule: `/{site}/{lang}/nav`, hoặc `/{site}/nav` nếu `en`, hoặc `/{lang}/nav` nếu không có site.
-- Lang segment được lấy **raw từ URL** (không qua `html[lang]`) để tránh alias normalize (`jp→ja`, `zh-cn→zh-CN`).
+- **`blocks/header/header.js`**: After Option 1 (metadata path) returns `null`, automatically parse the URL to get the site segment and lang segment, build a fallback path, and attempt to load again.
+- **`blocks/footer/footer.js`**: Same — add the same fallback logic.
+- **Emblem href**: Also use the URL-parsed lang segment as a fallback instead of hardcoding `/`.
+- Fallback path rule: `/{site}/{lang}/nav`, or `/{site}/nav` if `en`, or `/{lang}/nav` if no site.
+- Lang segment is taken **raw from the URL** (not via `html[lang]`) to avoid alias normalization (`jp→ja`, `zh-cn→zh-CN`).
 
 ## Capabilities
 
 ### New Capabilities
 
-- `header-footer-lang-fallback`: Cơ chế fallback tự động tính nav/footer/emblem path từ site segment + raw lang segment trong URL khi metadata không có hoặc fragment load thất bại.
+- `header-footer-lang-fallback`: Automatic fallback mechanism that computes nav/footer/emblem paths from the site segment + raw lang segment in the URL when metadata is absent or the fragment fetch fails.
 
 ### Modified Capabilities
 
-- `header-nav-zones`: Thay đổi cách header resolve nav path và emblem href — bổ sung fallback, không thay đổi requirements về layout hay zones.
+- `header-nav-zones`: Changes how the header resolves the nav path and emblem href — adds fallback, does not change layout or zone requirements.
 
 ## Impact
 
-- `blocks/header/header.js` — thêm URL parsing helper + fallback logic trong `decorate()`
-- `blocks/footer/footer.js` — thêm fallback logic trong `decorate()`
-- Không thay đổi `scripts/scripts.js`, `fragment.js`, hay bất kỳ CSS nào
-- Không breaking — Option 1 vẫn chạy trước, fallback chỉ kích hoạt khi cần
+- `blocks/header/header.js` — adds URL parsing helper + fallback logic in `decorate()`
+- `blocks/footer/footer.js` — adds fallback logic in `decorate()`
+- No changes to `scripts/scripts.js`, `fragment.js`, or any CSS
+- Non-breaking — Option 1 still runs first; fallback only activates when needed

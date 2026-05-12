@@ -1,75 +1,75 @@
 ## Context
 
-`header.js` hiện parse `/nav` document với 2 assumptions cứng:
+`header.js` currently parses the `/nav` document with two hard-coded assumptions:
 
-1. `buildDropdown()`: `srcItem.querySelector(':scope > ul')` — chỉ lấy `<ul>` **đầu tiên** trong Destinations `<li>`. Nếu author tạo nhiều `<ul>` riêng biệt cho từng sub-category group, chỉ group đầu tiên được render.
+1. `buildDropdown()`: `srcItem.querySelector(':scope > ul')` — only takes the **first** `<ul>` inside the Destinations `<li>`. If the author creates multiple separate `<ul>` elements for each sub-category group, only the first group is rendered.
 
-2. `decorate()`: `sections[0].querySelector('ul')` — chỉ lấy `<ul>` **đầu tiên** trong section 0. Nếu Experiences bị author đặt vào `<ul>` thứ hai tách biệt, item đó hoàn toàn bị bỏ qua.
+2. `decorate()`: `sections[0].querySelector('ul')` — only takes the **first** `<ul>` in section 0. If Experiences is authored in a separate second `<ul>`, that item is completely ignored.
 
-Cả 2 trường hợp fail silently — header render thiếu items, không có error, không có warning. Author không biết họ nhập sai.
+Both cases fail silently — the header renders with missing items, no error, no warning. The author does not know they entered the wrong structure.
 
-Constraint: Không thể enforce nested list structure ở UE level — component model chỉ validate block-level fields, không validate HTML tree depth.
+Constraint: Nested list structure cannot be enforced at the UE level — the component model only validates block-level fields, not HTML tree depth.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- `buildDropdown()` merge tất cả `<ul>` siblings trong một `<li>` thành 1 flat list sub-categories
-- `decorate()` collect `<li>` từ tất cả `<ul>` trong `sections[0]`, không chỉ `<ul>` đầu tiên
-- `console.warn` rõ ràng khi detect cấu trúc invalid (thiếu lang list, thiếu nav items) để dev/QA biết ngay khi test
-- `docs/header-nav-authoring-guide.md` mô tả đúng/sai với ví dụ HTML cho dev team reference
+- `buildDropdown()` merges all `<ul>` siblings in a `<li>` into a single flat list of sub-categories
+- `decorate()` collects `<li>` from all `<ul>` elements in `sections[0]`, not just the first `<ul>`
+- Clear `console.warn` with `[header]` prefix and a suggested fix path when an invalid structure is detected (missing lang list, missing nav items) so dev/QA knows immediately during testing
+- `docs/header-nav-authoring-guide.md` describes correct/incorrect authoring with HTML examples for the dev team's reference
 
 **Non-Goals:**
-- Không fix text thừa trong link label (e.g. `الخبرات(Experience)`) — đó là content issue
-- Không validate sâu hơn (depth, ordering) — ranh giới: "reasonable authoring variations", không phải "arbitrary broken structure"
-- Không implement UE-level validation — ngoài tầm của block JS
+- No fix for extra text in link labels (e.g. `الخبرات(Experience)`) — that is a content issue
+- No deeper validation (depth, ordering) — boundary: "reasonable authoring variations", not "arbitrary broken structure"
+- No UE-level validation — out of scope for block JS
 
 ## Decisions
 
-### 1. Merge nhiều `<ul>` trong `buildDropdown()` bằng `querySelectorAll` + `flatMap`
+### 1. Merge multiple `<ul>` in `buildDropdown()` using `querySelectorAll` + `flatMap`
 
-**Quyết định**:
+**Decision**:
 ```js
-// Thay thế querySelector(':scope > ul')?.querySelectorAll(':scope > li')
+// Replaces querySelector(':scope > ul')?.querySelectorAll(':scope > li')
 const subItems = [...srcItem.querySelectorAll(':scope > ul')]
   .flatMap((ul) => [...ul.querySelectorAll(':scope > li')]);
 ```
 
-**Tại sao `querySelectorAll` + `flatMap` thay vì chỉ `querySelector`**: Cover được cả structure đúng (1 `<ul>`) lẫn sai (nhiều `<ul>`). Kết quả giống nhau — flat array of `<li>`. Zero overhead.
+**Why `querySelectorAll` + `flatMap` instead of just `querySelector`**: Covers both the correct structure (1 `<ul>`) and the incorrect one (multiple `<ul>`). The result is identical — a flat array of `<li>` elements. Zero overhead.
 
 ---
 
-### 2. Collect từ nhiều `<ul>` root trong `decorate()` bằng `querySelectorAll` + `flatMap`
+### 2. Collect from multiple root `<ul>` in `decorate()` using `querySelectorAll` + `flatMap`
 
-**Quyết định**:
+**Decision**:
 ```js
-// Thay thế sections[0]?.querySelector('ul')
+// Replaces sections[0]?.querySelector('ul')
 const topLevelItems = sections[0]
   ? [...sections[0].querySelectorAll(':scope > ul')]
       .flatMap((ul) => [...ul.querySelectorAll(':scope > li')])
   : [];
 ```
 
-**Tại sao không giữ `querySelector` rồi thêm fallback**: Fallback phức tạp hơn, dễ bug. `querySelectorAll` + `flatMap` đơn giản và idempotent — nếu author nhập đúng (1 `<ul>`), behavior giống hệt như trước.
+**Why not keep `querySelector` and add a fallback**: More complex fallback logic, more error-prone. `querySelectorAll` + `flatMap` is simple and idempotent — if the author inputs correctly (1 `<ul>`), behavior is identical to before.
 
 ---
 
-### 3. `console.warn` thay vì `console.error` hay throw
+### 3. `console.warn` instead of `console.error` or throw
 
-**Quyết định**: Dùng `console.warn` với message rõ `[header]` prefix và path gợi ý fix.
+**Decision**: Use `console.warn` with a clear `[header]` prefix and a message suggesting the fix.
 
-**Tại sao không throw**: AEM EDS không có global error boundary — throw sẽ crash toàn bộ `loadEager()`. `console.warn` đủ để dev/QA thấy trong DevTools mà không ảnh hưởng các block khác.
+**Why not throw**: AEM EDS has no global error boundary — throwing would crash the entire `loadEager()`. `console.warn` is sufficient for dev/QA to see in DevTools without affecting other blocks.
 
-**Tại sao không `console.error`**: Không phải lỗi runtime — là authoring mistake. `warn` level phù hợp hơn.
+**Why not `console.error`**: This is not a runtime error — it is an authoring mistake. `warn` level is more appropriate.
 
 ---
 
-### 4. Authoring guide là Markdown trong `docs/`, không phải inline comment trong `/nav`
+### 4. Authoring guide is Markdown in `docs/`, not an inline comment in `/nav`
 
-**Quyết định**: Tạo `docs/header-nav-authoring-guide.md` trong repo.
+**Decision**: Create `docs/header-nav-authoring-guide.md` in the repo.
 
-**Tại sao không comment trong `/nav` document**: `/nav` sống trong SharePoint/GDocs — comment có thể bị xóa bởi author, không version-controlled. Markdown trong repo được review và track cùng code.
+**Why not a comment in the `/nav` document**: `/nav` lives in SharePoint/GDocs — comments may be deleted by authors and are not version-controlled. Markdown in the repo is reviewed and tracked alongside code.
 
 ## Risks / Trade-offs
 
-- **[Risk] Author tạo cấu trúc sai theo cách khác** → Mitigation: `console.warn` giúp detect nhanh khi QA test. Không thể cover mọi case — ranh giới đã được define rõ.
-- **[Trade-off] `flatMap` merge order phụ thuộc vào DOM order** → Acceptable: DOM order = authoring order, đây là behavior mong muốn.
+- **[Risk] Author creates an invalid structure in a different way** → Mitigation: `console.warn` helps detect it quickly during QA testing. Cannot cover every case — boundary has been clearly defined.
+- **[Trade-off] `flatMap` merge order depends on DOM order** → Acceptable: DOM order = authoring order, which is the desired behavior.
