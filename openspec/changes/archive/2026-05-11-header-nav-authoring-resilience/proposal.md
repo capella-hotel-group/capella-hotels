@@ -1,22 +1,22 @@
 ## Why
 
-`header.js` parse `/nav` document với assumption cứng: Destinations có đúng 1 `<ul>` con, và tất cả nav items nằm trong đúng 1 `<ul>` root. Khi author nhập sai cấu trúc trong Universal Editor (tạo nhiều nested lists cho sub-categories, hoặc tạo list riêng cho Experiences), JS bỏ qua dữ liệu silently — không có error, không có warning, header render thiếu items mà không ai biết tại sao. Cần fix JS defensive + thêm authoring guide để ngăn lỗi tái diễn.
+`header.js` parses the `/nav` document with hard-coded assumptions: Destinations has exactly 1 child `<ul>`, and all nav items live in exactly 1 root `<ul>`. When an author inputs the wrong structure in Universal Editor (creates multiple nested lists for sub-category groups, or creates a separate list for Experiences), JS silently discards the data — no error, no warning, the header renders with missing items and nobody knows why. The JS needs a defensive fix, and an authoring guide needs to be added to prevent the error from recurring.
 
 ## What Changes
 
-- **`blocks/header/header.js`**: Fix `buildDropdown()` để merge nhiều `<ul>` siblings thành 1 danh sách sub-categories. Fix `decorate()` để collect `<li>` từ tất cả `<ul>` trong `sections[0]` thay vì chỉ `<ul>` đầu tiên. Thêm `console.warn` rõ ràng khi detect cấu trúc invalid (thiếu lang list, thiếu nav items).
-- **`docs/header-nav-authoring-guide.md`**: Tạo mới authoring guide với visual diff đúng/sai, rules rõ ràng cho từng phần của `/nav` document.
+- **`blocks/header/header.js`**: Fix `buildDropdown()` to merge multiple `<ul>` siblings into a single flat list of sub-categories. Fix `decorate()` to collect `<li>` from all `<ul>` elements in `sections[0]` instead of only the first `<ul>`. Add clear `console.warn` messages when an invalid structure is detected (missing lang list, missing nav items).
+- **`docs/header-nav-authoring-guide.md`**: Create a new authoring guide with visual correct/incorrect diffs and clear rules for each section of the `/nav` document.
 
 ## Capabilities
 
 ### New Capabilities
-- `header-nav-authoring-guide`: Tài liệu hướng dẫn author cấu trúc đúng cho `/nav` document trong Universal Editor.
+- `header-nav-authoring-guide`: Documentation guiding authors on the correct structure for the `/nav` document in Universal Editor.
 
 ### Modified Capabilities
-- `header-desktop-layout`: JS parse logic của header block thay đổi — defensive hơn với malformed authoring input, có warning rõ ràng khi cấu trúc invalid.
+- `header-desktop-layout`: The JS parse logic of the header block changes — more defensive against malformed authoring input, with clear warnings when the structure is invalid.
 
 ## Impact
 
-- **`blocks/header/header.js`**: `buildDropdown()` và `decorate()` thay đổi parse logic. Backward compatible — structure đúng vẫn hoạt động như cũ.
-- **`docs/header-nav-authoring-guide.md`**: File mới, không impact code.
-- **Breaking**: Không có.
+- **`blocks/header/header.js`**: `buildDropdown()` and `decorate()` change their parse logic. Backward compatible — correct structure still works as before.
+- **`docs/header-nav-authoring-guide.md`**: New file, no code impact.
+- **Breaking**: None.

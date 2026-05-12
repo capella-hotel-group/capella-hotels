@@ -1,22 +1,22 @@
 ## 1. Foundation: scripts/scripts.js
 
-- [x] 1.1 Thêm hàm `getPageLang()` — parse lang từ URL path, skip `"global"`, fallback về `"en"`
-- [x] 1.2 Thêm hàm `applyDirection(lang)` — set `dir="rtl"` và `body.is-rtl` cho RTL langs (`ar`, `he`, `fa`, `ur`)
-- [x] 1.3 Trong `loadEager()`: thay `document.documentElement.lang = 'en'` bằng `const lang = getPageLang()` + `document.documentElement.lang = lang` + `applyDirection(lang)`
-- [x] 1.4 Verify thứ tự: `applyDirection()` chạy trước `decorateTemplateAndTheme()`
+- [x] 1.1 Add `getPageLang()` function — parse lang from URL path, skip `"global"`, fallback to `"en"`
+- [x] 1.2 Add `applyDirection(lang)` function — set `dir="rtl"` and `body.is-rtl` for RTL langs (`ar`, `he`, `fa`, `ur`)
+- [x] 1.3 In `loadEager()`: replace `document.documentElement.lang = 'en'` with `const lang = getPageLang()` + `document.documentElement.lang = lang` + `applyDirection(lang)`
+- [x] 1.4 Verify order: `applyDirection()` runs before `decorateTemplateAndTheme()`
 
 ## 2. Global styles: styles/styles.css
 
-- [x] 2.1 Thêm `[dir="rtl"]` block override `line-height` lên ≥ 1.8 cho body text
-- [x] 2.2 Thêm `[dir="rtl"]` block set `letter-spacing: 0` cho Arabic text
-- [x] 2.3 Thêm global icon flip rules: `[dir="rtl"] [class*="icon-arrow"]`, `[class*="icon-chevron"]`, `[class*="icon-back"]`, `[class*="icon-forward"]`, `[class*="icon-next"]`, `[class*="icon-prev"]` → `transform: scaleX(-1)`
+- [x] 2.1 Add `[dir="rtl"]` block overriding `line-height` to ≥ 1.8 for body text
+- [x] 2.2 Add `[dir="rtl"]` block setting `letter-spacing: 0` for Arabic text
+- [x] 2.3 Add global icon flip rules: `[dir="rtl"] [class*="icon-arrow"]`, `[class*="icon-chevron"]`, `[class*="icon-back"]`, `[class*="icon-forward"]`, `[class*="icon-next"]`, `[class*="icon-prev"]` → `transform: scaleX(-1)`
 
 ## 3. Header block: blocks/header/header.css
 
 - [x] 3.1 `padding-left: 5px` (`.header-lang-trigger::after`) → `padding-inline-start: 5px`
 - [x] 3.2 `left: 0` (`.header-lang-dropdown`) → `inset-inline-start: 0`
 - [x] 3.3 `right: 35px` (`.header-nav-dropdown-close`) → `inset-inline-end: 35px`
-- [x] 3.4 `left: 50%` + `left: 50%` trên close button lines — giữ nguyên (center trick)
+- [x] 3.4 `left: 50%` + `left: 50%` on close button lines — keep as-is (center trick)
 - [x] 3.5 `text-align: left` (`.header-nav-dropdown-cat`) → `text-align: start`
 - [x] 3.6 `text-align: left` (`.header-menu-toggle`) → `text-align: start`
 - [x] 3.7 `text-align: left` (`.header-mobile-nav-link`) → `text-align: start`
@@ -26,7 +26,7 @@
 - [x] 3.11 `padding-left: 0` (`.nav-drop`) → `padding-inline-start: 0`
 - [x] 3.12 `padding-right: 16px` (`.nav-drop`) → `padding-inline-end: 16px`
 - [x] 3.13 `left: -24px` (nav-sections submenu) → `inset-inline-start: -24px`
-- [x] 3.14 Thêm `[dir="rtl"]` override cho nav-sections submenu arrow (`right: 2px` → `inset-inline-end: 2px`)
+- [x] 3.14 Add `[dir="rtl"]` override for nav-sections submenu arrow (`right: 2px` → `inset-inline-end: 2px`)
 
 ## 4. Hero-banner block: blocks/hero-banner/hero-banner.css
 
@@ -50,7 +50,7 @@
 
 ## 7. QA & Verification
 
-- [x] 7.1 Test LTR pages (`/global/en/`) — layout không thay đổi so với trước
-- [x] 7.2 Test RTL bằng cách thêm `dir="rtl"` thủ công vào `<html>` trong DevTools — kiểm tra header, hero-banner, section-intro, text-with-image
-- [x] 7.3 Verify thứ tự execution trong `loadEager()` — `applyDirection()` chạy trước `decorateTemplateAndTheme()`
-- [x] 7.4 Confirm URL convention cho Arabic pages và test `getPageLang()` với URL đó
+- [x] 7.1 Test LTR pages (`/global/en/`) — layout unchanged from before
+- [x] 7.2 Test RTL by manually adding `dir="rtl"` to `<html>` in DevTools — check header, hero-banner, section-intro, text-with-image
+- [x] 7.3 Verify execution order in `loadEager()` — `applyDirection()` runs before `decorateTemplateAndTheme()`
+- [x] 7.4 Confirm URL convention for Arabic pages and test `getPageLang()` with that URL

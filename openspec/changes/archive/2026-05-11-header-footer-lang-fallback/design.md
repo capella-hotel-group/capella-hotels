@@ -1,11 +1,11 @@
 ## Context
 
-Header và footer dùng `loadFragment()` để fetch nội dung từ page riêng (`/nav`, `/footer`) được author trên Universal Editor. Path được xác định qua 2 cách:
+Header and footer use `loadFragment()` to fetch content from a dedicated page (`/nav`, `/footer`) authored in Universal Editor. The path is resolved in two ways:
 
-- **Option 1 (hiện tại)**: Đọc `<meta name="nav">` / `<meta name="footer">` do author set trên page.
-- **Option 2 (mới)**: Tự parse URL để lấy site segment và lang segment, build path tương ứng.
+- **Option 1 (current)**: Read `<meta name="nav">` / `<meta name="footer">` set by the author on the page.
+- **Option 2 (new)**: Parse the URL directly to get the site segment and lang segment, then build the corresponding path.
 
-URL structure thực tế của project:
+Actual URL structure used in this project:
 ```
 /{site}/{lang}/page    → /global/ar/page, /sanya/jp/page
 /{site}/page           → /bangkok/page  (English, no lang segment)
@@ -15,40 +15,40 @@ URL structure thực tế của project:
 
 Site segments: `global`, `bangkok`, `sanya`, `test-pages`.
 
-Lang segments trong URL là **raw slugs**: `jp`, `zh-cn`, `ko`, `ar`, `en` — **không phải BCP 47**. `getPageLang()` trong `scripts.js` normalize chúng (`jp→ja`, `zh-cn→zh-CN`) cho `html[lang]`, nhưng folder trên SharePoint vẫn dùng raw slug. Do đó fallback path phải dùng raw URL segment, không qua `html[lang]`.
+Lang segments in the URL are **raw slugs**: `jp`, `zh-cn`, `ko`, `ar`, `en` — **not BCP 47**. `getPageLang()` in `scripts.js` normalizes them (`jp→ja`, `zh-cn→zh-CN`) for `html[lang]`, but the folders on SharePoint still use the raw slug. Therefore the fallback path must use the raw URL segment, not `html[lang]`.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Header/footer luôn load được khi author quên set metadata
-- Nav/footer path và emblem href đều đúng site + lang segment
-- Raw URL slug được dùng trực tiếp để tránh alias mismatch
+- Header/footer always loads even when the author forgets to set metadata
+- Nav/footer path and emblem href both reflect the correct site + lang segment
+- Raw URL slug is used directly to avoid alias mismatch
 
 **Non-Goals:**
-- Không thay đổi `scripts.js`, `fragment.js`, hay CSS
-- Không handle trường hợp cả 2 option đều fail (đã có hide/return hiện tại)
-- Không validate xem site/lang có tồn tại trên server không
+- No changes to `scripts.js`, `fragment.js`, or CSS
+- No handling of the case where both options fail (existing hide/return behavior is kept)
+- No validation of whether the site/lang exists on the server
 
 ## Decisions
 
-### Dùng raw URL segment thay vì `html[lang]`
+### Use raw URL segment instead of `html[lang]`
 
-`getPageLang()` normalize `jp→ja`, `zh-cn→zh-CN` cho `html[lang]`. Nhưng folder trên SharePoint là `jp/`, `zh-cn/`. Nếu dùng `html[lang].toLowerCase()` sẽ build `/global/ja/nav` trong khi folder thực là `/global/jp/nav` → 404.
+`getPageLang()` normalizes `jp→ja`, `zh-cn→zh-CN` for `html[lang]`. But the folders on SharePoint are `jp/`, `zh-cn/`. Using `html[lang].toLowerCase()` would build `/global/ja/nav` while the actual folder is `/global/jp/nav` → 404.
 
-Dùng raw URL segment parse trực tiếp từ `window.location.pathname` đảm bảo khớp đúng folder.
+Using the raw URL segment parsed directly from `window.location.pathname` ensures the correct folder match.
 
-**Alternatives considered**: `html[lang].toLowerCase()` — đơn giản hơn nhưng sai với `jp` và các alias khác.
+**Alternatives considered**: `html[lang].toLowerCase()` — simpler but incorrect for `jp` and other aliases.
 
-### Parse site segment bằng `supportedSites` list
+### Parse site segment using a `supportedSites` list
 
-Site segment là segment đầu tiên trong pathname match với danh sách `supportedSites`. Lang segment là segment ngay sau site (nếu có và là valid lang). Cả hai được xác định bằng `VALID_LANG_PRIMARIES` + `LANG_MAP` đã có trong `scripts.js` — nhưng do không import được, cần duplicate logic tối giản trong helper.
+The site segment is the first pathname segment matching the `supportedSites` list. The lang segment is the next segment (if present and a valid lang). Both are identified using `VALID_LANG_PRIMARIES` + `LANG_MAP` already in `scripts.js` — but since they cannot be imported, the minimal logic must be duplicated in a helper.
 
-### Fallback chỉ kích hoạt khi Option 1 trả về `null`
+### Fallback only activates when Option 1 returns `null`
 
-Không có double-fetch ở happy path. Option 2 chỉ chạy khi metadata thiếu hoặc fetch fail.
+No double-fetch on the happy path. Option 2 only runs when metadata is missing or the fetch fails.
 
 ## Risks / Trade-offs
 
-- **[Risk] Thêm site vào danh sách nhưng quên update `supportedSites`** → Fallback path build sai (thiếu site segment). Mitigation: document rõ cần update list khi thêm site mới.
-- **[Risk] `jp`, `zh-cn` là raw slugs, không phải tất cả lang slugs đều validate được qua `VALID_LANG_PRIMARIES`** → `jp` không có trong set, cần check `LANG_MAP` trước. Helper phải replicate cả 2 checks.
-- **[Trade-off] Double network request khi Option 1 fail** → Chấp nhận được vì không phải happy path.
+- **[Risk] A new site is added but `supportedSites` is not updated** → Fallback path built incorrectly (missing site segment). Mitigation: Document clearly that the list must be updated when a new site is added.
+- **[Risk] `jp`, `zh-cn` are raw slugs; not all lang slugs validate through `VALID_LANG_PRIMARIES`** → `jp` is not in the set, so `LANG_MAP` must be checked first. The helper must replicate both checks.
+- **[Trade-off] Double network request when Option 1 fails** → Acceptable because this is not the happy path.

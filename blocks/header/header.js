@@ -1,24 +1,13 @@
 import { getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
-import { moveInstrumentation } from '../../scripts/scripts.js';
+import {
+  moveInstrumentation, SUPPORTED_SITES, LANG_MAP, VALID_LANG_PRIMARIES,
+} from '../../scripts/scripts.js';
 
 // Detect touch capability and add class to <html> for CSS hooks
 if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
   document.documentElement.classList.add('no-touch');
 }
-
-// Known site segments — update when new sites are added.
-const SUPPORTED_SITES = ['global', 'bangkok', 'sanya', 'test-pages'];
-
-// Raw lang slugs that differ from their BCP 47 primary (mirrors scripts.js LANG_MAP).
-const LANG_SLUG_MAP = { jp: true, 'zh-cn': true };
-
-// Minimal set of valid language primaries (mirrors scripts.js VALID_LANG_PRIMARIES).
-const VALID_LANG_PRIMARIES_SET = new Set([
-  'ar', 'en', 'fr', 'de', 'ja', 'ko', 'zh',
-  'he', 'fa', 'ur', 'it', 'es', 'pt', 'ru',
-  'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',
-]);
 
 /**
  * Parses `window.location.pathname` to extract the raw site and lang segments,
@@ -36,12 +25,12 @@ const VALID_LANG_PRIMARIES_SET = new Set([
 function getFragmentBasePath() {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const siteIdx = segments.findIndex((s) => SUPPORTED_SITES.includes(s));
-  const site = siteIdx !== -1 ? segments[siteIdx] : '';
+  const site = siteIdx !== -1 ? segments[siteIdx] : 'global';
 
   const afterSite = siteIdx !== -1 ? segments.slice(siteIdx + 1) : segments;
   const rawLang = afterSite[0]?.toLowerCase() ?? '';
-  const isLang = rawLang && (LANG_SLUG_MAP[rawLang] || VALID_LANG_PRIMARIES_SET.has(rawLang.split('-')[0]));
-  const lang = (isLang && rawLang !== 'en') ? rawLang : '';
+  const isLang = rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0]));
+  const lang = isLang ? rawLang : '';
 
   const parts = [site, lang].filter(Boolean);
   return parts.length ? `/${parts.join('/')}` : '';

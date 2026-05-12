@@ -48,16 +48,19 @@ export function moveInstrumentation(from, to) {
 
 const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 
+// Known site segments — update when a new site is added.
+export const SUPPORTED_SITES = ['global', 'bangkok', 'sanya', 'test-pages'];
+
 // Maps URL path slugs to valid BCP 47 language tags.
 // Only needed for slugs that differ from the BCP 47 primary (e.g. "jp" → "ja").
-const LANG_MAP = {
+export const LANG_MAP = {
   'zh-cn': 'zh-CN',
   jp: 'ja',
 };
 
 // Valid ISO 639-1 language primaries supported by this site.
 // Used to distinguish language codes (ar, en) from market/country codes (qa, sa, ae).
-const VALID_LANG_PRIMARIES = new Set([
+export const VALID_LANG_PRIMARIES = new Set([
   'ar', 'en', 'fr', 'de', 'ja', 'ko', 'zh',
   'he', 'fa', 'ur', 'it', 'es', 'pt', 'ru',
   'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',

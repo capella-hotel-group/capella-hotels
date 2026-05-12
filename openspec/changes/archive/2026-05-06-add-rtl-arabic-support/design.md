@@ -1,62 +1,62 @@
 ## Context
 
-Codebase hiện tại là AEM Edge Delivery Services + Universal Editor (Xwalk). Tất cả blocks render phía client, CSS được load qua `loadCSS()`. `scripts.js` là entry point — mọi thứ bắt đầu từ `loadEager()`.
+The codebase is AEM Edge Delivery Services + Universal Editor (Xwalk). All blocks render client-side, CSS is loaded via `loadCSS()`. `scripts.js` is the entry point — everything starts from `loadEager()`.
 
-Vấn đề hiện tại:
-- `document.documentElement.lang` hardcode `'en'` trong `loadEager()` — không phản ánh đúng ngôn ngữ trang
-- Không có `dir` attribute trên `<html>` — browser không biết render RTL
-- CSS các block dùng physical properties (`left`, `right`, `padding-left`...) — sẽ vỡ layout trong RTL
+Current problems:
+- `document.documentElement.lang` is hardcoded to `'en'` in `loadEager()` — does not reflect the actual page language
+- No `dir` attribute on `<html>` — the browser does not know to render RTL
+- CSS blocks use physical properties (`left`, `right`, `padding-left`...) — these will break layout in RTL
 
-Constraint quan trọng: `dir="rtl"` **phải được set trước** khi bất kỳ block nào được decorated, vì CSS `[dir="rtl"]` selectors cần biết context ngay lúc render. Nếu set sau, sẽ có layout flash.
+Key constraint: `dir="rtl"` **must be set before** any block is decorated, because CSS `[dir="rtl"]` selectors need to know the context at render time. Setting it later will cause a layout flash.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Set `lang` đúng từ URL path thay vì hardcode
-- Set `dir="rtl"` trên `<html>` trước `decorateTemplateAndTheme()` và `decorateMain()`
-- Tất cả CSS blocks dùng logical properties — tự mirror mà không cần JS thêm
-- `[dir="rtl"]` overrides cho các trường hợp logical properties không đủ (absolute positioning phức tạp)
-- RTL typography adjustments qua CSS variables (line-height, letter-spacing)
+- Set `lang` correctly from the URL path instead of hardcoding
+- Set `dir="rtl"` on `<html>` before `decorateTemplateAndTheme()` and `decorateMain()`
+- All CSS blocks use logical properties — auto-mirror without extra JS
+- `[dir="rtl"]` overrides for cases where logical properties are insufficient (complex absolute positioning)
+- RTL typography adjustments via CSS variables (line-height, letter-spacing)
 
 **Non-Goals:**
-- Không thêm Arabic font mới — dùng font stack hiện có (`Calibre`, `Goudy`)
-- Không xử lý bidi text mixing (`<bdi>` tag) trong scope này — đó là responsibility của content authors
-- Không implement language switching UI — header hiện có đã có lang selector
-- Không xử lý số, ngày tháng format — nằm ngoài scope CSS/JS
+- No new Arabic font — reuse existing font stack (`Calibre`, `Goudy`)
+- No bidi text mixing (`<bdi>` tag) handling in this scope — that is the responsibility of content authors
+- No language switching UI — the existing header already has a lang selector
+- No number or date format handling — out of scope for CSS/JS
 
 ## Decisions
 
-### 1. Lang detection từ URL path
+### 1. Lang detection from URL path
 
-**Quyết định**: Parse lang từ URL path segment, fallback về `'en'`.
+**Decision**: Parse lang from the URL path segment, fallback to `'en'`.
 
 ```js
 const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 
 function getPageLang() {
   const segments = window.location.pathname.split('/').filter(Boolean);
-  // Convention: /global/<lang>/... hoặc /<lang>/...
-  // Tìm segment đầu tiên khớp BCP 47 pattern (2-5 ký tự, không phải 'global')
+  // Convention: /global/<lang>/... or /<lang>/...
+  // Find the first segment matching the BCP 47 pattern (2-5 chars, not 'global')
   const lang = segments.find((s) => s !== 'global' && /^[a-z]{2,5}(-[a-z]{2,4})?$/i.test(s));
   return lang || 'en';
 }
 ```
 
-**Tại sao không dùng `<meta name="lang">`**: AEM EDS không guarantee meta tag này có mặt trên mọi trang. URL là source of truth đáng tin cậy hơn.
+**Why not `<meta name="lang">`**: AEM EDS does not guarantee this meta tag is present on every page. The URL is a more reliable source of truth.
 
-**Tại sao không dùng `document.documentElement.lang` từ HTML**: AEM EDS render HTML shell trước khi content load — giá trị này có thể chưa đúng lúc `loadEager()` chạy.
+**Why not `document.documentElement.lang` from HTML**: AEM EDS renders the HTML shell before content loads — this value may not be correct when `loadEager()` runs.
 
 ---
 
-### 2. `applyDirection()` chạy trong `loadEager()` trước decoration
+### 2. `applyDirection()` runs inside `loadEager()` before decoration
 
-**Quyết định**: Gọi `applyDirection()` ngay đầu `loadEager()`, trước `decorateTemplateAndTheme()`.
+**Decision**: Call `applyDirection()` at the top of `loadEager()`, before `decorateTemplateAndTheme()`.
 
 ```js
 async function loadEager(doc) {
   const lang = getPageLang();
   document.documentElement.lang = lang;
-  applyDirection(lang);           // ← trước mọi decoration
+  applyDirection(lang);           // ← before all decoration
   decorateTemplateAndTheme();
   ...
 }
@@ -70,50 +70,50 @@ function applyDirection(lang) {
 }
 ```
 
-**Tại sao không dùng CSS `:lang(ar)` selector thay vì JS**: CSS `:lang()` chỉ hoạt động sau khi `lang` attribute được set — vẫn cần JS set `dir`. Ngoài ra `[dir="rtl"]` selector rõ ràng hơn về intent.
+**Why not CSS `:lang(ar)` selector instead of JS**: CSS `:lang()` only works after the `lang` attribute is set — JS still needs to set `dir`. Also, `[dir="rtl"]` selectors are clearer in intent.
 
 ---
 
-### 3. Logical properties cho CSS — không dùng JS để flip layout
+### 3. Logical properties in CSS — no JS to flip layout
 
-**Quyết định**: Thay physical properties (`left`, `right`, `padding-left`...) bằng CSS logical properties (`inset-inline-start`, `padding-inline-start`...). Chỉ dùng `[dir="rtl"]` selector cho cases phức tạp (absolute positioning với calc, flex-direction reversal).
+**Decision**: Replace physical properties (`left`, `right`, `padding-left`...) with CSS logical properties (`inset-inline-start`, `padding-inline-start`...). Use `[dir="rtl"]` selectors only for complex cases (absolute positioning with calc, flex-direction reversal).
 
-**Tại sao không dùng JS để swap class/style**: CSS logical properties là standard, zero-JS, không có reflow sau khi `dir` được set. Performant hơn và dễ maintain hơn.
+**Why not JS to swap classes/styles**: CSS logical properties are standard, zero-JS, with no reflow after `dir` is set. More performant and easier to maintain.
 
-**Tại sao không dùng CSS `transform: scaleX(-1)` trên toàn block**: Sẽ flip cả text và images — không acceptable.
-
----
-
-### 4. RTL typography qua CSS variables, không thêm font mới
-
-**Quyết định**: Override `[dir="rtl"]` block trong `styles.css` để điều chỉnh `line-height` (tăng lên ~1.8) và `letter-spacing: 0` (Arabic không dùng letter-spacing). Dùng lại font stack hiện có.
-
-**Tại sao**: Arabic text cần line-height cao hơn Latin để diacritics không bị cắt. `letter-spacing` với Arabic phá vỡ character connections (kashida). Font `Calibre` và `Goudy` có Unicode coverage đủ cho Arabic display cơ bản.
+**Why not `transform: scaleX(-1)` on the entire block**: This would flip both text and images — not acceptable.
 
 ---
 
-### 5. Icon flip — chỉ directional icons
+### 4. RTL typography via CSS variables, no new fonts
 
-**Quyết định**: Dùng `[dir="rtl"] [class*="icon-arrow"]`, `[class*="icon-chevron"]`... với `transform: scaleX(-1)`. Icons neutral (close, logo) không flip.
+**Decision**: Override the `[dir="rtl"]` block in `styles.css` to adjust `line-height` (increase to ~1.8) and `letter-spacing: 0` (Arabic does not use letter-spacing). Reuse the existing font stack.
+
+**Why**: Arabic text needs a higher line-height than Latin so diacritics are not clipped. `letter-spacing` on Arabic breaks character connections (kashida). `Calibre` and `Goudy` fonts have sufficient Unicode coverage for basic Arabic display.
+
+---
+
+### 5. Icon flip — directional icons only
+
+**Decision**: Use `[dir="rtl"] [class*="icon-arrow"]`, `[class*="icon-chevron"]`... with `transform: scaleX(-1)`. Neutral icons (close, logo) are not flipped.
 
 ## Risks / Trade-offs
 
-- **[Risk] URL convention chưa thống nhất** → Lang detection có thể parse sai nếu URL pattern của Arabic pages khác `/global/ar/`. Mitigation: Cần confirm URL pattern trước khi ship, regex trong `getPageLang()` dễ adjust.
+- **[Risk] URL convention not yet agreed upon** → Lang detection may parse incorrectly if Arabic page URL patterns differ from `/global/ar/`. Mitigation: Confirm URL pattern before shipping; the regex in `getPageLang()` is easy to adjust.
 
-- **[Risk] Font `Calibre` không có Arabic glyphs** → Browser sẽ fallback về system Arabic font (thường là Arial hoặc system default) — layout có thể khác kỳ vọng. Mitigation: Test trực tiếp trên Arabic content, nếu cần thiết mới add Arabic font riêng trong phase sau.
+- **[Risk] `Calibre` font has no Arabic glyphs** → Browser will fall back to system Arabic font (typically Arial or system default) — layout may differ from expectations. Mitigation: Test directly on Arabic content; add a dedicated Arabic font in a later phase only if needed.
 
-- **[Risk] `body.classList.add('is-rtl')` chạy sau khi `body` render** → Có thể gây flash nếu có JS khác đọc class này. Mitigation: `is-rtl` chỉ dùng cho CSS `body.is-rtl` selectors nếu cần, không dùng cho JS logic.
+- **[Risk] `body.classList.add('is-rtl')` runs after `body` renders** → May cause a flash if other JS reads this class. Mitigation: `is-rtl` is used only for CSS `body.is-rtl` selectors when needed, not for JS logic.
 
-- **[Trade-off] Logical properties không support IE11** → Không phải concern với AEM EDS — target là modern browsers.
+- **[Trade-off] Logical properties do not support IE11** → Not a concern for AEM EDS — target is modern browsers.
 
 ## Migration Plan
 
-1. Ship `scripts.js` changes trước — đây là foundation, không break LTR pages (nếu URL không chứa lang segment, fallback về `'en'`).
-2. Ship `styles.css` changes — purely additive (`[dir="rtl"]` chỉ activate khi có attribute).
-3. Ship từng block CSS — có thể merge riêng, không phụ thuộc nhau.
-4. Rollback: Revert `scripts.js` về hardcode `lang='en'` — `dir` attribute sẽ không được set, RTL CSS không activate.
+1. Ship `scripts.js` changes first — this is the foundation; does not break LTR pages (if URL has no lang segment, falls back to `'en'`).
+2. Ship `styles.css` changes — purely additive (`[dir="rtl"]` activates only when the attribute is present).
+3. Ship each block CSS separately — can be merged independently, no interdependencies.
+4. Rollback: Revert `scripts.js` to hardcoded `lang='en'` — `dir` attribute will not be set, RTL CSS will not activate.
 
 ## Open Questions
 
-- URL pattern cho Arabic pages là gì? `/ar/...` hay `/global/ar/...`? → Ảnh hưởng đến regex trong `getPageLang()`.
-- `Calibre` font có Arabic glyph coverage không? → Cần test với Arabic content thật.
+- What is the URL pattern for Arabic pages? `/ar/...` or `/global/ar/...`? → Affects the regex in `getPageLang()`.
+- Does the `Calibre` font have Arabic glyph coverage? → Needs testing with real Arabic content.
