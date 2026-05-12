@@ -1,24 +1,17 @@
 import { getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
-import { moveInstrumentation } from '../../scripts/scripts.js';
-
-// Known site segments — mirrors header.js SUPPORTED_SITES.
-const SUPPORTED_SITES = ['global', 'bangkok', 'sanya', 'test-pages'];
-const LANG_SLUG_MAP = { jp: true, 'zh-cn': true };
-const VALID_LANG_PRIMARIES_SET = new Set([
-  'ar', 'en', 'fr', 'de', 'ja', 'ko', 'zh',
-  'he', 'fa', 'ur', 'it', 'es', 'pt', 'ru',
-  'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',
-]);
+import {
+  moveInstrumentation, SUPPORTED_SITES, LANG_MAP, VALID_LANG_PRIMARIES,
+} from '../../scripts/scripts.js';
 
 function getFragmentBasePath() {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const siteIdx = segments.findIndex((s) => SUPPORTED_SITES.includes(s));
-  const site = siteIdx !== -1 ? segments[siteIdx] : '';
+  const site = siteIdx !== -1 ? segments[siteIdx] : 'global';
   const afterSite = siteIdx !== -1 ? segments.slice(siteIdx + 1) : segments;
   const rawLang = afterSite[0]?.toLowerCase() ?? '';
-  const isLang = rawLang && (LANG_SLUG_MAP[rawLang] || VALID_LANG_PRIMARIES_SET.has(rawLang.split('-')[0]));
-  const lang = (isLang && rawLang !== 'en') ? rawLang : '';
+  const isLang = rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0]));
+  const lang = isLang ? rawLang : '';
   const parts = [site, lang].filter(Boolean);
   return parts.length ? `/${parts.join('/')}` : '';
 }
