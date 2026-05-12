@@ -527,7 +527,7 @@ const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 ---
 
 ### 3.4 Top 50 LTR Tags for Reference
-
+<!-- Full language list reference https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry -->
 | # | Tag | Language — Region |
 |---|---|---|
 | 1 | `en` | English — Generic |
