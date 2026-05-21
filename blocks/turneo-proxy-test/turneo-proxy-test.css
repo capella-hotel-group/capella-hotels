@@ -62,7 +62,6 @@
     outline: none;
     cursor: pointer;
     appearance: none;
-    -webkit-appearance: none;
     transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
@@ -287,5 +286,5 @@
     border: 1px solid #fca5a5;
     margin: 0;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }
