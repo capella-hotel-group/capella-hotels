@@ -177,9 +177,12 @@ function buildFilter(onSearch) {
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     btn.textContent = 'Searching\u2026';
-    await onSearch(fromInput.value, toInput.value);
-    btn.disabled = false;
-    btn.textContent = 'Search';
+    try {
+      await onSearch(fromInput.value, toInput.value);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Search';
+    }
   });
 
   bar.append(fromGroup, toGroup, btn);
