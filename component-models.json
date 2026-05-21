@@ -254,8 +254,14 @@
         "multi": false,
         "required": true,
         "options": [
-          { "name": "Image", "value": "image" },
-          { "name": "Video", "value": "video" }
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
         ]
       },
       {
@@ -286,7 +292,9 @@
         "valueType": "string",
         "condition": {
           "===": [
-            { "var": "media" },
+            {
+              "var": "media"
+            },
             "video"
           ]
         }
@@ -298,7 +306,9 @@
         "valueType": "string",
         "condition": {
           "===": [
-            { "var": "media" },
+            {
+              "var": "media"
+            },
             "video"
           ]
         }
@@ -427,5 +437,9 @@
         "valueType": "string"
       }
     ]
+  },
+  {
+    "id": "turneo-proxy-test",
+    "fields": []
   }
 ]
