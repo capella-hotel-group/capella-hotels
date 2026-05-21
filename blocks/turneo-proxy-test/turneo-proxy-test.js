@@ -142,7 +142,8 @@ function buildDateField(id, label) {
   input.type = 'date';
   input.id = `tpt-${id}`;
   input.className = 'turneo-proxy-test-filter-input';
-  input.min = new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  input.min = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   inputWrap.append(icon, input);
   group.append(lbl, inputWrap);
