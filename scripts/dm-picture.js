@@ -29,20 +29,17 @@ async function detectOrientation(dmUrl) {
       const metaUrl = `${dmUrl.split('?')[0]}?representation=metadata`;
       const resp = await fetch(metaUrl);
       const data = await resp.json();
-      width  = data?.assetMetadata?.['tiff:ImageWidth']  || 0;
+      width = data?.assetMetadata?.['tiff:ImageWidth'] || 0;
       height = data?.assetMetadata?.['tiff:ImageLength'] || 0;
-
     } else if (dmUrl.includes('/is/image/')) {
       // ── Scene7 / legacy DM ──
       const infoUrl = `${dmUrl.split('?')[0]}?req=imageinfo&fmt=json`;
       const resp = await fetch(infoUrl);
       const data = await resp.json();
-      width  = data?.imageInfo?.width  || 0;
+      width = data?.imageInfo?.width || 0;
       height = data?.imageInfo?.height || 0;
     }
-
     return width >= height ? 'landscape' : 'portrait';
-
   } catch {
     // Safe fallback — landscape is the most common hero orientation
     return 'landscape';
@@ -81,7 +78,6 @@ export async function buildResponsivePicture(dmUrl, altText, blockKey) {
   // 1. Look up the preset config for this block
   const blockConfig = DM_BLOCK_PRESETS[blockKey];
   if (!blockConfig) {
-    console.error(`[dm-picture] No preset config for block key: "${blockKey}"`);
     return null;
   }
 
@@ -98,13 +94,13 @@ export async function buildResponsivePicture(dmUrl, altText, blockKey) {
   // All others become <source> elements.
   sources.forEach((entry, index) => {
     const isLast = index === sources.length - 1;
-    const url    = applyPreset(dmUrl, entry.preset);
+    const url = applyPreset(dmUrl, entry.preset);
 
     if (isLast) {
       // ── <img> fallback ──
       const img = document.createElement('img');
-      img.src      = url;
-      img.alt      = altText || '';
+      img.src = url;
+      img.alt = altText || '';
       img.loading  = 'lazy';
       img.decoding = 'async';
       picture.appendChild(img);

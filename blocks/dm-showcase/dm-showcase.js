@@ -10,12 +10,11 @@ export default async function decorate(block) {
   // UE puts a linked image: <a href="...dm-url..."><img ...></a>
   // Fall back to reading the <img src> directly if no anchor.
   const anchor = imageCell.querySelector('a');
-  const img    = imageCell.querySelector('img');
-  const dmUrl  = anchor?.href || img?.src || '';
+  const img = imageCell.querySelector('img');
+  const dmUrl = anchor?.href || img?.src || '';
   const altText = img?.alt || '';
 
   if (!dmUrl) {
-    console.warn('[dm-showcase] No DM URL found in image cell');
     return;
   }
 
