@@ -18,7 +18,7 @@
 //   That's it. No other file needs to change.
 // ─────────────────────────────────────────────────────────────
 
-export default const DM_BLOCK_PRESETS = {
+const DM_BLOCK_PRESETS = {
 
   'dm-showcase': {
     landscape: {
@@ -37,3 +37,4 @@ export default const DM_BLOCK_PRESETS = {
   },
     // Add more blocks below — copy the pattern above
   };
+export default DM_BLOCK_PRESETS;

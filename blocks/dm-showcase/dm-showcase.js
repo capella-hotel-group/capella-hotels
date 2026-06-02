@@ -1,4 +1,4 @@
-import { buildResponsivePicture } from '../../scripts/dm-picture.js';
+import buildResponsivePicture from '../../scripts/dm-picture.js';
 
 export default async function decorate(block) {
   // UE / EDS authoring produces two cells in a row:

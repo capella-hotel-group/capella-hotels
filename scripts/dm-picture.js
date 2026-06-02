@@ -5,7 +5,7 @@
 // they ever need.
 // ─────────────────────────────────────────────────────────────
 
-import { DM_BLOCK_PRESETS } from './dm-presets.js';
+import DM_BLOCK_PRESETS from './dm-presets.js';
 
 // ── STEP A: Detect orientation ────────────────────────────────
 //
