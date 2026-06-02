@@ -234,6 +234,35 @@
     ]
   },
   {
+    "id": "dm-editorial",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "imageHorizontal",
+        "label": "Horizontal Image (Landscape)",
+        "multi": false
+      },
+      {
+        "component": "richtext",
+        "name": "textHorizontal",
+        "label": "Horizontal Caption Text"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "imageVertical",
+        "label": "Vertical Image (Portrait)",
+        "multi": false
+      },
+      {
+        "component": "richtext",
+        "name": "textVertical",
+        "label": "Vertical Body Text"
+      }
+    ]
+  },
+  {
     "id": "dm-showcase",
     "fields": [
       {
