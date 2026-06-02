@@ -24,17 +24,17 @@ const DM_BLOCK_PRESETS = {
     landscape: {
       sources: [
         { media: '(min-width: 1024px)', preset: 'dmShowcaseLandscapeDesktop' },
-        { media: '(min-width: 600px)',  preset: 'dmShowcaseLandscapeTablet'  },
-        {                               preset: 'dmShowcaseLandscapeMobile'  },
+        { media: '(min-width: 600px)', preset: 'dmShowcaseLandscapeTablet' },
+        { preset: 'dmShowcaseLandscapeMobile' },
       ],
     },
     portrait: {
       sources: [
         { media: '(min-width: 768px)', preset: 'dmShowcasePortraitDesktop' },
-        {                              preset: 'dmShowcasePortraitMobile'  },
+        { preset: 'dmShowcasePortraitMobile' },
       ],
     },
   },
-    // Add more blocks below — copy the pattern above
-  };
+  // Add more blocks below — copy the pattern above
+};
 export default DM_BLOCK_PRESETS;
