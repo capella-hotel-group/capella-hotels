@@ -9,7 +9,7 @@
     display: contents;
   }
   
-  @media (min-width: 768px) {
+  @media (width >= 768px) {
     .dm-showcase {
       grid-template-columns: 1fr 1fr;
       align-items: center;
