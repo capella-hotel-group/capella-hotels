@@ -74,7 +74,7 @@ function applyPreset(baseUrl, presetName) {
 // @param {string} blockKey - Must match a key in DM_BLOCK_PRESETS
 // @returns {Promise<HTMLPictureElement|null>}
 
-export async function buildResponsivePicture(dmUrl, altText, blockKey) {
+export default async function buildResponsivePicture(dmUrl, altText, blockKey) {
   // 1. Look up the preset config for this block
   const blockConfig = DM_BLOCK_PRESETS[blockKey];
   if (!blockConfig) {
@@ -101,13 +101,13 @@ export async function buildResponsivePicture(dmUrl, altText, blockKey) {
       const img = document.createElement('img');
       img.src = url;
       img.alt = altText || '';
-      img.loading  = 'lazy';
+      img.loading = 'lazy';
       img.decoding = 'async';
       picture.appendChild(img);
     } else {
       // ── <source> for this breakpoint ──
       const source = document.createElement('source');
-      source.media  = entry.media;
+      source.media = entry.media;
       source.srcset = url;
       picture.appendChild(source);
     }

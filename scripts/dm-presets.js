@@ -20,20 +20,20 @@
 
 export const DM_BLOCK_PRESETS = {
 
-'dm-showcase': {
-  landscape: {
-    sources: [
-      { media: '(min-width: 1024px)', preset: 'dmShowcaseLandscapeDesktop' },
-      { media: '(min-width: 600px)',  preset: 'dmShowcaseLandscapeTablet'  },
-      {                               preset: 'dmShowcaseLandscapeMobile'  },
-    ],
-  },
-  portrait: {
-    sources: [
-      { media: '(min-width: 768px)', preset: 'dmShowcasePortraitDesktop' },
-      {                              preset: 'dmShowcasePortraitMobile'  },
-    ],
-  },
-},
+    'dm-showcase': {
+        landscape: {
+            sources: [
+                { media: '(min-width: 1024px)', preset: 'dmShowcaseLandscapeDesktop' },
+                { media: '(min-width: 600px)', preset: 'dmShowcaseLandscapeTablet' },
+                { preset: 'dmShowcaseLandscapeMobile' },
+            ],
+        },
+        portrait: {
+            sources: [
+                { media: '(min-width: 768px)', preset: 'dmShowcasePortraitDesktop' },
+                { preset: 'dmShowcasePortraitMobile' },
+            ],
+        },
+    },
     // Add more blocks below — copy the pattern above
   };
