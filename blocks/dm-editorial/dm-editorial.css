@@ -1,0 +1,118 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * dm-editorial.css
+ *
+ * Two-section editorial layout:
+ *
+ *   HORIZONTAL SECTION (top)
+ *     Mobile:  image full-width, text below
+ *     Desktop: image full-width with text overlaid at bottom (caption style)
+ *
+ *   VERTICAL SECTION (bottom)
+ *     Mobile:  image full-width, text below
+ *     Desktop: portrait image left (40%), text right (60%)
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Shared block reset ────────────────────────────────────────────────────── */
+.dm-editorial {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+  
+  /* ── HORIZONTAL SECTION ────────────────────────────────────────────────────── */
+  
+  .dm-editorial-horizontal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Desktop: text overlaid on image as a caption bar */
+  @media (width >= 768px) {
+    .dm-editorial-horizontal {
+      gap: 0;
+    }
+  
+    .dm-editorial-horizontal picture {
+      display: block;
+      width: 100%;
+    }
+  
+    /* Text sits below image on desktop too — clean editorial style */
+    .dm-editorial-text--horizontal {
+      padding: 1rem 0 0;
+      border-top: 2px solid currentcolor;
+    }
+  }
+  
+  .dm-editorial-horizontal picture img {
+    width: 100%;
+    height: auto;
+    display: block;
+
+    /* Landscape image — enforce aspect ratio so it never collapses */
+    aspect-ratio: 16 / 6;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .dm-editorial-text--horizontal h2,
+  .dm-editorial-text--horizontal h3 {
+    margin-top: 0;
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  }
+  
+  .dm-editorial-text--horizontal p {
+    margin: 0.5rem 0 0;
+    font-size: 0.95rem;
+    opacity: 0.8;
+  }
+  
+  /* ── VERTICAL SECTION ──────────────────────────────────────────────────────── */
+  
+  .dm-editorial-vertical {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  /* Desktop: portrait image left, text right */
+  @media (width >= 768px) {
+    .dm-editorial-vertical {
+      grid-template-columns: 2fr 3fr; /* 40% image / 60% text */
+      align-items: start;
+      gap: 2.5rem;
+    }
+  }
+  
+  .dm-editorial-vertical picture {
+    display: block;
+    width: 100%;
+  }
+  
+  .dm-editorial-vertical picture img {
+    width: 100%;
+    height: auto;
+    display: block;
+
+    /* Portrait image — enforce aspect ratio */
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .dm-editorial-text--vertical {
+    padding: 0.5rem 0;
+  }
+  
+  .dm-editorial-text--vertical h2,
+  .dm-editorial-text--vertical h3 {
+    margin-top: 0;
+    font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+  }
+  
+  .dm-editorial-text--vertical p {
+    line-height: 1.7;
+    font-size: 1rem;
+  }
