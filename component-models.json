@@ -234,6 +234,23 @@
     ]
   },
   {
+    "id": "dm-showcase",
+    "fields": [
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "DM Image",
+        "multi": false
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "label": "Text Content"
+      }
+    ]
+  },
+  {
     "id": "fragment",
     "fields": [
       {

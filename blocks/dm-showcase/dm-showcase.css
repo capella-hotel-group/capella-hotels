@@ -1,0 +1,38 @@
+/* dm-showcase: image left, text right on tablet+ */
+.dm-showcase {
+    display: grid;
+    grid-template-columns: 1fr;   /* stacked on mobile */
+    gap: 1.5rem;
+  }
+  
+  .dm-showcase > div {            /* the single row wrapper EDS creates */
+    display: contents;
+  }
+  
+  @media (width >= 768px) {
+    .dm-showcase {
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+    }
+  }
+  
+  .dm-showcase picture {
+    display: block;
+    width: 100%;
+  }
+  
+  .dm-showcase picture img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+  }
+  
+  .dm-showcase-text {
+    padding: 1rem 0;
+  }
+  
+  .dm-showcase-text h2,
+  .dm-showcase-text h3 {
+    margin-top: 0;
+  }
