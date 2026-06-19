@@ -1,8 +1,0 @@
-.newsletter-form-block{max-width:420px;margin:0 auto;padding:24px}
-.newsletter-title{text-align:center;font-family: 'Goudy', serif;margin-bottom:16px}
-.newsletter-form select, .newsletter-form input[type="text"], .newsletter-form input[type="email"]{width:100%;padding:14px;border-radius:28px;border:1px solid #e6e6e6;margin-bottom:12px}
-.name-row{display:flex;gap:12px}
-.name-row input{flex:1}
-.newsletter-submit{display:block;margin:20px auto;padding:12px 32px;border-radius:30px;background:#fff;border:1px solid #ddd}
-.consent-row{font-size:13px;color:#666;margin-top:8px}
-.sr-only{position:absolute;left:-9999px}
