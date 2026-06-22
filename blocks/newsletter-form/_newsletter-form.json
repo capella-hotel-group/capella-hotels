@@ -20,69 +20,43 @@
   ],
   "models": [
     {
-      "id": "hero-banner",
+      "id": "newsletter-form",
       "fields": [
         {
           "component": "select",
-          "name": "media",
-          "label": "Media Type",
+          "name": "Salutation",
+          "label": "Salutation",
           "valueType": "string",
-          "multi": false,
-          "required": true,
           "options": [
-            { "name": "Image", "value": "image" },
-            { "name": "Video", "value": "video" }
-          ]
-        },
-        {
-          "component": "reference",
-          "name": "mediaAsset",
-          "label": "Media Asset",
-          "valueType": "string",
+            { "name": "Mr.", "value": "Mr." },
+            { "name": "Mrs.", "value": "Mrs." },
+            { "name": "Ms.", "value": "Ms." },
+            { "name": "Dr.", "value": "Dr." },
+            { "name": "Prof.", "value": "Prof." }
+          ],
           "required": true
         },
+        { "component": "text", "name": "FirstName", "label": "First Name", "valueType": "string", "required": true },
+        { "component": "text", "name": "LastName", "label": "Last Name", "valueType": "string", "required": true },
+        { "component": "text", "name": "Email", "label": "Email Address", "valueType": "string", "required": true },
         {
-          "component": "reference",
-          "name": "logo",
-          "label": "Logo",
+          "component": "select",
+          "name": "Country",
+          "label": "Country",
           "valueType": "string",
-          "condition": {
-            "===": [
-              { "var": "media" },
-              "image"
-            ]
-          }
+          "options": [
+            { "name": "Singapore", "value": "SG" },
+            { "name": "Australia", "value": "AU" },
+            { "name": "United States", "value": "US" },
+            { "name": "United Kingdom", "value": "GB" }
+          ],
+          "required": true
         },
-        {
-          "component": "reference",
-          "name": "mediaAssetMobile",
-          "label": "Media Asset (Mobile Video)",
-          "valueType": "string",
-          "condition": {
-            "===": [
-              { "var": "media" },
-              "video"
-            ]
-          }
-        },
-        {
-          "component": "text",
-          "name": "ctaLabel",
-          "label": "CTA Label",
-          "valueType": "string",
-          "condition": {
-            "===": [
-              { "var": "media" },
-              "video"
-            ]
-          }
-        },
-        {
-          "component": "richtext",
-          "name": "content",
-          "label": "Content",
-          "valueType": "string"
-        }
+        { "component": "text", "name": "Property", "label": "Property", "valueType": "string" },
+        { "component": "text", "name": "Timestamp", "label": "Timestamp", "valueType": "string" },
+        { "component": "text", "name": "Language", "label": "Language", "valueType": "string" },
+        { "component": "text", "name": "Consent", "label": "Consent", "valueType": "string" },
+        { "component": "text", "name": "Source", "label": "Source", "valueType": "string" }
       ]
     }
   ],
