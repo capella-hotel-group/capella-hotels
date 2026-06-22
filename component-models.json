@@ -382,6 +382,13 @@
         "value": "Salutation"
       },
       {
+        "component": "richtext",
+        "name": "salutationOptions",
+        "label": "Salutation Options (one per line, optional VALUE|Label)",
+        "valueType": "string",
+        "value": "Mr.\nMrs.\nMs.\nDr.\nProf."
+      },
+      {
         "component": "text",
         "name": "firstNameLabel",
         "label": "First Name Field Label",
@@ -408,6 +415,13 @@
         "label": "Country Field Label",
         "valueType": "string",
         "value": "Country"
+      },
+      {
+        "component": "richtext",
+        "name": "countryOptions",
+        "label": "Country Options (one per line as VALUE|Label)",
+        "valueType": "string",
+        "value": "SG|Singapore\nAU|Australia\nUS|United States\nGB|United Kingdom"
       },
       {
         "component": "richtext",
