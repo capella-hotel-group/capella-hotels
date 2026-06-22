@@ -1,0 +1,146 @@
+
+/* newsletter-form styles — uses logical properties for RTL support */
+
+.newsletter-form-element {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 520px;
+    margin-inline: auto;
+    padding: 40px;
+    background-color: var(--light-color);
+    text-align: start;
+}
+
+.newsletter-form-element .newsletter-title {
+    margin: 0 0 10px;
+    font-family: var(--heading-light-font-family);
+    font-size: var(--heading-font-size-l);
+    font-weight: 300;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.newsletter-form-element .newsletter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.newsletter-form-element .newsletter-field label {
+    font-size: var(--body-font-size-xs);
+    font-family: var(--body-font-family);
+    color: var(--dark-color);
+    letter-spacing: 0.04em;
+}
+
+.newsletter-form-element input,
+.newsletter-form-element select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--body-font-family);
+    font-size: var(--body-font-size-xs);
+}
+
+.newsletter-form-element input:focus,
+.newsletter-form-element select:focus {
+    outline: 2px solid var(--header-cta-bg);
+    outline-offset: 1px;
+    border-color: var(--header-cta-bg);
+}
+
+.newsletter-form-element input:user-invalid,
+.newsletter-form-element select:user-invalid {
+    border-color: #c0392b;
+}
+
+/* Two fields side-by-side; stacks on small screens */
+.newsletter-form-element .newsletter-name-row {
+    display: flex;
+    gap: 16px;
+}
+
+.newsletter-form-element .newsletter-name-row .newsletter-field {
+    flex: 1;
+}
+
+/* Consent checkbox row */
+.newsletter-form-element .newsletter-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.newsletter-form-element .newsletter-consent input {
+    width: auto;
+    margin-block-start: 3px;
+    flex-shrink: 0;
+}
+
+.newsletter-form-element .newsletter-consent label {
+    font-size: var(--body-font-size-xs);
+    line-height: 1.4;
+    color: var(--dark-color);
+}
+
+.newsletter-form-element .newsletter-consent a {
+    color: var(--link-color);
+    text-decoration: underline;
+}
+
+.newsletter-form-element .newsletter-consent a:hover {
+    color: var(--link-hover-color);
+}
+
+/* Submit button */
+.newsletter-form-element .newsletter-submit {
+    padding: 14px 24px;
+    border: none;
+    background-color: var(--header-cta-bg);
+    color: #fff;
+    font-family: var(--body-font-family);
+    font-size: var(--body-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--header-letter-spacing);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.newsletter-form-element .newsletter-submit:hover {
+    background-color: var(--header-cta-hover-bg);
+}
+
+.newsletter-form-element .newsletter-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Feedback message */
+.newsletter-form-element .newsletter-message {
+    min-height: 1.2em;
+    font-size: var(--body-font-size-xs);
+}
+
+.newsletter-form-element .newsletter-message.is-success {
+    color: #2e7d32;
+}
+
+.newsletter-form-element .newsletter-message.is-error {
+    color: #c0392b;
+}
+
+@media (width <=767px) {
+    .newsletter-form-element {
+        padding: 24px;
+    }
+
+    .newsletter-form-element .newsletter-name-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
