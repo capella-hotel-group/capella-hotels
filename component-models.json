@@ -368,109 +368,74 @@
     "id": "newsletter-form",
     "fields": [
       {
-        "component": "select",
-        "name": "Salutation",
-        "label": "Salutation",
+        "component": "text",
+        "name": "title",
+        "label": "Form Title",
         "valueType": "string",
-        "options": [
-          {
-            "name": "Mr.",
-            "value": "Mr."
-          },
-          {
-            "name": "Mrs.",
-            "value": "Mrs."
-          },
-          {
-            "name": "Ms.",
-            "value": "Ms."
-          },
-          {
-            "name": "Dr.",
-            "value": "Dr."
-          },
-          {
-            "name": "Prof.",
-            "value": "Prof."
-          }
-        ],
-        "required": true
+        "value": "Subscribe to our newsletter"
       },
       {
         "component": "text",
-        "name": "FirstName",
-        "label": "First Name",
+        "name": "salutationLabel",
+        "label": "Salutation Field Label",
         "valueType": "string",
-        "required": true
+        "value": "Salutation"
       },
       {
         "component": "text",
-        "name": "LastName",
-        "label": "Last Name",
+        "name": "firstNameLabel",
+        "label": "First Name Field Label",
         "valueType": "string",
-        "required": true
+        "value": "First Name"
       },
       {
         "component": "text",
-        "name": "Email",
-        "label": "Email Address",
+        "name": "lastNameLabel",
+        "label": "Last Name Field Label",
         "valueType": "string",
-        "required": true
+        "value": "Last Name"
       },
       {
-        "component": "select",
-        "name": "Country",
-        "label": "Country",
+        "component": "text",
+        "name": "emailLabel",
+        "label": "Email Field Label",
         "valueType": "string",
-        "options": [
-          {
-            "name": "Singapore",
-            "value": "SG"
-          },
-          {
-            "name": "Australia",
-            "value": "AU"
-          },
-          {
-            "name": "United States",
-            "value": "US"
-          },
-          {
-            "name": "United Kingdom",
-            "value": "GB"
-          }
-        ],
-        "required": true
+        "value": "Email Address"
       },
       {
         "component": "text",
-        "name": "Property",
-        "label": "Property",
-        "valueType": "string"
+        "name": "countryLabel",
+        "label": "Country Field Label",
+        "valueType": "string",
+        "value": "Country"
+      },
+      {
+        "component": "richtext",
+        "name": "consentMessage",
+        "label": "Consent Checkbox Text",
+        "valueType": "string",
+        "value": "I would like to receive updates and offers from Capella Hotel Group."
       },
       {
         "component": "text",
-        "name": "Timestamp",
-        "label": "Timestamp",
-        "valueType": "string"
+        "name": "submitLabel",
+        "label": "Submit Button Label",
+        "valueType": "string",
+        "value": "Continue"
       },
       {
         "component": "text",
-        "name": "Language",
-        "label": "Language",
-        "valueType": "string"
+        "name": "endpoint",
+        "label": "Submission Endpoint (POST URL)",
+        "valueType": "string",
+        "value": "/api/leads"
       },
       {
         "component": "text",
-        "name": "Consent",
-        "label": "Consent",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "Source",
-        "label": "Source",
-        "valueType": "string"
+        "name": "source",
+        "label": "Lead Source",
+        "valueType": "string",
+        "value": "website"
       }
     ]
   },
