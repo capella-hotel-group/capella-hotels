@@ -20,7 +20,7 @@ module.exports = {
     'no-param-reassign': [2, { props: false }], // allow modifying properties of param
     'xwalk/max-cells': ['error', {
       '*': 8, // limit number of cells in a block to 8
-      'newsletter-form': 12, // authorable salutation/country option lists add 2 fields
+      'newsletter-form': 12, // limit number of cells in newsletter form to 12
     }],
   },
 };
