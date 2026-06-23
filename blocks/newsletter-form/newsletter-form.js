@@ -1,7 +1,7 @@
 import { getEnv } from '../../scripts/env.js';
 
-// Fixed option lists for the select fields. Labels for these fields are
-// author-configurable via the block dialog; the option values are stable.
+// Fallback option lists, used only when the author leaves the corresponding
+// options field empty in the block dialog.
 const SALUTATIONS = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
 const COUNTRIES = [
   { value: 'SG', label: 'Singapore' },
@@ -13,15 +13,17 @@ const COUNTRIES = [
 // Authored row order — must match the field order in `_newsletter-form.json`.
 const ROW = {
   TITLE: 0,
-  SALUTATION: 1,
-  FIRST_NAME: 2,
-  LAST_NAME: 3,
-  EMAIL: 4,
-  COUNTRY: 5,
-  CONSENT: 6,
-  SUBMIT: 7,
-  ENDPOINT: 8,
-  SOURCE: 9,
+  SALUTATION_LABEL: 1,
+  SALUTATION_OPTIONS: 2,
+  FIRST_NAME: 3,
+  LAST_NAME: 4,
+  EMAIL: 5,
+  COUNTRY_LABEL: 6,
+  COUNTRY_OPTIONS: 7,
+  CONSENT: 8,
+  SUBMIT: 9,
+  ENDPOINT: 10,
+  SOURCE: 11,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -32,6 +34,32 @@ function rowText(rows, index) {
 /** Reads the inner HTML of an authored row's value cell (for richtext). */
 function rowHTML(rows, index) {
   return rows[index]?.querySelector(':scope > div')?.innerHTML?.trim() ?? '';
+}
+
+/**
+ * Parses an authored options cell into a list of { value, label }.
+ * Each line (a <p> or <li>) is one option. Authors may use a `VALUE|Label`
+ * syntax to set a distinct submitted value (e.g. `SG|Singapore`); when the
+ * pipe is omitted, the text is used for both value and label.
+ * Returns the provided fallback list when the cell is empty.
+ */
+function parseOptions(rows, index, fallback) {
+  const cell = rows[index]?.querySelector(':scope > div');
+  if (!cell) return fallback;
+
+  const lineEls = [...cell.querySelectorAll('p, li')];
+  const lines = (lineEls.length ? lineEls.map((el) => el.textContent) : cell.textContent.split('\n'))
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return fallback;
+
+  return lines.map((line) => {
+    const [first, ...rest] = line.split('|');
+    const value = first.trim();
+    const label = rest.length ? rest.join('|').trim() : value;
+    return { value, label };
+  });
 }
 
 /** Creates a labelled field wrapper containing the given input/select. */
@@ -136,11 +164,13 @@ export default function decorate(block) {
   // ── Read authored labels / config (the dialog inputs) ────────────────────
   const cfg = {
     title: rowText(rows, ROW.TITLE) || 'Subscribe to our newsletter',
-    salutationLabel: rowText(rows, ROW.SALUTATION) || 'Salutation',
+    salutationLabel: rowText(rows, ROW.SALUTATION_LABEL) || 'Salutation',
+    salutationOptions: parseOptions(rows, ROW.SALUTATION_OPTIONS, SALUTATIONS),
     firstNameLabel: rowText(rows, ROW.FIRST_NAME) || 'First Name',
     lastNameLabel: rowText(rows, ROW.LAST_NAME) || 'Last Name',
     emailLabel: rowText(rows, ROW.EMAIL) || 'Email Address',
-    countryLabel: rowText(rows, ROW.COUNTRY) || 'Country',
+    countryLabel: rowText(rows, ROW.COUNTRY_LABEL) || 'Country',
+    countryOptions: parseOptions(rows, ROW.COUNTRY_OPTIONS, COUNTRIES),
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
     endpoint: rowText(rows, ROW.ENDPOINT) || '/api/leads',
@@ -159,7 +189,7 @@ export default function decorate(block) {
   const salutation = buildField(
     'newsletter-salutation',
     cfg.salutationLabel,
-    buildSelect('Salutation', cfg.salutationLabel, SALUTATIONS),
+    buildSelect('Salutation', cfg.salutationLabel, cfg.salutationOptions),
   );
 
   const firstName = buildField(
@@ -187,7 +217,7 @@ export default function decorate(block) {
   const country = buildField(
     'newsletter-country',
     cfg.countryLabel,
-    buildSelect('Country', cfg.countryLabel, COUNTRIES),
+    buildSelect('Country', cfg.countryLabel, cfg.countryOptions),
   );
 
   // Consent checkbox — uses an internal control name; value is mapped to

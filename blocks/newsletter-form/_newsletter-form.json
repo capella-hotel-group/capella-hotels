@@ -23,9 +23,11 @@
       "fields": [
         { "component": "text", "name": "title", "label": "Form Title", "valueType": "string", "value": "Subscribe to our newsletter" },
         { "component": "text", "name": "salutationLabel", "label": "Salutation Field Label", "valueType": "string", "value": "Salutation" },
+        { "component": "richtext", "name": "salutationOptions", "label": "Salutation Options (one per line, optional VALUE|Label)", "valueType": "string", "value": "Mr.\nMrs.\nMs.\nDr.\nProf." },
         { "component": "text", "name": "firstNameLabel", "label": "First Name Field Label", "valueType": "string", "value": "First Name" },
         { "component": "text", "name": "lastNameLabel", "label": "Last Name Field Label", "valueType": "string", "value": "Last Name" },
         { "component": "text", "name": "emailLabel", "label": "Email Field Label", "valueType": "string", "value": "Email Address" },        { "component": "text", "name": "countryLabel", "label": "Country Field Label", "valueType": "string", "value": "Country" },
+        { "component": "richtext", "name": "countryOptions", "label": "Country Options (one per line as VALUE|Label)", "valueType": "string", "value": "SG|Singapore\nAU|Australia\nUS|United States\nGB|United Kingdom" },
         { "component": "richtext", "name": "consentMessage", "label": "Consent Checkbox Text", "valueType": "string", "value": "I would like to receive updates and offers from Capella Hotel Group." },
         { "component": "text", "name": "submitLabel", "label": "Submit Button Label", "valueType": "string", "value": "Continue" },
         { "component": "text", "name": "endpoint", "label": "Submission Endpoint (POST URL)", "valueType": "string", "value": "/api/leads" },
