@@ -44,6 +44,15 @@ export function getPublishBaseUrl() {
   return publishBaseUrlCache;
 }
 
+/**
+ * Returns the base path/origin for server-side API calls (e.g. AEM `/bin`
+ * servlets), selected based on the current environment. No trailing slash.
+ * @returns {string} Base URL, e.g. `https://publish-p152536-e1620746.adobeaemcloud.com`
+ */
+export function getBasePathBasedOnEnv() {
+  return getPublishBaseUrl();
+}
+
 export function getEnv() {
   if (typeof window === 'undefined') return 'rde';
   const { hostname } = window.location;

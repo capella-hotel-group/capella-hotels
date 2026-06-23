@@ -1,4 +1,7 @@
-import { getEnv } from '../../scripts/env.js';
+import { getEnv, getBasePathBasedOnEnv } from '../../scripts/env.js';
+
+// Fixed submission endpoint — resolved per environment, not author-editable.
+const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/news.json`;
 
 // Fallback option lists, used only when the author leaves the corresponding
 // options field empty in the block dialog.
@@ -22,8 +25,7 @@ const ROW = {
   COUNTRY_OPTIONS: 7,
   CONSENT: 8,
   SUBMIT: 9,
-  ENDPOINT: 10,
-  SOURCE: 11,
+  SOURCE: 10,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -123,12 +125,13 @@ async function submitForm(form, config, message, submitBtn) {
   const payload = Object.fromEntries(new FormData(form).entries());
 
   // Auto-mapped metadata (not visitor-entered).
-  payload.Consent = form.querySelector('[name="consentCheckbox"]')?.checked ? 'TRUE' : 'FALSE';
+  // Consent is implied by submitting the form (the consent line is shown above
+  // the submit button), so it is always recorded as TRUE.
+  payload.Consent = 'TRUE';
   payload.Timestamp = new Date().toISOString();
   payload.Language = document.documentElement.lang || 'en';
   payload.Source = config.source || 'website';
   payload.Environment = getEnv();
-  delete payload.consentCheckbox; // internal control, replaced by Consent
 
   message.textContent = '';
   message.className = 'newsletter-message';
@@ -173,7 +176,6 @@ export default function decorate(block) {
     countryOptions: parseOptions(rows, ROW.COUNTRY_OPTIONS, COUNTRIES),
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
-    endpoint: rowText(rows, ROW.ENDPOINT) || '/api/leads',
     source: rowText(rows, ROW.SOURCE) || 'website',
   };
 
@@ -189,7 +191,7 @@ export default function decorate(block) {
   const salutation = buildField(
     'newsletter-salutation',
     cfg.salutationLabel,
-    buildSelect('Salutation', cfg.salutationLabel, cfg.salutationOptions),
+    buildSelect('Salutation', 'Select', cfg.salutationOptions),
   );
 
   const firstName = buildField(
@@ -217,22 +219,15 @@ export default function decorate(block) {
   const country = buildField(
     'newsletter-country',
     cfg.countryLabel,
-    buildSelect('Country', cfg.countryLabel, cfg.countryOptions),
+    buildSelect('Country', 'Select', cfg.countryOptions),
   );
 
-  // Consent checkbox — uses an internal control name; value is mapped to
-  // `Consent` (TRUE/FALSE) at submit time.
+  // Consent notice — an informational line (no checkbox). By submitting the
+  // form the visitor agrees to this statement; `Consent` is recorded as TRUE.
   const consentWrapper = document.createElement('div');
   consentWrapper.className = 'newsletter-consent';
-  const consentInput = document.createElement('input');
-  consentInput.type = 'checkbox';
-  consentInput.id = 'newsletter-consent';
-  consentInput.name = 'consentCheckbox';
-  consentInput.required = true;
-  const consentLabel = document.createElement('label');
-  consentLabel.setAttribute('for', 'newsletter-consent');
-  consentLabel.innerHTML = cfg.consentHTML || 'I agree to receive updates.';
-  consentWrapper.append(consentInput, consentLabel);
+  consentWrapper.innerHTML = cfg.consentHTML
+    || 'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
 
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
@@ -261,7 +256,7 @@ export default function decorate(block) {
       form.reportValidity();
       return;
     }
-    submitForm(form, { endpoint: cfg.endpoint, source: cfg.source }, message, submitBtn);
+    submitForm(form, { endpoint: API_ENDPOINT, source: cfg.source }, message, submitBtn);
   });
 
   // ── Replace authored rows with the finished form ─────────────────────────
