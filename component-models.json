@@ -426,9 +426,9 @@
       {
         "component": "richtext",
         "name": "consentMessage",
-        "label": "Consent Checkbox Text",
+        "label": "Consent Notice Text",
         "valueType": "string",
-        "value": "I would like to receive updates and offers from Capella Hotel Group."
+        "value": "I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href=\"/privacy\">View our Privacy Policy</a>."
       },
       {
         "component": "text",
@@ -436,13 +436,6 @@
         "label": "Submit Button Label",
         "valueType": "string",
         "value": "Continue"
-      },
-      {
-        "component": "text",
-        "name": "endpoint",
-        "label": "Submission Endpoint (POST URL)",
-        "valueType": "string",
-        "value": "/api/leads"
       },
       {
         "component": "text",

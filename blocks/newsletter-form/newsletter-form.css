@@ -69,20 +69,8 @@
     flex: 1;
 }
 
-/* Consent checkbox row */
+/* Consent notice line (informational text, no checkbox) */
 .newsletter-form-element .newsletter-consent {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.newsletter-form-element .newsletter-consent input {
-    width: auto;
-    margin-block-start: 3px;
-    flex-shrink: 0;
-}
-
-.newsletter-form-element .newsletter-consent label {
     font-size: var(--body-font-size-xs);
     line-height: 1.4;
     color: var(--dark-color);
