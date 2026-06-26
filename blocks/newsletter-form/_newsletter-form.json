@@ -29,8 +29,7 @@
         { "component": "text", "name": "emailLabel", "label": "Email Field Label", "valueType": "string", "value": "Email Address" },        { "component": "text", "name": "countryLabel", "label": "Country Field Label", "valueType": "string", "value": "Country" },
         { "component": "richtext", "name": "countryOptions", "label": "Country Options (one per line as VALUE|Label)", "valueType": "string", "value": "SG|Singapore\nAU|Australia\nUS|United States\nGB|United Kingdom" },
         { "component": "richtext", "name": "consentMessage", "label": "Consent Notice Text", "valueType": "string", "value": "I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href=\"/privacy\">View our Privacy Policy</a>." },
-        { "component": "text", "name": "submitLabel", "label": "Submit Button Label", "valueType": "string", "value": "Continue" },
-        { "component": "text", "name": "source", "label": "Lead Source", "valueType": "string", "value": "website" }
+        { "component": "text", "name": "submitLabel", "label": "Submit Button Label", "valueType": "string", "value": "Continue" }
       ]
     }
   ],
