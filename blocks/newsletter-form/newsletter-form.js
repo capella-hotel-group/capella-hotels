@@ -1,4 +1,5 @@
 import { getEnv, getBasePathBasedOnEnv } from '../../scripts/env.js';
+import { getPageLang } from '../../scripts/scripts.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/news.json`;
@@ -13,6 +14,21 @@ const COUNTRIES = [
   { value: 'GB', label: 'United Kingdom' },
 ];
 
+// Maps a location found in the page URL to its display name and Capella
+// property code. Used to auto-derive Property (name) and Source (code) on submit.
+const PROPERTY_CODES = [
+  { keys: ['bangkok'], name: 'Capella Bangkok', code: 'CPBAN' },
+  { keys: ['hanoi'], name: 'Capella Hanoi', code: 'CPHAN' },
+  { keys: ['kyoto'], name: 'Capella Kyoto', code: 'CPKYO' },
+  { keys: ['macau', 'macao'], name: 'Capella Macau', code: 'CPMAC' },
+  { keys: ['sanya', 'tufu'], name: 'Capella Sanya', code: 'CPSAN' },
+  { keys: ['shanghai'], name: 'Capella Shanghai', code: 'CPSHA' },
+  { keys: ['singapore'], name: 'Capella Singapore', code: 'CPSIN' },
+  { keys: ['sydney'], name: 'Capella Sydney', code: 'CPSYD' },
+  { keys: ['taipei'], name: 'Capella Taipei', code: 'CPTAI' },
+  { keys: ['ubud'], name: 'Capella Ubud', code: 'CPUBU' },
+];
+
 // Authored row order — must match the field order in `_newsletter-form.json`.
 const ROW = {
   TITLE: 0,
@@ -25,7 +41,6 @@ const ROW = {
   COUNTRY_OPTIONS: 7,
   CONSENT: 8,
   SUBMIT: 9,
-  SOURCE: 10,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -62,6 +77,21 @@ function parseOptions(rows, index, fallback) {
     const label = rest.length ? rest.join('|').trim() : value;
     return { value, label };
   });
+}
+
+/**
+ * Derives the Capella property from the current page URL by matching a known
+ * location keyword in the path. The path is tokenized on slashes, hyphens and
+ * underscores, so a location matches whether it stands alone (`/bangkok`) or is
+ * part of a larger slug (`/capella-bangkok/...`).
+ * @returns {{ name: string, code: string } | null} The matched property, or null.
+ */
+function resolveProperty() {
+  const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
+  // Split into tokens so `bangkok` matches in `/bangkok` and `/capella-bangkok/`
+  // alike, without the substring false positives of a plain `includes` check.
+  const tokens = path.split(/[/_-]+/).filter(Boolean);
+  return PROPERTY_CODES.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
 }
 
 /** Creates a labelled field wrapper containing the given input/select. */
@@ -116,7 +146,7 @@ function buildInput(name, type, placeholder) {
 /**
  * Collects every form entry plus auto-mapped metadata and POSTs it as JSON.
  * @param {HTMLFormElement} form
- * @param {{ endpoint: string, source: string }} config
+ * @param {{ endpoint: string }} config
  * @param {HTMLElement} message Live-region element for feedback
  * @param {HTMLButtonElement} submitBtn
  */
@@ -125,12 +155,15 @@ async function submitForm(form, config, message, submitBtn) {
   const payload = Object.fromEntries(new FormData(form).entries());
 
   // Auto-mapped metadata (not visitor-entered).
-  // Consent is implied by submitting the form (the consent line is shown above
-  // the submit button), so it is always recorded as TRUE.
-  payload.Consent = 'TRUE';
-  payload.Timestamp = new Date().toISOString();
-  payload.Language = document.documentElement.lang || 'en';
-  payload.Source = config.source || 'website';
+  // Prefer the <html lang> attribute; if it is missing (e.g. block decorated
+  // before scripts.js sets it), derive the language from the URL path instead.
+  payload.Language = document.documentElement.lang || getPageLang();
+  // Property is the location name and Source is the property code (CP...),
+  // both derived from the page URL. On non-property pages Property is empty and
+  // Source falls back to 'website'.
+  const property = resolveProperty();
+  payload.Property = property ? property.name : '';
+  payload.Source = property ? property.code : 'website';
   payload.Environment = getEnv();
 
   message.textContent = '';
@@ -176,7 +209,6 @@ export default function decorate(block) {
     countryOptions: parseOptions(rows, ROW.COUNTRY_OPTIONS, COUNTRIES),
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
-    source: rowText(rows, ROW.SOURCE) || 'website',
   };
 
   // ── Build the real <form> ────────────────────────────────────────────────
@@ -223,7 +255,7 @@ export default function decorate(block) {
   );
 
   // Consent notice — an informational line (no checkbox). By submitting the
-  // form the visitor agrees to this statement; `Consent` is recorded as TRUE.
+  // form the visitor agrees to this statement.
   const consentWrapper = document.createElement('div');
   consentWrapper.className = 'newsletter-consent';
   consentWrapper.innerHTML = cfg.consentHTML
@@ -256,7 +288,7 @@ export default function decorate(block) {
       form.reportValidity();
       return;
     }
-    submitForm(form, { endpoint: API_ENDPOINT, source: cfg.source }, message, submitBtn);
+    submitForm(form, { endpoint: API_ENDPOINT }, message, submitBtn);
   });
 
   // ── Replace authored rows with the finished form ─────────────────────────
