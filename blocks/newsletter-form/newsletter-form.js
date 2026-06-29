@@ -144,19 +144,6 @@ function buildInput(name, type, placeholder) {
 }
 
 /**
- * Formats a Date as `yyyy-MM-dd'T'HH:mm:ss.SSS` in local time (no timezone
- * suffix), e.g. `2026-06-26T10:15:30.000`.
- * @param {Date} [date=new Date()] The date to format.
- * @returns {string}
- */
-function formatTimestamp(date = new Date()) {
-  const pad = (n, len = 2) => String(n).padStart(len, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-    + `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-    + `.${pad(date.getMilliseconds(), 3)}`;
-}
-
-/**
  * Collects every form entry plus auto-mapped metadata and POSTs it as JSON.
  * @param {HTMLFormElement} form
  * @param {{ endpoint: string }} config
@@ -168,10 +155,6 @@ async function submitForm(form, config, message, submitBtn) {
   const payload = Object.fromEntries(new FormData(form).entries());
 
   // Auto-mapped metadata (not visitor-entered).
-  // Consent is implied by submitting the form (the consent line is shown above
-  // the submit button), so it is always recorded as TRUE.
-  payload.Consent = 'TRUE';
-  payload.Timestamp = formatTimestamp();
   // Prefer the <html lang> attribute; if it is missing (e.g. block decorated
   // before scripts.js sets it), derive the language from the URL path instead.
   payload.Language = document.documentElement.lang || getPageLang();
@@ -272,7 +255,7 @@ export default function decorate(block) {
   );
 
   // Consent notice — an informational line (no checkbox). By submitting the
-  // form the visitor agrees to this statement; `Consent` is recorded as TRUE.
+  // form the visitor agrees to this statement.
   const consentWrapper = document.createElement('div');
   consentWrapper.className = 'newsletter-consent';
   consentWrapper.innerHTML = cfg.consentHTML
