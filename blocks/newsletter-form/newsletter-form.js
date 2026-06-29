@@ -2,7 +2,7 @@ import { getEnv, getBasePathBasedOnEnv } from '../../scripts/env.js';
 import { getPageLang } from '../../scripts/scripts.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
-const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/news.json`;
+const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/newslettersubscription.json`;
 
 // Fallback option lists, used only when the author leaves the corresponding
 // options field empty in the block dialog.
