@@ -4,8 +4,13 @@ import { getPageLang } from '../../scripts/scripts.js';
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/newslettersubscription.json`;
 
-// Fallback option lists, used only when the author leaves the corresponding
-// options field empty in the block dialog.
+// Persisted GraphQL query that returns a Content Fragment "list" by path. The
+// authored CF path is appended as `;path=<cfPath>`, e.g.
+// /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
+const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
+
+// Fallback option lists, used when the author leaves the Content Fragment path
+// empty or when the referenced fragment cannot be loaded.
 const SALUTATIONS = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
 const COUNTRIES = [
   { value: 'SG', label: 'Singapore' },
@@ -30,6 +35,8 @@ const PROPERTY_CODES = [
 ];
 
 // Authored row order — must match the field order in `_newsletter-form.json`.
+// SALUTATION_OPTIONS and COUNTRY_OPTIONS are Content Fragment paths whose
+// entries populate the corresponding dropdowns.
 const ROW = {
   TITLE: 0,
   SALUTATION_LABEL: 1,
@@ -54,29 +61,114 @@ function rowHTML(rows, index) {
 }
 
 /**
- * Parses an authored options cell into a list of { value, label }.
- * Each line (a <p> or <li>) is one option. Authors may use a `VALUE|Label`
- * syntax to set a distinct submitted value (e.g. `SG|Singapore`); when the
- * pipe is omitted, the text is used for both value and label.
- * Returns the provided fallback list when the cell is empty.
+ * Reads a Content Fragment path from an `aem-content` row. The picker renders
+ * the selected path as a link; fall back to the cell's text if it is stored as
+ * plain text.
  */
-function parseOptions(rows, index, fallback) {
+function rowLink(rows, index) {
   const cell = rows[index]?.querySelector(':scope > div');
-  if (!cell) return fallback;
+  if (!cell) return '';
+  const link = cell.querySelector('a');
+  return (link?.getAttribute('href') || cell.textContent || '').trim();
+}
 
-  const lineEls = [...cell.querySelectorAll('p, li')];
-  const lines = (lineEls.length ? lineEls.map((el) => el.textContent) : cell.textContent.split('\n'))
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (!lines.length) return fallback;
-
-  return lines.map((line) => {
+/**
+ * Normalises a single raw Content Fragment entry into a { value, label } pair.
+ * Accepts either a `VALUE|Label` string (label optional) or an object using any
+ * of the common key names (value/code/key/id and label/name/title/text).
+ * @returns {{ value: string, label: string } | null}
+ */
+function normalizeOption(item) {
+  if (typeof item === 'string') {
+    const line = item.trim();
+    if (!line) return null;
     const [first, ...rest] = line.split('|');
     const value = first.trim();
-    const label = rest.length ? rest.join('|').trim() : value;
-    return { value, label };
-  });
+    return { value, label: rest.length ? rest.join('|').trim() : value };
+  }
+  if (item && typeof item === 'object') {
+    const value = item.value ?? item.code ?? item.key ?? item.id
+      ?? item.label ?? item.name ?? item.title;
+    if (value == null) return null;
+    const label = item.label ?? item.name ?? item.title ?? item.text ?? value;
+    return { value: String(value).trim(), label: String(label).trim() };
+  }
+  return null;
+}
+
+// Field names a Content Fragment might use to hold its list of options.
+const OPTION_KEYS = ['options', 'items', 'elements', 'values', 'list', 'salutations', 'countries'];
+
+/**
+ * Extracts the raw list of option entries from the query response, tolerating
+ * the shapes AEM commonly returns: the GraphQL persisted-query envelope
+ * (`{ data: { <model>List: { items: [{ listItems: [...] }] } } }`), a bare
+ * array, a model field that is an array, a single multiline text field (one
+ * option per line), or the nested JCR export (`jcr:content/data/master`).
+ */
+function collectRawItems(data) {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return [];
+
+  // GraphQL persisted-query envelope: drill into `data` → `<model>List.items`.
+  if (data.data && typeof data.data === 'object') {
+    const node = Object.values(data.data).find((v) => v && typeof v === 'object');
+    const items = Array.isArray(node?.items)
+      ? node.items
+      : Object.values(data.data).find((v) => Array.isArray(v));
+    if (Array.isArray(items)) {
+      // Each list fragment holds its options in a nested array field
+      // (e.g. `listItems`); flatten those out. Items without a nested array are
+      // treated as option entries themselves.
+      return items.flatMap((item) => {
+        if (item && typeof item === 'object') {
+          const nested = Object.values(item).find((v) => Array.isArray(v));
+          if (nested) return nested;
+        }
+        return item;
+      });
+    }
+  }
+
+  // Unwrap the Content Fragment data node when present (JCR JSON export).
+  const master = data['jcr:content']?.data?.master ?? data.data?.master ?? data;
+
+  const arrayKey = OPTION_KEYS.find((key) => Array.isArray(master[key]));
+  if (arrayKey) return master[arrayKey];
+
+  // A single multiline string field → one option per line.
+  const multiline = Object.values(master).find((v) => typeof v === 'string' && v.includes('\n'));
+  if (multiline) return multiline.split('\n');
+
+  // Otherwise, the first array-valued field on the fragment.
+  return Object.values(master).find((v) => Array.isArray(v)) ?? [];
+}
+
+/**
+ * Fetches the option list for a Content Fragment via the `ListCF` persisted
+ * GraphQL query, passing the authored CF path as the `;path=` parameter.
+ * Returns the provided fallback list when no path is authored or the query
+ * cannot be loaded/parsed, so the form always has usable options.
+ * @param {string} path Authored Content Fragment path (e.g. `/content/dam/...`).
+ * @param {Array} fallback Options to use if the fragment is unavailable.
+ */
+async function fetchOptions(path, fallback) {
+  if (!path) return fallback;
+  try {
+    const cfPath = path.replace(/\.json$/, '');
+    const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${encodeURIComponent(cfPath)}`;
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) return fallback;
+
+    const options = collectRawItems(await response.json())
+      .map(normalizeOption)
+      .filter((opt) => opt && opt.value);
+    return options.length ? options : fallback;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Newsletter options fetch error:', path, error);
+    return fallback;
+  }
 }
 
 /**
@@ -194,22 +286,29 @@ async function submitForm(form, config, message, submitBtn) {
   }
 }
 
-export default function decorate(block) {
+export default async function decorate(block) {
   const rows = [...block.children];
 
   // ── Read authored labels / config (the dialog inputs) ────────────────────
   const cfg = {
     title: rowText(rows, ROW.TITLE) || 'Subscribe to our newsletter',
     salutationLabel: rowText(rows, ROW.SALUTATION_LABEL) || 'Salutation',
-    salutationOptions: parseOptions(rows, ROW.SALUTATION_OPTIONS, SALUTATIONS),
+    salutationPath: rowLink(rows, ROW.SALUTATION_OPTIONS),
     firstNameLabel: rowText(rows, ROW.FIRST_NAME) || 'First Name',
     lastNameLabel: rowText(rows, ROW.LAST_NAME) || 'Last Name',
     emailLabel: rowText(rows, ROW.EMAIL) || 'Email Address',
     countryLabel: rowText(rows, ROW.COUNTRY_LABEL) || 'Country',
-    countryOptions: parseOptions(rows, ROW.COUNTRY_OPTIONS, COUNTRIES),
+    countryPath: rowLink(rows, ROW.COUNTRY_OPTIONS),
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
   };
+
+  // Load dropdown options from the authored Content Fragments (in parallel),
+  // falling back to the built-in lists when a fragment is missing or empty.
+  const [salutationOptions, countryOptions] = await Promise.all([
+    fetchOptions(cfg.salutationPath, SALUTATIONS),
+    fetchOptions(cfg.countryPath, COUNTRIES),
+  ]);
 
   // ── Build the real <form> ────────────────────────────────────────────────
   const form = document.createElement('form');
@@ -223,7 +322,7 @@ export default function decorate(block) {
   const salutation = buildField(
     'newsletter-salutation',
     cfg.salutationLabel,
-    buildSelect('Salutation', 'Select', cfg.salutationOptions),
+    buildSelect('Salutation', 'Select', salutationOptions),
   );
 
   const firstName = buildField(
@@ -251,7 +350,7 @@ export default function decorate(block) {
   const country = buildField(
     'newsletter-country',
     cfg.countryLabel,
-    buildSelect('Country', 'Select', cfg.countryOptions),
+    buildSelect('Country', 'Select', countryOptions),
   );
 
   // Consent notice — an informational line (no checkbox). By submitting the

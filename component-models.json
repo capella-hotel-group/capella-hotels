@@ -382,11 +382,10 @@
         "value": "Salutation"
       },
       {
-        "component": "richtext",
+        "component": "aem-content",
         "name": "salutationOptions",
-        "label": "Salutation Options (one per line, optional VALUE|Label)",
-        "valueType": "string",
-        "value": "Mr.\nMrs.\nMs.\nDr.\nProf."
+        "label": "Salutation Options (Content Fragment path)",
+        "valueType": "string"
       },
       {
         "component": "text",
@@ -417,11 +416,10 @@
         "value": "Country"
       },
       {
-        "component": "richtext",
+        "component": "aem-content",
         "name": "countryOptions",
-        "label": "Country Options (one per line as VALUE|Label)",
-        "valueType": "string",
-        "value": "SG|Singapore\nAU|Australia\nUS|United States\nGB|United Kingdom"
+        "label": "Country Options (Content Fragment path)",
+        "valueType": "string"
       },
       {
         "component": "richtext",
