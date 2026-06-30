@@ -2,7 +2,7 @@ import { getEnv, getBasePathBasedOnEnv } from '../../scripts/env.js';
 import { getPageLang } from '../../scripts/scripts.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
-const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/newslettersubscription.json`;
+const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
 
 // Persisted GraphQL query that returns a Content Fragment "list" by path. The
 // authored CF path is appended as `;path=<cfPath>`, e.g.
