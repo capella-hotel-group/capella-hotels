@@ -4,6 +4,11 @@ import { getPageLang } from '../../scripts/scripts.js';
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/newslettersubscription.json`;
 
+// Persisted GraphQL query that returns a Content Fragment "list" by path. The
+// authored CF path is appended as `;path=<cfPath>`, e.g.
+// /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
+const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
+
 // Fallback option lists, used when the author leaves the Content Fragment path
 // empty or when the referenced fragment cannot be loaded.
 const SALUTATIONS = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
@@ -95,14 +100,35 @@ function normalizeOption(item) {
 const OPTION_KEYS = ['options', 'items', 'elements', 'values', 'list', 'salutations', 'countries'];
 
 /**
- * Extracts the raw list of option entries from a Content Fragment JSON payload,
- * tolerating the shapes AEM commonly returns: a bare array, a model field that
- * is an array, a single multiline text field (one option per line), or the
- * nested JCR export (`jcr:content/data/master`).
+ * Extracts the raw list of option entries from the query response, tolerating
+ * the shapes AEM commonly returns: the GraphQL persisted-query envelope
+ * (`{ data: { <model>List: { items: [{ listItems: [...] }] } } }`), a bare
+ * array, a model field that is an array, a single multiline text field (one
+ * option per line), or the nested JCR export (`jcr:content/data/master`).
  */
 function collectRawItems(data) {
   if (Array.isArray(data)) return data;
   if (!data || typeof data !== 'object') return [];
+
+  // GraphQL persisted-query envelope: drill into `data` → `<model>List.items`.
+  if (data.data && typeof data.data === 'object') {
+    const node = Object.values(data.data).find((v) => v && typeof v === 'object');
+    const items = Array.isArray(node?.items)
+      ? node.items
+      : Object.values(data.data).find((v) => Array.isArray(v));
+    if (Array.isArray(items)) {
+      // Each list fragment holds its options in a nested array field
+      // (e.g. `listItems`); flatten those out. Items without a nested array are
+      // treated as option entries themselves.
+      return items.flatMap((item) => {
+        if (item && typeof item === 'object') {
+          const nested = Object.values(item).find((v) => Array.isArray(v));
+          if (nested) return nested;
+        }
+        return item;
+      });
+    }
+  }
 
   // Unwrap the Content Fragment data node when present (JCR JSON export).
   const master = data['jcr:content']?.data?.master ?? data.data?.master ?? data;
@@ -119,17 +145,18 @@ function collectRawItems(data) {
 }
 
 /**
- * Fetches a Content Fragment and turns it into a list of { value, label }
- * options. Returns the provided fallback list when no path is authored or the
- * fragment cannot be loaded/parsed, so the form always has usable options.
+ * Fetches the option list for a Content Fragment via the `ListCF` persisted
+ * GraphQL query, passing the authored CF path as the `;path=` parameter.
+ * Returns the provided fallback list when no path is authored or the query
+ * cannot be loaded/parsed, so the form always has usable options.
  * @param {string} path Authored Content Fragment path (e.g. `/content/dam/...`).
  * @param {Array} fallback Options to use if the fragment is unavailable.
  */
 async function fetchOptions(path, fallback) {
   if (!path) return fallback;
   try {
-    const base = path.startsWith('http') ? path : `${getBasePathBasedOnEnv()}${path}`;
-    const url = base.endsWith('.json') ? base : `${base}.json`;
+    const cfPath = path.replace(/\.json$/, '');
+    const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${encodeURIComponent(cfPath)}`;
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) return fallback;
 
