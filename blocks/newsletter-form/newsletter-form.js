@@ -9,16 +9,6 @@ const API_ENDPOINT = `${getBasePathBasedOnEnv()}/bin/chg/newslettersubscription.
 // /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
 
-// Fallback option lists, used when the author leaves the Content Fragment path
-// empty or when the referenced fragment cannot be loaded.
-const SALUTATIONS = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
-const COUNTRIES = [
-  { value: 'SG', label: 'Singapore' },
-  { value: 'AU', label: 'Australia' },
-  { value: 'US', label: 'United States' },
-  { value: 'GB', label: 'United Kingdom' },
-];
-
 // Maps a location found in the page URL to its display name and Capella
 // property code. Used to auto-derive Property (name) and Source (code) on submit.
 const PROPERTY_CODES = [
@@ -147,27 +137,29 @@ function collectRawItems(data) {
 /**
  * Fetches the option list for a Content Fragment via the `ListCF` persisted
  * GraphQL query, passing the authored CF path as the `;path=` parameter.
- * Returns the provided fallback list when no path is authored or the query
- * cannot be loaded/parsed, so the form always has usable options.
+ * Returns only the options found in the fragment — an empty array when no path
+ * is authored or the query cannot be loaded/parsed (no hardcoded fallback).
  * @param {string} path Authored Content Fragment path (e.g. `/content/dam/...`).
- * @param {Array} fallback Options to use if the fragment is unavailable.
+ * @returns {Promise<Array<{ value: string, label: string }>>}
  */
-async function fetchOptions(path, fallback) {
-  if (!path) return fallback;
+async function fetchOptions(path) {
+  if (!path) return [];
   try {
+    // The persisted-query `;path=` parameter must be the RAW Content Fragment
+    // path. URL-encoding the slashes (e.g. `%2F`) makes the query match nothing
+    // and return an empty `items` array, so pass the path as-is.
     const cfPath = path.replace(/\.json$/, '');
-    const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${encodeURIComponent(cfPath)}`;
+    const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${cfPath}`;
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) return fallback;
+    if (!response.ok) return [];
 
-    const options = collectRawItems(await response.json())
+    return collectRawItems(await response.json())
       .map(normalizeOption)
       .filter((opt) => opt && opt.value);
-    return options.length ? options : fallback;
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Newsletter options fetch error:', path, error);
-    return fallback;
+    return [];
   }
 }
 
@@ -303,11 +295,11 @@ export default async function decorate(block) {
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
   };
 
-  // Load dropdown options from the authored Content Fragments (in parallel),
-  // falling back to the built-in lists when a fragment is missing or empty.
+  // Load dropdown options from the authored Content Fragments (in parallel).
+  // Only fragment data is shown — there is no hardcoded fallback list.
   const [salutationOptions, countryOptions] = await Promise.all([
-    fetchOptions(cfg.salutationPath, SALUTATIONS),
-    fetchOptions(cfg.countryPath, COUNTRIES),
+    fetchOptions(cfg.salutationPath),
+    fetchOptions(cfg.countryPath),
   ]);
 
   // ── Build the real <form> ────────────────────────────────────────────────
