@@ -3,16 +3,21 @@
  * Update ENV_CONFIG when new environments are provisioned.
  */
 
+// `hcaptchaSiteKey` is the PUBLIC hCaptcha site key for each environment. It is
+// safe to expose in client code (unlike the secret key, which must stay on the
+// servlet). Fill in the prod/stage keys as those environments are provisioned.
 const ENV_CONFIG = [
   {
     env: 'prod',
     publishUrl: 'https://publish-p000000-e0000000.adobeaemcloud.com',
     hostnames: [],
+    hcaptchaSiteKey: '',
   },
   {
     env: 'stage',
     publishUrl: 'https://publish-p000000-e0000000.adobeaemcloud.com',
     hostnames: [],
+    hcaptchaSiteKey: '',
   },
   {
     env: 'dev',
@@ -23,12 +28,14 @@ const ENV_CONFIG = [
       'main--capella-hotels--capella-hotel-group.aem.page',
       'main--capella-hotels--capella-hotel-group.aem.live',
     ],
+    hcaptchaSiteKey: '740c6c8a-6f1e-4a52-9ce0-069ce33451fc',
   },
   {
     // Fallback: unknown hostname → warn and use RDE publish
     env: 'dev',
     publishUrl: 'https://publish-p152536-e1620746.adobeaemcloud.com',
     hostnames: [],
+    hcaptchaSiteKey: '740c6c8a-6f1e-4a52-9ce0-069ce33451fc',
   },
 ];
 
@@ -59,6 +66,20 @@ export function getEnv() {
   const match = ENV_CONFIG.find((e) => e.hostnames.includes(hostname));
   if (match) return match.env;
   return ENV_CONFIG[ENV_CONFIG.length - 1].env;
+}
+
+/**
+ * Returns the PUBLIC hCaptcha site key for the current environment, resolved by
+ * hostname (falls back to the last ENV_CONFIG entry). Empty string when the
+ * environment has no key configured, in which case callers may fall back to the
+ * `hcaptcha-site-key` <meta> tag.
+ * @returns {string}
+ */
+export function getHCaptchaSiteKey() {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const entry = ENV_CONFIG.find((e) => e.hostnames.length && e.hostnames.includes(hostname))
+    ?? ENV_CONFIG[ENV_CONFIG.length - 1];
+  return entry.hcaptchaSiteKey ?? '';
 }
 
 export function resolveDAMUrl(src) {

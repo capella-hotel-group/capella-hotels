@@ -1,4 +1,4 @@
-import { getEnv, getBasePathBasedOnEnv } from '../../scripts/env.js';
+import { getEnv, getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '../../scripts/env.js';
 import { getPageLang } from '../../scripts/scripts.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
@@ -218,9 +218,15 @@ function resolveProperty(properties) {
   return properties.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
 }
 
-/** Reads the public hCaptcha site key from the page <meta> tag. */
+/**
+ * Resolves the public hCaptcha site key. Prefers the per-environment value from
+ * `env.js` (the "environment variable" equivalent in EDS); falls back to the
+ * `hcaptcha-site-key` <meta> tag when no environment key is configured.
+ */
 function getHCaptchaSiteKey() {
-  return document.head.querySelector('meta[name="hcaptcha-site-key"]')?.content?.trim() ?? '';
+  return getEnvHCaptchaSiteKey()
+    || document.head.querySelector('meta[name="hcaptcha-site-key"]')?.content?.trim()
+    || '';
 }
 
 // Single shared promise so the hCaptcha API script is loaded at most once, even
