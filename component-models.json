@@ -434,6 +434,12 @@
         "label": "Submit Button Label",
         "valueType": "string",
         "value": "Continue"
+      },
+      {
+        "component": "aem-content",
+        "name": "propertyOptions",
+        "label": "Property Mapping (Content Fragment path)",
+        "valueType": "string"
       }
     ]
   },

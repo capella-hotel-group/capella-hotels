@@ -29,7 +29,8 @@
         { "component": "text", "name": "emailLabel", "label": "Email Field Label", "valueType": "string", "value": "Email Address" },        { "component": "text", "name": "countryLabel", "label": "Country Field Label", "valueType": "string", "value": "Country" },
         { "component": "aem-content", "name": "countryOptions", "label": "Country Options (Content Fragment path)", "valueType": "string" },
         { "component": "richtext", "name": "consentMessage", "label": "Consent Notice Text", "valueType": "string", "value": "I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href=\"/privacy\">View our Privacy Policy</a>." },
-        { "component": "text", "name": "submitLabel", "label": "Submit Button Label", "valueType": "string", "value": "Continue" }
+        { "component": "text", "name": "submitLabel", "label": "Submit Button Label", "valueType": "string", "value": "Continue" },
+        { "component": "aem-content", "name": "propertyOptions", "label": "Property Mapping (Content Fragment path)", "valueType": "string" }
       ]
     }
   ],
