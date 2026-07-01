@@ -351,7 +351,9 @@ function buildInput(name, type, placeholder) {
 }
 
 /**
- * Collects every form entry plus auto-mapped metadata and POSTs it as JSON.
+ * Collects every form entry plus auto-mapped metadata and POSTs it as
+ * application/x-www-form-urlencoded (so the Sling servlet's getParameter()
+ * can read each field).
  * @param {HTMLFormElement} form
  * @param {{ endpoint: string, property: ({ name: string, code: string }|null),
  *   captcha: ({ getToken: () => string, reset: () => void }|null) }} config
@@ -406,10 +408,16 @@ async function submitForm(form, config, message, submitBtn) {
   submitBtn.disabled = true;
 
   try {
+    // The Sling servlet reads fields via request.getParameter(), which only
+    // parses form-encoded (or query-string / multipart) bodies — NOT a raw JSON
+    // body. Send application/x-www-form-urlencoded so every field is readable.
     const response = await fetch(config.endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        Accept: 'application/json',
+      },
+      body: new URLSearchParams(payload).toString(),
     });
 
     if (!response.ok) {
