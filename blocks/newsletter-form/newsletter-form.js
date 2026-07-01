@@ -1,4 +1,4 @@
-import { getEnv, getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '../../scripts/env.js';
+import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '../../scripts/env.js';
 import { getPageLang } from '../../scripts/scripts.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
@@ -16,7 +16,7 @@ const HCAPTCHA_API_SRC = 'https://js.hcaptcha.com/1/api.js?render=explicit';
 
 // Visitor-entered fields that are all mandatory. Submission is rejected (and
 // never sent) if any of these is missing or blank.
-const REQUIRED_FIELDS = ['Salutation', 'FirstName', 'LastName', 'Email', 'Country'];
+const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'country'];
 
 // Authored row order — must match the field order in `_newsletter-form.json`.
 // SALUTATION_OPTIONS, COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment
@@ -386,21 +386,20 @@ async function submitForm(form, config, message, submitBtn) {
     message.className = 'newsletter-message is-error';
     return;
   }
-  if (captchaToken) payload.captchaToken = captchaToken;
+  if (captchaToken) payload.captchaValue = captchaToken;
 
   // Auto-mapped metadata (not visitor-entered).
   // Prefer the <html lang> attribute; if it is missing (e.g. block decorated
   // before scripts.js sets it), derive the language from the URL path instead.
-  payload.Language = document.documentElement.lang || getPageLang();
+  payload.language = document.documentElement.lang || getPageLang();
   // Property is the location name and Source is the property code (CP...), both
   // resolved from the page URL against the authored CF mapping. On non-property
   // pages neither is set — the keys are omitted rather than sent empty.
   const { property } = config;
   if (property) {
-    payload.Property = property.name;
-    payload.Source = property.code;
+    payload.property = property.name;
+    payload.source = property.code;
   }
-  payload.Environment = getEnv();
 
   message.textContent = '';
   message.className = 'newsletter-message';
@@ -476,19 +475,19 @@ export default async function decorate(block) {
   const salutation = buildField(
     'newsletter-salutation',
     cfg.salutationLabel,
-    buildSelect('Salutation', 'Select', salutationOptions),
+    buildSelect('salutation', 'Select', salutationOptions),
   );
 
   const firstName = buildField(
     'newsletter-first-name',
     cfg.firstNameLabel,
-    buildInput('FirstName', 'text', cfg.firstNameLabel),
+    buildInput('firstName', 'text', cfg.firstNameLabel),
   );
 
   const lastName = buildField(
     'newsletter-last-name',
     cfg.lastNameLabel,
-    buildInput('LastName', 'text', cfg.lastNameLabel),
+    buildInput('lastName', 'text', cfg.lastNameLabel),
   );
 
   const nameRow = document.createElement('div');
@@ -498,13 +497,13 @@ export default async function decorate(block) {
   const email = buildField(
     'newsletter-email',
     cfg.emailLabel,
-    buildInput('Email', 'email', cfg.emailLabel),
+    buildInput('email', 'email', cfg.emailLabel),
   );
 
   const country = buildField(
     'newsletter-country',
     cfg.countryLabel,
-    buildSelect('Country', 'Select', countryOptions),
+    buildSelect('country', 'Select', countryOptions),
   );
 
   // Consent notice — an informational line (no checkbox). By submitting the
