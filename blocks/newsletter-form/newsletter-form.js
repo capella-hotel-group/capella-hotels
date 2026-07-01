@@ -9,24 +9,14 @@ const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubsc
 // /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
 
-// Maps a location found in the page URL to its display name and Capella
-// property code. Used to auto-derive Property (name) and Source (code) on submit.
-const PROPERTY_CODES = [
-  { keys: ['bangkok'], name: 'Capella Bangkok', code: 'CPBAN' },
-  { keys: ['hanoi'], name: 'Capella Hanoi', code: 'CPHAN' },
-  { keys: ['kyoto'], name: 'Capella Kyoto', code: 'CPKYO' },
-  { keys: ['macau', 'macao'], name: 'Capella Macau', code: 'CPMAC' },
-  { keys: ['sanya', 'tufu'], name: 'Capella Sanya', code: 'CPSAN' },
-  { keys: ['shanghai'], name: 'Capella Shanghai', code: 'CPSHA' },
-  { keys: ['singapore'], name: 'Capella Singapore', code: 'CPSIN' },
-  { keys: ['sydney'], name: 'Capella Sydney', code: 'CPSYD' },
-  { keys: ['taipei'], name: 'Capella Taipei', code: 'CPTAI' },
-  { keys: ['ubud'], name: 'Capella Ubud', code: 'CPUBU' },
-];
+// Visitor-entered fields that are all mandatory. Submission is rejected (and
+// never sent) if any of these is missing or blank.
+const REQUIRED_FIELDS = ['Salutation', 'FirstName', 'LastName', 'Email', 'Country'];
 
 // Authored row order — must match the field order in `_newsletter-form.json`.
-// SALUTATION_OPTIONS and COUNTRY_OPTIONS are Content Fragment paths whose
-// entries populate the corresponding dropdowns.
+// SALUTATION_OPTIONS, COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment
+// paths: the first two populate the dropdowns, the last provides the
+// location → Property/Source mapping used on submit.
 const ROW = {
   TITLE: 0,
   SALUTATION_LABEL: 1,
@@ -38,6 +28,7 @@ const ROW = {
   COUNTRY_OPTIONS: 7,
   CONSENT: 8,
   SUBMIT: 9,
+  PROPERTY_OPTIONS: 10,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -135,14 +126,13 @@ function collectRawItems(data) {
 }
 
 /**
- * Fetches the option list for a Content Fragment via the `ListCF` persisted
- * GraphQL query, passing the authored CF path as the `;path=` parameter.
- * Returns only the options found in the fragment — an empty array when no path
- * is authored or the query cannot be loaded/parsed (no hardcoded fallback).
+ * Runs the `ListCF` persisted GraphQL query for a Content Fragment path and
+ * returns its raw list entries. Empty array when no path is authored or the
+ * query cannot be loaded/parsed.
  * @param {string} path Authored Content Fragment path (e.g. `/content/dam/...`).
- * @returns {Promise<Array<{ value: string, label: string }>>}
+ * @returns {Promise<Array>}
  */
-async function fetchOptions(path) {
+async function fetchRawList(path) {
   if (!path) return [];
   try {
     // The persisted-query `;path=` parameter must be the RAW Content Fragment
@@ -152,30 +142,75 @@ async function fetchOptions(path) {
     const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${cfPath}`;
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) return [];
-
-    return collectRawItems(await response.json())
-      .map(normalizeOption)
-      .filter((opt) => opt && opt.value);
+    return collectRawItems(await response.json());
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Newsletter options fetch error:', path, error);
+    console.error('Newsletter list fetch error:', path, error);
     return [];
   }
 }
 
 /**
+ * Fetches dropdown options from a Content Fragment as { value, label } pairs.
+ * @param {string} path Authored Content Fragment path.
+ * @returns {Promise<Array<{ value: string, label: string }>>}
+ */
+async function fetchOptions(path) {
+  return (await fetchRawList(path))
+    .map(normalizeOption)
+    .filter((opt) => opt && opt.value);
+}
+
+/**
+ * Normalises a raw property-mapping entry into { keys, name, code }. Accepts a
+ * `KEYS|NAME|CODE` string (KEYS may list several comma/space separated location
+ * keywords, e.g. `macau,macao|Capella Macau|CPMAC`) or an object using
+ * keys/key/location + name/property + code/source style fields. When KEYS is
+ * omitted the NAME is tokenised and used for matching instead.
+ * @returns {{ keys: string[], name: string, code: string } | null}
+ */
+function normalizeProperty(item) {
+  let keysRaw;
+  let name;
+  let code;
+  if (typeof item === 'string') {
+    [keysRaw, name, code] = item.split('|').map((part) => part.trim());
+  } else if (item && typeof item === 'object') {
+    keysRaw = item.keys ?? item.key ?? item.location ?? item.slug;
+    name = item.name ?? item.property ?? item.title ?? item.label;
+    code = item.code ?? item.source ?? item.value;
+  }
+  if (!name || !code) return null;
+  const keysStr = Array.isArray(keysRaw) ? keysRaw.join(' ') : String(keysRaw ?? name);
+  const keys = keysStr.toLowerCase().split(/[,\s/_-]+/).filter(Boolean);
+  if (!keys.length) return null;
+  return { keys, name: String(name).trim(), code: String(code).trim() };
+}
+
+/**
+ * Fetches the location → Property/Source mapping from a Content Fragment.
+ * @param {string} path Authored Content Fragment path.
+ * @returns {Promise<Array<{ keys: string[], name: string, code: string }>>}
+ */
+async function fetchProperties(path) {
+  return (await fetchRawList(path))
+    .map(normalizeProperty)
+    .filter(Boolean);
+}
+
+/**
  * Derives the Capella property from the current page URL by matching a known
- * location keyword in the path. The path is tokenized on slashes, hyphens and
- * underscores, so a location matches whether it stands alone (`/bangkok`) or is
- * part of a larger slug (`/capella-bangkok/...`).
+ * location keyword in the path against the authored mapping. The path is
+ * tokenised on slashes, hyphens and underscores, so a location matches whether
+ * it stands alone (`/bangkok`) or is part of a larger slug (`/capella-bangkok/`).
+ * @param {Array<{ keys: string[], name: string, code: string }>} properties
  * @returns {{ name: string, code: string } | null} The matched property, or null.
  */
-function resolveProperty() {
+function resolveProperty(properties) {
+  if (!properties?.length) return null;
   const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
-  // Split into tokens so `bangkok` matches in `/bangkok` and `/capella-bangkok/`
-  // alike, without the substring false positives of a plain `includes` check.
   const tokens = path.split(/[/_-]+/).filter(Boolean);
-  return PROPERTY_CODES.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
+  return properties.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
 }
 
 /** Creates a labelled field wrapper containing the given input/select. */
@@ -230,24 +265,42 @@ function buildInput(name, type, placeholder) {
 /**
  * Collects every form entry plus auto-mapped metadata and POSTs it as JSON.
  * @param {HTMLFormElement} form
- * @param {{ endpoint: string }} config
+ * @param {{ endpoint: string, property: ({ name: string, code: string }|null) }} config
  * @param {HTMLElement} message Live-region element for feedback
  * @param {HTMLButtonElement} submitBtn
  */
 async function submitForm(form, config, message, submitBtn) {
-  // Gather all named fields the visitor entered.
-  const payload = Object.fromEntries(new FormData(form).entries());
+  // Gather all named fields the visitor entered, trimming whitespace so that
+  // spaces-only values (which satisfy HTML5 `required`) are treated as empty.
+  const payload = Object.fromEntries(
+    [...new FormData(form).entries()].map(([key, value]) => [
+      key,
+      typeof value === 'string' ? value.trim() : value,
+    ]),
+  );
+
+  // All fields are mandatory: if any is missing or blank, fail fast and do not
+  // send the request.
+  const missing = REQUIRED_FIELDS.filter((field) => !payload[field]);
+  if (missing.length) {
+    message.textContent = 'Please fill in all required fields.';
+    message.className = 'newsletter-message is-error';
+    form.reportValidity();
+    return;
+  }
 
   // Auto-mapped metadata (not visitor-entered).
   // Prefer the <html lang> attribute; if it is missing (e.g. block decorated
   // before scripts.js sets it), derive the language from the URL path instead.
   payload.Language = document.documentElement.lang || getPageLang();
-  // Property is the location name and Source is the property code (CP...),
-  // both derived from the page URL. On non-property pages Property is empty and
-  // Source falls back to 'website'.
-  const property = resolveProperty();
-  payload.Property = property ? property.name : '';
-  payload.Source = property ? property.code : 'website';
+  // Property is the location name and Source is the property code (CP...), both
+  // resolved from the page URL against the authored CF mapping. On non-property
+  // pages neither is set — the keys are omitted rather than sent empty.
+  const { property } = config;
+  if (property) {
+    payload.Property = property.name;
+    payload.Source = property.code;
+  }
   payload.Environment = getEnv();
 
   message.textContent = '';
@@ -293,14 +346,19 @@ export default async function decorate(block) {
     countryPath: rowLink(rows, ROW.COUNTRY_OPTIONS),
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
+    propertyPath: rowLink(rows, ROW.PROPERTY_OPTIONS),
   };
 
-  // Load dropdown options from the authored Content Fragments (in parallel).
-  // Only fragment data is shown — there is no hardcoded fallback list.
-  const [salutationOptions, countryOptions] = await Promise.all([
+  // Load dropdown options and the property mapping from the authored Content
+  // Fragments (in parallel). Only fragment data is used — nothing is hardcoded.
+  const [salutationOptions, countryOptions, properties] = await Promise.all([
     fetchOptions(cfg.salutationPath),
     fetchOptions(cfg.countryPath),
+    fetchProperties(cfg.propertyPath),
   ]);
+
+  // Resolve the current page's property once, for use on submit.
+  const property = resolveProperty(properties);
 
   // ── Build the real <form> ────────────────────────────────────────────────
   const form = document.createElement('form');
@@ -379,7 +437,7 @@ export default async function decorate(block) {
       form.reportValidity();
       return;
     }
-    submitForm(form, { endpoint: API_ENDPOINT }, message, submitBtn);
+    submitForm(form, { endpoint: API_ENDPOINT, property }, message, submitBtn);
   });
 
   // ── Replace authored rows with the finished form ─────────────────────────
