@@ -9,6 +9,11 @@ const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubsc
 // /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
 
+// hCaptcha JS API, loaded on demand. `render=explicit` lets us mount the widget
+// ourselves (rather than auto-scanning the DOM), which is what we need inside a
+// dynamically decorated block.
+const HCAPTCHA_API_SRC = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+
 // Visitor-entered fields that are all mandatory. Submission is rejected (and
 // never sent) if any of these is missing or blank.
 const REQUIRED_FIELDS = ['Salutation', 'FirstName', 'LastName', 'Email', 'Country'];
@@ -213,6 +218,83 @@ function resolveProperty(properties) {
   return properties.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
 }
 
+/** Reads the public hCaptcha site key from the page <meta> tag. */
+function getHCaptchaSiteKey() {
+  return document.head.querySelector('meta[name="hcaptcha-site-key"]')?.content?.trim() ?? '';
+}
+
+// Single shared promise so the hCaptcha API script is loaded at most once, even
+// when several newsletter blocks are present on the page.
+let hcaptchaApiPromise;
+
+/**
+ * Loads the hCaptcha JS API on demand and resolves with `window.hcaptcha`.
+ * Rejects if the script fails to load.
+ * @returns {Promise<object>}
+ */
+function loadHCaptcha() {
+  if (window.hcaptcha) return Promise.resolve(window.hcaptcha);
+  if (hcaptchaApiPromise) return hcaptchaApiPromise;
+
+  hcaptchaApiPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = HCAPTCHA_API_SRC;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => (window.hcaptcha ? resolve(window.hcaptcha) : reject(new Error('hCaptcha API unavailable')));
+    script.onerror = () => reject(new Error('Failed to load hCaptcha API'));
+    document.head.append(script);
+  });
+  return hcaptchaApiPromise;
+}
+
+/**
+ * Renders an hCaptcha widget into `container` and wires it to enable/disable the
+ * submit button. Returns a getter for the current token (empty when unsolved).
+ * On any failure the submit button is left enabled so the form still works —
+ * server-side verification remains the source of truth.
+ * @param {HTMLElement} container
+ * @param {string} siteKey
+ * @param {HTMLButtonElement} submitBtn
+ * @returns {Promise<{ getToken: () => string, reset: () => void }>}
+ */
+async function setupCaptcha(container, siteKey, submitBtn) {
+  let token = '';
+  let widgetId;
+  try {
+    const hcaptcha = await loadHCaptcha();
+    widgetId = hcaptcha.render(container, {
+      sitekey: siteKey,
+      callback: (response) => {
+        token = response;
+        submitBtn.disabled = false;
+      },
+      'expired-callback': () => {
+        token = '';
+        submitBtn.disabled = true;
+      },
+      'error-callback': () => {
+        token = '';
+        submitBtn.disabled = true;
+      },
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Newsletter captcha error:', error);
+    submitBtn.disabled = false;
+    return { getToken: () => '', reset: () => {} };
+  }
+
+  return {
+    getToken: () => token,
+    reset: () => {
+      token = '';
+      submitBtn.disabled = true;
+      if (window.hcaptcha && widgetId !== undefined) window.hcaptcha.reset(widgetId);
+    },
+  };
+}
+
 /** Creates a labelled field wrapper containing the given input/select. */
 function buildField(id, labelText, control, { required = true } = {}) {
   const wrapper = document.createElement('div');
@@ -265,7 +347,8 @@ function buildInput(name, type, placeholder) {
 /**
  * Collects every form entry plus auto-mapped metadata and POSTs it as JSON.
  * @param {HTMLFormElement} form
- * @param {{ endpoint: string, property: ({ name: string, code: string }|null) }} config
+ * @param {{ endpoint: string, property: ({ name: string, code: string }|null),
+ *   captcha: ({ getToken: () => string, reset: () => void }|null) }} config
  * @param {HTMLElement} message Live-region element for feedback
  * @param {HTMLButtonElement} submitBtn
  */
@@ -288,6 +371,16 @@ async function submitForm(form, config, message, submitBtn) {
     form.reportValidity();
     return;
   }
+
+  // hCaptcha: require a solved token before sending (defence-in-depth on top of
+  // the disabled submit button). Skipped when captcha isn't configured/loaded.
+  const captchaToken = config.captcha ? config.captcha.getToken() : '';
+  if (config.captcha && !captchaToken) {
+    message.textContent = 'Please complete the captcha.';
+    message.className = 'newsletter-message is-error';
+    return;
+  }
+  if (captchaToken) payload.captchaToken = captchaToken;
 
   // Auto-mapped metadata (not visitor-entered).
   // Prefer the <html lang> attribute; if it is missing (e.g. block decorated
@@ -321,13 +414,18 @@ async function submitForm(form, config, message, submitBtn) {
     form.reset();
     message.textContent = 'Thank you for subscribing!';
     message.classList.add('is-success');
+    // hCaptcha tokens are single-use: reset so a new solve is needed to submit
+    // again. This also re-disables the submit button.
+    if (config.captcha) config.captcha.reset();
+    else submitBtn.disabled = false;
   } catch (error) {
     message.textContent = 'Sorry, something went wrong. Please try again.';
     message.classList.add('is-error');
     // eslint-disable-next-line no-console
     console.error('Newsletter submission error:', error);
-  } finally {
-    submitBtn.disabled = false;
+    // The used token is now invalid; force a fresh challenge before retrying.
+    if (config.captcha) config.captcha.reset();
+    else submitBtn.disabled = false;
   }
 }
 
@@ -410,10 +508,17 @@ export default async function decorate(block) {
   consentWrapper.innerHTML = cfg.consentHTML
     || 'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
 
+  // hCaptcha widget mount point. When a site key is configured the submit button
+  // starts disabled and is enabled by the captcha callback (see setupCaptcha).
+  const siteKey = getHCaptchaSiteKey();
+  const captchaWrapper = document.createElement('div');
+  captchaWrapper.className = 'newsletter-captcha';
+
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
   submitBtn.className = 'newsletter-submit';
   submitBtn.textContent = cfg.submitLabel;
+  if (siteKey) submitBtn.disabled = true;
 
   const message = document.createElement('div');
   message.className = 'newsletter-message';
@@ -426,9 +531,15 @@ export default async function decorate(block) {
     email,
     country,
     consentWrapper,
+    captchaWrapper,
     submitBtn,
     message,
   );
+
+  // Render the captcha (if configured) and gate the submit button on it.
+  const captcha = siteKey
+    ? await setupCaptcha(captchaWrapper, siteKey, submitBtn)
+    : null;
 
   // ── Wire up submission ───────────────────────────────────────────────────
   form.addEventListener('submit', (event) => {
@@ -437,7 +548,7 @@ export default async function decorate(block) {
       form.reportValidity();
       return;
     }
-    submitForm(form, { endpoint: API_ENDPOINT, property }, message, submitBtn);
+    submitForm(form, { endpoint: API_ENDPOINT, property, captcha }, message, submitBtn);
   });
 
   // ── Replace authored rows with the finished form ─────────────────────────

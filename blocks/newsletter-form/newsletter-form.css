@@ -85,6 +85,11 @@
     color: var(--link-hover-color);
 }
 
+/* hCaptcha widget wrapper */
+.newsletter-form-element .newsletter-captcha:empty {
+    display: none;
+}
+
 /* Submit button */
 .newsletter-form-element .newsletter-submit {
     padding: 14px 24px;
