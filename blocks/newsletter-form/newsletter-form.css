@@ -59,12 +59,6 @@
     color: var(--header-cta-bg);
 }
 
-/* Inside the modal the form fills the panel (no extra centering/gap) */
-.newsletter-dialog .newsletter-form-element {
-    max-width: none;
-    margin-inline: 0;
-}
-
 .newsletter-form-element {
     display: flex;
     flex-direction: column;
@@ -74,6 +68,12 @@
     padding: 40px;
     background-color: var(--light-color);
     text-align: start;
+}
+
+/* Inside the modal the form fills the panel (no extra centering/gap) */
+.newsletter-dialog .newsletter-form-element {
+    max-width: none;
+    margin-inline: 0;
 }
 
 .newsletter-form-element .newsletter-title {
