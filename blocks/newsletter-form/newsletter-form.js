@@ -352,14 +352,18 @@ function buildInput(name, type, placeholder) {
 }
 
 /**
- * Wraps the form in a native <dialog> modal and returns the dialog plus its
- * trigger button. The dialog provides focus trapping, Esc-to-close and a
- * backdrop for free. Closing is wired to: the ✕ button, a click on the
- * backdrop (outside the panel), and the dialog's native `cancel` (Esc) event.
+ * Wraps the form in an overlay modal and returns the overlay plus its trigger
+ * button. A native <dialog>.showModal() is deliberately NOT used: a modal
+ * dialog renders in the browser "top layer", which paints above every
+ * normal-flow element regardless of z-index — including the hCaptcha challenge
+ * iframe hCaptcha appends to <body>. That made the captcha appear *behind* the
+ * form. A plain overlay keeps normal stacking so the challenge (max z-index)
+ * shows above the form. Closing is wired to: the ✕ button, a backdrop click,
+ * and the Escape key.
  * @param {HTMLFormElement} form The finished newsletter form.
  * @param {string} triggerLabel Text for the on-page button that opens the modal.
  * @param {string} title Accessible label for the dialog/close controls.
- * @returns {{ dialog: HTMLDialogElement, trigger: HTMLButtonElement }}
+ * @returns {{ overlay: HTMLDivElement, trigger: HTMLButtonElement }}
  */
 function buildModal(form, triggerLabel, title) {
   const trigger = document.createElement('button');
@@ -367,9 +371,11 @@ function buildModal(form, triggerLabel, title) {
   trigger.className = 'newsletter-trigger';
   trigger.textContent = triggerLabel;
 
-  const dialog = document.createElement('dialog');
-  dialog.className = 'newsletter-dialog';
-  dialog.setAttribute('aria-label', title);
+  const overlay = document.createElement('div');
+  overlay.className = 'newsletter-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', title);
 
   const panel = document.createElement('div');
   panel.className = 'newsletter-dialog-panel';
@@ -380,27 +386,40 @@ function buildModal(form, triggerLabel, title) {
   closeBtn.setAttribute('aria-label', 'Close');
   closeBtn.innerHTML = '&times;';
 
-  // The close button is a direct child of the dialog (a sibling of the
-  // scrollable panel) so it stays pinned in the corner while the form scrolls.
-  panel.append(form);
-  dialog.append(closeBtn, panel);
+  // The close button is absolutely positioned inside the panel, so it stays
+  // pinned in the corner while the form scrolls.
+  panel.append(closeBtn, form);
+  overlay.append(panel);
 
-  const close = () => dialog.close();
+  const open = () => {
+    overlay.classList.add('is-open');
+    document.body.classList.add('newsletter-modal-open');
+    closeBtn.focus();
+  };
+  const close = () => {
+    overlay.classList.remove('is-open');
+    document.body.classList.remove('newsletter-modal-open');
+    trigger.focus();
+  };
 
   // Open the modal from the on-page trigger.
-  trigger.addEventListener('click', () => dialog.showModal());
+  trigger.addEventListener('click', open);
 
   // Close via the ✕ button.
   closeBtn.addEventListener('click', close);
 
-  // Close when the backdrop (the dialog element itself, outside the panel) is
-  // clicked. Clicks inside the panel bubble to the dialog too, so compare the
-  // target explicitly.
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) close();
+  // Close when the backdrop (the overlay itself, outside the panel) is clicked.
+  // Clicks inside the panel bubble to the overlay too, so compare the target.
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) close();
   });
 
-  return { dialog, trigger };
+  // Close on Escape while the modal is open.
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && overlay.classList.contains('is-open')) close();
+  });
+
+  return { overlay, trigger };
 }
 
 /**
@@ -619,9 +638,9 @@ export default async function decorate(block) {
   });
 
   // ── Wrap the form in a modal, triggered by an on-page button ─────────────
-  const { dialog, trigger } = buildModal(form, cfg.triggerLabel, cfg.title);
+  const { overlay, trigger } = buildModal(form, cfg.triggerLabel, cfg.title);
 
   // ── Replace authored rows with the trigger button + modal ────────────────
   block.textContent = '';
-  block.append(trigger, dialog);
+  block.append(trigger, overlay);
 }

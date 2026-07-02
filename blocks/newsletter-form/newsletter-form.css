@@ -28,30 +28,40 @@
     background-color: var(--header-cta-hover-bg);
 }
 
-/* Modal dialog: reset the native <dialog> chrome and center the panel */
-.newsletter-dialog {
-    max-width: 560px;
-    width: calc(100% - 32px);
-    max-height: calc(100vh - 32px);
-    padding: 0;
-    border: none;
-    background: transparent;
-    overflow: visible;
-}
-
-.newsletter-dialog::backdrop {
+/* Overlay modal (a plain positioned element, NOT a top-layer <dialog>) so the
+   hCaptcha challenge popup — appended to <body> with a very high z-index — can
+   stack above the form instead of behind it. Hidden until `.is-open`. */
+.newsletter-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
     background-color: rgb(0 0 0 / 55%);
 }
 
+.newsletter-overlay.is-open {
+    display: flex;
+}
+
+/* Prevent the page behind the modal from scrolling while it is open. */
+body.newsletter-modal-open {
+    overflow: hidden;
+}
+
 /* Panel wraps the form and hosts the close button */
-.newsletter-dialog .newsletter-dialog-panel {
+.newsletter-overlay .newsletter-dialog-panel {
     position: relative;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 560px;
     max-height: calc(100vh - 32px);
 }
 
-.newsletter-dialog .newsletter-dialog-close {
+.newsletter-overlay .newsletter-dialog-close {
     position: absolute;
     inset-block-start: 12px;
     inset-inline-end: 12px;
@@ -67,7 +77,7 @@
     cursor: pointer;
 }
 
-.newsletter-dialog .newsletter-dialog-close:hover {
+.newsletter-overlay .newsletter-dialog-close:hover {
     color: var(--header-cta-bg);
 }
 
@@ -85,7 +95,7 @@
 /* Inside the modal the form fills the panel (no extra centering/gap) and
    scrolls internally when taller than the viewport, so the submit button and
    captcha stay reachable on short screens. */
-.newsletter-dialog .newsletter-form-element {
+.newsletter-overlay .newsletter-form-element {
     max-width: none;
     margin-inline: 0;
     overflow-y: auto;
