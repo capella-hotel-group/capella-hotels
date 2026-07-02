@@ -24,6 +24,7 @@
 .newsletter-dialog {
     max-width: 560px;
     width: calc(100% - 32px);
+    max-height: calc(100vh - 32px);
     padding: 0;
     border: none;
     background: transparent;
@@ -37,6 +38,9 @@
 /* Panel wraps the form and hosts the close button */
 .newsletter-dialog .newsletter-dialog-panel {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 32px);
 }
 
 .newsletter-dialog .newsletter-dialog-close {
@@ -70,10 +74,13 @@
     text-align: start;
 }
 
-/* Inside the modal the form fills the panel (no extra centering/gap) */
+/* Inside the modal the form fills the panel (no extra centering/gap) and
+   scrolls internally when taller than the viewport, so the submit button and
+   captcha stay reachable on short screens. */
 .newsletter-dialog .newsletter-form-element {
     max-width: none;
     margin-inline: 0;
+    overflow-y: auto;
 }
 
 .newsletter-form-element .newsletter-title {
