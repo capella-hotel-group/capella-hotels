@@ -18,6 +18,14 @@ const HCAPTCHA_API_SRC = 'https://js.hcaptcha.com/1/api.js?render=explicit';
 // never sent) if any of these is missing or blank.
 const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'country'];
 
+// Identifies which form was submitted — sent as the auto `source` field so SFMC
+// can tell newsletter sign-ups apart from other (e.g. enquiry) forms.
+const FORM_SOURCE = 'Newsletter';
+
+// `property` value sent on non-hotel pages (e.g. the global .com site) where no
+// hotel is matched from the URL. Hotel pages send the resolved hotel code.
+const NON_HOTEL_PROPERTY_CODE = 'CHR';
+
 // Authored row order — must match the field order in `_newsletter-form.json`.
 // SALUTATION_OPTIONS, COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment
 // paths: the first two populate the dropdowns, the last provides the
@@ -463,17 +471,17 @@ async function submitForm(form, config, message, submitBtn) {
   if (captchaToken) payload.captchaValue = captchaToken;
 
   // Auto-mapped metadata (not visitor-entered).
-  // Prefer the <html lang> attribute; if it is missing (e.g. block decorated
-  // before scripts.js sets it), derive the language from the URL path instead.
-  payload.language = document.documentElement.lang || getPageLang();
-  // Property is the location name and Source is the property code (CP...), both
-  // resolved from the page URL against the authored CF mapping. On non-property
-  // pages neither is set — the keys are omitted rather than sent empty.
+  // Language: SFMC expects the 2-character code only. `getPageLang()` /
+  // <html lang> may hold a full BCP-47 tag (e.g. `en-US`, `ar-QA`), so take the
+  // primary subtag before the hyphen.
+  const langTag = document.documentElement.lang || getPageLang();
+  payload.language = langTag.split('-')[0].toLowerCase();
+  // Property: the hotel code resolved from the page URL against the authored CF
+  // mapping. On non-hotel pages (no match) send the group-level `CHR` code.
+  // Source: a constant identifying which form was submitted.
   const { property } = config;
-  if (property) {
-    payload.property = property.name;
-    payload.source = property.code;
-  }
+  payload.property = property ? property.code : NON_HOTEL_PROPERTY_CODE;
+  payload.source = FORM_SOURCE;
 
   message.textContent = '';
   message.className = 'newsletter-message';
