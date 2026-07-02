@@ -1,6 +1,14 @@
 
 /* newsletter-form styles — uses logical properties for RTL support */
 
+/* Center the on-page trigger button within the block. The closed <dialog> is
+   display:none (and when open it is placed in the browser top layer), so this
+   only affects the trigger's placement. */
+.newsletter-form {
+    display: flex;
+    justify-content: center;
+}
+
 /* On-page button that opens the newsletter modal */
 .newsletter-form .newsletter-trigger {
     display: inline-block;
