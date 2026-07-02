@@ -380,8 +380,10 @@ function buildModal(form, triggerLabel, title) {
   closeBtn.setAttribute('aria-label', 'Close');
   closeBtn.innerHTML = '&times;';
 
-  panel.append(closeBtn, form);
-  dialog.append(panel);
+  // The close button is a direct child of the dialog (a sibling of the
+  // scrollable panel) so it stays pinned in the corner while the form scrolls.
+  panel.append(form);
+  dialog.append(closeBtn, panel);
 
   const close = () => dialog.close();
 
