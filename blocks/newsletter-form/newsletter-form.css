@@ -1,6 +1,70 @@
 
 /* newsletter-form styles — uses logical properties for RTL support */
 
+/* On-page button that opens the newsletter modal */
+.newsletter-form .newsletter-trigger {
+    display: inline-block;
+    padding: 14px 32px;
+    border: none;
+    background-color: var(--header-cta-bg);
+    color: #fff;
+    font-family: var(--body-font-family);
+    font-size: var(--body-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--header-letter-spacing);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.newsletter-form .newsletter-trigger:hover {
+    background-color: var(--header-cta-hover-bg);
+}
+
+/* Modal dialog: reset the native <dialog> chrome and center the panel */
+.newsletter-dialog {
+    max-width: 560px;
+    width: calc(100% - 32px);
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow: visible;
+}
+
+.newsletter-dialog::backdrop {
+    background-color: rgb(0 0 0 / 55%);
+}
+
+/* Panel wraps the form and hosts the close button */
+.newsletter-dialog .newsletter-dialog-panel {
+    position: relative;
+}
+
+.newsletter-dialog .newsletter-dialog-close {
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline-end: 12px;
+    z-index: 1;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--dark-color);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.newsletter-dialog .newsletter-dialog-close:hover {
+    color: var(--header-cta-bg);
+}
+
+/* Inside the modal the form fills the panel (no extra centering/gap) */
+.newsletter-dialog .newsletter-form-element {
+    max-width: none;
+    margin-inline: 0;
+}
+
 .newsletter-form-element {
     display: flex;
     flex-direction: column;

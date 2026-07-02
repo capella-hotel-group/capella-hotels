@@ -34,6 +34,7 @@ const ROW = {
   CONSENT: 8,
   SUBMIT: 9,
   PROPERTY_OPTIONS: 10,
+  TRIGGER_LABEL: 11,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -351,6 +352,56 @@ function buildInput(name, type, placeholder) {
 }
 
 /**
+ * Wraps the form in a native <dialog> modal and returns the dialog plus its
+ * trigger button. The dialog provides focus trapping, Esc-to-close and a
+ * backdrop for free. Closing is wired to: the ✕ button, a click on the
+ * backdrop (outside the panel), and the dialog's native `cancel` (Esc) event.
+ * @param {HTMLFormElement} form The finished newsletter form.
+ * @param {string} triggerLabel Text for the on-page button that opens the modal.
+ * @param {string} title Accessible label for the dialog/close controls.
+ * @returns {{ dialog: HTMLDialogElement, trigger: HTMLButtonElement }}
+ */
+function buildModal(form, triggerLabel, title) {
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'newsletter-trigger';
+  trigger.textContent = triggerLabel;
+
+  const dialog = document.createElement('dialog');
+  dialog.className = 'newsletter-dialog';
+  dialog.setAttribute('aria-label', title);
+
+  const panel = document.createElement('div');
+  panel.className = 'newsletter-dialog-panel';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'newsletter-dialog-close';
+  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.innerHTML = '&times;';
+
+  panel.append(closeBtn, form);
+  dialog.append(panel);
+
+  const close = () => dialog.close();
+
+  // Open the modal from the on-page trigger.
+  trigger.addEventListener('click', () => dialog.showModal());
+
+  // Close via the ✕ button.
+  closeBtn.addEventListener('click', close);
+
+  // Close when the backdrop (the dialog element itself, outside the panel) is
+  // clicked. Clicks inside the panel bubble to the dialog too, so compare the
+  // target explicitly.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) close();
+  });
+
+  return { dialog, trigger };
+}
+
+/**
  * Collects every form entry plus auto-mapped metadata and POSTs it as
  * application/x-www-form-urlencoded (so the Sling servlet's getParameter()
  * can read each field).
@@ -458,6 +509,7 @@ export default async function decorate(block) {
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
     propertyPath: rowLink(rows, ROW.PROPERTY_OPTIONS),
+    triggerLabel: rowText(rows, ROW.TRIGGER_LABEL) || 'Subscribe',
   };
 
   // Load dropdown options and the property mapping from the authored Content
@@ -564,7 +616,10 @@ export default async function decorate(block) {
     submitForm(form, { endpoint: API_ENDPOINT, property, captcha }, message, submitBtn);
   });
 
-  // ── Replace authored rows with the finished form ─────────────────────────
+  // ── Wrap the form in a modal, triggered by an on-page button ─────────────
+  const { dialog, trigger } = buildModal(form, cfg.triggerLabel, cfg.title);
+
+  // ── Replace authored rows with the trigger button + modal ────────────────
   block.textContent = '';
-  block.append(form);
+  block.append(trigger, dialog);
 }

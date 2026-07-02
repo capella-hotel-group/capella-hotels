@@ -440,6 +440,13 @@
         "name": "propertyOptions",
         "label": "Property Mapping (Content Fragment path)",
         "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "triggerLabel",
+        "label": "Open Button Label",
+        "valueType": "string",
+        "value": "Subscribe"
       }
     ]
   },
