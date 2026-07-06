@@ -22,8 +22,13 @@ const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'countr
 // can tell newsletter sign-ups apart from other (e.g. enquiry) forms.
 const FORM_SOURCE = 'Newsletter';
 
-// `property` value sent on non-hotel pages (e.g. the global .com site) where no
-// hotel is matched from the URL. Hotel pages send the resolved hotel code.
+// `property` fallback codes for non-hotel pages (where no specific hotel is
+// matched from the URL), chosen by the site's domain. Hotel-specific pages
+// always send the resolved hotel code instead.
+//   • capellahotelgroup.com          → CHG (Capella Hotel Group)
+//   • any other domain, e.g.
+//     capellahotels.com              → CHR (Capella Hotels & Resorts)
+const GROUP_PROPERTY_CODE = 'CHG';
 const NON_HOTEL_PROPERTY_CODE = 'CHR';
 
 // Authored row order — must match the field order in `_newsletter-form.json`.
@@ -225,6 +230,25 @@ function resolveProperty(properties) {
   const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
   const tokens = path.split(/[/_-]+/).filter(Boolean);
   return properties.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
+}
+
+/**
+ * Fallback `property` code for non-hotel pages (no specific hotel matched from
+ * the URL), evaluated in order:
+ *   1. A Residence(s) page without a country/hotel in the path → `CHR`
+ *      (Residences belong to Capella Hotels & Resorts), regardless of domain.
+ *   2. The Capella Hotel Group site (`capellahotelgroup.com`) → `CHG`.
+ *   3. Any other domain (e.g. `capellahotels.com`) → `CHR`.
+ * Hotel-specific pages use the resolved hotel code instead and never call this.
+ * @returns {string} `CHG` or `CHR`.
+ */
+function resolveFallbackCode() {
+  const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
+  const tokens = path.split(/[/_-]+/).filter(Boolean);
+  // Match both the singular (`residence`) and plural (`residences`) slugs.
+  if (tokens.includes('residences') || tokens.includes('residence')) return NON_HOTEL_PROPERTY_CODE;
+  const host = (typeof window !== 'undefined' ? window.location.hostname : '').toLowerCase();
+  return host.includes('capellahotelgroup') ? GROUP_PROPERTY_CODE : NON_HOTEL_PROPERTY_CODE;
 }
 
 /**
@@ -477,10 +501,11 @@ async function submitForm(form, config, message, submitBtn) {
   const langTag = document.documentElement.lang || getPageLang();
   payload.language = langTag.split('-')[0].toLowerCase();
   // Property: the hotel code resolved from the page URL against the authored CF
-  // mapping. On non-hotel pages (no match) send the group-level `CHR` code.
+  // mapping. On non-hotel pages (no match) fall back to a group code — CHR for a
+  // Residences page without a country, CHG on capellahotelgroup.com, else CHR.
   // Source: a constant identifying which form was submitted.
   const { property } = config;
-  payload.property = property ? property.code : NON_HOTEL_PROPERTY_CODE;
+  payload.property = property ? property.code : resolveFallbackCode();
   payload.source = FORM_SOURCE;
 
   message.textContent = '';
