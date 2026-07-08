@@ -74,7 +74,8 @@ function rowLink(rows, index) {
 
 /**
  * Normalises a single raw Content Fragment entry into a { value, label } pair.
- * Accepts either a `VALUE|Label` string (label optional) or an object using any
+ * Accepts either a `Label|VALUE` string (e.g. `Singapore|SG` — the visible label
+ * first, the submitted value/code last; value optional) or an object using any
  * of the common key names (value/code/key/id and label/name/title/text).
  * @returns {{ value: string, label: string } | null}
  */
@@ -82,9 +83,14 @@ function normalizeOption(item) {
   if (typeof item === 'string') {
     const line = item.trim();
     if (!line) return null;
-    const [first, ...rest] = line.split('|');
-    const value = first.trim();
-    return { value, label: rest.length ? rest.join('|').trim() : value };
+    // Authored as `Label|VALUE` (e.g. `Singapore|SG`): the visible label comes
+    // first, the submitted value/code last. The value never contains a pipe, so
+    // take the final segment as the value and everything before it as the label.
+    // A single segment (no pipe) is used for both value and label.
+    const parts = line.split('|');
+    const value = parts.pop().trim();
+    const label = parts.length ? parts.join('|').trim() : value;
+    return { value, label };
   }
   if (item && typeof item === 'object') {
     const value = item.value ?? item.code ?? item.key ?? item.id
@@ -182,24 +188,32 @@ async function fetchOptions(path) {
 
 /**
  * Normalises a raw property-mapping entry into { keys, name, code }. Accepts a
- * `KEYS|NAME|CODE` string (KEYS may list several comma/space separated location
- * keywords, e.g. `macau,macao|Capella Macau|CPMAC`) or an object using
- * keys/key/location + name/property + code/source style fields. When KEYS is
- * omitted the NAME is tokenised and used for matching instead.
+ * pipe string in either the 2-part `KEYS|CODE` form or the legacy 3-part
+ * `KEYS|NAME|CODE` form — NAME is optional, only aids authoring readability, and
+ * is NOT submitted (only `code` is). KEYS may list several comma/space separated
+ * location keywords (e.g. `macau,macao|CPMAC`). Objects using
+ * keys/key/location + code/source (+ optional name) style fields also work.
  * @returns {{ keys: string[], name: string, code: string } | null}
  */
 function normalizeProperty(item) {
   let keysRaw;
-  let name;
+  let name = '';
   let code;
   if (typeof item === 'string') {
-    [keysRaw, name, code] = item.split('|').map((part) => part.trim());
+    const parts = item.split('|').map((part) => part.trim());
+    // 3+ parts → KEYS|NAME|CODE (legacy); 2 parts → KEYS|CODE.
+    if (parts.length >= 3) {
+      [keysRaw, name, code] = parts;
+    } else {
+      [keysRaw, code] = parts;
+    }
   } else if (item && typeof item === 'object') {
     keysRaw = item.keys ?? item.key ?? item.location ?? item.slug;
-    name = item.name ?? item.property ?? item.title ?? item.label;
+    name = item.name ?? item.property ?? item.title ?? item.label ?? '';
     code = item.code ?? item.source ?? item.value;
   }
-  if (!name || !code) return null;
+  // Only `code` is mandatory now (it is the submitted value). `name` is optional.
+  if (!code) return null;
   const keysStr = Array.isArray(keysRaw) ? keysRaw.join(' ') : String(keysRaw ?? name);
   const keys = keysStr.toLowerCase().split(/[,\s/_-]+/).filter(Boolean);
   if (!keys.length) return null;
