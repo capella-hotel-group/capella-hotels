@@ -10,7 +10,8 @@
                         "template": {
                             "name": "Content Card",
                             "model": "content-card",
-                            "filter": "content-card"
+                            "filter": "content-card",
+                            "title": ""
                         }
                     }
                 }
@@ -89,8 +90,8 @@
                 },
                 {
                     "component": "text",
-                    "name": "meta",
-                    "label": "Meta / Award Info",
+                    "name": "awardInfo",
+                    "label": "Award Info",
                     "valueType": "string"
                 },
                 {

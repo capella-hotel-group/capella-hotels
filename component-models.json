@@ -289,8 +289,8 @@
       },
       {
         "component": "text",
-        "name": "meta",
-        "label": "Meta / Award Info",
+        "name": "awardInfo",
+        "label": "Award Info",
         "valueType": "string"
       },
       {

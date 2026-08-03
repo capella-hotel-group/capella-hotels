@@ -169,7 +169,8 @@
                 "template": {
                   "name": "Content Card",
                   "model": "content-card",
-                  "filter": "content-card"
+                  "filter": "content-card",
+                  "title": ""
                 }
               }
             }
