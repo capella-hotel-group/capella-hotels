@@ -17,12 +17,7 @@
       "columns",
       "fragment",
       "text-with-image",
-      "hero-banner",
-      "section-intro",
-      "awards-carousel",
-      "turneo-proxy-test",
-      "dm-showcase",
-      "newsletter-form"
+      "hero-banner"
     ]
   },
   {
@@ -50,6 +45,12 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "content-card",
+    "components": [
+      "content-card-item"
     ]
   }
 ]

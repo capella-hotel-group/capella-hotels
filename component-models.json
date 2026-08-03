@@ -234,6 +234,79 @@
     ]
   },
   {
+    "id": "content-card",
+    "fields": [
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Section Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "richtext",
+        "name": "subtitle",
+        "label": "Subtitle",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "content-card-item",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Card Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "location",
+        "label": "Location",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "cardTitle",
+        "label": "Card Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "meta",
+        "label": "Meta / Award Info",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link"
+      },
+      {
+        "component": "text",
+        "name": "ctaText",
+        "label": "CTA Text",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
     "id": "dm-showcase",
     "fields": [
       {
