@@ -8,11 +8,9 @@ function firstText(el) {
   return el?.textContent?.trim() || '';
 }
 
-function classifyIntroCell(cell, idx) {
-  if (idx === 0) return 'content-card-eyebrow';
-  if (idx === 1) return 'content-card-title';
-  return 'content-card-copy';
-}
+// Intro row order matches model field order:
+// row 0 = eyebrow | row 1 = title | row 2 = subtitle | row 3 = description
+const INTRO_ROWS = 4;
 
 function createMediaFigure(mediaCell) {
   const figure = document.createElement('figure');
@@ -85,16 +83,40 @@ function appendBodyContent(body, details) {
   });
 }
 
-function buildIntro(row) {
+function buildIntro(introRows) {
+  const [eyebrowRow, titleRow, subtitleRow, descRow] = introRows;
   const intro = document.createElement('header');
   intro.className = 'content-card-intro';
 
-  [...row.children].forEach((cell, idx) => {
-    const part = document.createElement('div');
-    part.className = classifyIntroCell(cell, idx);
-    moveChildren(cell, part);
-    intro.append(part);
-  });
+  const eyebrowText = firstText(eyebrowRow);
+  if (eyebrowText) {
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'content-card-eyebrow';
+    eyebrow.textContent = eyebrowText;
+    intro.append(eyebrow);
+  }
+
+  const titleText = firstText(titleRow);
+  if (titleText) {
+    const heading = document.createElement('h2');
+    heading.className = 'content-card-title';
+    heading.textContent = titleText;
+    intro.append(heading);
+  }
+
+  if (subtitleRow && firstText(subtitleRow)) {
+    const subtitle = document.createElement('div');
+    subtitle.className = 'content-card-subtitle';
+    moveChildren(subtitleRow.firstElementChild ?? subtitleRow, subtitle);
+    intro.append(subtitle);
+  }
+
+  if (descRow && firstText(descRow)) {
+    const desc = document.createElement('div');
+    desc.className = 'content-card-description';
+    moveChildren(descRow.firstElementChild ?? descRow, desc);
+    intro.append(desc);
+  }
 
   return intro;
 }
@@ -142,13 +164,12 @@ export default function decorate(block) {
   const rows = [...block.children];
   if (!rows.length) return;
 
-  const introRow = rows.shift();
-  const intro = buildIntro(introRow);
+  const intro = buildIntro(rows.slice(0, INTRO_ROWS));
 
   const list = document.createElement('ul');
   list.className = 'content-card-list';
 
-  rows.forEach((row) => {
+  rows.slice(INTRO_ROWS).forEach((row) => {
     const card = buildCard(row);
     if (card) list.append(card);
   });

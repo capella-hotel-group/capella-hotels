@@ -41,7 +41,21 @@
     text-transform: uppercase;
 }
 
-.content-card .content-card-copy {
+/* subtitle — GoudyWtcT 24px, matches Figma paragraph-stack heading */
+.content-card .content-card-subtitle {
+    max-width: 48rem;
+    color: #262727;
+    font-family: var(--heading-font-family);
+    font-size: 24px;
+    line-height: 28px;
+}
+
+.content-card .content-card-subtitle p {
+    margin: 0;
+}
+
+/* description — Calibre 18px, matches Figma paragraph-stack body */
+.content-card .content-card-description {
     max-width: 48rem;
     color: #262727;
     font-family: var(--body-font-family);
@@ -49,7 +63,7 @@
     line-height: 24px;
 }
 
-.content-card .content-card-copy p {
+.content-card .content-card-description p {
     margin: 0;
 }
 
@@ -131,10 +145,6 @@
 .content-card .content-card-meta p,
 .content-card .content-card-text p {
     margin: 0;
-}
-
-.content-card .content-card-copy p + p {
-    margin-top: 16px;
 }
 
 .content-card .content-card-cta {
