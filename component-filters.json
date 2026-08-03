@@ -22,7 +22,8 @@
       "awards-carousel",
       "turneo-proxy-test",
       "dm-showcase",
-      "newsletter-form"
+      "newsletter-form",
+      "content-card"
     ]
   },
   {
@@ -50,6 +51,12 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "content-card",
+    "components": [
+      "content-card-item"
     ]
   }
 ]
