@@ -282,7 +282,7 @@
       },
       {
         "component": "text",
-        "name": "cardTitle",
+        "name": "title",
         "label": "Card Title",
         "valueType": "string",
         "required": true
@@ -300,7 +300,7 @@
       },
       {
         "component": "text",
-        "name": "ctaText",
+        "name": "ctaLabel",
         "label": "CTA Text",
         "valueType": "string"
       }
