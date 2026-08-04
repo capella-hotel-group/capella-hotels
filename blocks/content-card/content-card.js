@@ -64,6 +64,11 @@ function createCtaWrap(link) {
   return ctaWrap;
 }
 
+function looksLikeUrl(value) {
+  if (!value) return false;
+  return /^(https?:\/\/|\/|\.\/|\.\.\/)/i.test(value.trim());
+}
+
 function appendBodyContent(body, details) {
   const lastIdx = details.length - 1;
 
@@ -74,6 +79,19 @@ function appendBodyContent(body, details) {
     if (hasLinkOnly && idx === lastIdx) {
       body.append(createCtaWrap(link));
       return;
+    }
+
+    // Support UE-authored plain text URL + label fields for CTA.
+    if (!link && idx < lastIdx) {
+      const maybeUrl = firstText(cell);
+      const maybeLabel = firstText(details[idx + 1]);
+      if (looksLikeUrl(maybeUrl) && maybeLabel) {
+        const cta = document.createElement('a');
+        cta.href = maybeUrl;
+        cta.textContent = maybeLabel;
+        body.append(createCtaWrap(cta));
+        return;
+      }
     }
 
     const meta = document.createElement('div');
