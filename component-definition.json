@@ -201,11 +201,7 @@
                 "template": {
                   "name": "Destination Tabs",
                   "filter": "destination-tabs",
-                  "model": "destination-tabs",
-                  "image": "",
-                  "title": "",
-                  "ctaLabel": "",
-                  "ctaLink": ""
+                  "model": "destination-tabs"
                 }
               }
             }
