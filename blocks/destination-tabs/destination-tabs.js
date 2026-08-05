@@ -60,7 +60,16 @@ async function renderCFPanel(panel, cfPath) {
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(avatarPath);
     avatarImg.alt = cfData.name || 'Avatar';
-    avatarCol.append(avatarImg);
+    leftCol.append(avatarImg);
+  }
+
+  const { _path: signaturePath } = cfData.signatureImage || {};
+  if (signaturePath) {
+    const sigImg = document.createElement('img');
+    sigImg.className = 'destination-tabs-signature desktop-signature';
+    sigImg.src = resolveAssetUrl(signaturePath);
+    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
+    leftCol.append(sigImg);
   }
 
   // Signature Image (Under Avatar on Desktop)
