@@ -1,7 +1,7 @@
 {
     "definitions": [
         {
-            "title": "Destination Cards",
+            "title": "Content Cards",
             "id": "content-card",
             "plugins": {
                 "xwalk": {
@@ -41,26 +41,29 @@
                     "component": "text",
                     "name": "eyebrow",
                     "label": "Eyebrow",
-                    "valueType": "string"
+                    "valueType": "string",
+                    "value": ""
                 },
                 {
                     "component": "text",
                     "name": "title",
                     "label": "Section Title",
                     "valueType": "string",
-                    "required": true
+                    "value": ""
                 },
                 {
                     "component": "richtext",
                     "name": "subtitle",
                     "label": "Subtitle",
-                    "valueType": "string"
+                    "valueType": "string",
+                    "value": ""
                 },
                 {
                     "component": "richtext",
                     "name": "description",
                     "label": "Description",
-                    "valueType": "string"
+                    "valueType": "string",
+                    "value": ""
                 }
             ]
         },
@@ -72,8 +75,7 @@
                     "name": "image",
                     "label": "Card Image",
                     "valueType": "string",
-                    "multi": false,
-                    "required": true
+                    "multi": false
                 },
                 {
                     "component": "text",
@@ -85,8 +87,7 @@
                     "component": "text",
                     "name": "title",
                     "label": "Card Title",
-                    "valueType": "string",
-                    "required": true
+                    "valueType": "string"
                 },
                 {
                     "component": "text",
