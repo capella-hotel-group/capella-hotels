@@ -49,8 +49,8 @@ async function renderCFPanel(panel, cfPath) {
   const avatarCol = document.createElement('div');
   avatarCol.className = 'destination-tabs-avatar-col';
 
-  // ESLint fix for _path dangling underscore
-  const avatarPath = cfData.image?.['_path'];
+  // Destructure _path to satisfy no-underscore-dangle & dot-notation rules
+  const { _path: avatarPath } = cfData.image || {};
   if (avatarPath) {
     const avatarImg = document.createElement('img');
     avatarImg.className = 'destination-tabs-avatar';
@@ -97,8 +97,8 @@ async function renderCFPanel(panel, cfPath) {
     panelContent.append(descEl);
   }
 
-  // Signature Image (ESLint fix for _path)
-  const signaturePath = cfData.signatureImage?.['_path'];
+  // Signature Image
+  const { _path: signaturePath } = cfData.signatureImage || {};
   if (signaturePath) {
     const sigImg = document.createElement('img');
     sigImg.className = 'destination-tabs-signature';
@@ -107,7 +107,7 @@ async function renderCFPanel(panel, cfPath) {
     panelContent.append(sigImg);
   }
 
-  // Cards Gallery (ESLint fix for _path)
+  // Cards Gallery
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
     const cardsWrapper = document.createElement('div');
     cardsWrapper.className = 'destination-tabs-cards-wrapper';
@@ -119,7 +119,7 @@ async function renderCFPanel(panel, cfPath) {
       const cardEl = document.createElement('div');
       cardEl.className = 'destination-tabs-card';
 
-      const cardImgPath = card.image?.['_path'];
+      const { _path: cardImgPath } = card.image || {};
       if (cardImgPath) {
         const cardImg = document.createElement('img');
         cardImg.className = 'destination-tabs-card-img';
