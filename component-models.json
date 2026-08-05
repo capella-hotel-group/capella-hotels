@@ -240,26 +240,29 @@
         "component": "text",
         "name": "eyebrow",
         "label": "Eyebrow",
-        "valueType": "string"
+        "valueType": "string",
+        "value": ""
       },
       {
         "component": "text",
         "name": "title",
         "label": "Section Title",
         "valueType": "string",
-        "required": true
+        "value": ""
       },
       {
         "component": "richtext",
         "name": "subtitle",
         "label": "Subtitle",
-        "valueType": "string"
+        "valueType": "string",
+        "value": ""
       },
       {
         "component": "richtext",
         "name": "description",
         "label": "Description",
-        "valueType": "string"
+        "valueType": "string",
+        "value": ""
       }
     ]
   },
