@@ -23,7 +23,8 @@
       "turneo-proxy-test",
       "dm-showcase",
       "newsletter-form",
-      "content-card"
+      "destination-tabs",
+      "destination-cards"
     ]
   },
   {
@@ -54,9 +55,9 @@
     ]
   },
   {
-    "id": "content-card",
+    "id": "destination-cards",
     "components": [
-      "content-card-item"
+      "destination-card-item"
     ]
   },
   {
