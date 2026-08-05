@@ -53,7 +53,7 @@ async function renderCFPanel(panel, cfPath) {
   const headerEl = document.createElement('div');
   headerEl.className = 'destination-tabs-header';
 
-  if (cfData.image?._path) {
+  if (cfData.image._path) {
     const avatarImg = document.createElement('img');
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(cfData.image._path);
@@ -98,7 +98,7 @@ async function renderCFPanel(panel, cfPath) {
   }
 
   // Signature Image
-  if (cfData.signatureImage?._path) {
+  if (cfData.signatureImage._path) {
     const sigImg = document.createElement('img');
     sigImg.className = 'destination-tabs-signature';
     sigImg.src = resolveAssetUrl(cfData.signatureImage._path);
@@ -118,7 +118,7 @@ async function renderCFPanel(panel, cfPath) {
       const cardEl = document.createElement('div');
       cardEl.className = 'destination-tabs-card';
 
-      if (card.image?._path) {
+      if (card.image._path) {
         const cardImg = document.createElement('img');
         cardImg.className = 'destination-tabs-card-img';
         cardImg.src = resolveAssetUrl(card.image._path);
