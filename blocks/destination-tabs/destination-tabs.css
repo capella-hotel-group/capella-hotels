@@ -1,46 +1,37 @@
-/* Full-bleed section background */
+/* Base Container */
 .destination-tabs-wrapper {
-  background-color: #faf9f6;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  box-sizing: border-box;
-  padding: 2.5rem 1.25rem;
-  font-family: Cinzel, Georgia, serif;
-  color: #1e2d3b;
-}
-
-.destination-tabs-wrapper > div {
   display: flex;
   flex-direction: column;
+  background-color: #faf9f6;
+  padding: 1rem 1.25rem;
+  font-family: Cinzel, Georgia, serif;
+  color: #1e2d3b;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 1320px;
   margin: 0 auto;
-  width: 100%;
 }
 
 @media (width >= 900px) {
   .destination-tabs-wrapper {
-    padding: 4rem 3rem;
-  }
-
-  .destination-tabs-wrapper > div {
     flex-direction: row;
-    gap: 4rem;
-    align-items: flex-start;
+    gap: 3.5rem;
+    padding: 1.5rem 2rem 1.5rem 0;
+    align-items: center; /* Center align left featured image and right column */
   }
 }
 
-/* Left Featured Japanese Art Image */
+/* Left Featured Image (Hidden on mobile) */
 .destination-tabs-left {
-  display: none; /* Hidden on mobile */
+  display: none;
   width: 100%;
 }
 
 @media (width >= 900px) {
   .destination-tabs-left {
     display: block;
-    flex: 0 0 42%;
-    max-width: 42%;
+    flex: 0 0 40%;
+    max-width: 40%;
   }
 }
 
@@ -62,7 +53,7 @@
   min-width: 0;
 }
 
-/* Section Title */
+/* Section Title ("MEET YOUR CULTURIST") */
 .destination-tabs-title {
   font-size: 1.5rem;
   font-weight: 400;
@@ -70,7 +61,8 @@
   text-transform: uppercase;
   color: #1e2d3b;
   text-align: center;
-  margin: 0 0 1.25rem;
+  margin: 0;
+  padding: 3rem 0;
 }
 
 @media (width >= 900px) {
@@ -87,7 +79,7 @@
   gap: 1.25rem;
   border-bottom: none;
   overflow-x: auto;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
   padding-bottom: 0.25rem;
   scrollbar-width: none;
 }
@@ -134,43 +126,63 @@
   display: block;
 }
 
-/* Culturist Info Grid */
-.destination-tabs-info-grid {
+/* Beige Card Container (Mobile) */
+.destination-tabs-info-card {
+  background-color: #eee8e2;
+  padding: 1.5rem;
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  margin-bottom: 2rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-info-grid {
-    display: grid;
-    grid-template-columns: 90px 1fr;
-    gap: 0.75rem 1.5rem;
+  .destination-tabs-info-card {
+    background-color: transparent;
+    padding: 0;
   }
 }
 
-/* Avatar Column */
-.destination-tabs-avatar-col {
+/* Culturist Layout: Mobile stacked vs Desktop 2 columns */
+.destination-tabs-culturist-layout {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
 }
 
 @media (width >= 900px) {
+  .destination-tabs-culturist-layout {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+  }
+}
+
+/* Avatar Column: Avatar on top, Signature directly under on Desktop */
+.destination-tabs-avatar-col {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+@media (width >= 900px) {
   .destination-tabs-avatar-col {
-    grid-column: 1 / 2;
-    grid-row: 1 / 2;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+    gap: 0.75rem;
   }
 }
 
 .destination-tabs-avatar {
-  width: 70px;
-  height: 70px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
 }
 
 @media (width >= 900px) {
@@ -180,17 +192,17 @@
   }
 }
 
-/* Name & Role */
-.destination-tabs-info-col {
+/* Details Column */
+.destination-tabs-details-col {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
 }
 
-@media (width >= 900px) {
-  .destination-tabs-info-col {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-  }
+.destination-tabs-header {
+  display: flex;
+  flex-direction: column;
 }
 
 .destination-tabs-name {
@@ -208,7 +220,6 @@
   margin: 0.2rem 0 0;
 }
 
-/* Quote */
 .destination-tabs-quote {
   font-size: 1.05rem;
   line-height: 1.45;
@@ -217,18 +228,10 @@
   color: #2b2b2b;
 }
 
-@media (width >= 900px) {
-  .destination-tabs-quote {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-  }
-}
-
 .destination-tabs-quote p {
   margin: 0;
 }
 
-/* Bio Description */
 .destination-tabs-description {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 0.825rem;
@@ -236,30 +239,32 @@
   color: #4a4a4a;
 }
 
-@media (width >= 900px) {
-  .destination-tabs-description {
-    grid-column: 2 / 3;
-    grid-row: 3 / 4;
-  }
-}
-
 .destination-tabs-description p {
   margin: 0;
 }
 
-/* Signature Image: After description on mobile, below avatar on desktop */
+/* Signature Image */
 .destination-tabs-signature {
-  max-width: 120px;
+  max-width: 110px;
   height: auto;
   display: block;
 }
 
+.desktop-signature {
+  display: none;
+}
+
+.mobile-signature {
+  display: block;
+}
+
 @media (width >= 900px) {
-  .destination-tabs-signature {
-    grid-column: 1 / 2;
-    grid-row: 2 / 4;
-    align-self: start;
-    margin-top: 0.5rem;
+  .desktop-signature {
+    display: block;
+  }
+
+  .mobile-signature {
+    display: none;
   }
 }
 
@@ -268,9 +273,14 @@
   position: relative;
   overflow-x: auto;
   scrollbar-width: none;
-  margin-bottom: 2.5rem;
   width: 100%;
-  mask-image: linear-gradient(to right, rgb(0 0 0 / 100%) 80%, rgb(0 0 0 / 0%) 100%);
+  margin-top: 0.5rem;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-cards-wrapper {
+    mask-image: linear-gradient(to right, rgb(0 0 0 / 100%) 80%, rgb(0 0 0 / 0%) 100%);
+  }
 }
 
 .destination-tabs-cards-wrapper::-webkit-scrollbar {
@@ -279,19 +289,19 @@
 
 .destination-tabs-cards {
   display: flex;
-  gap: 1rem;
-  padding-right: 2rem;
+  gap: 0.8rem;
 }
 
-/* Cards Sizing */
+/* Mobile: Exactly 2 cards side by side inside beige box */
 .destination-tabs-card {
   position: relative;
-  flex: 0 0 160px;
-  height: 200px;
+  flex: 0 0 calc(50% - 0.4rem);
+  aspect-ratio: 1 / 1.15;
   overflow: hidden;
   background-color: #ddd;
 }
 
+/* Desktop: Fixed card sizes */
 @media (width >= 900px) {
   .destination-tabs-card {
     flex: 0 0 170px;
@@ -322,7 +332,7 @@
 /* Bottom CTA */
 .destination-tabs-cta {
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
 
 @media (width >= 900px) {
