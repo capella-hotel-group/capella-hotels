@@ -101,8 +101,7 @@ async function renderCFPanel(panel, cfPath) {
     sigImg.src = cfData.signatureImage._path;
     sigImg.alt = `${cfData.name} Signature`;
     panelContent.append(sigImg);
-  }
-  // Cards gallery from cardContentReference
+  }  // Cards gallery from cardContentReference
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'destination-tabs-cards';
@@ -116,13 +115,13 @@ async function renderCFPanel(panel, cfPath) {
         cardImg.src = card.image._path;
         cardImg.alt = card.title || 'Card image';
         cardEl.append(cardImg);
+      }
 
-        if (card.title) {
-          const titleEl = document.createElement('p');
-          titleEl.className = 'destination-tabs-card-title';
-          titleEl.textContent = card.title;
-          cardEl.append(titleEl);
-        }
+      if (card.title) {
+        const titleEl = document.createElement('p');
+        titleEl.className = 'destination-tabs-card-title';
+        titleEl.textContent = card.title;
+        cardEl.append(titleEl);
       }
 
       cardsContainer.append(cardEl);

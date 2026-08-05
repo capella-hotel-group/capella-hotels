@@ -204,6 +204,7 @@
   aspect-ratio: 1;
   flex: 0 0 200px;
   scroll-snap-align: start;
+  background: #f0f0f0;
 }
 
 .destination-tabs-card img {
