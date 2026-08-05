@@ -6,7 +6,6 @@ import { getPublishBaseUrl } from '../../scripts/env.js';
 async function fetchCFDetails(cfPath) {
   try {
     const publishBase = getPublishBaseUrl();
-    //const encodedPath = encodeURIComponent(cfPath);
     const url = `${publishBase}/graphql/execute.json/capella-hotels/TabList;path=${cfPath}`;
 
     const response = await fetch(url, {
@@ -15,14 +14,14 @@ async function fetchCFDetails(cfPath) {
     });
 
     if (!response.ok) {
-      console.error(`GraphQL error: ${response.status}`);
+      // console.error(`GraphQL error: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
     return data.data?.tabDetailsByPath?.item || null;
   } catch (error) {
-    console.error(`Failed to fetch CF: ${cfPath}`, error);
+    // console.error(`Failed to fetch CF: ${cfPath}`, error);
     return null;
   }
 }
@@ -101,7 +100,9 @@ async function renderCFPanel(panel, cfPath) {
     sigImg.src = cfData.signatureImage._path;
     sigImg.alt = `${cfData.name} Signature`;
     panelContent.append(sigImg);
-  }  // Cards gallery from cardContentReference
+  }  
+  
+  // Cards gallery from cardContentReference
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'destination-tabs-cards';
@@ -166,7 +167,7 @@ export default async function decorate(block) {
         img.src,
         img.alt || 'Feature Image',
         false,
-        [{ width: '400' }]
+        [{ width: '400' }],
       );
       moveInstrumentation(imagePicture, optimized);
       leftCol.append(optimized);
