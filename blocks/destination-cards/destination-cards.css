@@ -9,6 +9,11 @@
     gap: 16px;
     justify-items: center;
     text-align: center;
+    margin-bottom: 56px;
+}
+
+.destination-cards .destination-cards-intro > * {
+    width: min(100%, 32rem);
 }
 
 .destination-cards .destination-cards-title {
@@ -21,7 +26,7 @@
 }
 
 .destination-cards .destination-cards-subtitle {
-    max-width: 46rem;
+    max-width: none;
     color: #262727;
     font-family: var(--body-font-family);
     font-size: 18px;
@@ -34,7 +39,7 @@
 }
 
 .destination-cards .destination-cards-list {
-    margin: 56px 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
     display: grid;
@@ -59,6 +64,10 @@
     background: #111;
 }
 
+.destination-cards .destination-cards-media.destination-cards-media-no-image {
+    background: linear-gradient(180deg, #354658 0%, #1b364b 100%);
+}
+
 .destination-cards .destination-cards-media picture,
 .destination-cards .destination-cards-media img {
     display: block;
@@ -74,7 +83,7 @@
     position: absolute;
     inset: 20px;
     display: grid;
-    align-content: space-between;
+    grid-template-rows: auto 1fr auto;
     justify-items: center;
     text-align: center;
     color: #fff;
@@ -90,22 +99,27 @@
 
 .destination-cards .destination-cards-card-title {
     margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
     font-family: var(--heading-font-family);
     font-size: 34px;
     line-height: 1.2;
+    align-self: center;
 }
 
 .destination-cards .destination-cards-icons {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    min-height: 24px;
+    gap: 16px;
+    min-height: 32px;
+    align-self: end;
 }
 
 .destination-cards .destination-cards-icons picture {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
 }
 
 .destination-cards .destination-cards-icons img {
@@ -117,6 +131,7 @@
 .destination-cards .destination-cards-footer {
     display: flex;
     align-items: center;
+    min-height: 40px;
 }
 
 .destination-cards .destination-cards-cta {
@@ -128,7 +143,9 @@
     font-size: 18px;
     font-weight: 600;
     line-height: 24px;
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
     text-transform: uppercase;
 }
 
@@ -146,6 +163,7 @@
 
     .destination-cards .destination-cards-intro {
         gap: 40px;
+        margin-bottom: 80px;
     }
 
     .destination-cards .destination-cards-title {
@@ -154,7 +172,6 @@
     }
 
     .destination-cards .destination-cards-list {
-        margin-top: 80px;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 40px;
     }
