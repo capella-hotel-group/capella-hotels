@@ -5,9 +5,7 @@ import { getPublishBaseUrl } from '../../scripts/env.js';
 // Resolve DAM asset URL with publish domain
 function resolveAssetUrl(damPath) {
   if (!damPath) return null;
-  // If it's already a full URL, return as-is
   if (damPath.startsWith('http')) return damPath;
-  // Otherwise, prepend publish base URL
   const publishBase = getPublishBaseUrl();
   return `${publishBase}${damPath}`;
 }
@@ -23,20 +21,16 @@ async function fetchCFDetails(cfPath) {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) {
-      // console.error(`GraphQL error: ${response.status}`);
-      return null;
-    }
+    if (!response.ok) return null;
 
     const data = await response.json();
     return data.data?.tabDetailsByPath?.item || null;
   } catch (error) {
-    // console.error(`Failed to fetch CF: ${cfPath}`, error);
     return null;
   }
 }
 
-// Render CF data into panel
+// Render Content Fragment into Tab Panel
 async function renderCFPanel(panel, cfPath) {
   const cfData = await fetchCFDetails(cfPath);
   const content = panel.querySelector('.destination-tabs-panel-content');
@@ -46,79 +40,77 @@ async function renderCFPanel(panel, cfPath) {
     return;
   }
 
-  // Clear placeholder
   if (content) content.remove();
-  // Create content structure from CF fields
+
   const panelContent = document.createElement('div');
   panelContent.className = 'destination-tabs-panel-content';
-  // Header: Avatar + Name + Role (horizontal layout)
+
+  // --- CULTURIST INFO CARD ---
+  const infoCard = document.createElement('div');
+  infoCard.className = 'destination-tabs-info-card';
+
+  // Header: Avatar + Name & Role
   const headerEl = document.createElement('div');
   headerEl.className = 'destination-tabs-header';
 
-  // Avatar column (left side)
-  const avatarCol = document.createElement('div');
-  avatarCol.className = 'destination-tabs-avatar-col';
-
-  // Avatar image
   if (cfData.image?._path) {
     const avatarImg = document.createElement('img');
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(cfData.image._path);
-    avatarImg.alt = cfData.name || 'Avatar';
-    avatarCol.append(avatarImg);
+    avatarImg.alt = cfData.name || 'Culturist Avatar';
+    headerEl.append(avatarImg);
   }
 
-  // Signature image (below avatar)
-  if (cfData.signatureImage?._path) {
-    const sigImg = document.createElement('img');
-    sigImg.className = 'destination-tabs-signature';
-    sigImg.src = resolveAssetUrl(cfData.signatureImage._path);
-    sigImg.alt = `${cfData.name} Signature`;
-    avatarCol.append(sigImg);
-  }
+  const nameRoleWrapper = document.createElement('div');
+  nameRoleWrapper.className = 'destination-tabs-name-role';
 
-  headerEl.append(avatarCol);
-
-  // Header content: Name + Role
-  const headerContent = document.createElement('div');
-  headerContent.className = 'destination-tabs-header-content';
-
-  // Name
   if (cfData.name) {
     const nameEl = document.createElement('h3');
     nameEl.className = 'destination-tabs-name';
     nameEl.textContent = cfData.name;
-    headerContent.append(nameEl);
+    nameRoleWrapper.append(nameEl);
   }
 
-  // Role
   if (cfData.role) {
     const roleEl = document.createElement('p');
     roleEl.className = 'destination-tabs-role';
     roleEl.textContent = cfData.role;
-    headerContent.append(roleEl);
+    nameRoleWrapper.append(roleEl);
   }
 
-  headerEl.append(headerContent);
-  panelContent.append(headerEl);
+  headerEl.append(nameRoleWrapper);
+  infoCard.append(headerEl);
 
   // Quote
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    panelContent.append(quoteEl);
+    infoCard.append(quoteEl);
   }
 
-  // Description (bio)
+  // Bio Description
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
     descEl.className = 'destination-tabs-description';
     descEl.innerHTML = cfData.description.html;
-    panelContent.append(descEl);
+    infoCard.append(descEl);
   }
-  // Cards gallery from cardContentReference
+
+  // Signature Image
+  if (cfData.signatureImage?._path) {
+    const sigImg = document.createElement('img');
+    sigImg.className = 'destination-tabs-signature';
+    sigImg.src = resolveAssetUrl(cfData.signatureImage._path);
+    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
+    infoCard.append(sigImg);
+  }
+
+  // Cards Gallery
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
+    const cardsWrapper = document.createElement('div');
+    cardsWrapper.className = 'destination-tabs-cards-wrapper';
+
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'destination-tabs-cards';
 
@@ -128,13 +120,14 @@ async function renderCFPanel(panel, cfPath) {
 
       if (card.image?._path) {
         const cardImg = document.createElement('img');
+        cardImg.className = 'destination-tabs-card-img';
         cardImg.src = resolveAssetUrl(card.image._path);
         cardImg.alt = card.title || 'Card image';
         cardEl.append(cardImg);
       }
 
       if (card.title) {
-        const titleEl = document.createElement('p');
+        const titleEl = document.createElement('span');
         titleEl.className = 'destination-tabs-card-title';
         titleEl.textContent = card.title;
         cardEl.append(titleEl);
@@ -143,9 +136,11 @@ async function renderCFPanel(panel, cfPath) {
       cardsContainer.append(cardEl);
     });
 
-    panelContent.append(cardsContainer);
+    cardsWrapper.append(cardsContainer);
+    infoCard.append(cardsWrapper);
   }
 
+  panelContent.append(infoCard);
   panel.append(panelContent);
 }
 
@@ -153,24 +148,20 @@ export default async function decorate(block) {
   const rows = [...block.querySelectorAll(':scope > div')];
   if (!rows.length) return;
 
-  // Main block structure:
-  // row 0: image (feature image)
-  // row 1: title (section heading)
-  // row 2: ctaLabel
-  // row 3: ctaLink
-  // rows 4+: tab items
-
   const imageRow = rows[0];
   const titleRow = rows[1];
   const ctaLabelRow = rows[2];
   const ctaLinkRow = rows[3];
-  const itemRows = rows.slice(4);
 
-  // Create main wrapper
+  const itemRows = rows.slice(4).filter((row) => {
+    const cells = [...row.querySelectorAll(':scope > div')];
+    return cells.some((cell) => cell.textContent.trim() !== '');
+  });
+
   const wrapper = document.createElement('div');
   wrapper.className = 'destination-tabs-wrapper';
 
-  // Left column: feature image
+  // Left Feature Image Column
   const leftCol = document.createElement('div');
   leftCol.className = 'destination-tabs-left';
 
@@ -183,27 +174,15 @@ export default async function decorate(block) {
           img.src,
           img.alt || 'Feature Image',
           false,
-          [{ width: '400' }],
+          [{ width: '800' }],
         );
         moveInstrumentation(imagePicture, optimized);
-        leftCol.append(optimized);
-      }
-    } else {
-      // Fallback: try to get image from first row as direct img
-      const img = imageRow.querySelector('img');
-      if (img) {
-        const optimized = createOptimizedPicture(
-          img.src,
-          img.alt || 'Feature Image',
-          false,
-          [{ width: '400' }],
-        );
         leftCol.append(optimized);
       }
     }
   }
 
-  // Right column: title, tabs, CTA
+  // Right Content Column
   const rightCol = document.createElement('div');
   rightCol.className = 'destination-tabs-right';
 
@@ -216,27 +195,21 @@ export default async function decorate(block) {
     rightCol.append(titleEl);
   }
 
-  // Tab navigation
+  // Tabs Nav
   const tabsNav = document.createElement('div');
   tabsNav.className = 'destination-tabs-nav';
   tabsNav.setAttribute('role', 'tablist');
 
-  // Tab panels container
+  // Panels Container
   const panelsContainer = document.createElement('div');
   panelsContainer.className = 'destination-tabs-panels';
 
-  // Build tabs and panels from item rows
   itemRows.forEach((itemRow, index) => {
     const itemCells = [...itemRow.querySelectorAll(':scope > div')];
-
-    // Item structure:
-    // cell 0: tabName
-    // cell 1: cfReference (content fragment path)
 
     const tabNameText = itemCells[0]?.textContent?.trim() || `Tab ${index + 1}`;
     const cfRef = itemCells[1]?.textContent?.trim() || '';
 
-    // Create tab button
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'destination-tabs-btn';
@@ -269,18 +242,14 @@ export default async function decorate(block) {
 
     tabsNav.append(btn);
 
-    // Create tab panel with CF reference
     const panel = document.createElement('div');
     panel.className = 'destination-tabs-panel';
     panel.id = `destination-tabs-panel-${index}`;
     panel.setAttribute('role', 'tabpanel');
     panel.setAttribute('aria-labelledby', `destination-tabs-tab-${index}`);
 
-    if (index === 0) {
-      panel.classList.add('active');
-    }
+    if (index === 0) panel.classList.add('active');
 
-    // Fetch and render CF content
     if (cfRef) {
       panel.setAttribute('data-cf', cfRef);
       const panelContent = document.createElement('div');
@@ -288,7 +257,6 @@ export default async function decorate(block) {
       panelContent.textContent = 'Loading...';
       panel.append(panelContent);
 
-      // Fetch CF details using persisted query and render
       renderCFPanel(panel, cfRef);
     }
 
@@ -297,12 +265,12 @@ export default async function decorate(block) {
 
   rightCol.append(tabsNav, panelsContainer);
 
-  // CTA Link (at bottom of right column)
-  const ctaLabelText = ctaLabelRow?.textContent?.trim() || 'Explore';
+  // Bottom CTA Link
+  const ctaLabelText = ctaLabelRow?.textContent?.trim() || 'EXPLORE KYOTO';
   const ctaLinkEl = ctaLinkRow?.querySelector('a');
-  const ctaHref = ctaLinkEl?.getAttribute('href') || '#';
+  const ctaHref = ctaLinkEl?.getAttribute('href') || ctaLinkRow?.textContent?.trim() || '#';
 
-  if (ctaLabelText || ctaHref) {
+  if (ctaLabelText) {
     const ctaContainer = document.createElement('div');
     ctaContainer.className = 'destination-tabs-cta';
 
@@ -315,9 +283,7 @@ export default async function decorate(block) {
     rightCol.append(ctaContainer);
   }
 
-  // Assemble wrapper
   wrapper.append(leftCol, rightCol);
-
   moveInstrumentation(block, wrapper);
   block.replaceChildren(wrapper);
 }
