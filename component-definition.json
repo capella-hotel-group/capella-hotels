@@ -160,7 +160,7 @@
           }
         },
         {
-          "title": "Content Cards",
+          "title": "Destination Cards",
           "id": "content-card",
           "plugins": {
             "xwalk": {
