@@ -242,6 +242,13 @@
         "label": "Title",
         "valueType": "string",
         "value": ""
+      },
+      {
+        "component": "text",
+        "name": "subtitle",
+        "label": "Subtitle",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },
@@ -250,10 +257,46 @@
     "fields": [
       {
         "component": "text",
-        "name": "title",
-        "label": "Title",
+        "name": "location",
+        "label": "Location",
         "valueType": "string",
         "value": ""
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Card Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "ctaName",
+        "label": "CTA Name",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "icons",
+        "label": "Icons",
+        "valueType": "string",
+        "multi": true,
+        "minItems": 0,
+        "maxItems": 3
       }
     ]
   },
