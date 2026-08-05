@@ -19,6 +19,14 @@ function collectMedia(cell) {
   });
 }
 
+function collectIconMedia(cells) {
+  const icons = cells
+    .flatMap((cell) => collectMedia(cell))
+    .slice(0, MAX_ICONS);
+
+  return icons;
+}
+
 function buildIntro(rows) {
   const [titleRow, subtitleRow] = rows;
 
@@ -65,13 +73,14 @@ function buildCard(row) {
   const location = textFromCell(cells[0]);
   const title = textFromCell(cells[1]);
   const image = cells[2]?.querySelector('picture, img');
-  if (!image) return null;
 
-  const icons = cells
-    .slice(5)
-    .flatMap((cell) => collectMedia(cell))
-    .slice(0, MAX_ICONS);
+  const icons = collectIconMedia(cells.slice(5, 8));
   const cta = buildCta(cells[3], cells[4]);
+
+  // Ignore rows that have no authored content at all.
+  if (!location && !title && !image && !cta && icons.length === 0) {
+    return null;
+  }
 
   const item = document.createElement('li');
   item.className = 'destination-cards-item';
@@ -83,8 +92,12 @@ function buildCard(row) {
   const media = document.createElement('figure');
   media.className = 'destination-cards-media';
 
-  const mediaNode = image.tagName.toLowerCase() === 'picture' ? image : image.closest('picture') || image;
-  media.append(mediaNode);
+  if (image) {
+    const mediaNode = image.tagName.toLowerCase() === 'picture' ? image : image.closest('picture') || image;
+    media.append(mediaNode);
+  } else {
+    media.classList.add('destination-cards-media-no-image');
+  }
 
   const overlay = document.createElement('figcaption');
   overlay.className = 'destination-cards-overlay';
