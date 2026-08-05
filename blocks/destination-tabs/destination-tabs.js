@@ -2,6 +2,16 @@ import { moveInstrumentation } from '../../scripts/scripts.js';
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { getPublishBaseUrl } from '../../scripts/env.js';
 
+// Resolve DAM asset URL with publish domain
+function resolveAssetUrl(damPath) {
+  if (!damPath) return null;
+  // If it's already a full URL, return as-is
+  if (damPath.startsWith('http')) return damPath;
+  // Otherwise, prepend publish base URL
+  const publishBase = getPublishBaseUrl();
+  return `${publishBase}${damPath}`;
+}
+
 // Fetch CF details using persisted GraphQL query
 async function fetchCFDetails(cfPath) {
   try {
@@ -29,7 +39,7 @@ async function fetchCFDetails(cfPath) {
 // Render CF data into panel
 async function renderCFPanel(panel, cfPath) {
   const cfData = await fetchCFDetails(cfPath);
-  let content = panel.querySelector('.destination-tabs-panel-content');
+  const content = panel.querySelector('.destination-tabs-panel-content');
 
   if (!cfData) {
     if (content) content.textContent = 'Failed to load content';
@@ -41,19 +51,33 @@ async function renderCFPanel(panel, cfPath) {
   // Create content structure from CF fields
   const panelContent = document.createElement('div');
   panelContent.className = 'destination-tabs-panel-content';
-
   // Header: Avatar + Name + Role (horizontal layout)
   const headerEl = document.createElement('div');
   headerEl.className = 'destination-tabs-header';
+
+  // Avatar column (left side)
+  const avatarCol = document.createElement('div');
+  avatarCol.className = 'destination-tabs-avatar-col';
 
   // Avatar image
   if (cfData.image?._path) {
     const avatarImg = document.createElement('img');
     avatarImg.className = 'destination-tabs-avatar';
-    avatarImg.src = cfData.image._path;
+    avatarImg.src = resolveAssetUrl(cfData.image._path);
     avatarImg.alt = cfData.name || 'Avatar';
-    headerEl.append(avatarImg);
+    avatarCol.append(avatarImg);
   }
+
+  // Signature image (below avatar)
+  if (cfData.signatureImage?._path) {
+    const sigImg = document.createElement('img');
+    sigImg.className = 'destination-tabs-signature';
+    sigImg.src = resolveAssetUrl(cfData.signatureImage._path);
+    sigImg.alt = `${cfData.name} Signature`;
+    avatarCol.append(sigImg);
+  }
+
+  headerEl.append(avatarCol);
 
   // Header content: Name + Role
   const headerContent = document.createElement('div');
@@ -93,15 +117,6 @@ async function renderCFPanel(panel, cfPath) {
     descEl.innerHTML = cfData.description.html;
     panelContent.append(descEl);
   }
-  // Signature image
-  if (cfData.signatureImage?._path) {
-    const sigImg = document.createElement('img');
-    sigImg.className = 'destination-tabs-signature';
-    sigImg.src = cfData.signatureImage._path;
-    sigImg.alt = `${cfData.name} Signature`;
-    panelContent.append(sigImg);
-  }  
-  
   // Cards gallery from cardContentReference
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
     const cardsContainer = document.createElement('div');
@@ -113,7 +128,7 @@ async function renderCFPanel(panel, cfPath) {
 
       if (card.image?._path) {
         const cardImg = document.createElement('img');
-        cardImg.src = card.image._path;
+        cardImg.src = resolveAssetUrl(card.image._path);
         cardImg.alt = card.title || 'Card image';
         cardEl.append(cardImg);
       }
@@ -159,18 +174,32 @@ export default async function decorate(block) {
   const leftCol = document.createElement('div');
   leftCol.className = 'destination-tabs-left';
 
-  const imagePicture = imageRow?.querySelector('picture');
-  if (imagePicture) {
-    const img = imagePicture.querySelector('img');
-    if (img) {
-      const optimized = createOptimizedPicture(
-        img.src,
-        img.alt || 'Feature Image',
-        false,
-        [{ width: '400' }],
-      );
-      moveInstrumentation(imagePicture, optimized);
-      leftCol.append(optimized);
+  if (imageRow) {
+    const imagePicture = imageRow.querySelector('picture');
+    if (imagePicture) {
+      const img = imagePicture.querySelector('img');
+      if (img) {
+        const optimized = createOptimizedPicture(
+          img.src,
+          img.alt || 'Feature Image',
+          false,
+          [{ width: '400' }],
+        );
+        moveInstrumentation(imagePicture, optimized);
+        leftCol.append(optimized);
+      }
+    } else {
+      // Fallback: try to get image from first row as direct img
+      const img = imageRow.querySelector('img');
+      if (img) {
+        const optimized = createOptimizedPicture(
+          img.src,
+          img.alt || 'Feature Image',
+          false,
+          [{ width: '400' }],
+        );
+        leftCol.append(optimized);
+      }
     }
   }
 
