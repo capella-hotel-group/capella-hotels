@@ -42,13 +42,16 @@ async function renderCFPanel(panel, cfPath) {
   const panelContent = document.createElement('div');
   panelContent.className = 'destination-tabs-panel-content';
 
-  // --- CULTURIST INFO CONTAINER ---
-  const infoContainer = document.createElement('div');
-  infoContainer.className = 'destination-tabs-info-container';
+  // Card Container for both Details and Gallery (Beige card on mobile)
+  const infoCard = document.createElement('div');
+  infoCard.className = 'destination-tabs-info-card';
 
+  // --- CULTURIST LAYOUT CONTAINER ---
+  const culturistLayout = document.createElement('div');
+  culturistLayout.className = 'destination-tabs-culturist-layout';
   // Left Column (Avatar + Signature for Desktop)
-  const leftCol = document.createElement('div');
-  leftCol.className = 'destination-tabs-culturist-left';
+  const avatarCol = document.createElement('div');
+  avatarCol.className = 'destination-tabs-avatar-col';
 
   const { _path: avatarPath } = cfData.image || {};
   if (avatarPath) {
@@ -56,25 +59,26 @@ async function renderCFPanel(panel, cfPath) {
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(avatarPath);
     avatarImg.alt = cfData.name || 'Avatar';
-    leftCol.append(avatarImg);
+    avatarCol.append(avatarImg);
   }
 
+  // Signature Image (Under Avatar on Desktop)
   const { _path: signaturePath } = cfData.signatureImage || {};
   if (signaturePath) {
-    const sigImg = document.createElement('img');
-    sigImg.className = 'destination-tabs-signature desktop-signature';
-    sigImg.src = resolveAssetUrl(signaturePath);
-    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
-    leftCol.append(sigImg);
+    const sigImgDesktop = document.createElement('img');
+    sigImgDesktop.className = 'destination-tabs-signature desktop-signature';
+    sigImgDesktop.src = resolveAssetUrl(signaturePath);
+    sigImgDesktop.alt = `${cfData.name || 'Culturist'} Signature`;
+    avatarCol.append(sigImgDesktop);
   }
 
-  infoContainer.append(leftCol);
+  culturistLayout.append(avatarCol);
 
-  // Right Column (Name, Role, Quote, Description, Cards)
-  const rightCol = document.createElement('div');
-  rightCol.className = 'destination-tabs-culturist-right';
+  // Right Column (Name, Role, Quote, Description)
+  const detailsCol = document.createElement('div');
+  detailsCol.className = 'destination-tabs-details-col';
 
-  // Name & Role Header
+  // Header: Name & Role
   const headerEl = document.createElement('div');
   headerEl.className = 'destination-tabs-header';
 
@@ -92,14 +96,14 @@ async function renderCFPanel(panel, cfPath) {
     headerEl.append(roleEl);
   }
 
-  rightCol.append(headerEl);
+  detailsCol.append(headerEl);
 
   // Quote
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    rightCol.append(quoteEl);
+    detailsCol.append(quoteEl);
   }
 
   // Bio Description
@@ -107,22 +111,22 @@ async function renderCFPanel(panel, cfPath) {
     const descEl = document.createElement('div');
     descEl.className = 'destination-tabs-description';
     descEl.innerHTML = cfData.description.html;
-    rightCol.append(descEl);
+    detailsCol.append(descEl);
   }
 
-  // Signature Image for Mobile (rendered below bio)
+  // Signature Image (After Bio Description on Mobile)
   if (signaturePath) {
     const sigImgMobile = document.createElement('img');
     sigImgMobile.className = 'destination-tabs-signature mobile-signature';
     sigImgMobile.src = resolveAssetUrl(signaturePath);
     sigImgMobile.alt = `${cfData.name || 'Culturist'} Signature`;
-    rightCol.append(sigImgMobile);
+    detailsCol.append(sigImgMobile);
   }
 
-  infoContainer.append(rightCol);
-  panelContent.append(infoContainer);
+  culturistLayout.append(detailsCol);
+  infoCard.append(culturistLayout);
 
-  // Cards Gallery
+  // --- CARDS GALLERY ---
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
     const cardsWrapper = document.createElement('div');
     cardsWrapper.className = 'destination-tabs-cards-wrapper';
@@ -154,9 +158,10 @@ async function renderCFPanel(panel, cfPath) {
     });
 
     cardsWrapper.append(cardsContainer);
-    panelContent.append(cardsWrapper);
+    infoCard.append(cardsWrapper);
   }
 
+  panelContent.append(infoCard);
   panel.append(panelContent);
 }
 
