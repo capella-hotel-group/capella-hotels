@@ -49,7 +49,6 @@ async function renderCFPanel(panel, cfPath) {
   // --- CULTURIST LAYOUT CONTAINER ---
   const culturistLayout = document.createElement('div');
   culturistLayout.className = 'destination-tabs-culturist-layout';
-
   // Left Column (Avatar + Signature for Desktop)
   const avatarCol = document.createElement('div');
   avatarCol.className = 'destination-tabs-avatar-col';
@@ -60,16 +59,7 @@ async function renderCFPanel(panel, cfPath) {
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(avatarPath);
     avatarImg.alt = cfData.name || 'Avatar';
-    leftCol.append(avatarImg);
-  }
-
-  const { _path: signaturePath } = cfData.signatureImage || {};
-  if (signaturePath) {
-    const sigImg = document.createElement('img');
-    sigImg.className = 'destination-tabs-signature desktop-signature';
-    sigImg.src = resolveAssetUrl(signaturePath);
-    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
-    leftCol.append(sigImg);
+    avatarCol.append(avatarImg);
   }
 
   // Signature Image (Under Avatar on Desktop)
