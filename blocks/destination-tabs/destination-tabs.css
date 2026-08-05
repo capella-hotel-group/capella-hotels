@@ -1,27 +1,36 @@
-/* Base Container */
+/* Full-bleed section background */
 .destination-tabs-wrapper {
-  display: flex;
-  flex-direction: column;
   background-color: #faf9f6;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  box-sizing: border-box;
   padding: 2.5rem 1.25rem;
   font-family: Cinzel, Georgia, serif;
   color: #1e2d3b;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 1280px;
+}
+
+.destination-tabs-wrapper > div {
+  display: flex;
+  flex-direction: column;
+  max-width: 1320px;
   margin: 0 auto;
+  width: 100%;
 }
 
 @media (width >= 900px) {
   .destination-tabs-wrapper {
+    padding: 4rem 3rem;
+  }
+
+  .destination-tabs-wrapper > div {
     flex-direction: row;
-    gap: 3.5rem;
-    padding: 4rem 2rem;
+    gap: 4rem;
     align-items: flex-start;
   }
 }
 
-/* Left Featured Image Column */
+/* Left Featured Japanese Art Image */
 .destination-tabs-left {
   display: none; /* Hidden on mobile */
   width: 100%;
@@ -29,9 +38,9 @@
 
 @media (width >= 900px) {
   .destination-tabs-left {
-    display: block; /* Visible on desktop */
-    flex: 0 0 40%;
-    max-width: 40%;
+    display: block;
+    flex: 0 0 42%;
+    max-width: 42%;
   }
 }
 
@@ -39,6 +48,7 @@
 .destination-tabs-left img {
   width: 100%;
   height: auto;
+  max-height: 750px;
   object-fit: cover;
   display: block;
 }
@@ -124,20 +134,36 @@
   display: block;
 }
 
-/* Culturist Header Layout */
-.destination-tabs-header {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.destination-tabs-avatar-col {
+/* Culturist Info Grid */
+.destination-tabs-info-grid {
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-info-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    column-gap: 1.5rem;
+    row-gap: 0.75rem;
+  }
+}
+
+/* Avatar Column */
+.destination-tabs-avatar-col {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  gap: 1rem;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-avatar-col {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    align-items: flex-start;
+  }
 }
 
 .destination-tabs-avatar {
@@ -145,6 +171,7 @@
   height: 70px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 @media (width >= 900px) {
@@ -154,9 +181,17 @@
   }
 }
 
+/* Name & Role */
 .destination-tabs-info-col {
   display: flex;
   flex-direction: column;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-info-col {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+  }
 }
 
 .destination-tabs-name {
@@ -174,46 +209,69 @@
   margin: 0.2rem 0 0;
 }
 
-/* Quote & Bio Text */
+/* Quote */
 .destination-tabs-quote {
   font-size: 1.05rem;
   line-height: 1.45;
   font-style: italic;
-  margin: 0 0 1.25rem;
+  margin: 0;
   color: #2b2b2b;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-quote {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+  }
 }
 
 .destination-tabs-quote p {
   margin: 0;
 }
 
+/* Bio Description */
 .destination-tabs-description {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 0.825rem;
   line-height: 1.55;
   color: #4a4a4a;
-  margin-bottom: 1.25rem;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-description {
+    grid-column: 2 / 3;
+    grid-row: 3 / 4;
+  }
 }
 
 .destination-tabs-description p {
   margin: 0;
 }
 
+/* Signature Image: After description on mobile, below avatar on desktop */
 .destination-tabs-signature {
-  max-width: 130px;
+  max-width: 120px;
   height: auto;
-  margin-bottom: 2rem;
   display: block;
 }
 
-/* Cards Gallery Wrapper with Fade-Out Right Mask */
+@media (width >= 900px) {
+  .destination-tabs-signature {
+    grid-column: 1 / 2;
+    grid-row: 2 / 4;
+    align-self: start;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Cards Gallery Wrapper */
 .destination-tabs-cards-wrapper {
   position: relative;
   overflow-x: auto;
   scrollbar-width: none;
   margin-bottom: 2.5rem;
   width: 100%;
-  mask-image: linear-gradient(to right, rgb(0 0 0 / 100%) 82%, rgb(0 0 0 / 0%) 100%);
+  mask-image: linear-gradient(to right, rgb(0 0 0 / 100%) 80%, rgb(0 0 0 / 0%) 100%);
 }
 
 .destination-tabs-cards-wrapper::-webkit-scrollbar {
@@ -226,27 +284,19 @@
   padding-right: 2rem;
 }
 
-/* Mobile: 2 full cards + peek 3rd */
+/* Cards Sizing */
 .destination-tabs-card {
   position: relative;
-  flex: 0 0 calc(46% - 0.5rem);
-  aspect-ratio: 1 / 1.15;
+  flex: 0 0 160px;
+  height: 200px;
   overflow: hidden;
   background-color: #ddd;
 }
 
-/* Tablet */
-@media (width >= 600px) {
-  .destination-tabs-card {
-    flex: 0 0 calc(36% - 0.5rem);
-  }
-}
-
-/* Desktop: 3 full cards + peeked 4th card */
 @media (width >= 900px) {
   .destination-tabs-card {
-    flex: 0 0 calc(28% - 0.5rem);
-    aspect-ratio: 1 / 1.1;
+    flex: 0 0 170px;
+    height: 210px;
   }
 }
 
@@ -263,7 +313,7 @@
   left: 1rem;
   right: 1rem;
   color: #fff;
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1.25;
   font-family: Cinzel, Georgia, serif;
   text-shadow: 0 1px 4px rgb(0 0 0 / 80%);

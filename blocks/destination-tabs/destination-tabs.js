@@ -42,14 +42,14 @@ async function renderCFPanel(panel, cfPath) {
   const panelContent = document.createElement('div');
   panelContent.className = 'destination-tabs-panel-content';
 
-  // --- CULTURIST HEADER (Avatar + Name & Role) ---
-  const headerEl = document.createElement('div');
-  headerEl.className = 'destination-tabs-header';
+  // Grid container for Culturist details
+  const infoGrid = document.createElement('div');
+  infoGrid.className = 'destination-tabs-info-grid';
 
+  // Avatar Image
   const avatarCol = document.createElement('div');
   avatarCol.className = 'destination-tabs-avatar-col';
 
-  // Destructure _path to satisfy no-underscore-dangle & dot-notation rules
   const { _path: avatarPath } = cfData.image || {};
   if (avatarPath) {
     const avatarImg = document.createElement('img');
@@ -59,8 +59,7 @@ async function renderCFPanel(panel, cfPath) {
     avatarCol.append(avatarImg);
   }
 
-  headerEl.append(avatarCol);
-
+  // Name & Role
   const infoCol = document.createElement('div');
   infoCol.className = 'destination-tabs-info-col';
 
@@ -78,15 +77,15 @@ async function renderCFPanel(panel, cfPath) {
     infoCol.append(roleEl);
   }
 
-  headerEl.append(infoCol);
-  panelContent.append(headerEl);
+  avatarCol.append(infoCol);
+  infoGrid.append(avatarCol);
 
   // Quote
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    panelContent.append(quoteEl);
+    infoGrid.append(quoteEl);
   }
 
   // Description / Bio
@@ -94,7 +93,7 @@ async function renderCFPanel(panel, cfPath) {
     const descEl = document.createElement('div');
     descEl.className = 'destination-tabs-description';
     descEl.innerHTML = cfData.description.html;
-    panelContent.append(descEl);
+    infoGrid.append(descEl);
   }
 
   // Signature Image
@@ -104,8 +103,10 @@ async function renderCFPanel(panel, cfPath) {
     sigImg.className = 'destination-tabs-signature';
     sigImg.src = resolveAssetUrl(signaturePath);
     sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
-    panelContent.append(sigImg);
+    infoGrid.append(sigImg);
   }
+
+  panelContent.append(infoGrid);
 
   // Cards Gallery
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
