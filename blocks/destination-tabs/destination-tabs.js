@@ -42,13 +42,13 @@ async function renderCFPanel(panel, cfPath) {
   const panelContent = document.createElement('div');
   panelContent.className = 'destination-tabs-panel-content';
 
-  // Grid container for Culturist details
-  const infoGrid = document.createElement('div');
-  infoGrid.className = 'destination-tabs-info-grid';
+  // --- CULTURIST INFO CONTAINER ---
+  const infoContainer = document.createElement('div');
+  infoContainer.className = 'destination-tabs-info-container';
 
-  // Avatar Image
-  const avatarCol = document.createElement('div');
-  avatarCol.className = 'destination-tabs-avatar-col';
+  // Left Column (Avatar + Signature for Desktop)
+  const leftCol = document.createElement('div');
+  leftCol.className = 'destination-tabs-culturist-left';
 
   const { _path: avatarPath } = cfData.image || {};
   if (avatarPath) {
@@ -56,57 +56,71 @@ async function renderCFPanel(panel, cfPath) {
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(avatarPath);
     avatarImg.alt = cfData.name || 'Avatar';
-    avatarCol.append(avatarImg);
+    leftCol.append(avatarImg);
   }
 
-  // Name & Role
-  const infoCol = document.createElement('div');
-  infoCol.className = 'destination-tabs-info-col';
+  const { _path: signaturePath } = cfData.signatureImage || {};
+  if (signaturePath) {
+    const sigImg = document.createElement('img');
+    sigImg.className = 'destination-tabs-signature desktop-signature';
+    sigImg.src = resolveAssetUrl(signaturePath);
+    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
+    leftCol.append(sigImg);
+  }
+
+  infoContainer.append(leftCol);
+
+  // Right Column (Name, Role, Quote, Description, Cards)
+  const rightCol = document.createElement('div');
+  rightCol.className = 'destination-tabs-culturist-right';
+
+  // Name & Role Header
+  const headerEl = document.createElement('div');
+  headerEl.className = 'destination-tabs-header';
 
   if (cfData.name) {
     const nameEl = document.createElement('h3');
     nameEl.className = 'destination-tabs-name';
     nameEl.textContent = cfData.name;
-    infoCol.append(nameEl);
+    headerEl.append(nameEl);
   }
 
   if (cfData.role) {
     const roleEl = document.createElement('p');
     roleEl.className = 'destination-tabs-role';
     roleEl.textContent = cfData.role;
-    infoCol.append(roleEl);
+    headerEl.append(roleEl);
   }
 
-  avatarCol.append(infoCol);
-  infoGrid.append(avatarCol);
+  rightCol.append(headerEl);
 
   // Quote
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    infoGrid.append(quoteEl);
+    rightCol.append(quoteEl);
   }
 
-  // Description / Bio
+  // Bio Description
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
     descEl.className = 'destination-tabs-description';
     descEl.innerHTML = cfData.description.html;
-    infoGrid.append(descEl);
+    rightCol.append(descEl);
   }
 
-  // Signature Image
-  const { _path: signaturePath } = cfData.signatureImage || {};
+  // Signature Image for Mobile (rendered below bio)
   if (signaturePath) {
-    const sigImg = document.createElement('img');
-    sigImg.className = 'destination-tabs-signature';
-    sigImg.src = resolveAssetUrl(signaturePath);
-    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
-    infoGrid.append(sigImg);
+    const sigImgMobile = document.createElement('img');
+    sigImgMobile.className = 'destination-tabs-signature mobile-signature';
+    sigImgMobile.src = resolveAssetUrl(signaturePath);
+    sigImgMobile.alt = `${cfData.name || 'Culturist'} Signature`;
+    rightCol.append(sigImgMobile);
   }
 
-  panelContent.append(infoGrid);
+  infoContainer.append(rightCol);
+  panelContent.append(infoContainer);
 
   // Cards Gallery
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
@@ -188,7 +202,7 @@ export default async function decorate(block) {
   const rightCol = document.createElement('div');
   rightCol.className = 'destination-tabs-right';
 
-  // Title
+  // Section Title
   const titleText = titleRow?.textContent?.trim() || '';
   if (titleText) {
     const titleEl = document.createElement('h2');
