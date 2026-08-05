@@ -350,7 +350,7 @@
         "value": ""
       },
       {
-        "component": "reference",
+        "component": "aem-content",
         "valueType": "string",
         "name": "cfReference",
         "label": "Content Fragment",
