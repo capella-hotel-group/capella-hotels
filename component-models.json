@@ -234,77 +234,26 @@
     ]
   },
   {
-    "id": "content-card",
+    "id": "destination-cards",
     "fields": [
       {
         "component": "text",
-        "name": "eyebrow",
-        "label": "Eyebrow",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
         "name": "title",
-        "label": "Section Title",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "richtext",
-        "name": "subtitle",
-        "label": "Subtitle",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "richtext",
-        "name": "description",
-        "label": "Description",
+        "label": "Title",
         "valueType": "string",
         "value": ""
       }
     ]
   },
   {
-    "id": "content-card-item",
+    "id": "destination-card-item",
     "fields": [
-      {
-        "component": "reference",
-        "name": "image",
-        "label": "Card Image",
-        "valueType": "string",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "location",
-        "label": "Location",
-        "valueType": "string"
-      },
       {
         "component": "text",
         "name": "title",
-        "label": "Card Title",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "awardInfo",
-        "label": "Award Info",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "ctaLink",
-        "label": "CTA Link",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "ctaLabel",
-        "label": "CTA Text",
-        "valueType": "string"
+        "label": "Title",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },
