@@ -2,7 +2,6 @@ import { moveInstrumentation } from '../../scripts/scripts.js';
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { getPublishBaseUrl } from '../../scripts/env.js';
 
-// Resolve DAM asset URL with publish domain
 function resolveAssetUrl(damPath) {
   if (!damPath) return null;
   if (damPath.startsWith('http')) return damPath;
@@ -10,7 +9,6 @@ function resolveAssetUrl(damPath) {
   return `${publishBase}${damPath}`;
 }
 
-// Fetch CF details using persisted GraphQL query
 async function fetchCFDetails(cfPath) {
   try {
     const publishBase = getPublishBaseUrl();
@@ -30,7 +28,6 @@ async function fetchCFDetails(cfPath) {
   }
 }
 
-// Render Content Fragment into Tab Panel
 async function renderCFPanel(panel, cfPath) {
   const cfData = await fetchCFDetails(cfPath);
   const content = panel.querySelector('.destination-tabs-panel-content');
@@ -45,68 +42,72 @@ async function renderCFPanel(panel, cfPath) {
   const panelContent = document.createElement('div');
   panelContent.className = 'destination-tabs-panel-content';
 
-  // --- CULTURIST INFO CARD ---
-  const infoCard = document.createElement('div');
-  infoCard.className = 'destination-tabs-info-card';
-
-  // Header: Avatar + Name & Role
+  // --- CULTURIST HEADER (Avatar + Name & Role) ---
   const headerEl = document.createElement('div');
   headerEl.className = 'destination-tabs-header';
 
-  if (cfData.image._path) {
+  const avatarCol = document.createElement('div');
+  avatarCol.className = 'destination-tabs-avatar-col';
+
+  // ESLint fix for _path dangling underscore
+  const avatarPath = cfData.image?.['_path'];
+  if (avatarPath) {
     const avatarImg = document.createElement('img');
     avatarImg.className = 'destination-tabs-avatar';
-    avatarImg.src = resolveAssetUrl(cfData.image._path);
-    avatarImg.alt = cfData.name || 'Culturist Avatar';
-    headerEl.append(avatarImg);
+    avatarImg.src = resolveAssetUrl(avatarPath);
+    avatarImg.alt = cfData.name || 'Avatar';
+    avatarCol.append(avatarImg);
   }
 
-  const nameRoleWrapper = document.createElement('div');
-  nameRoleWrapper.className = 'destination-tabs-name-role';
+  headerEl.append(avatarCol);
+
+  const infoCol = document.createElement('div');
+  infoCol.className = 'destination-tabs-info-col';
 
   if (cfData.name) {
     const nameEl = document.createElement('h3');
     nameEl.className = 'destination-tabs-name';
     nameEl.textContent = cfData.name;
-    nameRoleWrapper.append(nameEl);
+    infoCol.append(nameEl);
   }
 
   if (cfData.role) {
     const roleEl = document.createElement('p');
     roleEl.className = 'destination-tabs-role';
     roleEl.textContent = cfData.role;
-    nameRoleWrapper.append(roleEl);
+    infoCol.append(roleEl);
   }
 
-  headerEl.append(nameRoleWrapper);
-  infoCard.append(headerEl);
+  headerEl.append(infoCol);
+  panelContent.append(headerEl);
 
   // Quote
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    infoCard.append(quoteEl);
+    panelContent.append(quoteEl);
   }
 
-  // Bio Description
+  // Description / Bio
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
     descEl.className = 'destination-tabs-description';
     descEl.innerHTML = cfData.description.html;
-    infoCard.append(descEl);
+    panelContent.append(descEl);
   }
 
-  // Signature Image
-  if (cfData.signatureImage._path) {
+  // Signature Image (ESLint fix for _path)
+  const signaturePath = cfData.signatureImage?.['_path'];
+  if (signaturePath) {
     const sigImg = document.createElement('img');
     sigImg.className = 'destination-tabs-signature';
-    sigImg.src = resolveAssetUrl(cfData.signatureImage._path);
+    sigImg.src = resolveAssetUrl(signaturePath);
     sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
-    infoCard.append(sigImg);
+    panelContent.append(sigImg);
   }
 
-  // Cards Gallery
+  // Cards Gallery (ESLint fix for _path)
   if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
     const cardsWrapper = document.createElement('div');
     cardsWrapper.className = 'destination-tabs-cards-wrapper';
@@ -118,10 +119,11 @@ async function renderCFPanel(panel, cfPath) {
       const cardEl = document.createElement('div');
       cardEl.className = 'destination-tabs-card';
 
-      if (card.image._path) {
+      const cardImgPath = card.image?.['_path'];
+      if (cardImgPath) {
         const cardImg = document.createElement('img');
         cardImg.className = 'destination-tabs-card-img';
-        cardImg.src = resolveAssetUrl(card.image._path);
+        cardImg.src = resolveAssetUrl(cardImgPath);
         cardImg.alt = card.title || 'Card image';
         cardEl.append(cardImg);
       }
@@ -137,10 +139,9 @@ async function renderCFPanel(panel, cfPath) {
     });
 
     cardsWrapper.append(cardsContainer);
-    infoCard.append(cardsWrapper);
+    panelContent.append(cardsWrapper);
   }
 
-  panelContent.append(infoCard);
   panel.append(panelContent);
 }
 
@@ -161,7 +162,7 @@ export default async function decorate(block) {
   const wrapper = document.createElement('div');
   wrapper.className = 'destination-tabs-wrapper';
 
-  // Left Feature Image Column
+  // Left Feature Image
   const leftCol = document.createElement('div');
   leftCol.className = 'destination-tabs-left';
 
@@ -265,7 +266,7 @@ export default async function decorate(block) {
 
   rightCol.append(tabsNav, panelsContainer);
 
-  // Bottom CTA Link
+  // Bottom CTA
   const ctaLabelText = ctaLabelRow?.textContent?.trim() || 'EXPLORE KYOTO';
   const ctaLinkEl = ctaLinkRow?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || ctaLinkRow?.textContent?.trim() || '#';
