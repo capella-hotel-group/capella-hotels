@@ -37,13 +37,6 @@
       "id": "destination-tabs",
       "fields": [
         {
-          "component": "reference",
-          "valueType": "string",
-          "name": "image",
-          "label": "Feature Image",
-          "multi": false
-        },
-        {
           "component": "text",
           "valueType": "string",
           "name": "title",
