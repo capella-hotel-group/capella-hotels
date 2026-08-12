@@ -146,7 +146,6 @@ export default async function decorate(block) {
     firstDataRowIndex = 1; // Skip the image row
   }
 
-  const titleRow = rows[firstDataRowIndex];
   const ctaLabelRow = rows[firstDataRowIndex + 1];
   const ctaLinkRow = rows[firstDataRowIndex + 2];
   const itemRows = rows.slice(firstDataRowIndex + 3).filter((row) => {
@@ -175,6 +174,18 @@ export default async function decorate(block) {
   const destinationBtn = document.createElement('button');
   destinationBtn.className = 'destination-tabs-destination-btn';
   destinationBtn.setAttribute('type', 'button');
+
+  // Culturist info slot
+  const infoSlot = document.createElement('div');
+  infoSlot.className = 'destination-tabs-info-slot';
+
+  // Card slots
+  const cardSlot1 = document.createElement('div');
+  cardSlot1.className = 'destination-tabs-card-slot-1';
+
+  const cardSlot2 = document.createElement('div');
+  cardSlot2.className = 'destination-tabs-card-slot-2';
+
   let currentTabIndex = 0;
 
   const updateDestinationBtn = () => {
@@ -203,10 +214,6 @@ export default async function decorate(block) {
   titleBlock.append(titleBottom);
 
   infoCol.append(titleBlock);
-
-  // Culturist info slot
-  const infoSlot = document.createElement('div');
-  infoSlot.className = 'destination-tabs-info-slot';
   infoCol.append(infoSlot);
 
   // CTA
@@ -228,14 +235,7 @@ export default async function decorate(block) {
   }
 
   wrapper.append(infoCol);
-
-  // Card slots
-  const cardSlot1 = document.createElement('div');
-  cardSlot1.className = 'destination-tabs-card-slot-1';
   wrapper.append(cardSlot1);
-
-  const cardSlot2 = document.createElement('div');
-  cardSlot2.className = 'destination-tabs-card-slot-2';
   wrapper.append(cardSlot2);
 
   // Load initial tab data
