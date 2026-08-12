@@ -598,6 +598,16 @@
     ]
   },
   {
+    "id": "text-interactive-asset",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "reference",
+        "label": "Reference"
+      }
+    ]
+  },
+  {
     "id": "text-with-image",
     "fields": [
       {
