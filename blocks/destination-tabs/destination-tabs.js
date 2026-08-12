@@ -1,5 +1,4 @@
 import { moveInstrumentation } from '../../scripts/scripts.js';
-import { createOptimizedPicture } from '../../scripts/aem.js';
 import { getPublishBaseUrl } from '../../scripts/env.js';
 
 function resolveAssetUrl(damPath) {
@@ -28,30 +27,19 @@ async function fetchCFDetails(cfPath) {
   }
 }
 
-async function renderCFPanel(panel, cfPath) {
+async function renderCulturistInfo(slot, cfPath) {
   const cfData = await fetchCFDetails(cfPath);
-  const content = panel.querySelector('.destination-tabs-panel-content');
 
   if (!cfData) {
-    if (content) content.textContent = 'Failed to load content';
+    slot.textContent = 'Failed to load content';
     return;
   }
 
-  if (content) content.remove();
+  slot.innerHTML = '';
 
-  const panelContent = document.createElement('div');
-  panelContent.className = 'destination-tabs-panel-content';
-
-  // Card Container for both Details and Gallery (Beige card on mobile)
-  const infoCard = document.createElement('div');
-  infoCard.className = 'destination-tabs-info-card';
-
-  // --- CULTURIST LAYOUT CONTAINER ---
-  const culturistLayout = document.createElement('div');
-  culturistLayout.className = 'destination-tabs-culturist-layout';
-  // Left Column (Avatar + Signature for Desktop)
-  const avatarCol = document.createElement('div');
-  avatarCol.className = 'destination-tabs-avatar-col';
+  // Avatar + Signature Column
+  const photoSigCol = document.createElement('div');
+  photoSigCol.className = 'destination-tabs-photo-sig-col';
 
   const { _path: avatarPath } = cfData.image || {};
   if (avatarPath) {
@@ -59,239 +47,181 @@ async function renderCFPanel(panel, cfPath) {
     avatarImg.className = 'destination-tabs-avatar';
     avatarImg.src = resolveAssetUrl(avatarPath);
     avatarImg.alt = cfData.name || 'Avatar';
-    avatarCol.append(avatarImg);
+    photoSigCol.append(avatarImg);
   }
 
-  // Signature Image (Under Avatar on Desktop)
   const { _path: signaturePath } = cfData.signatureImage || {};
   if (signaturePath) {
-    const sigImgDesktop = document.createElement('img');
-    sigImgDesktop.className = 'destination-tabs-signature desktop-signature';
-    sigImgDesktop.src = resolveAssetUrl(signaturePath);
-    sigImgDesktop.alt = `${cfData.name || 'Culturist'} Signature`;
-    avatarCol.append(sigImgDesktop);
+    const sigImg = document.createElement('img');
+    sigImg.className = 'destination-tabs-signature';
+    sigImg.src = resolveAssetUrl(signaturePath);
+    sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
+    photoSigCol.append(sigImg);
   }
 
-  culturistLayout.append(avatarCol);
+  slot.append(photoSigCol);
 
-  // Right Column (Name, Role, Quote, Description)
-  const detailsCol = document.createElement('div');
-  detailsCol.className = 'destination-tabs-details-col';
-
-  // Header: Name & Role
-  const headerEl = document.createElement('div');
-  headerEl.className = 'destination-tabs-header';
+  // Content Column (Name, Quote, Description, CTA)
+  const contentCol = document.createElement('div');
+  contentCol.className = 'destination-tabs-content-col';
 
   if (cfData.name) {
-    const nameEl = document.createElement('h3');
-    nameEl.className = 'destination-tabs-name';
+    const nameEl = document.createElement('p');
+    nameEl.className = 'destination-tabs-culturist-name';
     nameEl.textContent = cfData.name;
-    headerEl.append(nameEl);
+    contentCol.append(nameEl);
   }
 
-  if (cfData.role) {
-    const roleEl = document.createElement('p');
-    roleEl.className = 'destination-tabs-role';
-    roleEl.textContent = cfData.role;
-    headerEl.append(roleEl);
-  }
-
-  detailsCol.append(headerEl);
-
-  // Quote
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    detailsCol.append(quoteEl);
+    contentCol.append(quoteEl);
   }
 
-  // Bio Description
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
     descEl.className = 'destination-tabs-description';
     descEl.innerHTML = cfData.description.html;
-    detailsCol.append(descEl);
+    contentCol.append(descEl);
   }
 
-  // Signature Image (After Bio Description on Mobile)
-  if (signaturePath) {
-    const sigImgMobile = document.createElement('img');
-    sigImgMobile.className = 'destination-tabs-signature mobile-signature';
-    sigImgMobile.src = resolveAssetUrl(signaturePath);
-    sigImgMobile.alt = `${cfData.name || 'Culturist'} Signature`;
-    detailsCol.append(sigImgMobile);
+  slot.append(contentCol);
+}
+
+async function renderGalleryCards(slot1, slot2, cfPath) {
+  const cfData = await fetchCFDetails(cfPath);
+
+  if (!cfData || !cfData.cardContentReference || cfData.cardContentReference.length < 2) {
+    slot1.textContent = 'No content';
+    slot2.textContent = 'No content';
+    return;
   }
 
-  culturistLayout.append(detailsCol);
-  infoCard.append(culturistLayout);
-
-  // --- CARDS GALLERY ---
-  if (cfData.cardContentReference && cfData.cardContentReference.length > 0) {
-    const cardsWrapper = document.createElement('div');
-    cardsWrapper.className = 'destination-tabs-cards-wrapper';
-
-    const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'destination-tabs-cards';
-
-    cfData.cardContentReference.forEach((card) => {
-      const cardEl = document.createElement('div');
-      cardEl.className = 'destination-tabs-card';
-
-      const { _path: cardImgPath } = card.image || {};
-      if (cardImgPath) {
-        const cardImg = document.createElement('img');
-        cardImg.className = 'destination-tabs-card-img';
-        cardImg.src = resolveAssetUrl(cardImgPath);
-        cardImg.alt = card.title || 'Card image';
-        cardEl.append(cardImg);
-      }
-
-      if (card.title) {
-        const titleEl = document.createElement('span');
-        titleEl.className = 'destination-tabs-card-title';
-        titleEl.textContent = card.title;
-        cardEl.append(titleEl);
-      }
-
-      cardsContainer.append(cardEl);
-    });
-
-    cardsWrapper.append(cardsContainer);
-    infoCard.append(cardsWrapper);
+  // Card 1
+  slot1.innerHTML = '';
+  const card1 = cfData.cardContentReference[0];
+  const { _path: card1ImgPath } = card1.image || {};
+  if (card1ImgPath) {
+    const card1Img = document.createElement('img');
+    card1Img.className = 'destination-tabs-card-slot-img';
+    card1Img.src = resolveAssetUrl(card1ImgPath);
+    card1Img.alt = card1.title || 'Gallery card';
+    slot1.append(card1Img);
+  }
+  if (card1.title) {
+    const card1Title = document.createElement('span');
+    card1Title.className = 'destination-tabs-card-title';
+    card1Title.textContent = card1.title;
+    slot1.append(card1Title);
   }
 
-  panelContent.append(infoCard);
-  panel.append(panelContent);
+  // Card 2
+  slot2.innerHTML = '';
+  const card2 = cfData.cardContentReference[1];
+  const { _path: card2ImgPath } = card2.image || {};
+  if (card2ImgPath) {
+    const card2Img = document.createElement('img');
+    card2Img.className = 'destination-tabs-card-slot-img';
+    card2Img.src = resolveAssetUrl(card2ImgPath);
+    card2Img.alt = card2.title || 'Gallery card';
+    slot2.append(card2Img);
+  }
+  if (card2.title) {
+    const card2Title = document.createElement('span');
+    card2Title.className = 'destination-tabs-card-title';
+    card2Title.textContent = card2.title;
+    slot2.append(card2Title);
+  }
 }
 
 export default async function decorate(block) {
   const rows = [...block.querySelectorAll(':scope > div')];
   if (!rows.length) return;
 
-  const imageRow = rows[0];
-  const titleRow = rows[1];
-  const ctaLabelRow = rows[2];
-  const ctaLinkRow = rows[3];
+  // Detect if first row is an image (backwards compatibility with old authored blocks)
+  let firstDataRowIndex = 0;
+  const hasImage = rows[0]?.querySelector('picture, img');
+  if (hasImage) {
+    firstDataRowIndex = 1; // Skip the image row
+  }
 
-  const itemRows = rows.slice(4).filter((row) => {
+  const ctaLabelRow = rows[firstDataRowIndex + 1];
+  const ctaLinkRow = rows[firstDataRowIndex + 2];
+  const itemRows = rows.slice(firstDataRowIndex + 3).filter((row) => {
     const cells = [...row.querySelectorAll(':scope > div')];
     return cells.some((cell) => cell.textContent.trim() !== '');
   });
 
+  if (!itemRows.length) return;
+
   const wrapper = document.createElement('div');
-  wrapper.className = 'destination-tabs-wrapper';
+  wrapper.className = 'destination-tabs-grid';
 
-  // Left Feature Image
-  const leftCol = document.createElement('div');
-  leftCol.className = 'destination-tabs-left';
+  // Left column: culturist info + title + CTA
+  const infoCol = document.createElement('div');
+  infoCol.className = 'destination-tabs-info-col';
 
-  if (imageRow) {
-    const imagePicture = imageRow.querySelector('picture');
-    if (imagePicture) {
-      const img = imagePicture.querySelector('img');
-      if (img) {
-        const optimized = createOptimizedPicture(
-          img.src,
-          img.alt || 'Feature Image',
-          false,
-          [{ width: '800' }],
-        );
-        moveInstrumentation(imagePicture, optimized);
-        leftCol.append(optimized);
-      }
-    }
-  }
+  // Title block (MEET YOUR [DESTINATION] CULTURIST)
+  const titleBlock = document.createElement('div');
+  titleBlock.className = 'destination-tabs-title-block';
 
-  // Right Content Column
-  const rightCol = document.createElement('div');
-  rightCol.className = 'destination-tabs-right';
+  const titleTop = document.createElement('div');
+  titleTop.className = 'destination-tabs-title-top';
+  titleTop.textContent = 'MEET YOUR';
+  titleBlock.append(titleTop);
 
-  // Section Title
-  const titleText = titleRow?.textContent?.trim() || '';
-  if (titleText) {
-    const titleEl = document.createElement('h2');
-    titleEl.className = 'destination-tabs-title';
-    titleEl.textContent = titleText;
-    rightCol.append(titleEl);
-  }
+  const destinationBtn = document.createElement('button');
+  destinationBtn.className = 'destination-tabs-destination-btn';
+  destinationBtn.setAttribute('type', 'button');
 
-  // Tabs Nav
-  const tabsNav = document.createElement('div');
-  tabsNav.className = 'destination-tabs-nav';
-  tabsNav.setAttribute('role', 'tablist');
+  // Culturist info slot
+  const infoSlot = document.createElement('div');
+  infoSlot.className = 'destination-tabs-info-slot';
 
-  // Panels Container
-  const panelsContainer = document.createElement('div');
-  panelsContainer.className = 'destination-tabs-panels';
+  // Card slots
+  const cardSlot1 = document.createElement('div');
+  cardSlot1.className = 'destination-tabs-card-slot-1';
 
-  itemRows.forEach((itemRow, index) => {
-    const itemCells = [...itemRow.querySelectorAll(':scope > div')];
+  const cardSlot2 = document.createElement('div');
+  cardSlot2.className = 'destination-tabs-card-slot-2';
 
-    const tabNameText = itemCells[0]?.textContent?.trim() || `Tab ${index + 1}`;
-    const cfRef = itemCells[1]?.textContent?.trim() || '';
+  let currentTabIndex = 0;
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'destination-tabs-btn';
-    btn.id = `destination-tabs-tab-${index}`;
-    btn.setAttribute('role', 'tab');
-    btn.setAttribute('aria-controls', `destination-tabs-panel-${index}`);
-    btn.textContent = tabNameText;
+  const updateDestinationBtn = () => {
+    const tabCells = itemRows[currentTabIndex]?.querySelectorAll(':scope > div');
+    const tabNameText = (tabCells && tabCells[0]) ? tabCells[0].textContent.trim() : `Destination ${currentTabIndex + 1}`;
+    destinationBtn.textContent = tabNameText || `Destination ${currentTabIndex + 1}`;
+  };
 
-    if (index === 0) {
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-    } else {
-      btn.setAttribute('aria-selected', 'false');
-    }
+  updateDestinationBtn();
+  destinationBtn.addEventListener('click', async () => {
+    currentTabIndex = (currentTabIndex + 1) % itemRows.length;
+    updateDestinationBtn();
 
-    btn.addEventListener('click', () => {
-      tabsNav.querySelectorAll('.destination-tabs-btn').forEach((b) => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      panelsContainer.querySelectorAll('.destination-tabs-panel').forEach((p) => {
-        p.classList.remove('active');
-      });
-
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-      const panel = document.getElementById(`destination-tabs-panel-${index}`);
-      if (panel) panel.classList.add('active');
-    });
-
-    tabsNav.append(btn);
-
-    const panel = document.createElement('div');
-    panel.className = 'destination-tabs-panel';
-    panel.id = `destination-tabs-panel-${index}`;
-    panel.setAttribute('role', 'tabpanel');
-    panel.setAttribute('aria-labelledby', `destination-tabs-tab-${index}`);
-
-    if (index === 0) panel.classList.add('active');
-
+    const cfRef = itemRows[currentTabIndex]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
     if (cfRef) {
-      panel.setAttribute('data-cf', cfRef);
-      const panelContent = document.createElement('div');
-      panelContent.className = 'destination-tabs-panel-content';
-      panelContent.textContent = 'Loading...';
-      panel.append(panelContent);
-
-      renderCFPanel(panel, cfRef);
+      await renderCulturistInfo(infoSlot, cfRef);
+      await renderGalleryCards(cardSlot1, cardSlot2, cfRef);
     }
-
-    panelsContainer.append(panel);
   });
 
-  rightCol.append(tabsNav, panelsContainer);
+  titleBlock.append(destinationBtn);
 
-  // Bottom CTA
-  const ctaLabelText = ctaLabelRow?.textContent?.trim() || 'EXPLORE KYOTO';
+  const titleBottom = document.createElement('div');
+  titleBottom.className = 'destination-tabs-title-bottom';
+  titleBottom.textContent = 'CULTURIST';
+  titleBlock.append(titleBottom);
+
+  infoCol.append(titleBlock);
+  infoCol.append(infoSlot);
+
+  // CTA
+  const ctaLabelText = ctaLabelRow?.textContent?.trim() || 'EXPLORE';
   const ctaLinkEl = ctaLinkRow?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || ctaLinkRow?.textContent?.trim() || '#';
 
-  if (ctaLabelText) {
+  if (ctaLabelText && ctaLabelText !== ctaHref) {
     const ctaContainer = document.createElement('div');
     ctaContainer.className = 'destination-tabs-cta';
 
@@ -301,10 +231,20 @@ export default async function decorate(block) {
     cta.textContent = ctaLabelText;
     ctaContainer.append(cta);
 
-    rightCol.append(ctaContainer);
+    infoCol.append(ctaContainer);
   }
 
-  wrapper.append(leftCol, rightCol);
+  wrapper.append(infoCol);
+  wrapper.append(cardSlot1);
+  wrapper.append(cardSlot2);
+
+  // Load initial tab data
+  const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
+  if (initialCfRef) {
+    await renderCulturistInfo(infoSlot, initialCfRef);
+    await renderGalleryCards(cardSlot1, cardSlot2, initialCfRef);
+  }
+
   moveInstrumentation(block, wrapper);
   block.replaceChildren(wrapper);
 }
