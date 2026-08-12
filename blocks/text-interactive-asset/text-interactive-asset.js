@@ -18,7 +18,11 @@ function getAuthoredCfPath(block) {
 }
 
 function normalizePath(path) {
-  return (path || '').trim().replace(/\.json$/, '');
+  return (path || '')
+    .trim()
+    .replace(/(\.plain)?\.html$/i, '')
+    .replace(/\.json$/i, '')
+    .replace(/\/$/, '');
 }
 
 function normalizeAssetCandidate(value) {
