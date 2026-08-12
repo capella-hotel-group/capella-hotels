@@ -21,8 +21,22 @@ function normalizePath(path) {
   return (path || '').trim().replace(/\.json$/, '');
 }
 
+function normalizeAssetCandidate(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  try {
+    const url = new URL(trimmed);
+    return url.pathname;
+  } catch (e) {
+    return trimmed;
+  }
+}
+
 function isAssetPath(value) {
-  return typeof value === 'string' && value.startsWith('/content/dam/');
+  const candidate = normalizeAssetCandidate(value);
+  return candidate.startsWith('/content/dam/');
 }
 
 function scoreAssetPath(path) {
@@ -37,7 +51,7 @@ function collectAssetPathCandidates(node, out = []) {
   if (!node) return out;
 
   if (typeof node === 'string') {
-    if (isAssetPath(node)) out.push(node);
+    if (isAssetPath(node)) out.push(normalizeAssetCandidate(node));
     return out;
   }
 
@@ -47,10 +61,21 @@ function collectAssetPathCandidates(node, out = []) {
   }
 
   if (typeof node === 'object') {
-    const directKeyOrder = ['assetPath', '_path', 'path', 'fileReference', 'imagePath', 'url'];
+    const directKeyOrder = [
+      'assetPath',
+      '_path',
+      'path',
+      'fileReference',
+      'imagePath',
+      'url',
+      '_publishUrl',
+      '_dynamicUrl',
+      'src',
+      'href',
+    ];
     directKeyOrder.forEach((key) => {
       const value = node[key];
-      if (isAssetPath(value)) out.push(value);
+      if (isAssetPath(value)) out.push(normalizeAssetCandidate(value));
     });
 
     Object.values(node).forEach((value) => collectAssetPathCandidates(value, out));
@@ -61,7 +86,8 @@ function collectAssetPathCandidates(node, out = []) {
 
 function extractAssetPath(graphqlData) {
   const candidates = collectAssetPathCandidates(graphqlData?.data || graphqlData)
-    .map((candidate) => candidate.trim())
+    .map((candidate) => normalizeAssetCandidate(candidate))
+    .map((candidate) => candidate.replace(/[#?].*$/, '').replace(/\/$/, ''))
     .filter(Boolean);
 
   if (!candidates.length) return null;
