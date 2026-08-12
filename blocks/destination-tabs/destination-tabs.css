@@ -1,231 +1,206 @@
-/* Base Container */
-.destination-tabs-wrapper {
-  display: flex;
-  flex-direction: column;
-  background-color: #faf9f6;
-  padding: 1rem 1.25rem;
+/* Ensure AEM's auto-generated outer wrapper and block are full width */
+.destination-tabs-wrapper,
+.destination-tabs {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Base Container - 3 column grid */
+.destination-tabs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  background-color: transparent;
+  padding: 2rem 1.5rem;
   font-family: Cinzel, Georgia, serif;
   color: #1e2d3b;
   box-sizing: border-box;
   width: 100%;
-  max-width: 1320px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-wrapper {
-    flex-direction: row;
-    gap: 3.5rem;
-    padding: 1.5rem 2rem 1.5rem 0;
-    align-items: center; /* Center align left featured image and right column */
+  .destination-tabs-grid {
+    grid-template-columns: 40% 1fr 1fr;
+    gap: 4px;
+    padding: 0;
+    height: 720px;
   }
 }
 
-/* Left Featured Image (Hidden on mobile) */
-.destination-tabs-left {
-  display: none;
-  width: 100%;
-}
-
-@media (width >= 900px) {
-  .destination-tabs-left {
-    display: block;
-    flex: 0 0 40%;
-    max-width: 40%;
-  }
-}
-
-.destination-tabs-left picture,
-.destination-tabs-left img {
-  width: 100%;
-  height: auto;
-  max-height: 750px;
-  object-fit: cover;
-  display: block;
-}
-
-/* Right Column */
-.destination-tabs-right {
-  flex: 1;
+/* Left Info Column */
+.destination-tabs-info-col {
+  background-color: rgb(236, 229, 227);
+  padding: 3rem 2rem 2rem 2rem;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  min-width: 0;
+  gap: 2rem;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-/* Section Title ("MEET YOUR CULTURIST") */
-.destination-tabs-title {
+@media (width >= 900px) {
+  .destination-tabs-info-col {
+    /* Figma 1440px: T64 R52 B64 L80 */
+    padding: 64px 52px 64px 80px;
+    gap: 56px;
+  }
+}
+
+/* Title Block */
+.destination-tabs-title-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.destination-tabs-title-top,
+.destination-tabs-title-bottom {
   font-size: 1.5rem;
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #1e2d3b;
-  text-align: center;
+  color: #1b364b;
   margin: 0;
-  padding: 3rem 0;
+  font-family: GoudyWtcT, Georgia, serif;
+  line-height: 1;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-title {
-    text-align: left;
-    font-size: 1.75rem;
+  .destination-tabs-title-top,
+  .destination-tabs-title-bottom {
+    font-size: 52px;
+    line-height: 52px;
   }
 }
 
-/* Tabs Navigation Bar */
-.destination-tabs-nav {
-  display: flex;
-  justify-content: center;
-  gap: 1.25rem;
-  border-bottom: none;
-  overflow-x: auto;
-  margin-bottom: 1.75rem;
-  padding-bottom: 0.25rem;
-  scrollbar-width: none;
-}
-
-@media (width >= 900px) {
-  .destination-tabs-nav {
-    justify-content: flex-start;
-    gap: 1.75rem;
-  }
-}
-
-.destination-tabs-nav::-webkit-scrollbar {
-  display: none;
-}
-
-.destination-tabs-btn {
+/* Destination Selector Button */
+.destination-tabs-destination-btn {
   background: transparent;
   border: none;
-  font-family: inherit;
-  font-size: 0.8rem;
+  padding: 0;
+  font-family: GoudyWtcT, Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #a0a6ac;
-  padding: 0.3rem 0;
+  color: #1b364b;
   cursor: pointer;
-  white-space: nowrap;
-  font-weight: 400;
-  transition: color 0.2s ease;
-}
-
-.destination-tabs-btn.active,
-.destination-tabs-btn:hover {
-  color: #1e2d3b;
-  font-weight: 700;
-}
-
-/* Tab Panels */
-.destination-tabs-panel {
-  display: none;
-  width: 100%;
-}
-
-.destination-tabs-panel.active {
+  text-decoration: underline;
+  text-underline-offset: 0.5rem;
+  transition: opacity 0.2s ease;
+  line-height: 1;
   display: block;
-}
-
-/* Beige Card Container (Mobile) */
-.destination-tabs-info-card {
-  background-color: #eee8e2;
-  padding: 1.5rem;
-  border-radius: 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  box-sizing: border-box;
   width: 100%;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.destination-tabs-destination-btn:hover {
+  opacity: 0.7;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-info-card {
-    background-color: transparent;
-    padding: 0;
+  .destination-tabs-destination-btn {
+    font-size: 52px;
+    line-height: 52px;
   }
 }
 
-/* Culturist Layout: Mobile stacked vs Desktop 2 columns */
-.destination-tabs-culturist-layout {
+.destination-tabs-destination-btn::after {
+  content: ' ⌄';
+  font-size: 1rem;
+  margin-left: 0.25rem;
+}
+
+/* Culturist Info Slot */
+.destination-tabs-info-slot {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-info-slot {
+    gap: 40px;
+  }
+}
+
+/* Photo + Signature Column */
+.destination-tabs-photo-sig-col {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-@media (width >= 900px) {
-  .destination-tabs-culturist-layout {
-    flex-direction: row;
-    align-items: center;
-    gap: 1.5rem;
-  }
-}
-
-/* Avatar Column: Avatar on top, Signature directly under on Desktop */
-.destination-tabs-avatar-col {
-  display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 1rem;
-  flex-shrink: 0;
-}
-
-@media (width >= 900px) {
-  .destination-tabs-avatar-col {
-    flex-direction: column;
-    align-items: center;
-    width: 100px;
-    gap: 0.75rem;
-  }
 }
 
 .destination-tabs-avatar {
-  width: 75px;
-  height: 75px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 @media (width >= 900px) {
   .destination-tabs-avatar {
-    width: 80px;
-    height: 80px;
+    width: 160px;
+    height: 160px;
   }
 }
 
-/* Details Column */
-.destination-tabs-details-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.destination-tabs-signature {
+  width: 140px;
+  height: 70px;
+  object-fit: contain;
+  display: block;
 }
 
-.destination-tabs-header {
+/* Content Column (Name, Quote, Description) */
+.destination-tabs-content-col {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
-.destination-tabs-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+@media (width >= 900px) {
+  .destination-tabs-content-col {
+    gap: 20px;
+  }
+}
+
+.destination-tabs-culturist-name {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
   margin: 0;
-  color: #2c2c2c;
-}
-
-.destination-tabs-role {
-  font-size: 0.75rem;
-  color: #666;
-  margin: 0.2rem 0 0;
+  color: rgb(38, 39, 39);
+  line-height: 18px;
 }
 
 .destination-tabs-quote {
-  font-size: 1.05rem;
-  line-height: 1.45;
-  font-style: italic;
+  font-family: GoudyWtcT, Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.3;
+  font-style: normal;
   margin: 0;
-  color: #2b2b2b;
+  color: #1b364b;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-quote {
+    font-size: 28px;
+    line-height: 32px;
+  }
 }
 
 .destination-tabs-quote p {
@@ -234,115 +209,42 @@
 
 .destination-tabs-description {
   font-family: system-ui, -apple-system, sans-serif;
-  font-size: 0.825rem;
-  line-height: 1.55;
-  color: #4a4a4a;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgb(38, 39, 39);
+}
+
+@media (width >= 900px) {
+  .destination-tabs-description {
+    font-size: 20px;
+    line-height: 22px;
+  }
 }
 
 .destination-tabs-description p {
   margin: 0;
 }
 
-/* Signature Image */
-.destination-tabs-signature {
-  max-width: 110px;
-  height: auto;
-  display: block;
-}
-
-.desktop-signature {
-  display: none;
-}
-
-.mobile-signature {
-  display: block;
-}
-
-@media (width >= 900px) {
-  .desktop-signature {
-    display: block;
-  }
-
-  .mobile-signature {
-    display: none;
-  }
-}
-
-/* Cards Gallery Wrapper */
-.destination-tabs-cards-wrapper {
-  position: relative;
-  overflow-x: auto;
-  scrollbar-width: none;
-  width: 100%;
-  margin-top: 0.5rem;
-}
-
-@media (width >= 900px) {
-  .destination-tabs-cards-wrapper {
-    mask-image: linear-gradient(to right, rgb(0 0 0 / 100%) 80%, rgb(0 0 0 / 0%) 100%);
-  }
-}
-
-.destination-tabs-cards-wrapper::-webkit-scrollbar {
-  display: none;
-}
-
-.destination-tabs-cards {
-  display: flex;
-  gap: 0.8rem;
-}
-
-/* Mobile: Exactly 2 cards side by side inside beige box */
-.destination-tabs-card {
-  position: relative;
-  flex: 0 0 calc(50% - 0.4rem);
-  aspect-ratio: 1 / 1.15;
-  overflow: hidden;
-  background-color: #ddd;
-}
-
-/* Desktop: Fixed card sizes */
-@media (width >= 900px) {
-  .destination-tabs-card {
-    flex: 0 0 170px;
-    height: 210px;
-  }
-}
-
-.destination-tabs-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.destination-tabs-card-title {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  right: 1rem;
-  color: #fff;
-  font-size: 1rem;
-  line-height: 1.25;
-  font-family: Cinzel, Georgia, serif;
-  text-shadow: 0 1px 4px rgb(0 0 0 / 80%);
-  pointer-events: none;
-}
-
-/* Bottom CTA */
+/* CTA Link */
 .destination-tabs-cta {
-  text-align: center;
-  margin-top: 2rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  /* offset past avatar column + gap to align with text content */
+  padding-left: calc(160px + 2rem);
+  text-align: left;
 }
 
 @media (width >= 900px) {
   .destination-tabs-cta {
-    text-align: left;
+    padding-top: 0;
+    padding-left: calc(160px + 40px);
   }
 }
 
 .destination-tabs-cta-link {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #1e2d3b;
@@ -354,4 +256,63 @@
 
 .destination-tabs-cta-link:hover {
   opacity: 0.7;
+}
+
+/* Card Slots - Full height containers */
+.destination-tabs-card-slot-1,
+.destination-tabs-card-slot-2 {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+  display: flex;
+  align-items: flex-end;
+  background-color: #ddd;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-card-slot-1,
+  .destination-tabs-card-slot-2 {
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+/* Card Images fill the slot */
+.destination-tabs-card-slot-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  z-index: 1;
+}
+
+/* Card Title Overlay */
+.destination-tabs-card-title {
+  position: absolute;
+  /* Figma: pad T80 L64 */
+  top: 80px;
+  left: 64px;
+  right: 64px;
+  color: #fff;
+  font-size: 1.5rem;
+  font-family: GoudyWtcT, Georgia, serif;
+  font-weight: 400;
+  line-height: 1.3;
+  text-shadow: 0 2px 8px rgb(0 0 0 / 60%);
+  pointer-events: none;
+  z-index: 2;
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+@media (width >= 900px) {
+  .destination-tabs-card-title {
+    font-size: 52px;
+    line-height: 52px;
+  }
 }
