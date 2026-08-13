@@ -23,7 +23,14 @@
         {
           "component": "aem-content",
           "name": "reference",
-          "label": "Reference"
+          "label": "Reference",
+          "valueType": "string"
+        },
+        {
+          "component": "aem-content",
+          "name": "assetPath",
+          "label": "Asset Path",
+          "valueType": "string"
         }
       ]
     }
