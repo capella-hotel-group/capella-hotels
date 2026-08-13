@@ -3,9 +3,9 @@ import { getPublishBaseUrl } from '../../scripts/env.js';
 const CARD_LIST_QUERY = '/graphql/execute.json/capella-hotels/CardList';
 const TAB_LIST_QUERY = '/graphql/execute.json/capella-hotels/TabList';
 
-function getAuthoredCfPath(block) {
-  const firstRow = block.querySelector(':scope > div');
-  const cell = firstRow?.querySelector(':scope > div:last-child') || firstRow?.querySelector(':scope > div');
+function getAuthoredPath(block, rowIndex) {
+  const row = block.querySelectorAll(':scope > div')[rowIndex];
+  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
   if (!cell) return '';
   const link = cell.querySelector('a');
   const rawPath = (link?.getAttribute('href') || cell.textContent || '').trim();
@@ -16,6 +16,10 @@ function getAuthoredCfPath(block) {
   } catch (e) {
     return rawPath;
   }
+}
+
+function getAuthoredCfPath(block) {
+  return getAuthoredPath(block, 0);
 }
 
 function normalizePath(path) {
@@ -37,6 +41,10 @@ function normalizeAssetCandidate(value) {
   } catch (e) {
     return trimmed;
   }
+}
+
+function getAuthoredAssetPath(block) {
+  return normalizeAssetCandidate(getAuthoredPath(block, 1)).replace(/[#?].*$/, '').replace(/\/$/, '');
 }
 
 function isAssetPath(value) {
@@ -438,8 +446,19 @@ function renderFailure(block, message) {
 
 export default async function decorate(block) {
   const cfPath = getAuthoredCfPath(block);
-  if (!cfPath) {
-    renderFailure(block, 'Interactive asset path is not authored.');
+  const authoredAssetPath = getAuthoredAssetPath(block);
+  if (!cfPath && !authoredAssetPath) {
+    renderFailure(block, 'Interactive asset or asset path is not authored.');
+    return;
+  }
+
+  if (authoredAssetPath) {
+    try {
+      const metadata = await fetchAssetMetadata(authoredAssetPath);
+      renderInteractiveAsset(block, authoredAssetPath, metadata);
+    } catch (e) {
+      renderInteractiveAsset(block, authoredAssetPath, {});
+    }
     return;
   }
 
