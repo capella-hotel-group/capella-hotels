@@ -6,18 +6,6 @@ function textFromCell(cell) {
   return cell?.textContent?.trim() || '';
 }
 
-function collectMedia(cell) {
-  const pics = [...(cell?.querySelectorAll('picture') || [])];
-  if (pics.length) return pics;
-
-  const imgs = [...(cell?.querySelectorAll('img') || [])];
-  return imgs.map((img) => {
-    const picture = document.createElement('picture');
-    picture.append(img);
-    return picture;
-  });
-}
-
 function buildIntro(rows) {
   const [titleRow, subtitleRow] = rows;
 
