@@ -605,7 +605,7 @@
         "name": "assetPath",
         "label": "Asset Link",
         "valueType": "string",
-        "configUrl": "/tools/assets-selector/interactive-asset-picker.json",
+        "configUrl": "https://main--capella-hotels--capella-hotel-group.aem.live/tools/assets-selector/interactive-asset-picker.json",
         "required": true
       }
     ]
