@@ -1,26 +1,6 @@
 import { getPublishBaseUrl } from '../../scripts/env.js';
 
-const CARD_LIST_QUERY = '/graphql/execute.json/capella-hotels/CardList';
 const TAB_LIST_QUERY = '/graphql/execute.json/capella-hotels/TabList';
-
-function getAuthoredPath(block, rowIndex) {
-  const row = block.querySelectorAll(':scope > div')[rowIndex];
-  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
-  if (!cell) return '';
-  const link = cell.querySelector('a');
-  const rawPath = (link?.getAttribute('href') || cell.textContent || '').trim();
-  if (!rawPath) return '';
-
-  try {
-    return new URL(rawPath).pathname;
-  } catch (e) {
-    return rawPath;
-  }
-}
-
-function getAuthoredCfPath(block) {
-  return getAuthoredPath(block, 0);
-}
 
 function normalizePath(path) {
   return (path || '')
@@ -44,88 +24,12 @@ function normalizeAssetCandidate(value) {
 }
 
 function getAuthoredAssetPath(block) {
-  return normalizeAssetCandidate(getAuthoredPath(block, 1)).replace(/[#?].*$/, '').replace(/\/$/, '');
-}
-
-function isAssetPath(value) {
-  const candidate = normalizeAssetCandidate(value);
-  return candidate.startsWith('/content/dam/');
-}
-
-function scoreAssetPath(path) {
-  let score = 0;
-  if (/\.(png|jpe?g|gif|webp|svg|avif|mp4|webm|pdf)$/i.test(path)) score += 5;
-  if (!path.includes('/fragments/')) score += 3;
-  if (path.includes('/home/')) score += 1;
-  return score;
-}
-
-function collectAssetPathCandidates(node, out = []) {
-  if (!node) return out;
-
-  if (typeof node === 'string') {
-    if (isAssetPath(node)) out.push(normalizeAssetCandidate(node));
-    return out;
-  }
-
-  if (Array.isArray(node)) {
-    node.forEach((item) => collectAssetPathCandidates(item, out));
-    return out;
-  }
-
-  if (typeof node === 'object') {
-    const directKeyOrder = [
-      'assetPath',
-      '_path',
-      'path',
-      'fileReference',
-      'imagePath',
-      'url',
-      '_publishUrl',
-      '_dynamicUrl',
-      'src',
-      'href',
-    ];
-    directKeyOrder.forEach((key) => {
-      const value = node[key];
-      if (isAssetPath(value)) out.push(normalizeAssetCandidate(value));
-    });
-
-    Object.values(node).forEach((value) => collectAssetPathCandidates(value, out));
-  }
-
-  return out;
-}
-
-function extractAssetPath(graphqlData) {
-  const candidates = collectAssetPathCandidates(graphqlData?.data || graphqlData)
-    .map((candidate) => normalizeAssetCandidate(candidate))
-    .map((candidate) => candidate.replace(/[#?].*$/, '').replace(/\/$/, ''))
-    .filter(Boolean);
-
-  if (!candidates.length) return null;
-
-  const ranked = [...new Set(candidates)]
-    .sort((a, b) => scoreAssetPath(b) - scoreAssetPath(a));
-
-  return ranked[0] || null;
-}
-
-async function fetchCardListData(cfPath) {
-  const publishBaseUrl = getPublishBaseUrl();
-  const normalizedCfPath = normalizePath(cfPath);
-  const url = `${publishBaseUrl}${CARD_LIST_QUERY};path=${normalizedCfPath}`;
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!response.ok) {
-    throw new Error('CardList request failed');
-  }
-
-  return response.json();
+  const row = block.querySelectorAll(':scope > div')[1];
+  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
+  if (!cell) return '';
+  const link = cell.querySelector('a');
+  const rawPath = (link?.getAttribute('href') || cell.textContent || '').trim();
+  return normalizeAssetCandidate(rawPath).replace(/[#?].*$/, '').replace(/\/$/, '');
 }
 
 async function fetchTabDetailsData(cfPath) {
@@ -445,39 +349,16 @@ function renderFailure(block, message) {
 }
 
 export default async function decorate(block) {
-  const cfPath = getAuthoredCfPath(block);
   const authoredAssetPath = getAuthoredAssetPath(block);
-  if (!cfPath && !authoredAssetPath) {
-    renderFailure(block, 'Interactive asset or asset path is not authored.');
-    return;
-  }
-
-  if (authoredAssetPath) {
-    try {
-      const metadata = await fetchAssetMetadata(authoredAssetPath);
-      renderInteractiveAsset(block, authoredAssetPath, metadata);
-    } catch (e) {
-      renderInteractiveAsset(block, authoredAssetPath, {});
-    }
+  if (!authoredAssetPath) {
+    renderFailure(block, 'Asset path is not authored.');
     return;
   }
 
   try {
-    const graphqlData = await fetchCardListData(cfPath);
-    const assetPath = extractAssetPath(graphqlData);
-
-    if (!assetPath) {
-      renderFailure(block, 'No asset was found for the authored Content Fragment path.');
-      return;
-    }
-
-    try {
-      const metadata = await fetchAssetMetadata(assetPath);
-      renderInteractiveAsset(block, assetPath, metadata);
-    } catch (e) {
-      renderInteractiveAsset(block, assetPath, {});
-    }
+    const metadata = await fetchAssetMetadata(authoredAssetPath);
+    renderInteractiveAsset(block, authoredAssetPath, metadata);
   } catch (e) {
-    renderFailure(block, 'Unable to load interactive asset content right now.');
+    renderInteractiveAsset(block, authoredAssetPath, {});
   }
 }
