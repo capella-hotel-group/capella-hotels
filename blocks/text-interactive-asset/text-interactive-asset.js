@@ -25,13 +25,11 @@ function normalizeAssetCandidate(value) {
 
 function getAuthoredAssetPath(block) {
   const rows = block.querySelectorAll(':scope > div');
-  const row = [...rows].reverse().find((candidate) => candidate.textContent.trim() || candidate.querySelector('a, img'));
+  const row = rows[0];
   const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
-  if (!cell) return '';
-  const link = cell.querySelector('a');
-  const image = cell.querySelector('img');
-  const rawPath = (link?.getAttribute('href') || image?.getAttribute('src') || cell.textContent || '').trim();
-  return normalizeAssetCandidate(rawPath).replace(/[#?].*$/, '').replace(/\/$/, '');
+  const link = cell?.querySelector('a');
+  const authoredPath = link?.getAttribute('href') || '';
+  return normalizeAssetCandidate(authoredPath).replace(/[#?].*$/, '').replace(/\/$/, '');
 }
 
 async function fetchTabDetailsData(cfPath) {
@@ -294,7 +292,7 @@ function renderInteractiveAsset(block, assetPath, metadata) {
 
   const assetLink = document.createElement('a');
   assetLink.className = 'text-interactive-asset-link';
-  assetLink.href = media.src;
+  assetLink.href = resolveAssetUrl(assetPath);
   assetLink.target = '_blank';
   assetLink.rel = 'noopener noreferrer';
   assetLink.append(media);

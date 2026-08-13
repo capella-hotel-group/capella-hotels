@@ -21,10 +21,11 @@
       "id": "text-interactive-asset",
       "fields": [
         {
-          "component": "reference",
+          "component": "aem-content",
           "name": "assetPath",
-          "label": "Asset Path",
-          "valueType": "string"
+          "label": "Asset Link",
+          "valueType": "string",
+          "required": true
         }
       ]
     }
