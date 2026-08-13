@@ -24,11 +24,13 @@ function normalizeAssetCandidate(value) {
 }
 
 function getAuthoredAssetPath(block) {
-  const row = block.querySelectorAll(':scope > div')[1];
+  const rows = block.querySelectorAll(':scope > div');
+  const row = [...rows].reverse().find((candidate) => candidate.textContent.trim() || candidate.querySelector('a, img'));
   const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
   if (!cell) return '';
   const link = cell.querySelector('a');
-  const rawPath = (link?.getAttribute('href') || cell.textContent || '').trim();
+  const image = cell.querySelector('img');
+  const rawPath = (link?.getAttribute('href') || image?.getAttribute('src') || cell.textContent || '').trim();
   return normalizeAssetCandidate(rawPath).replace(/[#?].*$/, '').replace(/\/$/, '');
 }
 
@@ -289,7 +291,14 @@ function renderInteractiveAsset(block, assetPath, metadata) {
   media.className = 'text-interactive-asset-image';
   media.src = `${publishBaseUrl}${assetPath}`;
   media.alt = metadata?.['dc:title'] || metadata?.['dc:description'] || 'Interactive asset';
-  mediaWrap.append(media);
+
+  const assetLink = document.createElement('a');
+  assetLink.className = 'text-interactive-asset-link';
+  assetLink.href = media.src;
+  assetLink.target = '_blank';
+  assetLink.rel = 'noopener noreferrer';
+  assetLink.append(media);
+  mediaWrap.append(assetLink);
 
   if (hotspots.length) {
     const hotspotLayer = document.createElement('div');

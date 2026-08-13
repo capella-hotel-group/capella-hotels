@@ -21,7 +21,7 @@
       "id": "text-interactive-asset",
       "fields": [
         {
-          "component": "aem-content",
+          "component": "reference",
           "name": "assetPath",
           "label": "Asset Path",
           "valueType": "string"
