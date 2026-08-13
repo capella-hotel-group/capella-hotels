@@ -25,10 +25,11 @@ function normalizeAssetCandidate(value) {
 
 function getAuthoredAssetPath(block) {
   const rows = block.querySelectorAll(':scope > div');
-  const row = rows[0];
+  const row = [...rows].reverse().find((candidate) => candidate.querySelector('a, img') || candidate.textContent.trim());
   const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
   const link = cell?.querySelector('a');
-  const authoredPath = link?.getAttribute('href') || '';
+  const image = cell?.querySelector('img');
+  const authoredPath = link?.getAttribute('href') || image?.getAttribute('src') || '';
   return normalizeAssetCandidate(authoredPath).replace(/[#?].*$/, '').replace(/\/$/, '');
 }
 
