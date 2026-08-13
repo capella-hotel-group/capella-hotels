@@ -21,10 +21,11 @@
       "id": "text-interactive-asset",
       "fields": [
         {
-          "component": "aem-content",
+          "component": "custom-asset-namespace:custom-asset",
           "name": "assetPath",
           "label": "Asset Link",
           "valueType": "string",
+          "configUrl": "/tools/assets-selector/interactive-asset-picker.json",
           "required": true
         }
       ]
