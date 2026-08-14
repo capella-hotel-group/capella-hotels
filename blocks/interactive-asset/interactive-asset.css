@@ -1,26 +1,26 @@
-.text-interactive-asset .text-interactive-asset-wrapper {
+.interactive-asset .interactive-asset-wrapper {
   display: grid;
   gap: 1.5rem;
 }
 
-.text-interactive-asset .text-interactive-asset-media-wrap {
+.interactive-asset .interactive-asset-media-wrap {
   position: relative;
   line-height: 0;
 }
 
-.text-interactive-asset .text-interactive-asset-image {
+.interactive-asset .interactive-asset-image {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot-layer {
+.interactive-asset .interactive-asset-hotspot-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot {
+.interactive-asset .interactive-asset-hotspot {
   position: absolute;
   display: inline-flex;
   align-items: center;
@@ -39,20 +39,20 @@
   transition: background-color 160ms ease, transform 160ms ease;
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot::before {
+.interactive-asset .interactive-asset-hotspot::before {
   content: '+';
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot:hover,
-.text-interactive-asset .text-interactive-asset-hotspot:focus-visible {
+.interactive-asset .interactive-asset-hotspot:hover,
+.interactive-asset .interactive-asset-hotspot:focus-visible {
   background: #000;
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot:focus-visible {
+.interactive-asset .interactive-asset-hotspot:focus-visible {
   outline: none;
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot-label {
+.interactive-asset .interactive-asset-hotspot-label {
   position: absolute;
   top: calc(100% + 0.4rem);
   left: 50%;
@@ -68,44 +68,44 @@
   transition: opacity 160ms ease;
 }
 
-.text-interactive-asset .text-interactive-asset-hotspot:hover .text-interactive-asset-hotspot-label,
-.text-interactive-asset .text-interactive-asset-hotspot:focus-visible .text-interactive-asset-hotspot-label {
+.interactive-asset .interactive-asset-hotspot:hover .interactive-asset-hotspot-label,
+.interactive-asset .interactive-asset-hotspot:focus-visible .interactive-asset-hotspot-label {
   opacity: 1;
 }
 
-.text-interactive-asset .text-interactive-asset-content {
+.interactive-asset .interactive-asset-content {
   line-height: 1.5;
 }
 
-.text-interactive-asset .text-interactive-asset-title {
+.interactive-asset .interactive-asset-title {
   margin: 0 0 0.5rem;
 }
 
-.text-interactive-asset .text-interactive-asset-description {
+.interactive-asset .interactive-asset-description {
   margin: 0 0 1rem;
 }
 
-.text-interactive-asset .text-interactive-asset-metadata {
+.interactive-asset .interactive-asset-metadata {
   display: grid;
   grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
   gap: 0.3rem 0.8rem;
   margin: 0;
 }
 
-.text-interactive-asset .text-interactive-asset-metadata dt {
+.interactive-asset .interactive-asset-metadata dt {
   font-weight: 600;
 }
 
-.text-interactive-asset .text-interactive-asset-metadata dd {
+.interactive-asset .interactive-asset-metadata dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
 
-.text-interactive-asset .text-interactive-asset-error {
+.interactive-asset .interactive-asset-error {
   color: #a90000;
 }
 
-.text-interactive-asset .text-interactive-asset-modal {
+.interactive-asset .interactive-asset-modal {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -116,11 +116,11 @@
   background: rgb(0 0 0 / 55%);
 }
 
-.text-interactive-asset .text-interactive-asset-modal.is-open {
+.interactive-asset .interactive-asset-modal.is-open {
   display: flex;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-panel {
+.interactive-asset .interactive-asset-modal-panel {
   position: relative;
   width: min(100%, 26rem);
   max-height: min(90vh, 52rem);
@@ -131,7 +131,7 @@
   box-shadow: 0 18px 40px rgb(0 0 0 / 35%);
 }
 
-.text-interactive-asset .text-interactive-asset-modal-close {
+.interactive-asset .interactive-asset-modal-close {
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
@@ -147,25 +147,25 @@
   cursor: pointer;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-body {
+.interactive-asset .interactive-asset-modal-body {
   padding: 1.2rem;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-title {
+.interactive-asset .interactive-asset-modal-title {
   margin: 0 0 0.8rem;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-image {
+.interactive-asset .interactive-asset-modal-image {
   display: block;
   width: 100%;
   height: auto;
   margin: 0 0 0.9rem;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-quote {
+.interactive-asset .interactive-asset-modal-quote {
   margin: 0 0 0.75rem;
   padding-left: 0;
   border-left: 0;
@@ -173,22 +173,22 @@
   font-style: italic;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-description {
+.interactive-asset .interactive-asset-modal-description {
   font-size: 0.9rem;
   line-height: 1.45;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-description p {
+.interactive-asset .interactive-asset-modal-description p {
   margin: 0 0 0.6rem;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-loading,
-.text-interactive-asset .text-interactive-asset-modal-error,
-.text-interactive-asset .text-interactive-asset-modal-empty {
+.interactive-asset .interactive-asset-modal-loading,
+.interactive-asset .interactive-asset-modal-error,
+.interactive-asset .interactive-asset-modal-empty {
   margin: 0;
   font-size: 0.9rem;
 }
 
-.text-interactive-asset .text-interactive-asset-modal-error {
+.interactive-asset .interactive-asset-modal-error {
   color: #a90000;
 }

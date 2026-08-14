@@ -467,6 +467,18 @@
     ]
   },
   {
+    "id": "interactive-asset",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfPath",
+        "label": "Content Fragment Path",
+        "valueType": "string",
+        "required": true
+      }
+    ]
+  },
+  {
     "id": "newsletter-form",
     "fields": [
       {
@@ -573,26 +585,6 @@
         "name": "description",
         "label": "Description",
         "valueType": "string"
-      }
-    ]
-  },
-  {
-    "id": "text-interactive-asset",
-    "fields": [
-      {
-        "component": "custom-asset-namespace:custom-asset",
-        "name": "assetPath",
-        "label": "Asset Link",
-        "valueType": "string",
-        "configUrl": "https://main--capella-hotels--capella-hotel-group.aem.live/tools/assets-selector/interactive-asset-picker.json",
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "imageMapPath",
-        "label": "Image Map Asset Path",
-        "valueType": "string",
-        "required": true
       }
     ]
   },
