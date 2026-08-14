@@ -23,20 +23,17 @@ function normalizeAssetCandidate(value) {
   }
 }
 
-function getAuthoredAssetPath(block) {
-  const rows = block.querySelectorAll(':scope > div');
-  const row = [...rows].find((candidate) => candidate.querySelector('a, img'));
+function getAuthoredCfPath(block) {
+  const row = block.querySelectorAll(':scope > div')[0];
   const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
   const link = cell?.querySelector('a');
-  const image = cell?.querySelector('img');
-  const authoredPath = link?.getAttribute('href') || image?.getAttribute('src') || '';
-  return normalizeAssetCandidate(authoredPath).replace(/[#?].*$/, '').replace(/\/$/, '');
+  return (link?.getAttribute('href') || cell?.textContent || '').trim();
 }
 
-function getAuthoredImageMapPath(block) {
-  const row = block.querySelectorAll(':scope > div')[1];
-  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
-  return cell?.textContent || '';
+function addDamPrefix(path) {
+  const normalizedPath = normalizeAssetCandidate(path).replace(/[#?].*$/, '').replace(/^\/+|\/+$/g, '');
+  if (!normalizedPath) return '';
+  return normalizedPath.startsWith('content/dam/') ? `/${normalizedPath}` : `/content/dam/${normalizedPath}`;
 }
 
 async function fetchTabDetailsData(cfPath) {
@@ -74,18 +71,10 @@ async function fetchAssetMetadata(assetPath) {
   return response.json();
 }
 
-function createMetadataRows(metadata) {
-  const preferredKeys = ['imageMap'];
-  const rows = [];
-
-  preferredKeys.forEach((key) => {
-    const value = metadata?.[key];
-    if (value == null || value === '') return;
-    const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-    rows.push({ key, value: displayValue });
-  });
-
-  return rows;
+function getImageMapValue(metadata) {
+  const value = metadata?.imageMap;
+  if (value == null || value === '') return '';
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
 }
 
 function parseImageMap(imageMapValue) {
@@ -130,32 +119,32 @@ function resolveAssetUrl(path) {
 }
 
 function buildHotspotModal(block) {
-  const existing = block.querySelector('.text-interactive-asset-modal');
+  const existing = block.querySelector('.interactive-asset-modal');
   if (existing) {
     return {
       modal: existing,
-      panel: existing.querySelector('.text-interactive-asset-modal-panel'),
-      body: existing.querySelector('.text-interactive-asset-modal-body'),
+      panel: existing.querySelector('.interactive-asset-modal-panel'),
+      body: existing.querySelector('.interactive-asset-modal-body'),
     };
   }
 
   const modal = document.createElement('div');
-  modal.className = 'text-interactive-asset-modal';
+  modal.className = 'interactive-asset-modal';
   modal.setAttribute('aria-hidden', 'true');
 
   const panel = document.createElement('div');
-  panel.className = 'text-interactive-asset-modal-panel';
+  panel.className = 'interactive-asset-modal-panel';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
 
   const closeBtn = document.createElement('button');
-  closeBtn.className = 'text-interactive-asset-modal-close';
+  closeBtn.className = 'interactive-asset-modal-close';
   closeBtn.type = 'button';
   closeBtn.setAttribute('aria-label', 'Close popup');
   closeBtn.textContent = 'x';
 
   const body = document.createElement('div');
-  body.className = 'text-interactive-asset-modal-body';
+  body.className = 'interactive-asset-modal-body';
 
   const closeModal = () => {
     modal.classList.remove('is-open');
@@ -182,7 +171,7 @@ function buildHotspotModal(block) {
 function renderModalLoading(body, label) {
   body.innerHTML = '';
   const loading = document.createElement('p');
-  loading.className = 'text-interactive-asset-modal-loading';
+  loading.className = 'interactive-asset-modal-loading';
   loading.textContent = `Loading ${label || 'details'}...`;
   body.append(loading);
 }
@@ -190,7 +179,7 @@ function renderModalLoading(body, label) {
 function renderModalError(body, message) {
   body.innerHTML = '';
   const error = document.createElement('p');
-  error.className = 'text-interactive-asset-modal-error';
+  error.className = 'interactive-asset-modal-error';
   error.textContent = message;
   body.append(error);
 }
@@ -199,14 +188,14 @@ function renderModalContent(body, cfData, fallbackLabel) {
   body.innerHTML = '';
 
   const title = document.createElement('h4');
-  title.className = 'text-interactive-asset-modal-title';
+  title.className = 'interactive-asset-modal-title';
   title.textContent = cfData?.name || fallbackLabel || 'Details';
   body.append(title);
 
   const { _path: imagePath } = cfData?.image || {};
   if (imagePath) {
     const image = document.createElement('img');
-    image.className = 'text-interactive-asset-modal-image';
+    image.className = 'interactive-asset-modal-image';
     image.src = resolveAssetUrl(imagePath);
     image.alt = cfData?.name || fallbackLabel || 'Popup image';
     body.append(image);
@@ -214,21 +203,21 @@ function renderModalContent(body, cfData, fallbackLabel) {
 
   if (cfData?.quote?.html) {
     const quote = document.createElement('blockquote');
-    quote.className = 'text-interactive-asset-modal-quote';
+    quote.className = 'interactive-asset-modal-quote';
     quote.innerHTML = cfData.quote.html;
     body.append(quote);
   }
 
   if (cfData?.description?.html) {
     const description = document.createElement('div');
-    description.className = 'text-interactive-asset-modal-description';
+    description.className = 'interactive-asset-modal-description';
     description.innerHTML = cfData.description.html;
     body.append(description);
   }
 
   if (!imagePath && !cfData?.quote?.html && !cfData?.description?.html) {
     const empty = document.createElement('p');
-    empty.className = 'text-interactive-asset-modal-empty';
+    empty.className = 'interactive-asset-modal-empty';
     empty.textContent = 'No detail content found for this hotspot.';
     body.append(empty);
   }
@@ -258,7 +247,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   hotspotLayer.replaceChildren();
   hotspots.forEach((spot) => {
     const anchor = document.createElement('a');
-    anchor.className = 'text-interactive-asset-hotspot';
+    anchor.className = 'interactive-asset-hotspot';
     anchor.href = resolveHotspotHref(spot.href);
     anchor.target = spot.target || '_self';
     anchor.rel = anchor.target === '_blank' ? 'noopener noreferrer' : '';
@@ -274,7 +263,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
     });
 
     const label = document.createElement('span');
-    label.className = 'text-interactive-asset-hotspot-label';
+    label.className = 'interactive-asset-hotspot-label';
     label.textContent = spot.label;
     anchor.append(label);
 
@@ -282,23 +271,24 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   });
 }
 
-function renderInteractiveAsset(block, assetPath, metadata, imageMapPathText) {
+function renderInteractiveAsset(block, assetPath, metadata) {
   const publishBaseUrl = getPublishBaseUrl();
-  const hotspots = parseImageMap(metadata?.imageMap);
+  const imageMapValue = getImageMapValue(metadata);
+  const hotspots = parseImageMap(imageMapValue);
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'text-interactive-asset-wrapper';
+  wrapper.className = 'interactive-asset-wrapper';
 
   const mediaWrap = document.createElement('div');
-  mediaWrap.className = 'text-interactive-asset-media-wrap';
+  mediaWrap.className = 'interactive-asset-media-wrap';
 
   const media = document.createElement('img');
-  media.className = 'text-interactive-asset-image';
+  media.className = 'interactive-asset-image';
   media.src = `${publishBaseUrl}${assetPath}`;
   media.alt = metadata?.['dc:title'] || metadata?.['dc:description'] || 'Interactive asset';
 
   const assetLink = document.createElement('a');
-  assetLink.className = 'text-interactive-asset-link';
+  assetLink.className = 'interactive-asset-link';
   assetLink.href = resolveAssetUrl(assetPath);
   assetLink.target = '_blank';
   assetLink.rel = 'noopener noreferrer';
@@ -307,7 +297,7 @@ function renderInteractiveAsset(block, assetPath, metadata, imageMapPathText) {
 
   if (hotspots.length) {
     const hotspotLayer = document.createElement('div');
-    hotspotLayer.className = 'text-interactive-asset-hotspot-layer';
+    hotspotLayer.className = 'interactive-asset-hotspot-layer';
     mediaWrap.append(hotspotLayer);
 
     const fallbackWidth = Number(metadata?.['tiff:ImageWidth']) || Number(metadata?.['exif:PixelXDimension']) || 0;
@@ -331,27 +321,19 @@ function renderInteractiveAsset(block, assetPath, metadata, imageMapPathText) {
   wrapper.append(mediaWrap);
 
   const content = document.createElement('div');
-  content.className = 'text-interactive-asset-content';
+  content.className = 'interactive-asset-content';
 
-  const imageMapPath = document.createElement('p');
-  imageMapPath.className = 'text-interactive-asset-image-map-path';
-  imageMapPath.textContent = imageMapPathText;
-  content.append(imageMapPath);
-
-  const metadataRows = createMetadataRows(metadata);
-  if (metadataRows.length) {
+  if (imageMapValue) {
     const list = document.createElement('dl');
-    list.className = 'text-interactive-asset-metadata';
+    list.className = 'interactive-asset-metadata';
 
-    metadataRows.forEach(({ key, value }) => {
-      const dt = document.createElement('dt');
-      dt.textContent = key;
+    const dt = document.createElement('dt');
+    dt.textContent = 'imageMap';
 
-      const dd = document.createElement('dd');
-      dd.textContent = value;
+    const dd = document.createElement('dd');
+    dd.textContent = imageMapValue;
 
-      list.append(dt, dd);
-    });
+    list.append(dt, dd);
 
     content.append(list);
   }
@@ -362,29 +344,30 @@ function renderInteractiveAsset(block, assetPath, metadata, imageMapPathText) {
 
 function renderFailure(block, message) {
   const error = document.createElement('p');
-  error.className = 'text-interactive-asset-error';
+  error.className = 'interactive-asset-error';
   error.textContent = message;
   block.replaceChildren(error);
 }
 
 export default async function decorate(block) {
-  const authoredAssetPath = getAuthoredAssetPath(block);
-  const imageMapPathText = getAuthoredImageMapPath(block);
-  const imageMapPath = imageMapPathText.trim();
-  if (!authoredAssetPath) {
-    renderFailure(block, 'Asset path is not authored.');
-    return;
-  }
-
-  if (!imageMapPath) {
-    renderFailure(block, 'Image map asset path is not authored.');
+  const cfPath = getAuthoredCfPath(block);
+  if (!cfPath) {
+    renderFailure(block, 'Content Fragment path is not authored.');
     return;
   }
 
   try {
-    const metadata = await fetchAssetMetadata(imageMapPath);
-    renderInteractiveAsset(block, authoredAssetPath, metadata, imageMapPathText);
+    const cfData = await fetchTabDetailsData(cfPath);
+    const assetPathText = cfData?.image?._path || cfData?.asset?._path || cfData?.assetPath || cfData?.imagePath || '';
+    const assetPath = addDamPrefix(assetPathText);
+    if (!assetPath) {
+      renderFailure(block, 'No asset path was found in the Content Fragment.');
+      return;
+    }
+
+    const metadata = await fetchAssetMetadata(assetPath);
+    renderInteractiveAsset(block, assetPath, metadata);
   } catch (e) {
-    renderInteractiveAsset(block, authoredAssetPath, {}, imageMapPathText);
+    renderFailure(block, 'Unable to load the interactive asset.');
   }
 }
