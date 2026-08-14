@@ -27,6 +27,13 @@
           "valueType": "string",
           "configUrl": "https://main--capella-hotels--capella-hotel-group.aem.live/tools/assets-selector/interactive-asset-picker.json",
           "required": true
+        },
+        {
+          "component": "text",
+          "name": "imageMapPath",
+          "label": "Image Map Asset Path",
+          "valueType": "string",
+          "required": true
         }
       ]
     }
