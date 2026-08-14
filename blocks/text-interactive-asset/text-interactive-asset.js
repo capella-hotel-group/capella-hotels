@@ -25,12 +25,18 @@ function normalizeAssetCandidate(value) {
 
 function getAuthoredAssetPath(block) {
   const rows = block.querySelectorAll(':scope > div');
-  const row = [...rows].reverse().find((candidate) => candidate.querySelector('a, img') || candidate.textContent.trim());
+  const row = [...rows].find((candidate) => candidate.querySelector('a, img'));
   const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
   const link = cell?.querySelector('a');
   const image = cell?.querySelector('img');
   const authoredPath = link?.getAttribute('href') || image?.getAttribute('src') || '';
   return normalizeAssetCandidate(authoredPath).replace(/[#?].*$/, '').replace(/\/$/, '');
+}
+
+function getAuthoredImageMapPath(block) {
+  const row = block.querySelectorAll(':scope > div')[1];
+  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
+  return cell?.textContent?.trim() || '';
 }
 
 async function fetchTabDetailsData(cfPath) {
@@ -276,7 +282,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   });
 }
 
-function renderInteractiveAsset(block, assetPath, metadata) {
+function renderInteractiveAsset(block, assetPath, metadata, imageMapPathValue) {
   const publishBaseUrl = getPublishBaseUrl();
   const hotspots = parseImageMap(metadata?.imageMap);
 
@@ -327,6 +333,11 @@ function renderInteractiveAsset(block, assetPath, metadata) {
   const content = document.createElement('div');
   content.className = 'text-interactive-asset-content';
 
+  const imageMapPath = document.createElement('p');
+  imageMapPath.className = 'text-interactive-asset-image-map-path';
+  imageMapPath.textContent = imageMapPathValue;
+  content.append(imageMapPath);
+
   const metadataRows = createMetadataRows(metadata);
   if (metadataRows.length) {
     const list = document.createElement('dl');
@@ -358,15 +369,21 @@ function renderFailure(block, message) {
 
 export default async function decorate(block) {
   const authoredAssetPath = getAuthoredAssetPath(block);
+  const imageMapPath = getAuthoredImageMapPath(block);
   if (!authoredAssetPath) {
     renderFailure(block, 'Asset path is not authored.');
     return;
   }
 
+  if (!imageMapPath) {
+    renderFailure(block, 'Image map asset path is not authored.');
+    return;
+  }
+
   try {
-    const metadata = await fetchAssetMetadata(authoredAssetPath);
-    renderInteractiveAsset(block, authoredAssetPath, metadata);
+    const metadata = await fetchAssetMetadata(imageMapPath);
+    renderInteractiveAsset(block, authoredAssetPath, metadata, imageMapPath);
   } catch (e) {
-    renderInteractiveAsset(block, authoredAssetPath, {});
+    renderInteractiveAsset(block, authoredAssetPath, {}, imageMapPath);
   }
 }
