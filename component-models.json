@@ -353,6 +353,62 @@
     ]
   },
   {
+    "id": "filters-grid",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfRootPath",
+        "label": "Content Fragment Root Path",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "revealMoreLabel",
+        "label": "Reveal More CTA Text",
+        "valueType": "string",
+        "value": "Reveal More"
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-tab",
+    "fields": [
+      {
+        "component": "text",
+        "name": "tabKey",
+        "label": "Tab Key",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "tabLabel",
+        "label": "Tab Label",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-filter",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Filter Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "tags",
+        "label": "Tags (comma separated, used to fetch CFs)",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "fragment",
     "fields": [
       {
