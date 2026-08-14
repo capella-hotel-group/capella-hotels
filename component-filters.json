@@ -24,8 +24,7 @@
       "dm-showcase",
       "newsletter-form",
       "destination-tabs",
-      "destination-cards",
-      "text-interactive-asset"
+      "destination-cards"
     ]
   },
   {
@@ -65,6 +64,18 @@
     "id": "destination-tabs",
     "components": [
       "destination-tabs-item"
+    ]
+  },
+  {
+    "id": "filters-grid",
+    "components": [
+      "filters-grid-tab"
+    ]
+  },
+  {
+    "id": "filters-grid-tab",
+    "components": [
+      "filters-grid-filter"
     ]
   }
 ]
