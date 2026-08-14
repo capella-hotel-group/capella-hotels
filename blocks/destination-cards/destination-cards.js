@@ -1,30 +1,9 @@
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
 const INTRO_ROWS = 2;
-const MAX_ICONS = 3;
 
 function textFromCell(cell) {
   return cell?.textContent?.trim() || '';
-}
-
-function collectMedia(cell) {
-  const pics = [...(cell?.querySelectorAll('picture') || [])];
-  if (pics.length) return pics;
-
-  const imgs = [...(cell?.querySelectorAll('img') || [])];
-  return imgs.map((img) => {
-    const picture = document.createElement('picture');
-    picture.append(img);
-    return picture;
-  });
-}
-
-function collectIconMedia(cells) {
-  const icons = cells
-    .flatMap((cell) => collectMedia(cell))
-    .slice(0, MAX_ICONS);
-
-  return icons;
 }
 
 function buildIntro(rows) {
@@ -74,11 +53,10 @@ function buildCard(row) {
   const title = textFromCell(cells[1]);
   const image = cells[2]?.querySelector('picture, img');
 
-  const icons = collectIconMedia(cells.slice(5, 8));
   const cta = buildCta(cells[3], cells[4]);
 
   // Ignore rows that have no authored content at all.
-  if (!location && !title && !image && !cta && icons.length === 0) {
+  if (!location && !title && !image && !cta) {
     return null;
   }
 
@@ -110,17 +88,10 @@ function buildCard(row) {
   }
 
   if (title) {
-    const titleEl = document.createElement('h3');
+    const titleEl = document.createElement('h1');
     titleEl.className = 'destination-cards-card-title';
     titleEl.textContent = title;
     overlay.append(titleEl);
-  }
-
-  if (icons.length) {
-    const iconsWrap = document.createElement('div');
-    iconsWrap.className = 'destination-cards-icons';
-    icons.forEach((icon) => iconsWrap.append(icon));
-    overlay.append(iconsWrap);
   }
 
   media.append(overlay);
