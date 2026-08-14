@@ -88,27 +88,6 @@
           "name": "ctaLink",
           "label": "CTA Link",
           "valueType": "string"
-        },
-        {
-          "component": "reference",
-          "name": "icon1",
-          "label": "Icon 1",
-          "valueType": "string",
-          "multi": false
-        },
-        {
-          "component": "reference",
-          "name": "icon2",
-          "label": "Icon 2",
-          "valueType": "string",
-          "multi": false
-        },
-        {
-          "component": "reference",
-          "name": "icon3",
-          "label": "Icon 3",
-          "valueType": "string",
-          "multi": false
         }
       ]
     }
