@@ -31,6 +31,12 @@ function getAuthoredCfPath(block) {
   return (link?.getAttribute('href') || cell?.textContent || '').trim();
 }
 
+function getAuthoredField(block, index, richText = false) {
+  const row = block.querySelectorAll(':scope > div')[index];
+  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
+  return richText ? cell?.innerHTML?.trim() || '' : cell?.textContent?.trim() || '';
+}
+
 function addDamPrefix(path) {
   const normalizedPath = normalizeAssetCandidate(path).replace(/[#?].*$/, '').replace(/^\/+|\/+$/g, '');
   if (!normalizedPath) return '';
@@ -272,7 +278,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   });
 }
 
-function renderInteractiveAsset(block, assetPath, metadata) {
+function renderInteractiveAsset(block, assetPath, metadata, contentData) {
   const publishBaseUrl = getPublishBaseUrl();
   const imageMapValue = getImageMapValue(metadata);
   const hotspots = parseImageMap(imageMapValue);
@@ -324,19 +330,25 @@ function renderInteractiveAsset(block, assetPath, metadata) {
   const content = document.createElement('div');
   content.className = 'interactive-asset-content';
 
-  if (imageMapValue) {
-    const list = document.createElement('dl');
-    list.className = 'interactive-asset-metadata';
+  if (contentData.subtitle) {
+    const subtitle = document.createElement('p');
+    subtitle.className = 'interactive-asset-subtitle';
+    subtitle.textContent = contentData.subtitle;
+    content.append(subtitle);
+  }
 
-    const dt = document.createElement('dt');
-    dt.textContent = 'imageMap';
+  if (contentData.title) {
+    const title = document.createElement('h2');
+    title.className = 'interactive-asset-title';
+    title.textContent = contentData.title;
+    content.append(title);
+  }
 
-    const dd = document.createElement('dd');
-    dd.textContent = imageMapValue;
-
-    list.append(dt, dd);
-
-    content.append(list);
+  if (contentData.description) {
+    const description = document.createElement('div');
+    description.className = 'interactive-asset-description';
+    description.innerHTML = contentData.description;
+    content.append(description);
   }
 
   wrapper.append(content);
@@ -352,6 +364,11 @@ function renderFailure(block, message) {
 
 export default async function decorate(block) {
   const cfPath = getAuthoredCfPath(block);
+  const contentData = {
+    subtitle: getAuthoredField(block, 1),
+    title: getAuthoredField(block, 2),
+    description: getAuthoredField(block, 3, true),
+  };
   if (!cfPath) {
     renderFailure(block, 'Content Fragment path is not authored.');
     return;
@@ -371,7 +388,7 @@ export default async function decorate(block) {
     }
 
     const metadata = await fetchAssetMetadata(assetPath);
-    renderInteractiveAsset(block, assetPath, metadata);
+    renderInteractiveAsset(block, assetPath, metadata, contentData);
   } catch (e) {
     renderFailure(block, 'Unable to load the interactive asset.');
   }
