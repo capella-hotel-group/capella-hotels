@@ -1,6 +1,7 @@
 import { getPublishBaseUrl } from '../../scripts/env.js';
 
 const TAB_LIST_QUERY = '/graphql/execute.json/capella-hotels/TabList';
+const PATH_KEY = '_path';
 
 function normalizePath(path) {
   return (path || '')
@@ -192,7 +193,7 @@ function renderModalContent(body, cfData, fallbackLabel) {
   title.textContent = cfData?.name || fallbackLabel || 'Details';
   body.append(title);
 
-  const { _path: imagePath } = cfData?.image || {};
+  const imagePath = cfData?.image?.[PATH_KEY];
   if (imagePath) {
     const image = document.createElement('img');
     image.className = 'interactive-asset-modal-image';
@@ -358,7 +359,11 @@ export default async function decorate(block) {
 
   try {
     const cfData = await fetchTabDetailsData(cfPath);
-    const assetPathText = cfData?.image?._path || cfData?.asset?._path || cfData?.assetPath || cfData?.imagePath || '';
+    const assetPathText = cfData?.image?.[PATH_KEY]
+      || cfData?.asset?.[PATH_KEY]
+      || cfData?.assetPath
+      || cfData?.imagePath
+      || '';
     const assetPath = addDamPrefix(assetPathText);
     if (!assetPath) {
       renderFailure(block, 'No asset path was found in the Content Fragment.');
