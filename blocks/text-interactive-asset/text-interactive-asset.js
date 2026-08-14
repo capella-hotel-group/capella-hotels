@@ -36,7 +36,7 @@ function getAuthoredAssetPath(block) {
 function getAuthoredImageMapPath(block) {
   const row = block.querySelectorAll(':scope > div')[1];
   const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
-  return cell?.textContent?.trim() || '';
+  return cell?.textContent || '';
 }
 
 async function fetchTabDetailsData(cfPath) {
@@ -282,7 +282,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   });
 }
 
-function renderInteractiveAsset(block, assetPath, metadata, imageMapPathValue) {
+function renderInteractiveAsset(block, assetPath, metadata, imageMapPathText) {
   const publishBaseUrl = getPublishBaseUrl();
   const hotspots = parseImageMap(metadata?.imageMap);
 
@@ -335,7 +335,7 @@ function renderInteractiveAsset(block, assetPath, metadata, imageMapPathValue) {
 
   const imageMapPath = document.createElement('p');
   imageMapPath.className = 'text-interactive-asset-image-map-path';
-  imageMapPath.textContent = imageMapPathValue;
+  imageMapPath.textContent = imageMapPathText;
   content.append(imageMapPath);
 
   const metadataRows = createMetadataRows(metadata);
@@ -369,7 +369,8 @@ function renderFailure(block, message) {
 
 export default async function decorate(block) {
   const authoredAssetPath = getAuthoredAssetPath(block);
-  const imageMapPath = getAuthoredImageMapPath(block);
+  const imageMapPathText = getAuthoredImageMapPath(block);
+  const imageMapPath = imageMapPathText.trim();
   if (!authoredAssetPath) {
     renderFailure(block, 'Asset path is not authored.');
     return;
@@ -382,8 +383,8 @@ export default async function decorate(block) {
 
   try {
     const metadata = await fetchAssetMetadata(imageMapPath);
-    renderInteractiveAsset(block, authoredAssetPath, metadata, imageMapPath);
+    renderInteractiveAsset(block, authoredAssetPath, metadata, imageMapPathText);
   } catch (e) {
-    renderInteractiveAsset(block, authoredAssetPath, {}, imageMapPath);
+    renderInteractiveAsset(block, authoredAssetPath, {}, imageMapPathText);
   }
 }
