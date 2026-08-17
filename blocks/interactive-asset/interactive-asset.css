@@ -24,8 +24,7 @@
   display: block;
   width: 100%;
   height: auto;
-  min-height: 28rem;
-  object-fit: cover;
+  min-height: 0;
 }
 
 .interactive-asset .interactive-asset-hotspot-layer {
@@ -92,7 +91,7 @@
 
 .interactive-asset .interactive-asset-content {
   order: 1;
-  padding: 2.2rem 1.5rem 2.4rem;
+  padding: 1.8rem 1.5rem 2rem;
   line-height: 1.5;
   background: var(--interactive-asset-paper);
 }
@@ -107,7 +106,7 @@
 }
 
 .interactive-asset .interactive-asset-title {
-  max-width: 18ch;
+  max-width: 20ch;
   margin: 0 0 1.25rem;
   color: var(--interactive-asset-ink);
   font-family: var(--heading-light-font-family);
@@ -155,25 +154,25 @@
   inset: 0;
   z-index: 40;
   display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
-  background: rgb(24 28 31 / 42%);
+  pointer-events: none;
+  background: transparent;
 }
 
 .interactive-asset .interactive-asset-modal.is-open {
-  display: flex;
+  display: block;
+  pointer-events: auto;
 }
 
 .interactive-asset .interactive-asset-modal-panel {
-  position: relative;
+  position: fixed;
   width: min(100%, 22rem);
-  max-height: min(88vh, 38rem);
+  max-height: calc(100vh - 2rem);
   overflow: auto;
   border-radius: 0;
   background: var(--interactive-asset-panel, #e7dcd9);
   color: #1b1b1b;
   box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
+  pointer-events: auto;
 }
 
 .interactive-asset .interactive-asset-modal-close {
@@ -244,10 +243,38 @@
   color: #a90000;
 }
 
+@media (width >= 600px) and (width < 900px) {
+  .interactive-asset .interactive-asset-content {
+    padding: 3rem clamp(2.5rem, 8vw, 6rem) 3.2rem;
+  }
+
+  .interactive-asset .interactive-asset-title {
+    max-width: 22ch;
+    margin-bottom: 1.5rem;
+    font-size: 3rem;
+  }
+
+  .interactive-asset .interactive-asset-description {
+    max-width: 38rem;
+    font-size: 1rem;
+  }
+
+  .interactive-asset .interactive-asset-image {
+    min-height: 34rem;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .interactive-asset .interactive-asset-modal-panel {
+    width: min(24rem, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+  }
+}
+
 @media (width >= 900px) {
   .interactive-asset .interactive-asset-wrapper {
     display: grid;
-    grid-template-columns: minmax(14rem, 0.85fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(24rem, 0.92fr) minmax(0, 1.08fr);
     align-items: stretch;
   }
 
@@ -255,7 +282,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 4rem clamp(2rem, 5vw, 6rem);
+    padding: 4rem clamp(2.5rem, 7vw, 7rem);
   }
 
   .interactive-asset .interactive-asset-media-wrap {
@@ -263,7 +290,9 @@
   }
 
   .interactive-asset .interactive-asset-image {
-    min-height: 40rem;
+    min-height: 38rem;
+    object-fit: cover;
+    object-position: center;
   }
 
   .interactive-asset .interactive-asset-title {
@@ -274,12 +303,8 @@
     font-size: 1rem;
   }
 
-  .interactive-asset .interactive-asset-modal {
-    justify-content: flex-end;
-    padding: 2.5rem 3rem;
-  }
-
   .interactive-asset .interactive-asset-modal-panel {
-    width: min(32rem, 42vw);
+    width: min(22rem, 38vw);
+    max-height: calc(100vh - 5.8rem);
   }
 }
