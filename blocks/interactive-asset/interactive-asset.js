@@ -154,6 +154,13 @@ function buildHotspotModal(block) {
   body.className = 'interactive-asset-modal-body';
 
   const closeModal = () => {
+    if (modal.repositionHandler) {
+      window.removeEventListener('scroll', modal.repositionHandler);
+      window.removeEventListener('resize', modal.repositionHandler);
+      modal.repositionHandler = null;
+    }
+    panel.style.top = '';
+    panel.style.left = '';
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
   };
@@ -230,21 +237,66 @@ function renderModalContent(body, cfData, fallbackLabel) {
   }
 }
 
-async function openHotspotModal(block, hotspot) {
-  const { modal, body } = buildHotspotModal(block);
+function positionHotspotModal(modal, panel, hotspotElement, block) {
+  if (!hotspotElement) return;
+
+  const isDesktop = window.innerWidth >= 900;
+  if (!isDesktop) {
+    // Mobile/tablet: center in image container
+    const mediaWrap = block.querySelector('.interactive-asset-media-wrap');
+    if (mediaWrap) {
+      const mediaRect = mediaWrap.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      panel.style.top = `${Math.max(mediaRect.top + (mediaRect.height - panelRect.height) / 2, 0)}px`;
+      panel.style.left = `${Math.max(mediaRect.left + (mediaRect.width - panelRect.width) / 2, 0)}px`;
+    }
+  } else {
+    // Desktop: position near hotspot
+    const hotspotRect = hotspotElement.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const gap = 0.75 * parseFloat(getComputedStyle(document.documentElement).fontSize || '16');
+    const margin = 12;
+    const left = Math.min(
+      Math.max(hotspotRect.left + (hotspotRect.width / 2) - (panelRect.width / 2), margin),
+      window.innerWidth - panelRect.width - margin,
+    );
+    const top = Math.min(
+      hotspotRect.bottom + gap,
+      window.innerHeight - panelRect.height - margin,
+    );
+    panel.style.left = `${Math.max(margin, left)}px`;
+    panel.style.top = `${Math.max(margin, top)}px`;
+  }
+}
+
+async function openHotspotModal(block, hotspot, hotspotElement) {
+  const { modal, panel, body } = buildHotspotModal(block);
+  if (modal.repositionHandler) {
+    window.removeEventListener('scroll', modal.repositionHandler);
+    window.removeEventListener('resize', modal.repositionHandler);
+  }
+  modal.repositionHandler = () => {
+    positionHotspotModal(modal, panel, hotspotElement, block);
+  };
+  window.addEventListener('scroll', modal.repositionHandler, { passive: true });
+  window.addEventListener('resize', modal.repositionHandler);
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
   renderModalLoading(body, hotspot?.label);
+  positionHotspotModal(modal, panel, hotspotElement, block);
 
   try {
     const cfData = await fetchTabDetailsData(hotspot?.href || '');
     if (!cfData) {
       renderModalError(body, 'No detail content found for this hotspot.');
+      positionHotspotModal(modal, panel, hotspotElement, block);
       return;
     }
     renderModalContent(body, cfData, hotspot?.label);
+    positionHotspotModal(modal, panel, hotspotElement, block);
   } catch (e) {
     renderModalError(body, 'Unable to load hotspot details right now.');
+    positionHotspotModal(modal, panel, hotspotElement, block);
   }
 }
 
@@ -266,7 +318,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
     anchor.style.height = `${((spot.radius * 2) / sourceHeight) * 100}%`;
     anchor.addEventListener('click', (event) => {
       event.preventDefault();
-      onHotspotClick(spot);
+      onHotspotClick(spot, anchor);
     });
 
     const label = document.createElement('span');
@@ -294,13 +346,7 @@ function renderInteractiveAsset(block, assetPath, metadata, contentData) {
   media.src = `${publishBaseUrl}${assetPath}`;
   media.alt = metadata?.['dc:title'] || metadata?.['dc:description'] || 'Interactive asset';
 
-  const assetLink = document.createElement('a');
-  assetLink.className = 'interactive-asset-link';
-  assetLink.href = resolveAssetUrl(assetPath);
-  assetLink.target = '_blank';
-  assetLink.rel = 'noopener noreferrer';
-  assetLink.append(media);
-  mediaWrap.append(assetLink);
+  mediaWrap.append(media);
 
   if (hotspots.length) {
     const hotspotLayer = document.createElement('div');
@@ -313,9 +359,13 @@ function renderInteractiveAsset(block, assetPath, metadata, contentData) {
     const syncHotspots = () => {
       const sourceWidth = media.naturalWidth || fallbackWidth;
       const sourceHeight = media.naturalHeight || fallbackHeight;
-      applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, (spot) => {
-        openHotspotModal(block, spot);
-      });
+      applyHotspotLayout(
+        hotspotLayer,
+        hotspots,
+        sourceWidth,
+        sourceHeight,
+        (spot, hotspotElement) => openHotspotModal(block, spot, hotspotElement),
+      );
     };
 
     if (media.complete) {
@@ -338,9 +388,9 @@ function renderInteractiveAsset(block, assetPath, metadata, contentData) {
   }
 
   if (contentData.title) {
-    const title = document.createElement('h2');
+    const title = document.createElement('div');
     title.className = 'interactive-asset-title';
-    title.textContent = contentData.title;
+    title.innerHTML = contentData.title;
     content.append(title);
   }
 
@@ -366,7 +416,7 @@ export default async function decorate(block) {
   const cfPath = getAuthoredCfPath(block);
   const contentData = {
     subtitle: getAuthoredField(block, 1),
-    title: getAuthoredField(block, 2),
+    title: getAuthoredField(block, 2, true),
     description: getAuthoredField(block, 3, true),
   };
   if (!cfPath) {
