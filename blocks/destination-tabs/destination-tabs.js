@@ -61,22 +61,22 @@ async function renderCulturistInfo(slot, cfPath) {
 
   slot.append(photoSigCol);
 
-  // Content Column (Name, Quote, Description, CTA)
+  // Content Column (Quote, Name, Description, CTA)
   const contentCol = document.createElement('div');
   contentCol.className = 'destination-tabs-content-col';
-
-  if (cfData.name) {
-    const nameEl = document.createElement('p');
-    nameEl.className = 'destination-tabs-culturist-name';
-    nameEl.textContent = cfData.name;
-    contentCol.append(nameEl);
-  }
 
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'destination-tabs-quote';
     quoteEl.innerHTML = cfData.quote.html;
     contentCol.append(quoteEl);
+  }
+
+  if (cfData.name) {
+    const nameEl = document.createElement('p');
+    nameEl.className = 'destination-tabs-culturist-name';
+    nameEl.textContent = `- ${cfData.name}`;
+    contentCol.append(nameEl);
   }
 
   if (cfData.description?.html) {
@@ -89,50 +89,59 @@ async function renderCulturistInfo(slot, cfPath) {
   slot.append(contentCol);
 }
 
-async function renderGalleryCards(slot1, slot2, cfPath) {
-  const cfData = await fetchCFDetails(cfPath);
+function buildCarouselCard(card) {
+  const slide = document.createElement('li');
+  slide.className = 'destination-tabs-carousel-card';
 
-  if (!cfData || !cfData.cardContentReference || cfData.cardContentReference.length < 2) {
-    slot1.textContent = 'No content';
-    slot2.textContent = 'No content';
+  const { _path: cardImgPath } = card.image || {};
+  if (cardImgPath) {
+    const cardImg = document.createElement('img');
+    cardImg.className = 'destination-tabs-card-slot-img';
+    cardImg.src = resolveAssetUrl(cardImgPath);
+    cardImg.alt = card.title || 'Gallery card';
+    slide.append(cardImg);
+  }
+  if (card.title) {
+    const cardTitle = document.createElement('span');
+    cardTitle.className = 'destination-tabs-card-title';
+    cardTitle.textContent = card.title;
+    slide.append(cardTitle);
+  }
+
+  return slide;
+}
+
+async function renderGalleryCarousel(carouselCol, cfPath) {
+  const track = carouselCol.querySelector('.destination-tabs-carousel-track');
+  const prevBtn = carouselCol.querySelector('.destination-tabs-carousel-prev');
+  const nextBtn = carouselCol.querySelector('.destination-tabs-carousel-next');
+
+  const cfData = await fetchCFDetails(cfPath);
+  track.innerHTML = '';
+
+  const cards = cfData?.cardContentReference || [];
+  if (!cards.length) {
+    track.textContent = 'No content';
+    carouselCol.classList.add('destination-tabs-carousel--empty');
     return;
   }
 
-  // Card 1
-  slot1.innerHTML = '';
-  const card1 = cfData.cardContentReference[0];
-  const { _path: card1ImgPath } = card1.image || {};
-  if (card1ImgPath) {
-    const card1Img = document.createElement('img');
-    card1Img.className = 'destination-tabs-card-slot-img';
-    card1Img.src = resolveAssetUrl(card1ImgPath);
-    card1Img.alt = card1.title || 'Gallery card';
-    slot1.append(card1Img);
-  }
-  if (card1.title) {
-    const card1Title = document.createElement('span');
-    card1Title.className = 'destination-tabs-card-title';
-    card1Title.textContent = card1.title;
-    slot1.append(card1Title);
-  }
+  carouselCol.classList.remove('destination-tabs-carousel--empty');
+  cards.forEach((card) => track.append(buildCarouselCard(card)));
 
-  // Card 2
-  slot2.innerHTML = '';
-  const card2 = cfData.cardContentReference[1];
-  const { _path: card2ImgPath } = card2.image || {};
-  if (card2ImgPath) {
-    const card2Img = document.createElement('img');
-    card2Img.className = 'destination-tabs-card-slot-img';
-    card2Img.src = resolveAssetUrl(card2ImgPath);
-    card2Img.alt = card2.title || 'Gallery card';
-    slot2.append(card2Img);
-  }
-  if (card2.title) {
-    const card2Title = document.createElement('span');
-    card2Title.className = 'destination-tabs-card-title';
-    card2Title.textContent = card2.title;
-    slot2.append(card2Title);
-  }
+  const hasMultiple = cards.length > 2;
+  prevBtn.hidden = !hasMultiple;
+  nextBtn.hidden = !hasMultiple;
+
+  const scrollByCard = (direction) => {
+    const card = track.querySelector('.destination-tabs-carousel-card');
+    if (!card) return;
+    const amount = card.getBoundingClientRect().width + 4;
+    track.scrollBy({ left: direction * amount, behavior: 'smooth' });
+  };
+
+  prevBtn.onclick = () => scrollByCard(-1);
+  nextBtn.onclick = () => scrollByCard(1);
 }
 
 export default async function decorate(block) {
@@ -175,23 +184,58 @@ export default async function decorate(block) {
   destinationBtn.className = 'destination-tabs-destination-btn';
   destinationBtn.setAttribute('type', 'button');
 
+  // Invisible spacer mirrors the arrow's width so the label stays visually centered
+  const destinationSpacer = document.createElement('span');
+  destinationSpacer.className = 'destination-tabs-destination-arrow destination-tabs-destination-arrow--spacer';
+  destinationSpacer.setAttribute('aria-hidden', 'true');
+  destinationSpacer.textContent = '⌄';
+  destinationBtn.append(destinationSpacer);
+
+  const destinationLabel = document.createElement('span');
+  destinationLabel.className = 'destination-tabs-destination-label';
+  destinationBtn.append(destinationLabel);
+
+  const destinationArrow = document.createElement('span');
+  destinationArrow.className = 'destination-tabs-destination-arrow';
+  destinationArrow.setAttribute('aria-hidden', 'true');
+  destinationArrow.textContent = '⌄';
+  destinationBtn.append(destinationArrow);
+
   // Culturist info slot
   const infoSlot = document.createElement('div');
   infoSlot.className = 'destination-tabs-info-slot';
 
-  // Card slots
-  const cardSlot1 = document.createElement('div');
-  cardSlot1.className = 'destination-tabs-card-slot-1';
+  // Panel wraps the avatar/quote row + CTA, so tablet can background just this part
+  const panel = document.createElement('div');
+  panel.className = 'destination-tabs-panel';
+  panel.append(infoSlot);
 
-  const cardSlot2 = document.createElement('div');
-  cardSlot2.className = 'destination-tabs-card-slot-2';
+  // Carousel column (replaces the previous two static card slots)
+  const carouselCol = document.createElement('div');
+  carouselCol.className = 'destination-tabs-carousel-col';
+
+  const carouselTrack = document.createElement('ul');
+  carouselTrack.className = 'destination-tabs-carousel-track';
+  carouselCol.append(carouselTrack);
+
+  const carouselPrevBtn = document.createElement('button');
+  carouselPrevBtn.type = 'button';
+  carouselPrevBtn.className = 'destination-tabs-carousel-prev';
+  carouselPrevBtn.setAttribute('aria-label', 'Previous cards');
+  carouselCol.append(carouselPrevBtn);
+
+  const carouselNextBtn = document.createElement('button');
+  carouselNextBtn.type = 'button';
+  carouselNextBtn.className = 'destination-tabs-carousel-next';
+  carouselNextBtn.setAttribute('aria-label', 'Next cards');
+  carouselCol.append(carouselNextBtn);
 
   let currentTabIndex = 0;
 
   const updateDestinationBtn = () => {
     const tabCells = itemRows[currentTabIndex]?.querySelectorAll(':scope > div');
     const tabNameText = (tabCells && tabCells[0]) ? tabCells[0].textContent.trim() : `Destination ${currentTabIndex + 1}`;
-    destinationBtn.textContent = tabNameText || `Destination ${currentTabIndex + 1}`;
+    destinationLabel.textContent = tabNameText || `Destination ${currentTabIndex + 1}`;
   };
 
   updateDestinationBtn();
@@ -202,7 +246,7 @@ export default async function decorate(block) {
     const cfRef = itemRows[currentTabIndex]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
     if (cfRef) {
       await renderCulturistInfo(infoSlot, cfRef);
-      await renderGalleryCards(cardSlot1, cardSlot2, cfRef);
+      await renderGalleryCarousel(carouselCol, cfRef);
     }
   });
 
@@ -214,7 +258,7 @@ export default async function decorate(block) {
   titleBlock.append(titleBottom);
 
   infoCol.append(titleBlock);
-  infoCol.append(infoSlot);
+  infoCol.append(panel);
 
   // CTA
   const ctaLabelText = ctaLabelRow?.textContent?.trim() || 'EXPLORE';
@@ -231,18 +275,17 @@ export default async function decorate(block) {
     cta.textContent = ctaLabelText;
     ctaContainer.append(cta);
 
-    infoCol.append(ctaContainer);
+    panel.append(ctaContainer);
   }
 
   wrapper.append(infoCol);
-  wrapper.append(cardSlot1);
-  wrapper.append(cardSlot2);
+  wrapper.append(carouselCol);
 
   // Load initial tab data
   const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
   if (initialCfRef) {
     await renderCulturistInfo(infoSlot, initialCfRef);
-    await renderGalleryCards(cardSlot1, cardSlot2, initialCfRef);
+    await renderGalleryCarousel(carouselCol, initialCfRef);
   }
 
   moveInstrumentation(block, wrapper);
