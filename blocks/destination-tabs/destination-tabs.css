@@ -533,10 +533,7 @@
 .destination-tabs-carousel-card::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 50% 0 0;
   background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
   pointer-events: none;
   z-index: 2;
@@ -564,13 +561,17 @@
   filter: drop-shadow(0 1px 4px rgb(0 0 0 / 50%));
 }
 
+.destination-tabs-carousel-prev {
+  left: 8px;
+}
+
+.destination-tabs-carousel-next {
+  right: 8px;
+}
+
 .destination-tabs-carousel-prev:hover,
 .destination-tabs-carousel-next:hover {
   opacity: 1;
-}
-
-.destination-tabs-carousel-prev {
-  left: 8px;
 }
 
 .destination-tabs-carousel-prev::before {
@@ -580,10 +581,6 @@
   border-left: 2px solid currentcolor;
   border-bottom: 2px solid currentcolor;
   transform: rotate(45deg);
-}
-
-.destination-tabs-carousel-next {
-  right: 8px;
 }
 
 .destination-tabs-carousel-next::before {
