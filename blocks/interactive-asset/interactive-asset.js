@@ -1,26 +1,7 @@
 import { getPublishBaseUrl } from '../../scripts/env.js';
 
-const CARD_LIST_QUERY = '/graphql/execute.json/capella-hotels/CardList';
 const TAB_LIST_QUERY = '/graphql/execute.json/capella-hotels/TabList';
-
-function getAuthoredPath(block, rowIndex) {
-  const row = block.querySelectorAll(':scope > div')[rowIndex];
-  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
-  if (!cell) return '';
-  const link = cell.querySelector('a');
-  const rawPath = (link?.getAttribute('href') || cell.textContent || '').trim();
-  if (!rawPath) return '';
-
-  try {
-    return new URL(rawPath).pathname;
-  } catch (e) {
-    return rawPath;
-  }
-}
-
-function getAuthoredCfPath(block) {
-  return getAuthoredPath(block, 0);
-}
+const PATH_KEY = '_path';
 
 function normalizePath(path) {
   return (path || '')
@@ -43,89 +24,23 @@ function normalizeAssetCandidate(value) {
   }
 }
 
-function getAuthoredAssetPath(block) {
-  return normalizeAssetCandidate(getAuthoredPath(block, 1)).replace(/[#?].*$/, '').replace(/\/$/, '');
+function getAuthoredCfPath(block) {
+  const row = block.querySelectorAll(':scope > div')[0];
+  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
+  const link = cell?.querySelector('a');
+  return (link?.getAttribute('href') || cell?.textContent || '').trim();
 }
 
-function isAssetPath(value) {
-  const candidate = normalizeAssetCandidate(value);
-  return candidate.startsWith('/content/dam/');
+function getAuthoredField(block, index, richText = false) {
+  const row = block.querySelectorAll(':scope > div')[index];
+  const cell = row?.querySelector(':scope > div:last-child') || row?.querySelector(':scope > div');
+  return richText ? cell?.innerHTML?.trim() || '' : cell?.textContent?.trim() || '';
 }
 
-function scoreAssetPath(path) {
-  let score = 0;
-  if (/\.(png|jpe?g|gif|webp|svg|avif|mp4|webm|pdf)$/i.test(path)) score += 5;
-  if (!path.includes('/fragments/')) score += 3;
-  if (path.includes('/home/')) score += 1;
-  return score;
-}
-
-function collectAssetPathCandidates(node, out = []) {
-  if (!node) return out;
-
-  if (typeof node === 'string') {
-    if (isAssetPath(node)) out.push(normalizeAssetCandidate(node));
-    return out;
-  }
-
-  if (Array.isArray(node)) {
-    node.forEach((item) => collectAssetPathCandidates(item, out));
-    return out;
-  }
-
-  if (typeof node === 'object') {
-    const directKeyOrder = [
-      'assetPath',
-      '_path',
-      'path',
-      'fileReference',
-      'imagePath',
-      'url',
-      '_publishUrl',
-      '_dynamicUrl',
-      'src',
-      'href',
-    ];
-    directKeyOrder.forEach((key) => {
-      const value = node[key];
-      if (isAssetPath(value)) out.push(normalizeAssetCandidate(value));
-    });
-
-    Object.values(node).forEach((value) => collectAssetPathCandidates(value, out));
-  }
-
-  return out;
-}
-
-function extractAssetPath(graphqlData) {
-  const candidates = collectAssetPathCandidates(graphqlData?.data || graphqlData)
-    .map((candidate) => normalizeAssetCandidate(candidate))
-    .map((candidate) => candidate.replace(/[#?].*$/, '').replace(/\/$/, ''))
-    .filter(Boolean);
-
-  if (!candidates.length) return null;
-
-  const ranked = [...new Set(candidates)]
-    .sort((a, b) => scoreAssetPath(b) - scoreAssetPath(a));
-
-  return ranked[0] || null;
-}
-
-async function fetchCardListData(cfPath) {
-  const publishBaseUrl = getPublishBaseUrl();
-  const normalizedCfPath = normalizePath(cfPath);
-  const url = `${publishBaseUrl}${CARD_LIST_QUERY};path=${normalizedCfPath}`;
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!response.ok) {
-    throw new Error('CardList request failed');
-  }
-
-  return response.json();
+function addDamPrefix(path) {
+  const normalizedPath = normalizeAssetCandidate(path).replace(/[#?].*$/, '').replace(/^\/+|\/+$/g, '');
+  if (!normalizedPath) return '';
+  return normalizedPath.startsWith('content/dam/') ? `/${normalizedPath}` : `/content/dam/${normalizedPath}`;
 }
 
 async function fetchTabDetailsData(cfPath) {
@@ -163,18 +78,10 @@ async function fetchAssetMetadata(assetPath) {
   return response.json();
 }
 
-function createMetadataRows(metadata) {
-  const preferredKeys = ['imageMap'];
-  const rows = [];
-
-  preferredKeys.forEach((key) => {
-    const value = metadata?.[key];
-    if (value == null || value === '') return;
-    const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-    rows.push({ key, value: displayValue });
-  });
-
-  return rows;
+function getImageMapValue(metadata) {
+  const value = metadata?.imageMap;
+  if (value == null || value === '') return '';
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
 }
 
 function parseImageMap(imageMapValue) {
@@ -219,34 +126,41 @@ function resolveAssetUrl(path) {
 }
 
 function buildHotspotModal(block) {
-  const existing = block.querySelector('.text-interactive-asset-modal');
+  const existing = block.querySelector('.interactive-asset-modal');
   if (existing) {
     return {
       modal: existing,
-      panel: existing.querySelector('.text-interactive-asset-modal-panel'),
-      body: existing.querySelector('.text-interactive-asset-modal-body'),
+      panel: existing.querySelector('.interactive-asset-modal-panel'),
+      body: existing.querySelector('.interactive-asset-modal-body'),
     };
   }
 
   const modal = document.createElement('div');
-  modal.className = 'text-interactive-asset-modal';
+  modal.className = 'interactive-asset-modal';
   modal.setAttribute('aria-hidden', 'true');
 
   const panel = document.createElement('div');
-  panel.className = 'text-interactive-asset-modal-panel';
+  panel.className = 'interactive-asset-modal-panel';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
 
   const closeBtn = document.createElement('button');
-  closeBtn.className = 'text-interactive-asset-modal-close';
+  closeBtn.className = 'interactive-asset-modal-close';
   closeBtn.type = 'button';
   closeBtn.setAttribute('aria-label', 'Close popup');
   closeBtn.textContent = 'x';
 
   const body = document.createElement('div');
-  body.className = 'text-interactive-asset-modal-body';
+  body.className = 'interactive-asset-modal-body';
 
   const closeModal = () => {
+    if (modal.repositionHandler) {
+      window.removeEventListener('scroll', modal.repositionHandler);
+      window.removeEventListener('resize', modal.repositionHandler);
+      modal.repositionHandler = null;
+    }
+    panel.style.top = '';
+    panel.style.left = '';
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
   };
@@ -271,7 +185,7 @@ function buildHotspotModal(block) {
 function renderModalLoading(body, label) {
   body.innerHTML = '';
   const loading = document.createElement('p');
-  loading.className = 'text-interactive-asset-modal-loading';
+  loading.className = 'interactive-asset-modal-loading';
   loading.textContent = `Loading ${label || 'details'}...`;
   body.append(loading);
 }
@@ -279,7 +193,7 @@ function renderModalLoading(body, label) {
 function renderModalError(body, message) {
   body.innerHTML = '';
   const error = document.createElement('p');
-  error.className = 'text-interactive-asset-modal-error';
+  error.className = 'interactive-asset-modal-error';
   error.textContent = message;
   body.append(error);
 }
@@ -288,14 +202,14 @@ function renderModalContent(body, cfData, fallbackLabel) {
   body.innerHTML = '';
 
   const title = document.createElement('h4');
-  title.className = 'text-interactive-asset-modal-title';
+  title.className = 'interactive-asset-modal-title';
   title.textContent = cfData?.name || fallbackLabel || 'Details';
   body.append(title);
 
-  const { _path: imagePath } = cfData?.image || {};
+  const imagePath = cfData?.image?.[PATH_KEY];
   if (imagePath) {
     const image = document.createElement('img');
-    image.className = 'text-interactive-asset-modal-image';
+    image.className = 'interactive-asset-modal-image';
     image.src = resolveAssetUrl(imagePath);
     image.alt = cfData?.name || fallbackLabel || 'Popup image';
     body.append(image);
@@ -303,41 +217,86 @@ function renderModalContent(body, cfData, fallbackLabel) {
 
   if (cfData?.quote?.html) {
     const quote = document.createElement('blockquote');
-    quote.className = 'text-interactive-asset-modal-quote';
+    quote.className = 'interactive-asset-modal-quote';
     quote.innerHTML = cfData.quote.html;
     body.append(quote);
   }
 
   if (cfData?.description?.html) {
     const description = document.createElement('div');
-    description.className = 'text-interactive-asset-modal-description';
+    description.className = 'interactive-asset-modal-description';
     description.innerHTML = cfData.description.html;
     body.append(description);
   }
 
   if (!imagePath && !cfData?.quote?.html && !cfData?.description?.html) {
     const empty = document.createElement('p');
-    empty.className = 'text-interactive-asset-modal-empty';
+    empty.className = 'interactive-asset-modal-empty';
     empty.textContent = 'No detail content found for this hotspot.';
     body.append(empty);
   }
 }
 
-async function openHotspotModal(block, hotspot) {
-  const { modal, body } = buildHotspotModal(block);
+function positionHotspotModal(modal, panel, hotspotElement, block) {
+  if (!hotspotElement) return;
+
+  const isDesktop = window.innerWidth >= 900;
+  if (!isDesktop) {
+    // Mobile/tablet: center in image container
+    const mediaWrap = block.querySelector('.interactive-asset-media-wrap');
+    if (mediaWrap) {
+      const mediaRect = mediaWrap.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      panel.style.top = `${Math.max(mediaRect.top + (mediaRect.height - panelRect.height) / 2, 0)}px`;
+      panel.style.left = `${Math.max(mediaRect.left + (mediaRect.width - panelRect.width) / 2, 0)}px`;
+    }
+  } else {
+    // Desktop: position near hotspot
+    const hotspotRect = hotspotElement.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const gap = 0.75 * parseFloat(getComputedStyle(document.documentElement).fontSize || '16');
+    const margin = 12;
+    const left = Math.min(
+      Math.max(hotspotRect.left + (hotspotRect.width / 2) - (panelRect.width / 2), margin),
+      window.innerWidth - panelRect.width - margin,
+    );
+    const top = Math.min(
+      hotspotRect.bottom + gap,
+      window.innerHeight - panelRect.height - margin,
+    );
+    panel.style.left = `${Math.max(margin, left)}px`;
+    panel.style.top = `${Math.max(margin, top)}px`;
+  }
+}
+
+async function openHotspotModal(block, hotspot, hotspotElement) {
+  const { modal, panel, body } = buildHotspotModal(block);
+  if (modal.repositionHandler) {
+    window.removeEventListener('scroll', modal.repositionHandler);
+    window.removeEventListener('resize', modal.repositionHandler);
+  }
+  modal.repositionHandler = () => {
+    positionHotspotModal(modal, panel, hotspotElement, block);
+  };
+  window.addEventListener('scroll', modal.repositionHandler, { passive: true });
+  window.addEventListener('resize', modal.repositionHandler);
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
   renderModalLoading(body, hotspot?.label);
+  positionHotspotModal(modal, panel, hotspotElement, block);
 
   try {
     const cfData = await fetchTabDetailsData(hotspot?.href || '');
     if (!cfData) {
       renderModalError(body, 'No detail content found for this hotspot.');
+      positionHotspotModal(modal, panel, hotspotElement, block);
       return;
     }
     renderModalContent(body, cfData, hotspot?.label);
+    positionHotspotModal(modal, panel, hotspotElement, block);
   } catch (e) {
     renderModalError(body, 'Unable to load hotspot details right now.');
+    positionHotspotModal(modal, panel, hotspotElement, block);
   }
 }
 
@@ -347,7 +306,7 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   hotspotLayer.replaceChildren();
   hotspots.forEach((spot) => {
     const anchor = document.createElement('a');
-    anchor.className = 'text-interactive-asset-hotspot';
+    anchor.className = 'interactive-asset-hotspot';
     anchor.href = resolveHotspotHref(spot.href);
     anchor.target = spot.target || '_self';
     anchor.rel = anchor.target === '_blank' ? 'noopener noreferrer' : '';
@@ -359,11 +318,11 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
     anchor.style.height = `${((spot.radius * 2) / sourceHeight) * 100}%`;
     anchor.addEventListener('click', (event) => {
       event.preventDefault();
-      onHotspotClick(spot);
+      onHotspotClick(spot, anchor);
     });
 
     const label = document.createElement('span');
-    label.className = 'text-interactive-asset-hotspot-label';
+    label.className = 'interactive-asset-hotspot-label';
     label.textContent = spot.label;
     anchor.append(label);
 
@@ -371,25 +330,27 @@ function applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, o
   });
 }
 
-function renderInteractiveAsset(block, assetPath, metadata) {
+function renderInteractiveAsset(block, assetPath, metadata, contentData) {
   const publishBaseUrl = getPublishBaseUrl();
-  const hotspots = parseImageMap(metadata?.imageMap);
+  const imageMapValue = getImageMapValue(metadata);
+  const hotspots = parseImageMap(imageMapValue);
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'text-interactive-asset-wrapper';
+  wrapper.className = 'interactive-asset-wrapper';
 
   const mediaWrap = document.createElement('div');
-  mediaWrap.className = 'text-interactive-asset-media-wrap';
+  mediaWrap.className = 'interactive-asset-media-wrap';
 
   const media = document.createElement('img');
-  media.className = 'text-interactive-asset-image';
+  media.className = 'interactive-asset-image';
   media.src = `${publishBaseUrl}${assetPath}`;
   media.alt = metadata?.['dc:title'] || metadata?.['dc:description'] || 'Interactive asset';
+
   mediaWrap.append(media);
 
   if (hotspots.length) {
     const hotspotLayer = document.createElement('div');
-    hotspotLayer.className = 'text-interactive-asset-hotspot-layer';
+    hotspotLayer.className = 'interactive-asset-hotspot-layer';
     mediaWrap.append(hotspotLayer);
 
     const fallbackWidth = Number(metadata?.['tiff:ImageWidth']) || Number(metadata?.['exif:PixelXDimension']) || 0;
@@ -398,9 +359,13 @@ function renderInteractiveAsset(block, assetPath, metadata) {
     const syncHotspots = () => {
       const sourceWidth = media.naturalWidth || fallbackWidth;
       const sourceHeight = media.naturalHeight || fallbackHeight;
-      applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, (spot) => {
-        openHotspotModal(block, spot);
-      });
+      applyHotspotLayout(
+        hotspotLayer,
+        hotspots,
+        sourceWidth,
+        sourceHeight,
+        (spot, hotspotElement) => openHotspotModal(block, spot, hotspotElement),
+      );
     };
 
     if (media.complete) {
@@ -413,24 +378,27 @@ function renderInteractiveAsset(block, assetPath, metadata) {
   wrapper.append(mediaWrap);
 
   const content = document.createElement('div');
-  content.className = 'text-interactive-asset-content';
+  content.className = 'interactive-asset-content';
 
-  const metadataRows = createMetadataRows(metadata);
-  if (metadataRows.length) {
-    const list = document.createElement('dl');
-    list.className = 'text-interactive-asset-metadata';
+  if (contentData.subtitle) {
+    const subtitle = document.createElement('p');
+    subtitle.className = 'interactive-asset-subtitle';
+    subtitle.textContent = contentData.subtitle;
+    content.append(subtitle);
+  }
 
-    metadataRows.forEach(({ key, value }) => {
-      const dt = document.createElement('dt');
-      dt.textContent = key;
+  if (contentData.title) {
+    const title = document.createElement('div');
+    title.className = 'interactive-asset-title';
+    title.innerHTML = contentData.title;
+    content.append(title);
+  }
 
-      const dd = document.createElement('dd');
-      dd.textContent = value;
-
-      list.append(dt, dd);
-    });
-
-    content.append(list);
+  if (contentData.description) {
+    const description = document.createElement('div');
+    description.className = 'interactive-asset-description';
+    description.innerHTML = contentData.description;
+    content.append(description);
   }
 
   wrapper.append(content);
@@ -439,45 +407,39 @@ function renderInteractiveAsset(block, assetPath, metadata) {
 
 function renderFailure(block, message) {
   const error = document.createElement('p');
-  error.className = 'text-interactive-asset-error';
+  error.className = 'interactive-asset-error';
   error.textContent = message;
   block.replaceChildren(error);
 }
 
 export default async function decorate(block) {
   const cfPath = getAuthoredCfPath(block);
-  const authoredAssetPath = getAuthoredAssetPath(block);
-  if (!cfPath && !authoredAssetPath) {
-    renderFailure(block, 'Interactive asset or asset path is not authored.');
-    return;
-  }
-
-  if (authoredAssetPath) {
-    try {
-      const metadata = await fetchAssetMetadata(authoredAssetPath);
-      renderInteractiveAsset(block, authoredAssetPath, metadata);
-    } catch (e) {
-      renderInteractiveAsset(block, authoredAssetPath, {});
-    }
+  const contentData = {
+    subtitle: getAuthoredField(block, 1),
+    title: getAuthoredField(block, 2, true),
+    description: getAuthoredField(block, 3, true),
+  };
+  if (!cfPath) {
+    renderFailure(block, 'Content Fragment path is not authored.');
     return;
   }
 
   try {
-    const graphqlData = await fetchCardListData(cfPath);
-    const assetPath = extractAssetPath(graphqlData);
-
+    const cfData = await fetchTabDetailsData(cfPath);
+    const assetPathText = cfData?.image?.[PATH_KEY]
+      || cfData?.asset?.[PATH_KEY]
+      || cfData?.assetPath
+      || cfData?.imagePath
+      || '';
+    const assetPath = addDamPrefix(assetPathText);
     if (!assetPath) {
-      renderFailure(block, 'No asset was found for the authored Content Fragment path.');
+      renderFailure(block, 'No asset path was found in the Content Fragment.');
       return;
     }
 
-    try {
-      const metadata = await fetchAssetMetadata(assetPath);
-      renderInteractiveAsset(block, assetPath, metadata);
-    } catch (e) {
-      renderInteractiveAsset(block, assetPath, {});
-    }
+    const metadata = await fetchAssetMetadata(assetPath);
+    renderInteractiveAsset(block, assetPath, metadata, contentData);
   } catch (e) {
-    renderFailure(block, 'Unable to load interactive asset content right now.');
+    renderFailure(block, 'Unable to load the interactive asset.');
   }
 }

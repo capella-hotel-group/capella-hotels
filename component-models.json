@@ -374,6 +374,62 @@
     ]
   },
   {
+    "id": "filters-grid",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfRootPath",
+        "label": "Content Fragment Root Path",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "revealMoreLabel",
+        "label": "Reveal More CTA Text",
+        "valueType": "string",
+        "value": "Reveal More"
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-tab",
+    "fields": [
+      {
+        "component": "text",
+        "name": "tabKey",
+        "label": "Tab Key",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "tabLabel",
+        "label": "Tab Label",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-filter",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Filter Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "tags",
+        "label": "Tags (comma separated, used to fetch CFs)",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "fragment",
     "fields": [
       {
@@ -488,6 +544,36 @@
     ]
   },
   {
+    "id": "interactive-asset",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfPath",
+        "label": "Content Fragment Path",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "subtitle",
+        "label": "Subtitle",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
     "id": "newsletter-form",
     "fields": [
       {
@@ -593,23 +679,6 @@
         "component": "richtext",
         "name": "description",
         "label": "Description",
-        "valueType": "string"
-      }
-    ]
-  },
-  {
-    "id": "text-interactive-asset",
-    "fields": [
-      {
-        "component": "aem-content",
-        "name": "reference",
-        "label": "Reference",
-        "valueType": "string"
-      },
-      {
-        "component": "aem-content",
-        "name": "assetPath",
-        "label": "Asset Path",
         "valueType": "string"
       }
     ]
