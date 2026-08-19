@@ -115,8 +115,7 @@
     inset: 14px;
     display: grid;
     grid-template-rows: auto 1fr;
-    align-items: center;
-    justify-items: center;
+    place-items: center;
     text-align: center;
     color: #fff;
     z-index: 1;
