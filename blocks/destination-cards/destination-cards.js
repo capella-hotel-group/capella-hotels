@@ -6,6 +6,18 @@ function textFromCell(cell) {
   return cell?.textContent?.trim() || '';
 }
 
+function isEnabled(cell) {
+  return textFromCell(cell).toLowerCase() === 'true';
+}
+
+function setLinkAttributes(link, href, openInNewTab) {
+  link.href = href;
+  if (openInNewTab) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+}
+
 function buildIntro(rows) {
   const [titleRow, subtitleRow] = rows;
 
@@ -31,17 +43,15 @@ function buildIntro(rows) {
   return intro;
 }
 
-function buildCta(labelCell, linkCell) {
+function buildCta(labelCell, href, openInNewTab) {
   const label = textFromCell(labelCell);
-  const authoredLink = linkCell?.querySelector('a');
-  const href = authoredLink?.getAttribute('href') || textFromCell(linkCell);
 
   if (!label && !href) return null;
 
   const cta = document.createElement('a');
   cta.className = 'destination-cards-cta';
   cta.textContent = label || 'Explore';
-  cta.href = href || '#';
+  setLinkAttributes(cta, href || '#', openInNewTab);
   return cta;
 }
 
@@ -52,8 +62,12 @@ function buildCard(row) {
   const location = textFromCell(cells[0]);
   const title = textFromCell(cells[1]);
   const image = cells[2]?.querySelector('picture, img');
+  const imageAlt = textFromCell(cells[3]);
+  const authoredLink = cells[5]?.querySelector('a');
+  const href = authoredLink?.getAttribute('href') || textFromCell(cells[5]);
+  const openInNewTab = isEnabled(cells[6]);
 
-  const cta = buildCta(cells[3], cells[4]);
+  const cta = buildCta(cells[4], href, openInNewTab);
 
   // Ignore rows that have no authored content at all.
   if (!location && !title && !image && !cta) {
@@ -70,9 +84,18 @@ function buildCard(row) {
   const media = document.createElement('figure');
   media.className = 'destination-cards-media';
 
+  const mediaContent = href ? document.createElement('a') : document.createElement('div');
+  mediaContent.className = 'destination-cards-media-link';
+  if (href) {
+    setLinkAttributes(mediaContent, href, openInNewTab);
+    mediaContent.setAttribute('aria-label', `${title || location || 'Destination'}: ${textFromCell(cells[4]) || 'Explore'}`);
+  }
+
   if (image) {
     const mediaNode = image.tagName.toLowerCase() === 'picture' ? image : image.closest('picture') || image;
-    media.append(mediaNode);
+    const imageElement = mediaNode.querySelector('img') || (mediaNode.tagName === 'IMG' ? mediaNode : null);
+    if (imageElement && imageAlt) imageElement.alt = imageAlt;
+    mediaContent.append(mediaNode);
   } else {
     media.classList.add('destination-cards-media-no-image');
   }
@@ -94,7 +117,8 @@ function buildCard(row) {
     overlay.append(titleEl);
   }
 
-  media.append(overlay);
+  mediaContent.append(overlay);
+  media.append(mediaContent);
   article.append(media);
 
   if (cta) {

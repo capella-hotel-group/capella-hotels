@@ -39,14 +39,15 @@
         {
           "component": "text",
           "name": "title",
-          "label": "Title",
+          "label": "Main Section Title",
           "valueType": "string",
+          "required": true,
           "value": ""
         },
         {
           "component": "text",
           "name": "subtitle",
-          "label": "Subtitle",
+          "label": "Section Description",
           "valueType": "string",
           "value": ""
         }
@@ -58,36 +59,56 @@
         {
           "component": "text",
           "name": "location",
-          "label": "Location",
+          "label": "Location Eyebrow",
           "valueType": "string",
+          "required": true,
           "value": ""
         },
         {
           "component": "text",
           "name": "title",
-          "label": "Card Title",
+          "label": "Card Headline",
           "valueType": "string",
+          "required": true,
           "value": ""
         },
         {
           "component": "reference",
           "name": "image",
-          "label": "Image",
+          "label": "Card Background Image",
           "valueType": "string",
-          "multi": false
+          "multi": false,
+          "required": true
+        },
+        {
+          "component": "text",
+          "name": "imageAlt",
+          "label": "Asset Alt Text",
+          "valueType": "string",
+          "required": true,
+          "value": ""
         },
         {
           "component": "text",
           "name": "ctaName",
-          "label": "CTA Name",
+          "label": "Card CTA Label",
           "valueType": "string",
+          "required": true,
           "value": ""
         },
         {
           "component": "aem-content",
           "name": "ctaLink",
-          "label": "CTA Link",
-          "valueType": "string"
+          "label": "Card CTA URL",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
         }
       ]
     }
