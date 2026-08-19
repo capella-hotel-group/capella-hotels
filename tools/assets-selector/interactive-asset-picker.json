@@ -1,0 +1,35 @@
+{
+  "repoNames": [
+    "author-p152536-e1620746.adobeaemcloud.com"
+  ],
+  "aemTierType": [
+    "author"
+  ],
+  "expiryOptions": {
+    "allowSelectionAndDrag": true
+  },
+  "filterSchema": [
+    {
+      "fields": [
+        {
+          "defaultValue": [
+            "image/*"
+          ],
+          "element": "checkbox",
+          "name": "type",
+          "options": [
+            {
+              "label": "Image",
+              "readOnly": true,
+              "value": "image/*"
+            }
+          ]
+        }
+      ],
+      "groupKey": "FileTypeGroup",
+      "header": "File Type"
+    }
+  ],
+  "rootPath": "/content/dam",
+  "alwaysUseDMDelivery": false
+}
