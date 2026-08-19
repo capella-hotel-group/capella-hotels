@@ -13,7 +13,7 @@
 }
 
 .destination-cards .destination-cards-intro > * {
-    width: min(100%, 38rem);
+    width: min(100%, 22rem);
 }
 
 .destination-cards .destination-cards-title {
@@ -25,6 +25,10 @@
     line-height: 1;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+.destination-cards .destination-cards-title {
+    max-width: 16rem;
 }
 
 .destination-cards .destination-cards-subtitle {
@@ -49,7 +53,8 @@
     grid-auto-columns: calc(100% - 36px);
     grid-auto-flow: column;
     gap: 16px;
-    max-width: 1200px;
+    max-width: 880px;
+    margin-inline: auto;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scroll-snap-type: inline mandatory;
@@ -204,6 +209,7 @@
 
     .destination-cards .destination-cards-title {
         font-size: var(--heading-font-size-xl);
+        max-width: 18rem;
     }
 
     .destination-cards .destination-cards-list {
