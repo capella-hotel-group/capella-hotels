@@ -6,10 +6,6 @@ function textFromCell(cell) {
   return cell?.textContent?.trim() || '';
 }
 
-function isEnabled(cell) {
-  return textFromCell(cell).toLowerCase() === 'true';
-}
-
 function setLinkAttributes(link, href, openInNewTab) {
   link.href = href;
   if (openInNewTab) {
@@ -31,13 +27,12 @@ function getCardFields(cells) {
   const { href, linkIndex } = getCardLink(cells);
   const hasNewFieldOrder = linkIndex >= 5;
   const ctaLabelCell = linkIndex > 3 ? cells[linkIndex - 1] : null;
-  const openInNewTab = linkIndex >= 0 && isEnabled(cells[linkIndex + 1]);
 
   return {
     href,
     ctaLabelCell,
     imageAlt: hasNewFieldOrder ? textFromCell(cells[3]) : null,
-    openInNewTab,
+    openInNewTab: false,
   };
 }
 

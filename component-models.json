@@ -346,23 +346,6 @@
         "label": "Card CTA URL",
         "valueType": "string",
         "required": true
-      },
-      {
-        "component": "select",
-        "name": "openInNewTab",
-        "label": "Open in new tab",
-        "valueType": "string",
-        "value": "false",
-        "options": [
-          {
-            "name": "No",
-            "value": "false"
-          },
-          {
-            "name": "Yes",
-            "value": "true"
-          }
-        ]
       }
     ]
   },
