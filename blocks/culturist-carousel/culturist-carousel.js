@@ -91,26 +91,32 @@ async function renderCulturistInfo(slot, cfPath) {
   const contentCol = document.createElement('div');
   contentCol.className = 'culturist-carousel-content-col';
 
+  // Scrollable area holds the quote/name/description; CTA stays outside so it's always visible
+  const contentScroll = document.createElement('div');
+  contentScroll.className = 'culturist-carousel-content-scroll';
+
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'culturist-carousel-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    contentCol.append(quoteEl);
+    contentScroll.append(quoteEl);
   }
 
   if (cfData.name) {
     const nameEl = document.createElement('p');
     nameEl.className = 'culturist-carousel-culturist-name';
     nameEl.textContent = `- ${cfData.name}`;
-    contentCol.append(nameEl);
+    contentScroll.append(nameEl);
   }
 
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
     descEl.className = 'culturist-carousel-description';
     descEl.innerHTML = cfData.description.html;
-    contentCol.append(descEl);
+    contentScroll.append(descEl);
   }
+
+  contentCol.append(contentScroll);
 
   const ctaHref = resolveLinkHref(cfData.ctaLink, cfData.ctaExternalLink);
   if (cfData.ctaLabel && ctaHref) {

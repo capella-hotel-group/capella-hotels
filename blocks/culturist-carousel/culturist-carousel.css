@@ -264,20 +264,32 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-
-  /* Fixed height keeps the block from resizing; content scrolls instead of truncating */
-  max-height: 260px;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
-.culturist-carousel-content-col::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
 }
 
 @media (width >= 900px) {
   .culturist-carousel-content-col {
+    gap: 20px;
+  }
+}
+
+/* Scrollable area for quote/name/description; fixed height keeps the block from resizing */
+.culturist-carousel-content-scroll {
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.culturist-carousel-content-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+@media (width >= 900px) {
+  .culturist-carousel-content-scroll {
     gap: 20px;
     max-height: 340px;
   }
