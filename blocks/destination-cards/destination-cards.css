@@ -24,11 +24,8 @@
     font-weight: 300;
     line-height: 1;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.destination-cards .destination-cards-title {
     max-width: 16rem;
+    text-transform: uppercase;
 }
 
 .destination-cards .destination-cards-subtitle {
