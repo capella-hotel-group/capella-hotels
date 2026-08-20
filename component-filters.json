@@ -23,7 +23,7 @@
       "turneo-proxy-test",
       "dm-showcase",
       "newsletter-form",
-      "destination-tabs",
+      "culturist-carousel",
       "destination-cards",
       "interactive-asset",
       "filters-grid"
@@ -57,15 +57,15 @@
     ]
   },
   {
-    "id": "destination-cards",
+    "id": "culturist-carousel",
     "components": [
-      "destination-card-item"
+      "culturist-carousel-item"
     ]
   },
   {
-    "id": "destination-tabs",
+    "id": "destination-cards",
     "components": [
-      "destination-tabs-item"
+      "destination-card-item"
     ]
   },
   {

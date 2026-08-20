@@ -1,6 +1,6 @@
 /* Ensure AEM's auto-generated outer wrapper and block are full width */
-.destination-tabs-wrapper,
-.destination-tabs {
+.culturist-carousel-wrapper,
+.culturist-carousel {
   width: 100%;
   max-width: 100%;
   padding: 0;
@@ -8,7 +8,7 @@
 }
 
 /* Base Container - 3 column grid */
-.destination-tabs-grid {
+.culturist-carousel-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
@@ -22,7 +22,7 @@
 }
 
 @media (width >= 1024px) {
-  .destination-tabs-grid {
+  .culturist-carousel-grid {
     gap: 4px;
     padding: 0;
     height: 720px;
@@ -31,13 +31,13 @@
 
 /* Desktop 1024px+ spec: left/right panels split evenly */
 @media (width >= 1024px) {
-  .destination-tabs-grid {
+  .culturist-carousel-grid {
     grid-template-columns: 50% 50%;
   }
 }
 
 /* Left Info Column */
-.destination-tabs-info-col {
+.culturist-carousel-info-col {
   background-color: rgb(236 229 227);
   padding: 3rem 2rem 2rem;
   display: flex;
@@ -48,7 +48,7 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-info-col {
+  .culturist-carousel-info-col {
     /* Figma 1024px: T64 R52 B64 L80 */
     padding: 64px 52px 64px 80px;
     gap: 56px;
@@ -56,20 +56,20 @@
 }
 
 /* Panel wraps the avatar/quote row + CTA; by default it's just a layout passthrough */
-.destination-tabs-panel {
+.culturist-carousel-panel {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-panel {
+  .culturist-carousel-panel {
     gap: 56px;
   }
 }
 
 /* Title Block */
-.destination-tabs-title-block {
+.culturist-carousel-title-block {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -77,8 +77,8 @@
   gap: 0.25rem;
 }
 
-.destination-tabs-title-top,
-.destination-tabs-title-bottom {
+.culturist-carousel-title-top,
+.culturist-carousel-title-bottom {
   font-size: 1.5rem;
   font-weight: 400;
   letter-spacing: 0.15em;
@@ -92,8 +92,8 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-title-top,
-  .destination-tabs-title-bottom {
+  .culturist-carousel-title-top,
+  .culturist-carousel-title-bottom {
     font-size: 52px;
     line-height: 52px;
   }
@@ -101,14 +101,14 @@
 
 /* Desktop: title uses a lighter weight, not bold */
 @media (width >= 1024px) {
-  .destination-tabs-title-top,
-  .destination-tabs-title-bottom {
+  .culturist-carousel-title-top,
+  .culturist-carousel-title-bottom {
     font-weight: 300;
   }
 }
 
 /* Destination Selector Button */
-.destination-tabs-destination-btn {
+.culturist-carousel-destination-btn {
   background: transparent;
   border: none;
   padding: 0;
@@ -129,12 +129,12 @@
   hyphens: auto;
 }
 
-.destination-tabs-destination-btn:hover {
+.culturist-carousel-destination-btn:hover {
   opacity: 0.7;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-destination-btn {
+  .culturist-carousel-destination-btn {
     font-size: 52px;
     line-height: 52px;
   }
@@ -142,28 +142,28 @@
 
 /* Desktop: dropdown location right-aligns, and stays a lighter weight, not bold */
 @media (width >= 1024px) {
-  .destination-tabs-destination-btn {
+  .culturist-carousel-destination-btn {
     justify-content: flex-end;
     font-weight: 300;
   }
 }
 
-.destination-tabs-destination-label {
+.culturist-carousel-destination-label {
   text-decoration: underline;
   text-underline-offset: 0.5rem;
 }
 
-.destination-tabs-destination-arrow {
+.culturist-carousel-destination-arrow {
   font-size: 1rem;
   margin-left: 0.25rem;
 }
 
-.destination-tabs-destination-arrow--spacer {
+.culturist-carousel-destination-arrow--spacer {
   display: none;
 }
 
 /* Culturist Info Slot */
-.destination-tabs-info-slot {
+.culturist-carousel-info-slot {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 2rem;
@@ -171,20 +171,20 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-info-slot {
+  .culturist-carousel-info-slot {
     gap: 40px;
   }
 }
 
 /* Photo + Signature Column */
-.destination-tabs-photo-sig-col {
+.culturist-carousel-photo-sig-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
 }
 
-.destination-tabs-avatar {
+.culturist-carousel-avatar {
   width: 160px;
   height: 160px;
   border-radius: 50%;
@@ -192,13 +192,13 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-avatar {
+  .culturist-carousel-avatar {
     width: 160px;
     height: 160px;
   }
 }
 
-.destination-tabs-signature {
+.culturist-carousel-signature {
   width: 140px;
   height: 70px;
   object-fit: contain;
@@ -206,19 +206,19 @@
 }
 
 /* Content Column (Name, Quote, Description) */
-.destination-tabs-content-col {
+.culturist-carousel-content-col {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
 @media (width >= 900px) {
-  .destination-tabs-content-col {
+  .culturist-carousel-content-col {
     gap: 20px;
   }
 }
 
-.destination-tabs-culturist-name {
+.culturist-carousel-culturist-name {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 14px;
   font-weight: 400;
@@ -229,7 +229,7 @@
   line-height: 18px;
 }
 
-.destination-tabs-quote {
+.culturist-carousel-quote {
   font-family: GoudyWtcT, Georgia, serif;
   font-size: 1.5rem;
   font-weight: 400;
@@ -240,17 +240,17 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-quote {
+  .culturist-carousel-quote {
     font-size: 28px;
     line-height: 32px;
   }
 }
 
-.destination-tabs-quote p {
+.culturist-carousel-quote p {
   margin: 0;
 }
 
-.destination-tabs-description {
+.culturist-carousel-description {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 1rem;
   font-weight: 400;
@@ -259,18 +259,18 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-description {
+  .culturist-carousel-description {
     font-size: 20px;
     line-height: 22px;
   }
 }
 
-.destination-tabs-description p {
+.culturist-carousel-description p {
   margin: 0;
 }
 
 /* CTA Link */
-.destination-tabs-cta {
+.culturist-carousel-cta {
   margin-top: auto;
   padding-top: 1rem;
 
@@ -280,13 +280,13 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-cta {
+  .culturist-carousel-cta {
     padding-top: 0;
     padding-left: calc(160px + 40px);
   }
 }
 
-.destination-tabs-cta-link {
+.culturist-carousel-cta-link {
   font-size: 0.75rem;
   font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: 0.12em;
@@ -298,80 +298,80 @@
   transition: opacity 0.2s;
 }
 
-.destination-tabs-cta-link:hover {
+.culturist-carousel-cta-link:hover {
   opacity: 0.7;
 }
 
 /* Compact composition (mobile through pre-1024 desktop) to match the approved visual layout */
 @media (width < 1024px) {
-  .destination-tabs-grid {
+  .culturist-carousel-grid {
     gap: 0;
     padding: 0;
   }
 
-  .destination-tabs-info-col {
+  .culturist-carousel-info-col {
     padding: 42px 30px 34px;
     gap: 22px;
   }
 
-  .destination-tabs-title-block {
+  .culturist-carousel-title-block {
     align-items: flex-start;
     text-align: left;
     gap: 2px;
   }
 
-  .destination-tabs-title-top,
-  .destination-tabs-title-bottom,
-  .destination-tabs-destination-btn {
+  .culturist-carousel-title-top,
+  .culturist-carousel-title-bottom,
+  .culturist-carousel-destination-btn {
     font-size: 34px;
     line-height: 38px;
     letter-spacing: 0.04em;
   }
 
-  .destination-tabs-destination-btn {
+  .culturist-carousel-destination-btn {
     justify-content: flex-start;
   }
 
-  .destination-tabs-destination-arrow {
+  .culturist-carousel-destination-arrow {
     font-size: 14px;
     margin-left: 6px;
   }
 
-  .destination-tabs-info-slot {
+  .culturist-carousel-info-slot {
     grid-template-columns: 1fr 120px;
     gap: 16px;
     padding-top: 20px;
     border-top: 1px solid rgb(231 225 223);
   }
 
-  .destination-tabs-photo-sig-col {
+  .culturist-carousel-photo-sig-col {
     order: 2;
     align-items: flex-start;
     gap: 8px;
   }
 
-  .destination-tabs-avatar {
+  .culturist-carousel-avatar {
     width: 100px;
     height: 100px;
   }
 
-  .destination-tabs-signature {
+  .culturist-carousel-signature {
     width: 90px;
     height: auto;
   }
 
-  .destination-tabs-content-col {
+  .culturist-carousel-content-col {
     order: 1;
     gap: 10px;
     padding-top: 4px;
   }
 
-  .destination-tabs-quote {
+  .culturist-carousel-quote {
     font-size: 18px;
     line-height: 1.3;
   }
 
-  .destination-tabs-culturist-name {
+  .culturist-carousel-culturist-name {
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -379,13 +379,13 @@
     line-height: 14px;
   }
 
-  .destination-tabs-description {
+  .culturist-carousel-description {
     font-size: 12px;
     line-height: 17px;
     color: #6b6b6b;
   }
 
-  .destination-tabs-cta {
+  .culturist-carousel-cta {
     margin-top: 0;
     padding-top: 8px;
     padding-left: 0;
@@ -394,21 +394,21 @@
 
 /* Sub-1024 overrides: split background, overlapping avatar, right-aligned dropdown */
 @media (width < 1024px) {
-  .destination-tabs-grid {
-    --destination-tabs-tablet-inline-inset: 32px;
+  .culturist-carousel-grid {
+    --culturist-carousel-tablet-inline-inset: 32px;
   }
 
-  .destination-tabs-info-col {
+  .culturist-carousel-info-col {
     background-color: transparent;
     padding: 0;
     gap: 0;
   }
 
-  .destination-tabs-title-block {
-    padding: 42px var(--destination-tabs-tablet-inline-inset) 24px;
+  .culturist-carousel-title-block {
+    padding: 42px var(--culturist-carousel-tablet-inline-inset) 24px;
   }
 
-  .destination-tabs-destination-btn {
+  .culturist-carousel-destination-btn {
     justify-content: flex-start;
 
     /* little right of the title lines, scales with the title width */
@@ -416,27 +416,27 @@
   }
 
   /* Background starts at the quote row and runs through the CTA */
-  .destination-tabs-panel {
+  .culturist-carousel-panel {
     position: relative;
     background-color: rgb(236 229 227);
-    padding: 24px var(--destination-tabs-tablet-inline-inset) 34px;
+    padding: 24px var(--culturist-carousel-tablet-inline-inset) 34px;
     gap: 16px;
   }
 
-  .destination-tabs-info-slot {
+  .culturist-carousel-info-slot {
     position: relative;
     grid-template-columns: 1fr 25%;
   }
 
   /* Avatar + signature straddle the panel's top edge: half above, half inside */
-  .destination-tabs-photo-sig-col {
+  .culturist-carousel-photo-sig-col {
     align-items: center;
 
     /* half the column's own width == half the avatar's height, minus the panel's own top padding */
     padding-top: calc(50% - 24px);
   }
 
-  .destination-tabs-avatar {
+  .culturist-carousel-avatar {
     position: absolute;
 
     /* -24px cancels the panel's own top padding, so 0 lines up with the bg boundary */
@@ -450,13 +450,13 @@
     transform: translateY(-50%);
   }
 
-  .destination-tabs-signature {
+  .culturist-carousel-signature {
     width: 160px;
   }
 }
 
 /* Carousel Column - Full height container listing all authored cards */
-.destination-tabs-carousel-col {
+.culturist-carousel-carousel-col {
   position: relative;
   overflow: hidden;
   min-height: 300px;
@@ -464,13 +464,13 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-carousel-col {
+  .culturist-carousel-carousel-col {
     height: 100%;
     min-height: 0;
   }
 }
 
-.destination-tabs-carousel-track {
+.culturist-carousel-carousel-track {
   display: flex;
   height: 100%;
   margin: 0;
@@ -482,12 +482,12 @@
   overscroll-behavior-x: contain;
 }
 
-.destination-tabs-carousel-track::-webkit-scrollbar {
+.culturist-carousel-carousel-track::-webkit-scrollbar {
   display: none;
 }
 
 /* First card shows in full, second card peeks partially as a scroll affordance */
-.destination-tabs-carousel-card {
+.culturist-carousel-carousel-card {
   position: relative;
   flex: 0 0 100%;
   min-height: 440px;
@@ -496,7 +496,7 @@
 }
 
 @media (width >= 900px) {
-  .destination-tabs-carousel-card {
+  .culturist-carousel-carousel-card {
     flex: 0 0 80%;
     min-height: 440px;
   }
@@ -504,20 +504,20 @@
 
 /* Below 1024px: two cards evenly split, filling the row with no peek */
 @media (width >= 480px) and (width < 1024px) {
-  .destination-tabs-carousel-card {
+  .culturist-carousel-carousel-card {
     flex: 0 0 49.5%;
   }
 }
 
 /* Figma 1024px spec: first card fixed at 589px, remaining space peeks the next card */
 @media (width >= 1024px) {
-  .destination-tabs-carousel-card {
+  .culturist-carousel-carousel-card {
     flex: 0 0 min(589px, calc(100% - 24px));
   }
 }
 
 /* Card Images fill the slide */
-.destination-tabs-card-slot-img {
+.culturist-carousel-card-slot-img {
   position: absolute;
   top: 0;
   left: 0;
@@ -530,7 +530,7 @@
 }
 
 /* Dark scrim over the bottom half of the image for title legibility */
-.destination-tabs-carousel-card::after {
+.culturist-carousel-carousel-card::after {
   content: '';
   position: absolute;
   inset: 50% 0 0;
@@ -540,8 +540,8 @@
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
-.destination-tabs-carousel-prev,
-.destination-tabs-carousel-next {
+.culturist-carousel-carousel-prev,
+.culturist-carousel-carousel-next {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -561,20 +561,20 @@
   filter: drop-shadow(0 1px 4px rgb(0 0 0 / 50%));
 }
 
-.destination-tabs-carousel-prev {
+.culturist-carousel-carousel-prev {
   left: 8px;
 }
 
-.destination-tabs-carousel-next {
+.culturist-carousel-carousel-next {
   right: 8px;
 }
 
-.destination-tabs-carousel-prev:hover,
-.destination-tabs-carousel-next:hover {
+.culturist-carousel-carousel-prev:hover,
+.culturist-carousel-carousel-next:hover {
   opacity: 1;
 }
 
-.destination-tabs-carousel-prev::before {
+.culturist-carousel-carousel-prev::before {
   content: '';
   width: 12px;
   height: 12px;
@@ -583,7 +583,7 @@
   transform: rotate(45deg);
 }
 
-.destination-tabs-carousel-next::before {
+.culturist-carousel-carousel-next::before {
   content: '';
   width: 12px;
   height: 12px;
@@ -592,13 +592,13 @@
   transform: rotate(45deg);
 }
 
-.destination-tabs-carousel--empty .destination-tabs-carousel-prev,
-.destination-tabs-carousel--empty .destination-tabs-carousel-next {
+.culturist-carousel-carousel--empty .culturist-carousel-carousel-prev,
+.culturist-carousel-carousel--empty .culturist-carousel-carousel-next {
   display: none;
 }
 
 /* Card Title Overlay */
-.destination-tabs-card-title {
+.culturist-carousel-card-title {
   position: absolute;
 
   /* Figma: pad T80 L64 */
@@ -620,7 +620,7 @@
 
 /* Narrow cards (below 1024px, two-up layout) need tighter padding and a smaller title */
 @media (width < 1024px) {
-  .destination-tabs-card-title {
+  .culturist-carousel-card-title {
     top: 24px;
     left: 20px;
     right: 20px;
@@ -630,7 +630,7 @@
 }
 
 @media (width >= 1024px) {
-  .destination-tabs-card-title {
+  .culturist-carousel-card-title {
     top: clamp(40px, 5vw, 80px);
     left: clamp(28px, 4vw, 64px);
     right: clamp(28px, 4vw, 64px);
@@ -642,21 +642,21 @@
 /* Sub-1024: 2 full cards + a peek of the 3rd, no arrows (swipe/scroll only) */
 @media (width < 1024px) {
   /* Inset lives on the non-scrolling column so it stays put while the track scrolls */
-  .destination-tabs-carousel-col {
+  .culturist-carousel-carousel-col {
     background-color: rgb(236 229 227);
-    padding: 0 0 32px var(--destination-tabs-tablet-inline-inset);
+    padding: 0 0 32px var(--culturist-carousel-tablet-inline-inset);
   }
 
-  .destination-tabs-carousel-card {
+  .culturist-carousel-carousel-card {
     flex: 0 0 45%;
   }
 
-  .destination-tabs-carousel-prev,
-  .destination-tabs-carousel-next {
+  .culturist-carousel-carousel-prev,
+  .culturist-carousel-carousel-next {
     display: none;
   }
 
-  .destination-tabs-card-title {
+  .culturist-carousel-card-title {
     font-size: var(--heading-font-size-l);
     line-height: 1.2;
   }
@@ -665,7 +665,7 @@
 /* Mobile-only fine tuning */
 @media (width < 768px) {
   /* Show 2 cards in view: first full, second ~90% visible */
-  .destination-tabs-carousel-card {
+  .culturist-carousel-carousel-card {
     flex: 0 0 52.5%;
   }
 }
