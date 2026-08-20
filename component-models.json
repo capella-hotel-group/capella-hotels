@@ -348,11 +348,21 @@
         "required": true
       },
       {
-        "component": "boolean",
+        "component": "select",
         "name": "openInNewTab",
         "label": "Open in new tab",
-        "valueType": "boolean",
-        "value": false
+        "valueType": "string",
+        "value": "false",
+        "options": [
+          {
+            "name": "No",
+            "value": "false"
+          },
+          {
+            "name": "Yes",
+            "value": "true"
+          }
+        ]
       }
     ]
   },
