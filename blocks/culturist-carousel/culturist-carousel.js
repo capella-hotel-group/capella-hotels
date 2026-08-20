@@ -9,10 +9,11 @@ function resolveAssetUrl(damPath) {
 }
 
 function resolveLinkHref(internalRef, externalLink) {
-  if (externalLink) return externalLink;
   // internalRef may be a plain path string or a reference object like { _path }
-  const internalPath = typeof internalRef === 'string' ? internalRef : internalRef?._path;
+  const { _path: refPath } = (typeof internalRef === 'object' && internalRef) || {};
+  const internalPath = typeof internalRef === 'string' ? internalRef : refPath;
   if (internalPath) return resolveAssetUrl(internalPath);
+  if (externalLink) return externalLink;
   return null;
 }
 
