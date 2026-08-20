@@ -24,9 +24,7 @@
       "dm-showcase",
       "newsletter-form",
       "culturist-carousel",
-      "destination-cards",
-      "interactive-asset",
-      "filters-grid"
+      "destination-cards"
     ]
   },
   {
@@ -78,6 +76,12 @@
     "id": "filters-grid-tab",
     "components": [
       "filters-grid-filter"
+    ]
+  },
+  {
+    "id": "offers-carousel",
+    "components": [
+      "offers-carousel-item"
     ]
   }
 ]
