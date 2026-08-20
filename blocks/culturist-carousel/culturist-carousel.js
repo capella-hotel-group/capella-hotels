@@ -39,12 +39,12 @@ async function renderCulturistInfo(slot, cfPath) {
 
   // Avatar + Signature Column
   const photoSigCol = document.createElement('div');
-  photoSigCol.className = 'destination-tabs-photo-sig-col';
+  photoSigCol.className = 'culturist-carousel-photo-sig-col';
 
   const { _path: avatarPath } = cfData.image || {};
   if (avatarPath) {
     const avatarImg = document.createElement('img');
-    avatarImg.className = 'destination-tabs-avatar';
+    avatarImg.className = 'culturist-carousel-avatar';
     avatarImg.src = resolveAssetUrl(avatarPath);
     avatarImg.alt = cfData.name || 'Avatar';
     photoSigCol.append(avatarImg);
@@ -53,7 +53,7 @@ async function renderCulturistInfo(slot, cfPath) {
   const { _path: signaturePath } = cfData.signatureImage || {};
   if (signaturePath) {
     const sigImg = document.createElement('img');
-    sigImg.className = 'destination-tabs-signature';
+    sigImg.className = 'culturist-carousel-signature';
     sigImg.src = resolveAssetUrl(signaturePath);
     sigImg.alt = `${cfData.name || 'Culturist'} Signature`;
     photoSigCol.append(sigImg);
@@ -63,25 +63,25 @@ async function renderCulturistInfo(slot, cfPath) {
 
   // Content Column (Quote, Name, Description, CTA)
   const contentCol = document.createElement('div');
-  contentCol.className = 'destination-tabs-content-col';
+  contentCol.className = 'culturist-carousel-content-col';
 
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
-    quoteEl.className = 'destination-tabs-quote';
+    quoteEl.className = 'culturist-carousel-quote';
     quoteEl.innerHTML = cfData.quote.html;
     contentCol.append(quoteEl);
   }
 
   if (cfData.name) {
     const nameEl = document.createElement('p');
-    nameEl.className = 'destination-tabs-culturist-name';
+    nameEl.className = 'culturist-carousel-culturist-name';
     nameEl.textContent = `- ${cfData.name}`;
     contentCol.append(nameEl);
   }
 
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
-    descEl.className = 'destination-tabs-description';
+    descEl.className = 'culturist-carousel-description';
     descEl.innerHTML = cfData.description.html;
     contentCol.append(descEl);
   }
@@ -91,19 +91,19 @@ async function renderCulturistInfo(slot, cfPath) {
 
 function buildCarouselCard(card) {
   const slide = document.createElement('li');
-  slide.className = 'destination-tabs-carousel-card';
+  slide.className = 'culturist-carousel-carousel-card';
 
   const { _path: cardImgPath } = card.image || {};
   if (cardImgPath) {
     const cardImg = document.createElement('img');
-    cardImg.className = 'destination-tabs-card-slot-img';
+    cardImg.className = 'culturist-carousel-card-slot-img';
     cardImg.src = resolveAssetUrl(cardImgPath);
     cardImg.alt = card.title || 'Gallery card';
     slide.append(cardImg);
   }
   if (card.title) {
     const cardTitle = document.createElement('span');
-    cardTitle.className = 'destination-tabs-card-title';
+    cardTitle.className = 'culturist-carousel-card-title';
     cardTitle.textContent = card.title;
     slide.append(cardTitle);
   }
@@ -112,9 +112,9 @@ function buildCarouselCard(card) {
 }
 
 async function renderGalleryCarousel(carouselCol, cfPath) {
-  const track = carouselCol.querySelector('.destination-tabs-carousel-track');
-  const prevBtn = carouselCol.querySelector('.destination-tabs-carousel-prev');
-  const nextBtn = carouselCol.querySelector('.destination-tabs-carousel-next');
+  const track = carouselCol.querySelector('.culturist-carousel-carousel-track');
+  const prevBtn = carouselCol.querySelector('.culturist-carousel-carousel-prev');
+  const nextBtn = carouselCol.querySelector('.culturist-carousel-carousel-next');
 
   const cfData = await fetchCFDetails(cfPath);
   track.innerHTML = '';
@@ -122,11 +122,11 @@ async function renderGalleryCarousel(carouselCol, cfPath) {
   const cards = cfData?.cardContentReference || [];
   if (!cards.length) {
     track.textContent = 'No content';
-    carouselCol.classList.add('destination-tabs-carousel--empty');
+    carouselCol.classList.add('culturist-carousel-carousel--empty');
     return;
   }
 
-  carouselCol.classList.remove('destination-tabs-carousel--empty');
+  carouselCol.classList.remove('culturist-carousel-carousel--empty');
   cards.forEach((card) => track.append(buildCarouselCard(card)));
 
   const hasMultiple = cards.length > 2;
@@ -134,7 +134,7 @@ async function renderGalleryCarousel(carouselCol, cfPath) {
   nextBtn.hidden = !hasMultiple;
 
   const scrollByCard = (direction) => {
-    const card = track.querySelector('.destination-tabs-carousel-card');
+    const card = track.querySelector('.culturist-carousel-carousel-card');
     if (!card) return;
     const amount = card.getBoundingClientRect().width + 4;
     track.scrollBy({ left: direction * amount, behavior: 'smooth' });
@@ -165,68 +165,68 @@ export default async function decorate(block) {
   if (!itemRows.length) return;
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'destination-tabs-grid';
+  wrapper.className = 'culturist-carousel-grid';
 
   // Left column: culturist info + title + CTA
   const infoCol = document.createElement('div');
-  infoCol.className = 'destination-tabs-info-col';
+  infoCol.className = 'culturist-carousel-info-col';
 
   // Title block (MEET YOUR [DESTINATION] CULTURIST)
   const titleBlock = document.createElement('div');
-  titleBlock.className = 'destination-tabs-title-block';
+  titleBlock.className = 'culturist-carousel-title-block';
 
   const titleTop = document.createElement('div');
-  titleTop.className = 'destination-tabs-title-top';
+  titleTop.className = 'culturist-carousel-title-top';
   titleTop.textContent = 'MEET YOUR';
   titleBlock.append(titleTop);
 
   const destinationBtn = document.createElement('button');
-  destinationBtn.className = 'destination-tabs-destination-btn';
+  destinationBtn.className = 'culturist-carousel-destination-btn';
   destinationBtn.setAttribute('type', 'button');
 
   // Invisible spacer mirrors the arrow's width so the label stays visually centered
   const destinationSpacer = document.createElement('span');
-  destinationSpacer.className = 'destination-tabs-destination-arrow destination-tabs-destination-arrow--spacer';
+  destinationSpacer.className = 'culturist-carousel-destination-arrow culturist-carousel-destination-arrow--spacer';
   destinationSpacer.setAttribute('aria-hidden', 'true');
   destinationSpacer.textContent = '⌄';
   destinationBtn.append(destinationSpacer);
 
   const destinationLabel = document.createElement('span');
-  destinationLabel.className = 'destination-tabs-destination-label';
+  destinationLabel.className = 'culturist-carousel-destination-label';
   destinationBtn.append(destinationLabel);
 
   const destinationArrow = document.createElement('span');
-  destinationArrow.className = 'destination-tabs-destination-arrow';
+  destinationArrow.className = 'culturist-carousel-destination-arrow';
   destinationArrow.setAttribute('aria-hidden', 'true');
   destinationArrow.textContent = '⌄';
   destinationBtn.append(destinationArrow);
 
   // Culturist info slot
   const infoSlot = document.createElement('div');
-  infoSlot.className = 'destination-tabs-info-slot';
+  infoSlot.className = 'culturist-carousel-info-slot';
 
   // Panel wraps the avatar/quote row + CTA, so tablet can background just this part
   const panel = document.createElement('div');
-  panel.className = 'destination-tabs-panel';
+  panel.className = 'culturist-carousel-panel';
   panel.append(infoSlot);
 
   // Carousel column (replaces the previous two static card slots)
   const carouselCol = document.createElement('div');
-  carouselCol.className = 'destination-tabs-carousel-col';
+  carouselCol.className = 'culturist-carousel-carousel-col';
 
   const carouselTrack = document.createElement('ul');
-  carouselTrack.className = 'destination-tabs-carousel-track';
+  carouselTrack.className = 'culturist-carousel-carousel-track';
   carouselCol.append(carouselTrack);
 
   const carouselPrevBtn = document.createElement('button');
   carouselPrevBtn.type = 'button';
-  carouselPrevBtn.className = 'destination-tabs-carousel-prev';
+  carouselPrevBtn.className = 'culturist-carousel-carousel-prev';
   carouselPrevBtn.setAttribute('aria-label', 'Previous cards');
   carouselCol.append(carouselPrevBtn);
 
   const carouselNextBtn = document.createElement('button');
   carouselNextBtn.type = 'button';
-  carouselNextBtn.className = 'destination-tabs-carousel-next';
+  carouselNextBtn.className = 'culturist-carousel-carousel-next';
   carouselNextBtn.setAttribute('aria-label', 'Next cards');
   carouselCol.append(carouselNextBtn);
 
@@ -253,7 +253,7 @@ export default async function decorate(block) {
   titleBlock.append(destinationBtn);
 
   const titleBottom = document.createElement('div');
-  titleBottom.className = 'destination-tabs-title-bottom';
+  titleBottom.className = 'culturist-carousel-title-bottom';
   titleBottom.textContent = 'CULTURIST';
   titleBlock.append(titleBottom);
 
@@ -267,10 +267,10 @@ export default async function decorate(block) {
 
   if (ctaLabelText && ctaLabelText !== ctaHref) {
     const ctaContainer = document.createElement('div');
-    ctaContainer.className = 'destination-tabs-cta';
+    ctaContainer.className = 'culturist-carousel-cta';
 
     const cta = document.createElement('a');
-    cta.className = 'destination-tabs-cta-link';
+    cta.className = 'culturist-carousel-cta-link';
     cta.href = ctaHref;
     cta.textContent = ctaLabelText;
     ctaContainer.append(cta);
