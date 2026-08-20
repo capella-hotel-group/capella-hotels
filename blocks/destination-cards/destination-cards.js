@@ -18,10 +18,33 @@ function setLinkAttributes(link, href, openInNewTab) {
   }
 }
 
+function getCardLink(cells) {
+  const linkIndex = cells.findIndex((cell, index) => index > 2 && cell.querySelector('a'));
+  const linkCell = linkIndex >= 0 ? cells[linkIndex] : null;
+  const authoredLink = linkCell?.querySelector('a');
+  const href = authoredLink?.getAttribute('href') || '';
+
+  return { href, linkIndex };
+}
+
+function getCardFields(cells) {
+  const { href, linkIndex } = getCardLink(cells);
+  const hasNewFieldOrder = linkIndex >= 5;
+  const ctaLabelCell = linkIndex > 3 ? cells[linkIndex - 1] : null;
+  const openInNewTab = linkIndex >= 0 && isEnabled(cells[linkIndex + 1]);
+
+  return {
+    href,
+    ctaLabelCell,
+    imageAlt: hasNewFieldOrder ? textFromCell(cells[3]) : null,
+    openInNewTab,
+  };
+}
+
 function buildIntro(rows) {
   const [titleRow, subtitleRow] = rows;
 
-  const intro = document.createElement('header');
+  const intro = document.createElement('div');
   intro.className = 'destination-cards-intro';
 
   const title = textFromCell(titleRow?.firstElementChild || titleRow);
@@ -62,12 +85,14 @@ function buildCard(row) {
   const location = textFromCell(cells[0]);
   const title = textFromCell(cells[1]);
   const image = cells[2]?.querySelector('picture, img');
-  const imageAlt = textFromCell(cells[3]);
-  const authoredLink = cells[5]?.querySelector('a');
-  const href = authoredLink?.getAttribute('href') || textFromCell(cells[5]);
-  const openInNewTab = isEnabled(cells[6]);
+  const {
+    href,
+    ctaLabelCell,
+    imageAlt,
+    openInNewTab,
+  } = getCardFields(cells);
 
-  const cta = buildCta(cells[4], href, openInNewTab);
+  const cta = buildCta(ctaLabelCell, href, openInNewTab);
 
   // Ignore rows that have no authored content at all.
   if (!location && !title && !image && !cta) {
@@ -88,13 +113,13 @@ function buildCard(row) {
   mediaContent.className = 'destination-cards-media-link';
   if (href) {
     setLinkAttributes(mediaContent, href, openInNewTab);
-    mediaContent.setAttribute('aria-label', `${title || location || 'Destination'}: ${textFromCell(cells[4]) || 'Explore'}`);
+    mediaContent.setAttribute('aria-label', `${title || location || 'Destination'}: ${textFromCell(ctaLabelCell) || 'Explore'}`);
   }
 
   if (image) {
     const mediaNode = image.tagName.toLowerCase() === 'picture' ? image : image.closest('picture') || image;
     const imageElement = mediaNode.querySelector('img') || (mediaNode.tagName === 'IMG' ? mediaNode : null);
-    if (imageElement && imageAlt) imageElement.alt = imageAlt;
+    if (imageElement && imageAlt !== null) imageElement.alt = imageAlt;
     mediaContent.append(mediaNode);
   } else {
     media.classList.add('destination-cards-media-no-image');
