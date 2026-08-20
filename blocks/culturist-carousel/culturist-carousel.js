@@ -8,9 +8,12 @@ function resolveAssetUrl(damPath) {
   return `${publishBase}${damPath}`;
 }
 
-function resolveLinkHref(internalPath, externalLink) {
-  if (externalLink) return externalLink;
+function resolveLinkHref(internalRef, externalLink) {
+  // internalRef may be a plain path string or a reference object like { _path }
+  const { _path: refPath } = (typeof internalRef === 'object' && internalRef) || {};
+  const internalPath = typeof internalRef === 'string' ? internalRef : refPath;
   if (internalPath) return resolveAssetUrl(internalPath);
+  if (externalLink) return externalLink;
   return null;
 }
 
@@ -30,11 +33,22 @@ async function fetchCFDetails(cfPath) {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      // eslint-disable-next-line no-console
+      console.error(`[culturist-carousel] GraphQL request failed (${response.status}) for ${cfPath}`);
+      return null;
+    }
 
     const data = await response.json();
-    return data.data?.tabDetailsByPath?.item || null;
+    const item = data.data?.tabDetailsByPath?.item || null;
+    if (!item) {
+      // eslint-disable-next-line no-console
+      console.error(`[culturist-carousel] No tabDetailsByPath item returned for ${cfPath}`, data);
+    }
+    return item;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`[culturist-carousel] Failed to fetch CF details for ${cfPath}`, error);
     return null;
   }
 }
