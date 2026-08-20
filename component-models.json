@@ -658,14 +658,14 @@
     "fields": [
       {
         "component": "text",
-        "name": "primaryEyebrowText",
+        "name": "eyebrow",
         "label": "Primary Eyebrow Text",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "text",
-        "name": "primaryMainTitle",
+        "name": "title",
         "label": "Primary Main Title",
         "valueType": "string",
         "required": true,
@@ -678,7 +678,7 @@
     "fields": [
       {
         "component": "reference",
-        "name": "cardImage",
+        "name": "media_cardImage",
         "label": "Card Image",
         "valueType": "string",
         "multi": false,
@@ -686,7 +686,7 @@
       },
       {
         "component": "text",
-        "name": "assetAltText",
+        "name": "media_cardImageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
         "required": true,
@@ -694,14 +694,14 @@
       },
       {
         "component": "text",
-        "name": "cardEyebrow",
+        "name": "content_cardEyebrow",
         "label": "Card Eyebrow",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "text",
-        "name": "cardTitle",
+        "name": "content_headline",
         "label": "Card Title",
         "valueType": "string",
         "required": true,
@@ -709,30 +709,30 @@
       },
       {
         "component": "richtext",
-        "name": "cardDescription",
+        "name": "content_cardDescription",
         "label": "Card Description",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
+        "component": "aem-content",
+        "name": "ctas_primaryCta",
+        "label": "Primary CTA URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
         "component": "text",
-        "name": "primaryCtaLabel",
+        "name": "ctas_primaryCtaText",
         "label": "Primary CTA Label",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
-        "component": "aem-content",
-        "name": "primaryCtaUrl",
-        "label": "Primary CTA URL",
-        "valueType": "string",
-        "required": true
-      },
-      {
         "component": "select",
-        "name": "primaryCtaOpenInNewTab",
+        "name": "ctas_primaryCtaOpenInNewTab",
         "label": "Primary CTA Open in new tab",
         "valueType": "string",
         "value": "false",
@@ -748,21 +748,21 @@
         ]
       },
       {
+        "component": "aem-content",
+        "name": "ctas_secondaryCta",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
         "component": "text",
-        "name": "secondaryCtaLabel",
+        "name": "ctas_secondaryCtaText",
         "label": "Secondary CTA Label",
         "valueType": "string",
         "value": ""
       },
       {
-        "component": "aem-content",
-        "name": "secondaryCtaUrl",
-        "label": "Secondary CTA URL",
-        "valueType": "string"
-      },
-      {
         "component": "select",
-        "name": "secondaryCtaOpenInNewTab",
+        "name": "ctas_secondaryCtaOpenInNewTab",
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
         "value": "false",
