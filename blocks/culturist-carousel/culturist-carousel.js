@@ -178,6 +178,7 @@ async function renderGalleryCarousel(carouselCol, cfPath) {
 
   carouselCol.classList.remove('culturist-carousel-carousel--empty');
   cards.forEach((card) => track.append(buildCarouselCard(card)));
+  track.scrollLeft = 0;
 
   const hasMultiple = cards.length > 2;
   prevBtn.hidden = !hasMultiple;
