@@ -42,6 +42,14 @@
   white-space: pre-line;
 }
 
+.offers-carousel .offers-carousel-title-line {
+  display: inline-block;
+}
+
+.offers-carousel .offers-carousel-title-line:nth-of-type(2) {
+  margin-left: 72px;
+}
+
 .offers-carousel .offers-carousel-stage {
   position: relative;
   width: 100%;
@@ -99,8 +107,8 @@
   position: absolute;
   inset: 14px;
   z-index: 1;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
   color: #fff;
 }
 
@@ -114,15 +122,16 @@
 }
 
 .offers-carousel .offers-carousel-card-body {
-  display: grid;
-  align-content: end;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: 12px;
 }
 
 .offers-carousel .offers-carousel-card-title {
   margin: 0;
   font-family: var(--heading-font-family);
-  font-size: 42px;
+  font-size: var(--heading-font-size-l);
   line-height: 1;
   font-weight: 400;
 }
@@ -143,11 +152,13 @@
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
 }
 
 .offers-carousel .offers-carousel-card-cta {
   font-family: var(--body-font-family);
-  font-size: 11px;
+  font-size: var(--body-font-size-xs);
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -195,26 +206,6 @@
   transform: translate(128px, -54px) scale(0.78);
 }
 
-.offers-carousel .offers-carousel-nav {
-  position: absolute;
-  right: 0;
-  bottom: -40px;
-  display: inline-flex;
-  gap: 8px;
-}
-
-.offers-carousel .offers-carousel-nav button {
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgb(27 54 75 / 35%);
-  background: #fff;
-  color: #1b364b;
-  cursor: pointer;
-  font-size: 20px;
-  line-height: 1;
-  padding: 0;
-}
-
 @media (width >= 768px) {
   .offers-carousel .offers-carousel-layout {
     grid-template-columns: minmax(220px, 34%) minmax(0, 66%);
@@ -230,7 +221,7 @@
 
   .offers-carousel .offers-carousel-title {
     max-width: 310px;
-    font-size: 52px;
+    font-size: var(--heading-font-size-xxl);
   }
 
   .offers-carousel .offers-carousel-stage {
@@ -253,6 +244,10 @@
 
   .offers-carousel .offers-carousel-title {
     max-width: 420px;
+  }
+
+  .offers-carousel .offers-carousel-title-line:nth-of-type(2) {
+    margin-left: 84px;
   }
 
   .offers-carousel .offers-carousel-stage {
@@ -279,7 +274,7 @@
   }
 
   .offers-carousel .offers-carousel-card-title {
-    font-size: 44px;
+    font-size: var(--heading-font-size-l);
   }
 
   .offers-carousel .offers-carousel-card-description {

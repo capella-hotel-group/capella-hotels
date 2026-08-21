@@ -18,6 +18,16 @@ function applyTarget(anchor, openInNewTab) {
   anchor.rel = 'noopener noreferrer';
 }
 
+function appendTitleLines(element, text) {
+  text.split(/\r?\n/).forEach((line, index, lines) => {
+    const lineElement = document.createElement('span');
+    lineElement.className = 'offers-carousel-title-line';
+    lineElement.textContent = line;
+    element.append(lineElement);
+    if (index < lines.length - 1) element.append(document.createElement('br'));
+  });
+}
+
 function parseCard(row) {
   const cells = [...row.children];
   if (cells.length < 3) return null;
@@ -218,7 +228,7 @@ export default function decorate(block) {
   if (title) {
     const titleEl = document.createElement('h2');
     titleEl.className = 'offers-carousel-title';
-    titleEl.textContent = title;
+    appendTitleLines(titleEl, title);
     copy.append(titleEl);
   }
 
@@ -234,23 +244,7 @@ export default function decorate(block) {
     return element;
   });
 
-  const nav = document.createElement('div');
-  nav.className = 'offers-carousel-nav';
-
-  const prev = document.createElement('button');
-  prev.className = 'offers-carousel-nav-prev';
-  prev.type = 'button';
-  prev.setAttribute('aria-label', 'Previous offer');
-  prev.textContent = '‹';
-
-  const next = document.createElement('button');
-  next.className = 'offers-carousel-nav-next';
-  next.type = 'button';
-  next.setAttribute('aria-label', 'Next offer');
-  next.textContent = '›';
-
-  nav.append(prev, next);
-  stage.append(cards, nav);
+  stage.append(cards);
 
   root.append(copy, stage);
   block.replaceChildren(root);
