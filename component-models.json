@@ -372,21 +372,11 @@
         ]
       },
       {
-        "component": "select",
+        "component": "boolean",
         "name": "settings_openInNewTab",
         "label": "Open in new tab",
-        "valueType": "string",
-        "value": "false",
-        "options": [
-          {
-            "name": "No",
-            "value": "false"
-          },
-          {
-            "name": "Yes",
-            "value": "true"
-          }
-        ]
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
