@@ -156,42 +156,65 @@
     ]
   },
   {
-    "id": "awards-carousel",
+    "id": "awards-list",
     "fields": [
       {
         "component": "text",
         "name": "title",
         "valueType": "string",
-        "label": "Carousel Title"
+        "label": "Section Title",
+        "required": true
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "valueType": "string",
+        "label": "Section Description",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "cta",
+        "valueType": "string",
+        "label": "CTA Label"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "valueType": "string",
+        "label": "CTA Link"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "valueType": "boolean",
+        "value": false,
+        "label": "Open CTA in new tab"
       }
     ]
   },
   {
-    "id": "carousel-cards",
+    "id": "awards-list-item",
     "fields": [
       {
         "component": "reference",
         "valueType": "string",
         "name": "image",
-        "label": "Image"
+        "label": "Award Logo",
+        "required": true
       },
       {
         "component": "text",
         "valueType": "string",
-        "name": "alt",
-        "label": "Alt Text"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "title",
-        "label": "Card Title"
+        "name": "imageAlt",
+        "label": "Award Logo Alt Text",
+        "required": true
       },
       {
         "component": "richtext",
         "valueType": "string",
         "name": "description",
-        "label": "Card Description"
+        "label": "Award Text"
       }
     ]
   },
@@ -239,22 +262,18 @@
       {
         "component": "text",
         "valueType": "string",
-        "name": "title",
-        "label": "Section Title",
-        "value": ""
+        "name": "titlePrefix",
+        "label": "Section Title Prefix",
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "valueType": "string",
-        "name": "ctaLabel",
-        "label": "CTA Label",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "ctaLink",
-        "label": "CTA Link"
+        "name": "titleSuffix",
+        "label": "Section Title Suffix",
+        "value": "",
+        "required": true
       }
     ]
   },
@@ -266,14 +285,16 @@
         "valueType": "string",
         "name": "tabName",
         "label": "Tab Name",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "aem-content",
         "valueType": "string",
         "name": "cfReference",
         "label": "Content Fragment",
-        "multi": false
+        "multi": false,
+        "required": true
       }
     ]
   },
@@ -377,50 +398,6 @@
         "label": "Open in new tab",
         "valueType": "boolean",
         "value": false
-      }
-    ]
-  },
-  {
-    "id": "destination-tabs",
-    "fields": [
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "title",
-        "label": "Section Title",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "ctaLabel",
-        "label": "CTA Label",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "ctaLink",
-        "label": "CTA Link"
-      }
-    ]
-  },
-  {
-    "id": "destination-tabs-item",
-    "fields": [
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "tabName",
-        "label": "Tab Name",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "cfReference",
-        "label": "Content Fragment",
-        "multi": false
       }
     ]
   },
@@ -728,6 +705,132 @@
     ]
   },
   {
+    "id": "offers-carousel",
+    "fields": [
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Primary Eyebrow Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Primary Main Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "offers-carousel-item",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "media_cardImage",
+        "label": "Card Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "media_cardImageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "content_cardEyebrow",
+        "label": "Card Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "content_headline",
+        "label": "Card Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "content_cardDescription",
+        "label": "Card Description",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctas_primaryCta",
+        "label": "Primary CTA URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "ctas_primaryCtaText",
+        "label": "Primary CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "ctas_primaryCtaOpenInNewTab",
+        "label": "Primary CTA Open in new tab",
+        "valueType": "string",
+        "value": "false",
+        "options": [
+          {
+            "name": "No",
+            "value": "false"
+          },
+          {
+            "name": "Yes",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "component": "aem-content",
+        "name": "ctas_secondaryCta",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctas_secondaryCtaText",
+        "label": "Secondary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "ctas_secondaryCtaOpenInNewTab",
+        "label": "Secondary CTA Open in new tab",
+        "valueType": "string",
+        "value": "false",
+        "options": [
+          {
+            "name": "No",
+            "value": "false"
+          },
+          {
+            "name": "Yes",
+            "value": "true"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "section-intro",
     "fields": [
       {
@@ -773,16 +876,16 @@
       },
       {
         "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
         "name": "title",
         "label": "Title",
         "valueType": "string",
         "required": true
-      },
-      {
-        "component": "text",
-        "name": "blockquote",
-        "label": "Sub Title",
-        "valueType": "string"
       },
       {
         "component": "richtext",
@@ -794,14 +897,27 @@
       {
         "component": "reference",
         "name": "image",
-        "label": "Image",
+        "label": "Desktop Asset",
         "valueType": "string",
         "required": true
       },
       {
         "component": "text",
-        "name": "alt",
-        "label": "Alt Text",
+        "name": "imageAlt",
+        "label": "Desktop Asset Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "imageMobile",
+        "label": "Tablet / Mobile Asset",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "imageMobileAlt",
+        "label": "Tablet / Mobile Asset Alt Text",
         "valueType": "string"
       },
       {
@@ -812,9 +928,16 @@
       },
       {
         "component": "aem-content",
-        "name": "link",
+        "name": "cta_link",
         "label": "CTA Link",
         "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "label": "CTA Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },

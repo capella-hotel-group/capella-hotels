@@ -19,20 +19,21 @@
       "text-with-image",
       "hero-banner",
       "section-intro",
-      "awards-carousel",
+      "awards-list",
       "turneo-proxy-test",
       "dm-showcase",
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
       "interactive-asset",
-      "filters-grid"
+      "filters-grid",
+      "offers-carousel"
     ]
   },
   {
-    "id": "awards-carousel",
+    "id": "awards-list",
     "components": [
-      "carousel-cards"
+      "awards-list-item"
     ]
   },
   {
@@ -78,6 +79,12 @@
     "id": "filters-grid-tab",
     "components": [
       "filters-grid-filter"
+    ]
+  },
+  {
+    "id": "offers-carousel",
+    "components": [
+      "offers-carousel-item"
     ]
   }
 ]

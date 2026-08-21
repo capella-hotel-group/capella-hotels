@@ -39,22 +39,18 @@
         {
           "component": "text",
           "valueType": "string",
-          "name": "title",
-          "label": "Section Title",
-          "value": ""
+          "name": "titlePrefix",
+          "label": "Section Title Prefix",
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "valueType": "string",
-          "name": "ctaLabel",
-          "label": "CTA Label",
-          "value": ""
-        },
-        {
-          "component": "aem-content",
-          "valueType": "string",
-          "name": "ctaLink",
-          "label": "CTA Link"
+          "name": "titleSuffix",
+          "label": "Section Title Suffix",
+          "value": "",
+          "required": true
         }
       ]
     },
@@ -66,14 +62,16 @@
           "valueType": "string",
           "name": "tabName",
           "label": "Tab Name",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "aem-content",
           "valueType": "string",
           "name": "cfReference",
           "label": "Content Fragment",
-          "multi": false
+          "multi": false,
+          "required": true
         }
       ]
     }
