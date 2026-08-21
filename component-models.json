@@ -822,16 +822,16 @@
       },
       {
         "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
         "name": "title",
         "label": "Title",
         "valueType": "string",
         "required": true
-      },
-      {
-        "component": "text",
-        "name": "blockquote",
-        "label": "Sub Title",
-        "valueType": "string"
       },
       {
         "component": "richtext",
@@ -843,14 +843,27 @@
       {
         "component": "reference",
         "name": "image",
-        "label": "Image",
+        "label": "Desktop Asset",
         "valueType": "string",
         "required": true
       },
       {
         "component": "text",
-        "name": "alt",
-        "label": "Alt Text",
+        "name": "imageAlt",
+        "label": "Desktop Asset Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "imageMobile",
+        "label": "Tablet / Mobile Asset",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "imageMobileAlt",
+        "label": "Tablet / Mobile Asset Alt Text",
         "valueType": "string"
       },
       {
@@ -861,9 +874,26 @@
       },
       {
         "component": "aem-content",
-        "name": "link",
+        "name": "cta_link",
         "label": "CTA Link",
         "valueType": "string"
+      },
+      {
+        "component": "select",
+        "name": "cta_openInNewTab",
+        "label": "CTA Open in new tab",
+        "valueType": "boolean",
+        "value": false,
+        "options": [
+          {
+            "name": "No",
+            "value": false
+          },
+          {
+            "name": "Yes",
+            "value": true
+          }
+        ]
       }
     ]
   },
