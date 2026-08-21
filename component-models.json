@@ -849,7 +849,7 @@
       },
       {
         "component": "text",
-        "name": "alt",
+        "name": "imageAlt",
         "label": "Desktop Asset Alt Text",
         "valueType": "string",
         "required": true
@@ -862,7 +862,7 @@
       },
       {
         "component": "text",
-        "name": "altMobile",
+        "name": "imageMobileAlt",
         "label": "Tablet / Mobile Asset Alt Text",
         "valueType": "string"
       },
@@ -874,13 +874,13 @@
       },
       {
         "component": "aem-content",
-        "name": "link",
+        "name": "cta_link",
         "label": "CTA Link",
         "valueType": "string"
       },
       {
         "component": "select",
-        "name": "ctaOpenInNewTab",
+        "name": "cta_openInNewTab",
         "label": "CTA Open in new tab",
         "valueType": "boolean",
         "value": false,

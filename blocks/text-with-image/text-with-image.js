@@ -5,27 +5,28 @@ export default function decorate(block) {
   // row 1: eyebrow
   // row 2: description
   // row 3: desktop image (picture)
-  // row 4: desktop alt text
-  // row 5: mobile/tablet image (picture)
-  // row 6: mobile/tablet alt text
-  // row 7: cta text
-  // row 8: cta link
-  // row 9: cta open in new tab
+  // row 4: mobile/tablet image (picture)
+  // row 5: cta group (label, link, open in new tab)
   const titleText = rows[0]?.firstElementChild?.textContent?.trim() || '';
   const eyebrowText = rows[1]?.firstElementChild?.textContent?.trim() || '';
   const descriptionEl = rows[2]?.firstElementChild;
   const pictureEl = rows[3]?.querySelector('picture');
-  const altText = rows[4]?.firstElementChild?.textContent?.trim() || '';
-  const mobilePictureEl = rows[5]?.querySelector('picture');
-  const mobileAltText = rows[6]?.firstElementChild?.textContent?.trim() || '';
-  const ctaText = rows[7]?.firstElementChild?.textContent?.trim() || 'Read More';
-  const ctaLinkEl = rows[8]?.querySelector('a');
+  const desktopImg = pictureEl?.querySelector('img');
+  const altText = desktopImg?.getAttribute('alt') || '';
+  const mobilePictureEl = rows[4]?.querySelector('picture');
+  const mobileImg = mobilePictureEl?.querySelector('img');
+  const mobileAltText = mobileImg?.getAttribute('alt') || '';
+  const ctaGroup = rows[5]?.firstElementChild;
+  const ctaLinkEl = ctaGroup?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || '';
-  const openInNewTabValue = rows[9]?.firstElementChild?.textContent?.trim().toLowerCase();
+  const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
+  const ctaText = ctaTextEl?.textContent?.trim() || 'Read More';
+  const openInNewTabEl = [...(ctaGroup?.children || [])]
+    .find((element) => /^(true|false)$/i.test(element.textContent.trim()));
+  const openInNewTabValue = openInNewTabEl?.textContent?.trim().toLowerCase() || '';
   const openInNewTab = openInNewTabValue === 'true';
 
   if (pictureEl) {
-    const desktopImg = pictureEl.querySelector('img');
     const responsiveImageQuery = window.matchMedia('(max-width: 1024px)');
     const updateAltText = () => {
       if (desktopImg) {
@@ -35,9 +36,9 @@ export default function decorate(block) {
     updateAltText();
 
     if (mobilePictureEl) {
-      const mobileImg = mobilePictureEl.querySelector('img');
+      const mobilePictureImg = mobilePictureEl.querySelector('img');
       const mobileSource = mobilePictureEl.querySelector('source');
-      const mobileSrc = mobileSource?.getAttribute('srcset') || mobileImg?.getAttribute('src');
+      const mobileSrc = mobileSource?.getAttribute('srcset') || mobilePictureImg?.getAttribute('src');
       if (mobileSrc) {
         const source = document.createElement('source');
         source.media = '(max-width: 1024px)';
