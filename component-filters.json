@@ -19,14 +19,21 @@
       "text-with-image",
       "hero-banner",
       "section-intro",
-      "awards-carousel",
-      "turneo-proxy-test"
+      "awards-list",
+      "turneo-proxy-test",
+      "dm-showcase",
+      "newsletter-form",
+      "culturist-carousel",
+      "destination-cards",
+      "interactive-asset",
+      "filters-grid",
+      "offers-carousel"
     ]
   },
   {
-    "id": "awards-carousel",
+    "id": "awards-list",
     "components": [
-      "carousel-cards"
+      "awards-list-item"
     ]
   },
   {
@@ -48,6 +55,36 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "culturist-carousel",
+    "components": [
+      "culturist-carousel-item"
+    ]
+  },
+  {
+    "id": "destination-cards",
+    "components": [
+      "destination-card-item"
+    ]
+  },
+  {
+    "id": "filters-grid",
+    "components": [
+      "filters-grid-tab"
+    ]
+  },
+  {
+    "id": "filters-grid-tab",
+    "components": [
+      "filters-grid-filter"
+    ]
+  },
+  {
+    "id": "offers-carousel",
+    "components": [
+      "offers-carousel-item"
     ]
   }
 ]

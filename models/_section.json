@@ -52,7 +52,17 @@
         "columns",
         "fragment",
         "text-with-image",
-        "hero-banner"
+        "hero-banner",
+        "section-intro",
+        "awards-list",
+        "turneo-proxy-test",
+        "dm-showcase",
+        "newsletter-form",
+        "culturist-carousel",
+        "destination-cards",
+        "interactive-asset",
+        "filters-grid",
+        "offers-carousel"
       ]
     }
   ]

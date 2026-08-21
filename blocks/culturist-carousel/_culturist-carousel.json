@@ -1,0 +1,87 @@
+{
+  "definitions": [
+    {
+      "title": "Culturist Carousel",
+      "id": "culturist-carousel",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Culturist Carousel",
+              "filter": "culturist-carousel",
+              "model": "culturist-carousel"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Culturist Carousel Item",
+      "id": "culturist-carousel-item",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Culturist Carousel Item",
+              "model": "culturist-carousel-item"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "culturist-carousel",
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "titlePrefix",
+          "label": "Section Title Prefix",
+          "value": "",
+          "required": true
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "titleSuffix",
+          "label": "Section Title Suffix",
+          "value": "",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "culturist-carousel-item",
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "tabName",
+          "label": "Tab Name",
+          "value": "",
+          "required": true
+        },
+        {
+          "component": "aem-content",
+          "valueType": "string",
+          "name": "cfReference",
+          "label": "Content Fragment",
+          "multi": false,
+          "required": true
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "culturist-carousel",
+      "components": [
+        "culturist-carousel-item"
+      ]
+    }
+  ]
+}

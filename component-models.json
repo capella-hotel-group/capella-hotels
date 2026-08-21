@@ -156,42 +156,65 @@
     ]
   },
   {
-    "id": "awards-carousel",
+    "id": "awards-list",
     "fields": [
       {
         "component": "text",
         "name": "title",
         "valueType": "string",
-        "label": "Carousel Title"
+        "label": "Section Title",
+        "required": true
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "valueType": "string",
+        "label": "Section Description",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "cta",
+        "valueType": "string",
+        "label": "CTA Label"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "valueType": "string",
+        "label": "CTA Link"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "valueType": "boolean",
+        "value": false,
+        "label": "Open CTA in new tab"
       }
     ]
   },
   {
-    "id": "carousel-cards",
+    "id": "awards-list-item",
     "fields": [
       {
         "component": "reference",
         "valueType": "string",
         "name": "image",
-        "label": "Image"
+        "label": "Award Logo",
+        "required": true
       },
       {
         "component": "text",
         "valueType": "string",
-        "name": "alt",
-        "label": "Alt Text"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "title",
-        "label": "Card Title"
+        "name": "imageAlt",
+        "label": "Award Logo Alt Text",
+        "required": true
       },
       {
         "component": "richtext",
         "valueType": "string",
         "name": "description",
-        "label": "Card Description"
+        "label": "Award Text"
       }
     ]
   },
@@ -230,6 +253,207 @@
         "name": "rows",
         "value": "",
         "label": "Rows"
+      }
+    ]
+  },
+  {
+    "id": "culturist-carousel",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "titlePrefix",
+        "label": "Section Title Prefix",
+        "value": "",
+        "required": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "titleSuffix",
+        "label": "Section Title Suffix",
+        "value": "",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "culturist-carousel-item",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tabName",
+        "label": "Tab Name",
+        "value": "",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "cfReference",
+        "label": "Content Fragment",
+        "multi": false,
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "destination-cards",
+    "fields": [
+      {
+        "component": "text",
+        "name": "anchorId",
+        "label": "User-defined ID",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Main Section Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "subtitle",
+        "label": "Section Description",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "destination-card-item",
+    "fields": [
+      {
+        "component": "text",
+        "name": "location",
+        "label": "Location Eyebrow",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Card Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Card Background Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "Card CTA URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "ctaName",
+        "label": "Card CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "darkOverlay",
+        "label": "Darkened layer over image",
+        "valueType": "string",
+        "value": "true",
+        "options": [
+          {
+            "name": "Enabled",
+            "value": "true"
+          },
+          {
+            "name": "Disabled",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "filters-grid",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfRootPath",
+        "label": "Content Fragment Root Path",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "revealMoreLabel",
+        "label": "Reveal More CTA Text",
+        "valueType": "string",
+        "value": "Reveal More"
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-tab",
+    "fields": [
+      {
+        "component": "text",
+        "name": "tabKey",
+        "label": "Tab Key",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "tabLabel",
+        "label": "Tab Label",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-filter",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Filter Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "tags",
+        "label": "Tags (comma separated, used to fetch CFs)",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },
@@ -348,6 +572,248 @@
     ]
   },
   {
+    "id": "interactive-asset",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfPath",
+        "label": "Content Fragment Path",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "subtitle",
+        "label": "Subtitle",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "newsletter-form",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Form Title",
+        "valueType": "string",
+        "value": "Subscribe to our newsletter"
+      },
+      {
+        "component": "text",
+        "name": "salutationLabel",
+        "label": "Salutation Field Label",
+        "valueType": "string",
+        "value": "Salutation"
+      },
+      {
+        "component": "aem-content",
+        "name": "salutationOptions",
+        "label": "Salutation Options (Content Fragment path)",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "firstNameLabel",
+        "label": "First Name Field Label",
+        "valueType": "string",
+        "value": "First Name"
+      },
+      {
+        "component": "text",
+        "name": "lastNameLabel",
+        "label": "Last Name Field Label",
+        "valueType": "string",
+        "value": "Last Name"
+      },
+      {
+        "component": "text",
+        "name": "emailLabel",
+        "label": "Email Field Label",
+        "valueType": "string",
+        "value": "Email Address"
+      },
+      {
+        "component": "text",
+        "name": "countryLabel",
+        "label": "Country Field Label",
+        "valueType": "string",
+        "value": "Country"
+      },
+      {
+        "component": "aem-content",
+        "name": "countryOptions",
+        "label": "Country Options (Content Fragment path)",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "consentMessage",
+        "label": "Consent Notice Text",
+        "valueType": "string",
+        "value": "I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href=\"/privacy\">View our Privacy Policy</a>."
+      },
+      {
+        "component": "text",
+        "name": "submitLabel",
+        "label": "Submit Button Label",
+        "valueType": "string",
+        "value": "Continue"
+      },
+      {
+        "component": "aem-content",
+        "name": "propertyOptions",
+        "label": "Property Mapping (Content Fragment path)",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "triggerLabel",
+        "label": "Open Button Label",
+        "valueType": "string",
+        "value": "Subscribe"
+      }
+    ]
+  },
+  {
+    "id": "offers-carousel",
+    "fields": [
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Primary Eyebrow Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Primary Main Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "offers-carousel-item",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "media_cardImage",
+        "label": "Card Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "media_cardImageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "content_cardEyebrow",
+        "label": "Card Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "content_headline",
+        "label": "Card Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "content_cardDescription",
+        "label": "Card Description",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctas_primaryCta",
+        "label": "Primary CTA URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "ctas_primaryCtaText",
+        "label": "Primary CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "ctas_primaryCtaOpenInNewTab",
+        "label": "Primary CTA Open in new tab",
+        "valueType": "string",
+        "value": "false",
+        "options": [
+          {
+            "name": "No",
+            "value": "false"
+          },
+          {
+            "name": "Yes",
+            "value": "true"
+          }
+        ]
+      },
+      {
+        "component": "aem-content",
+        "name": "ctas_secondaryCta",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctas_secondaryCtaText",
+        "label": "Secondary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "ctas_secondaryCtaOpenInNewTab",
+        "label": "Secondary CTA Open in new tab",
+        "valueType": "string",
+        "value": "false",
+        "options": [
+          {
+            "name": "No",
+            "value": "false"
+          },
+          {
+            "name": "Yes",
+            "value": "true"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "section-intro",
     "fields": [
       {
@@ -393,16 +859,16 @@
       },
       {
         "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
         "name": "title",
         "label": "Title",
         "valueType": "string",
         "required": true
-      },
-      {
-        "component": "text",
-        "name": "blockquote",
-        "label": "Sub Title",
-        "valueType": "string"
       },
       {
         "component": "richtext",
@@ -414,14 +880,27 @@
       {
         "component": "reference",
         "name": "image",
-        "label": "Image",
+        "label": "Desktop Asset",
         "valueType": "string",
         "required": true
       },
       {
         "component": "text",
-        "name": "alt",
-        "label": "Alt Text",
+        "name": "imageAlt",
+        "label": "Desktop Asset Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "imageMobile",
+        "label": "Tablet / Mobile Asset",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "imageMobileAlt",
+        "label": "Tablet / Mobile Asset Alt Text",
         "valueType": "string"
       },
       {
@@ -432,9 +911,16 @@
       },
       {
         "component": "aem-content",
-        "name": "link",
+        "name": "cta_link",
         "label": "CTA Link",
         "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "label": "CTA Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },

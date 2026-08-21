@@ -66,14 +66,13 @@ export const VALID_LANG_PRIMARIES = new Set([
   'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',
 ]);
 
-/**
- * Detects the page language from the URL path and normalizes it to a BCP 47 tag.
+/** * Detects the page language from the URL path and normalizes it to a BCP 47 tag.
  * Checks LANG_MAP aliases first, then validates primary against VALID_LANG_PRIMARIES.
  * Skips market/country codes (qa, sa, ae) that are not valid language primaries.
  * Falls back to "en".
  * @returns {string} BCP 47 language tag
  */
-function getPageLang() {
+export function getPageLang() {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const match = segments.find((s) => {
     const lower = s.toLowerCase();
