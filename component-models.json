@@ -303,6 +303,13 @@
     "fields": [
       {
         "component": "text",
+        "name": "anchorId",
+        "label": "User-defined ID",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
         "name": "title",
         "label": "Main Section Title",
         "valueType": "string",
@@ -310,7 +317,7 @@
         "value": ""
       },
       {
-        "component": "text",
+        "component": "richtext",
         "name": "subtitle",
         "label": "Section Description",
         "valueType": "string",
@@ -323,15 +330,15 @@
     "fields": [
       {
         "component": "text",
-        "name": "location",
+        "name": "content_location",
         "label": "Location Eyebrow",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
-        "component": "text",
-        "name": "title",
+        "component": "richtext",
+        "name": "content_headline",
         "label": "Card Headline",
         "valueType": "string",
         "required": true,
@@ -339,7 +346,7 @@
       },
       {
         "component": "reference",
-        "name": "image",
+        "name": "media_image",
         "label": "Card Background Image",
         "valueType": "string",
         "multi": false,
@@ -347,26 +354,50 @@
       },
       {
         "component": "text",
-        "name": "imageAlt",
+        "name": "media_imageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
+        "component": "aem-content",
+        "name": "cta_link",
+        "label": "Card CTA URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
         "component": "text",
-        "name": "ctaName",
+        "name": "cta_linkText",
         "label": "Card CTA Label",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
-        "component": "aem-content",
-        "name": "ctaLink",
-        "label": "Card CTA URL",
+        "component": "select",
+        "name": "settings_darkOverlay",
+        "label": "Darkened layer over image",
         "valueType": "string",
-        "required": true
+        "value": "true",
+        "options": [
+          {
+            "name": "Enabled",
+            "value": "true"
+          },
+          {
+            "name": "Disabled",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "boolean",
+        "name": "settings_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
