@@ -41,14 +41,16 @@
           "valueType": "string",
           "name": "titlePrefix",
           "label": "Section Title Prefix",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "valueType": "string",
           "name": "titleSuffix",
           "label": "Section Title Suffix",
-          "value": ""
+          "value": "",
+          "required": true
         }
       ]
     },
@@ -60,14 +62,16 @@
           "valueType": "string",
           "name": "tabName",
           "label": "Tab Name",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "aem-content",
           "valueType": "string",
           "name": "cfReference",
           "label": "Content Fragment",
-          "multi": false
+          "multi": false,
+          "required": true
         }
       ]
     }
