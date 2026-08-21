@@ -6,10 +6,40 @@ function textFromCell(cell) {
   return cell?.textContent?.trim() || '';
 }
 
+function setLinkAttributes(link, href, openInNewTab) {
+  link.href = href;
+  if (openInNewTab) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+}
+
+function getCardLink(cells) {
+  const linkIndex = cells.findIndex((cell, index) => index > 2 && cell.querySelector('a'));
+  const linkCell = linkIndex >= 0 ? cells[linkIndex] : null;
+  const authoredLink = linkCell?.querySelector('a');
+  const href = authoredLink?.getAttribute('href') || '';
+
+  return { href, linkIndex };
+}
+
+function getCardFields(cells) {
+  const { href, linkIndex } = getCardLink(cells);
+  const hasNewFieldOrder = linkIndex >= 5;
+  const ctaLabelCell = linkIndex > 3 ? cells[linkIndex - 1] : null;
+
+  return {
+    href,
+    ctaLabelCell,
+    imageAlt: hasNewFieldOrder ? textFromCell(cells[3]) : null,
+    openInNewTab: false,
+  };
+}
+
 function buildIntro(rows) {
   const [titleRow, subtitleRow] = rows;
 
-  const intro = document.createElement('header');
+  const intro = document.createElement('div');
   intro.className = 'destination-cards-intro';
 
   const title = textFromCell(titleRow?.firstElementChild || titleRow);
@@ -31,17 +61,15 @@ function buildIntro(rows) {
   return intro;
 }
 
-function buildCta(labelCell, linkCell) {
+function buildCta(labelCell, href, openInNewTab) {
   const label = textFromCell(labelCell);
-  const authoredLink = linkCell?.querySelector('a');
-  const href = authoredLink?.getAttribute('href') || textFromCell(linkCell);
 
   if (!label && !href) return null;
 
   const cta = document.createElement('a');
   cta.className = 'destination-cards-cta';
   cta.textContent = label || 'Explore';
-  cta.href = href || '#';
+  setLinkAttributes(cta, href || '#', openInNewTab);
   return cta;
 }
 
@@ -52,8 +80,14 @@ function buildCard(row) {
   const location = textFromCell(cells[0]);
   const title = textFromCell(cells[1]);
   const image = cells[2]?.querySelector('picture, img');
+  const {
+    href,
+    ctaLabelCell,
+    imageAlt,
+    openInNewTab,
+  } = getCardFields(cells);
 
-  const cta = buildCta(cells[3], cells[4]);
+  const cta = buildCta(ctaLabelCell, href, openInNewTab);
 
   // Ignore rows that have no authored content at all.
   if (!location && !title && !image && !cta) {
@@ -70,9 +104,18 @@ function buildCard(row) {
   const media = document.createElement('figure');
   media.className = 'destination-cards-media';
 
+  const mediaContent = href ? document.createElement('a') : document.createElement('div');
+  mediaContent.className = 'destination-cards-media-link';
+  if (href) {
+    setLinkAttributes(mediaContent, href, openInNewTab);
+    mediaContent.setAttribute('aria-label', `${title || location || 'Destination'}: ${textFromCell(ctaLabelCell) || 'Explore'}`);
+  }
+
   if (image) {
     const mediaNode = image.tagName.toLowerCase() === 'picture' ? image : image.closest('picture') || image;
-    media.append(mediaNode);
+    const imageElement = mediaNode.querySelector('img') || (mediaNode.tagName === 'IMG' ? mediaNode : null);
+    if (imageElement && imageAlt !== null) imageElement.alt = imageAlt;
+    mediaContent.append(mediaNode);
   } else {
     media.classList.add('destination-cards-media-no-image');
   }
@@ -94,7 +137,8 @@ function buildCard(row) {
     overlay.append(titleEl);
   }
 
-  media.append(overlay);
+  mediaContent.append(overlay);
+  media.append(mediaContent);
   article.append(media);
 
   if (cta) {
