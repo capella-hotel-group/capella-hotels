@@ -918,7 +918,7 @@
       },
       {
         "component": "select",
-        "name": "ctaActionType",
+        "name": "ctaActionKind",
         "label": "CTA Action Type",
         "valueType": "string",
         "required": true,
