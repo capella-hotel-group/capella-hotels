@@ -97,21 +97,11 @@
           "valueType": "string"
         },
         {
-          "component": "select",
+          "component": "boolean",
           "name": "cta_openInNewTab",
           "label": "CTA Open in new tab",
           "valueType": "boolean",
-          "value": false,
-          "options": [
-            {
-              "name": "No",
-              "value": false
-            },
-            {
-              "name": "Yes",
-              "value": true
-            }
-          ]
+          "value": false
         }
       ]
     }
