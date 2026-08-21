@@ -18,6 +18,7 @@ export default function decorate(block) {
   const mobileSource = mobilePictureEl?.querySelector('source');
   const mobileSrc = mobileSource?.getAttribute('srcset') || mobileImg?.getAttribute('src');
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
+  const responsiveAltText = mobileAltText || altText;
   const ctaGroup = rows[5]?.firstElementChild;
   const ctaLinkEl = ctaGroup?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || '';
@@ -32,7 +33,7 @@ export default function decorate(block) {
     const responsiveImageQuery = window.matchMedia('(max-width: 1024px)');
     const updateAltText = () => {
       if (desktopImg) {
-        desktopImg.alt = responsiveImageQuery.matches && mobileAltText ? mobileAltText : altText;
+        desktopImg.alt = responsiveImageQuery.matches ? responsiveAltText : altText;
       }
     };
     updateAltText();
