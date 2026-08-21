@@ -855,6 +855,102 @@
     ]
   },
   {
+    "id": "text-with-cta",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Main Section Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "subtitle",
+        "label": "Subtitle / Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "backgroundTheme",
+        "label": "Background Theme",
+        "valueType": "string",
+        "required": true,
+        "value": "light-neutral",
+        "options": [
+          {
+            "name": "Light Neutral",
+            "value": "light-neutral"
+          },
+          {
+            "name": "Soft Sand",
+            "value": "soft-sand"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "name": "ctaStyle",
+        "label": "CTA Style",
+        "valueType": "string",
+        "required": true,
+        "value": "underlined-text-link",
+        "options": [
+          {
+            "name": "Underlined Text Link",
+            "value": "underlined-text-link"
+          },
+          {
+            "name": "Solid Button",
+            "value": "solid-button"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "ctaActionKind",
+        "label": "CTA Action Type",
+        "valueType": "string",
+        "required": true,
+        "value": "external-url",
+        "options": [
+          {
+            "name": "Open Pop-up Form Modal",
+            "value": "popup-form-modal"
+          },
+          {
+            "name": "Navigate to External URL",
+            "value": "external-url"
+          }
+        ]
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaTargetUrl",
+        "label": "CTA Target Action / URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "text-with-image",
     "fields": [
       {
