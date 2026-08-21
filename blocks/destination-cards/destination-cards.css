@@ -214,9 +214,21 @@
         margin-bottom: 56px;
     }
 
+    .destination-cards .destination-cards-intro > * {
+        width: auto;
+    }
+
     .destination-cards .destination-cards-title {
         font-size: var(--heading-font-size-xl);
-        max-width: 18rem;
+        width: 420px;
+        height: 96px;
+        max-width: none;
+    }
+
+    .destination-cards .destination-cards-subtitle {
+        width: 628px;
+        height: 72px;
+        max-width: none;
     }
 
     .destination-cards .destination-cards-list {
