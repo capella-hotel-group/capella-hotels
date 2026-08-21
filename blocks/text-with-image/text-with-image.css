@@ -1,5 +1,4 @@
 .text-with-image-container {
-    background: #F5F5F6;
     padding: 40px 0;
 
 }
@@ -31,6 +30,10 @@
     letter-spacing: 0;
     color: #1B364B;
     margin: 0;
+    width: 100%;
+    max-width: 345px;
+    padding-inline-start: 32px;
+    text-indent: -32px;
 }
 
 .text-with-image .text-col .eyebrow {
@@ -66,8 +69,8 @@
     font-family: var(--body-font-family);
     font-weight: 400;
     color: #262727;
-    line-height: 22px;
-    font-size: 1.125rem;
+    line-height: 24px;
+    font-size: 1.25rem;
     margin: 0;
     letter-spacing: 0;
 }
@@ -83,6 +86,7 @@
     font-size: 1.125rem;
     font-family: var(--body-font-family);
     font-weight: 300;
+    text-transform: uppercase;
     letter-spacing: 0;
     text-decoration: underline;
     text-decoration-thickness: 1px;
@@ -98,7 +102,6 @@
 /* Image column */
 .text-with-image .image-col {
     overflow: hidden;
-    aspect-ratio: 4 / 3;
 }
 
 .text-with-image.image-left .image-col {
@@ -114,47 +117,90 @@
 .text-with-image .image-col img {
     display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
 }
 
 /* Tablet */
 @media (width <=1024px) {
     .text-with-image {
-        grid-template-columns: 40% 60%;
+        grid-template-columns: 50% 50%;
     }
 
     .text-with-image .text-col {
-        padding: 48px 32px;
+        padding: 64px 48px;
     }
 
     .text-with-image .text-col h3 {
         font-size: 2.5rem;
+    }
+
+    .text-with-image .description p {
+        font-size: 1.5rem;
+        line-height: 24px;
+    }
+
+    .text-with-image .image-col.has-mobile-image {
+        aspect-ratio: 4 / 5;
+    }
+
+    .text-with-image .image-col.has-mobile-image img {
+        height: 100%;
+        object-fit: cover;
     }
 }
 
 /* Mobile */
 @media (width <=767px) {
     .text-with-image .text-col h3 {
-        font-size: 2rem;
+        font-size: 2.25rem;
+        line-height: 36px;
     }
 
     .text-with-image {
         grid-template-columns: 1fr;
-        gap: 30px;
+        gap: 0;
+        padding: 48px 0;
         margin-bottom: 80px;
     }
 
     .text-with-image .text-col {
-        padding: 40px 24px 0;
+        padding: 48px 24px;
+    }
+
+    .text-with-image .text-col .eyebrow {
+        font-size: 1rem;
+        line-height: 20px;
+        margin-bottom: 12px;
     }
 
     .text-with-image .description {
         margin-top: 32px;
+        gap: 12px;
+    }
+
+    .text-with-image .description h4 {
+        font-size: 1.25rem;
+        line-height: 22px;
+    }
+
+    .text-with-image .description p {
+        font-size: 1.125rem;
+        line-height: 20px;
+    }
+
+    .text-with-image .cta-link {
+        font-size: 1rem;
+        line-height: 20px;
     }
 
     .text-with-image .image-col {
         width: 100%;
+        aspect-ratio: 4 / 5;
+    }
+
+    .text-with-image .image-col img {
+        height: 100%;
+        object-fit: cover;
     }
 
     .text-with-image.image-left .image-col {

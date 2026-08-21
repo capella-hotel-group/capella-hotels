@@ -1,20 +1,22 @@
 export default function decorate(block) {
   const rows = [...block.children];
 
-  // row 0: title
-  // row 1: eyebrow
+  // row 0: eyebrow
+  // row 1: title
   // row 2: description
   // row 3: desktop image (picture)
   // row 4: mobile/tablet image (picture)
   // row 5: cta group (label, link, open in new tab)
-  const titleText = rows[0]?.firstElementChild?.textContent?.trim() || '';
-  const eyebrowText = rows[1]?.firstElementChild?.textContent?.trim() || '';
+  const eyebrowText = rows[0]?.firstElementChild?.textContent?.trim() || '';
+  const titleText = rows[1]?.firstElementChild?.textContent?.trim() || '';
   const descriptionEl = rows[2]?.firstElementChild;
   const pictureEl = rows[3]?.querySelector('picture');
   const desktopImg = pictureEl?.querySelector('img');
   const altText = desktopImg?.getAttribute('alt') || '';
   const mobilePictureEl = rows[4]?.querySelector('picture');
   const mobileImg = mobilePictureEl?.querySelector('img');
+  const mobileSource = mobilePictureEl?.querySelector('source');
+  const mobileSrc = mobileSource?.getAttribute('srcset') || mobileImg?.getAttribute('src');
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
   const ctaGroup = rows[5]?.firstElementChild;
   const ctaLinkEl = ctaGroup?.querySelector('a');
@@ -36,9 +38,6 @@ export default function decorate(block) {
     updateAltText();
 
     if (mobilePictureEl) {
-      const mobilePictureImg = mobilePictureEl.querySelector('img');
-      const mobileSource = mobilePictureEl.querySelector('source');
-      const mobileSrc = mobileSource?.getAttribute('srcset') || mobilePictureImg?.getAttribute('src');
       if (mobileSrc) {
         const source = document.createElement('source');
         source.media = '(max-width: 1024px)';
@@ -85,6 +84,7 @@ export default function decorate(block) {
 
   const imageCol = document.createElement('div');
   imageCol.className = 'image-col';
+  if (mobileSrc) imageCol.classList.add('has-mobile-image');
   if (pictureEl) imageCol.append(pictureEl);
   mobilePictureEl?.remove();
 
