@@ -18,11 +18,12 @@ export default function decorate(block) {
   const mobileSource = mobilePictureEl?.querySelector('source');
   const mobileSrc = mobileSource?.getAttribute('srcset') || mobileImg?.getAttribute('src');
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
+  const responsiveAltText = mobileAltText || altText;
   const ctaGroup = rows[5]?.firstElementChild;
   const ctaLinkEl = ctaGroup?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || '';
   const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
-  const ctaText = ctaTextEl?.textContent?.trim() || 'Read More';
+  const ctaText = ctaTextEl?.textContent?.trim() || '';
   const openInNewTabEl = [...(ctaGroup?.children || [])]
     .find((element) => /^(true|false)$/i.test(element.textContent.trim()));
   const openInNewTabValue = openInNewTabEl?.textContent?.trim().toLowerCase() || '';
@@ -32,7 +33,7 @@ export default function decorate(block) {
     const responsiveImageQuery = window.matchMedia('(max-width: 1024px)');
     const updateAltText = () => {
       if (desktopImg) {
-        desktopImg.alt = responsiveImageQuery.matches && mobileAltText ? mobileAltText : altText;
+        desktopImg.alt = responsiveImageQuery.matches ? responsiveAltText : altText;
       }
     };
     updateAltText();
@@ -73,7 +74,7 @@ export default function decorate(block) {
 
   textCol.append(desc);
 
-  if (ctaHref) {
+  if (ctaHref && ctaText) {
     const cta = document.createElement('a');
     cta.className = 'cta-link';
     cta.href = ctaHref;
