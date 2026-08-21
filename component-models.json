@@ -200,8 +200,7 @@
         "component": "reference",
         "valueType": "string",
         "name": "image",
-        "label": "Award Logo",
-        "required": true
+        "label": "Award Logo"
       },
       {
         "component": "text",
