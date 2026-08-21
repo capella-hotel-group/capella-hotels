@@ -108,6 +108,10 @@
     order: -1;
 }
 
+.text-with-image.image-left {
+    grid-template-columns: 60% 40%;
+}
+
 /* .text-with-image .image-col picture {
     display: block;
     width: calc(100% - 40px);
@@ -161,6 +165,10 @@
         gap: 0;
         padding: 48px 0;
         margin-bottom: 80px;
+    }
+
+    .text-with-image.image-left {
+        grid-template-columns: 1fr;
     }
 
     .text-with-image .text-col {
