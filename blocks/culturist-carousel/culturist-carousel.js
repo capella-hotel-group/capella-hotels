@@ -91,26 +91,32 @@ async function renderCulturistInfo(slot, cfPath) {
   const contentCol = document.createElement('div');
   contentCol.className = 'culturist-carousel-content-col';
 
+  // Scrollable area holds the quote/name/description; CTA stays outside so it's always visible
+  const contentScroll = document.createElement('div');
+  contentScroll.className = 'culturist-carousel-content-scroll';
+
   if (cfData.quote?.html) {
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'culturist-carousel-quote';
     quoteEl.innerHTML = cfData.quote.html;
-    contentCol.append(quoteEl);
+    contentScroll.append(quoteEl);
   }
 
   if (cfData.name) {
     const nameEl = document.createElement('p');
     nameEl.className = 'culturist-carousel-culturist-name';
     nameEl.textContent = `- ${cfData.name}`;
-    contentCol.append(nameEl);
+    contentScroll.append(nameEl);
   }
 
   if (cfData.description?.html) {
     const descEl = document.createElement('div');
     descEl.className = 'culturist-carousel-description';
     descEl.innerHTML = cfData.description.html;
-    contentCol.append(descEl);
+    contentScroll.append(descEl);
   }
+
+  contentCol.append(contentScroll);
 
   const ctaHref = resolveLinkHref(cfData.ctaLink, cfData.ctaExternalLink);
   if (cfData.ctaLabel && ctaHref) {
@@ -121,7 +127,7 @@ async function renderCulturistInfo(slot, cfPath) {
     cta.className = 'culturist-carousel-cta-link';
     cta.href = ctaHref;
     cta.textContent = cfData.ctaLabel;
-    applyLinkTarget(cta, cfData.ctaOpenInNewTab);
+    applyLinkTarget(cta, cfData.ctaOpenInNewTab ?? false);
     ctaContainer.append(cta);
 
     contentCol.append(ctaContainer);
@@ -139,7 +145,7 @@ function buildCarouselCard(card) {
   cardContent.className = 'culturist-carousel-card-content';
   if (cardHref) {
     cardContent.href = cardHref;
-    applyLinkTarget(cardContent, card.openInNewTab);
+    applyLinkTarget(cardContent, card.openInNewTab ?? false);
   }
 
   const { _path: cardImgPath } = card.image || {};
@@ -169,7 +175,8 @@ async function renderGalleryCarousel(carouselCol, cfPath) {
   const cfData = await fetchCFDetails(cfPath);
   track.innerHTML = '';
 
-  const cards = cfData?.cardContentReference || [];
+  // Skip any null/empty entries so one bad card doesn't break the rest
+  const cards = (cfData?.cardContentReference || []).filter(Boolean);
   if (!cards.length) {
     track.textContent = 'No content';
     carouselCol.classList.add('culturist-carousel-carousel--empty');
@@ -177,7 +184,14 @@ async function renderGalleryCarousel(carouselCol, cfPath) {
   }
 
   carouselCol.classList.remove('culturist-carousel-carousel--empty');
-  cards.forEach((card) => track.append(buildCarouselCard(card)));
+  cards.forEach((card) => {
+    try {
+      track.append(buildCarouselCard(card));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[culturist-carousel] Skipping malformed card', card, error);
+    }
+  });
   track.scrollLeft = 0;
 
   const hasMultiple = cards.length > 2;
