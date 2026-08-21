@@ -69,6 +69,12 @@
     ]
   },
   {
+    "id": "destination-tabs",
+    "components": [
+      "destination-tabs-item"
+    ]
+  },
+  {
     "id": "filters-grid",
     "components": [
       "filters-grid-tab"

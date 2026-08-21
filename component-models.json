@@ -282,6 +282,13 @@
     "fields": [
       {
         "component": "text",
+        "name": "anchorId",
+        "label": "User-defined ID",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
         "name": "title",
         "label": "Main Section Title",
         "valueType": "string",
@@ -289,7 +296,7 @@
         "value": ""
       },
       {
-        "component": "text",
+        "component": "richtext",
         "name": "subtitle",
         "label": "Section Description",
         "valueType": "string",
@@ -302,15 +309,15 @@
     "fields": [
       {
         "component": "text",
-        "name": "location",
+        "name": "content_location",
         "label": "Location Eyebrow",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
-        "component": "text",
-        "name": "title",
+        "component": "richtext",
+        "name": "content_headline",
         "label": "Card Headline",
         "valueType": "string",
         "required": true,
@@ -318,7 +325,7 @@
       },
       {
         "component": "reference",
-        "name": "image",
+        "name": "media_image",
         "label": "Card Background Image",
         "valueType": "string",
         "multi": false,
@@ -326,26 +333,104 @@
       },
       {
         "component": "text",
-        "name": "imageAlt",
+        "name": "media_imageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
+        "component": "aem-content",
+        "name": "cta_link",
+        "label": "Card CTA URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
         "component": "text",
-        "name": "ctaName",
+        "name": "cta_linkText",
         "label": "Card CTA Label",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
-        "component": "aem-content",
-        "name": "ctaLink",
-        "label": "Card CTA URL",
+        "component": "select",
+        "name": "settings_darkOverlay",
+        "label": "Darkened layer over image",
         "valueType": "string",
-        "required": true
+        "value": "true",
+        "options": [
+          {
+            "name": "Enabled",
+            "value": "true"
+          },
+          {
+            "name": "Disabled",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "name": "settings_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "string",
+        "value": "false",
+        "options": [
+          {
+            "name": "No",
+            "value": "false"
+          },
+          {
+            "name": "Yes",
+            "value": "true"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "destination-tabs",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Section Title",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "ctaLink",
+        "label": "CTA Link"
+      }
+    ]
+  },
+  {
+    "id": "destination-tabs-item",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "tabName",
+        "label": "Tab Name",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "cfReference",
+        "label": "Content Fragment",
+        "multi": false
       }
     ]
   },
@@ -672,6 +757,23 @@
         "component": "richtext",
         "name": "description",
         "label": "Description",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "text-interactive-asset",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "reference",
+        "label": "Reference",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "assetPath",
+        "label": "Asset Path",
         "valueType": "string"
       }
     ]

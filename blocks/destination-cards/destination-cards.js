@@ -1,12 +1,24 @@
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
-const INTRO_ROWS = 2;
-
 function textFromCell(cell) {
-  return cell?.textContent?.trim() || '';
+  if (!cell) return '';
+  const textNodes = [...cell.children]
+    .map((child) => child.textContent.trim())
+    .filter(Boolean);
+  return textNodes.length > 1 ? textNodes.join('\n') : cell.textContent.trim();
 }
 
-function setLinkAttributes(link, href, openInNewTab) {
+function textFromPart(cell, index) {
+  return textFromCell([...cell?.children || []][index] || cell);
+}
+
+function isEnabled(value, fallback = false) {
+  const text = typeof value === 'string' ? value : textFromCell(value);
+  if (!text) return fallback;
+  return ['true', 'yes', 'enabled'].includes(text.trim().toLowerCase());
+}
+
+function setLinkAttributes(link, href, openInNewTab = false) {
   link.href = href;
   if (openInNewTab) {
     link.target = '_blank';
@@ -14,33 +26,66 @@ function setLinkAttributes(link, href, openInNewTab) {
   }
 }
 
-function getCardLink(cells) {
-  const linkIndex = cells.findIndex((cell, index) => index > 2 && cell.querySelector('a'));
-  const linkCell = linkIndex >= 0 ? cells[linkIndex] : null;
-  const authoredLink = linkCell?.querySelector('a');
-  const href = authoredLink?.getAttribute('href') || '';
-
-  return { href, linkIndex };
+function getLinkFromCell(cell) {
+  const authoredLink = cell?.querySelector('a');
+  return {
+    href: authoredLink?.getAttribute('href') || textFromCell(cell),
+    label: authoredLink?.textContent?.trim() || textFromCell(cell),
+  };
 }
 
-function getCardFields(cells) {
-  const { href, linkIndex } = getCardLink(cells);
-  const hasNewFieldOrder = linkIndex >= 5;
+function getIntroRows(rows) {
+  const firstCardIndex = rows.findIndex((row) => row.children.length > 1);
+  return firstCardIndex >= 0 ? rows.slice(0, firstCardIndex) : rows;
+}
+
+function getCardFields(row) {
+  const cells = [...row.children];
+  const isGroupedModel = cells.length <= 4 && cells[1]?.querySelector('picture, img');
+
+  if (isGroupedModel) {
+    const [contentCell, mediaCell, ctaCell, settingsCell] = cells;
+    const cta = getLinkFromCell(ctaCell);
+    const settingsParts = [...settingsCell?.children || []];
+
+    return {
+      location: textFromPart(contentCell, 0),
+      title: textFromPart(contentCell, 1),
+      image: mediaCell.querySelector('picture, img'),
+      imageAlt: mediaCell.querySelector('img')?.getAttribute('alt') || textFromPart(mediaCell, 1),
+      href: cta.href,
+      ctaLabel: cta.label,
+      darkOverlay: isEnabled(settingsParts[0] || settingsCell, true),
+      openInNewTab: isEnabled(settingsParts[1], false),
+    };
+  }
+
+  const linkIndex = cells.findIndex((cell, index) => index > 2 && cell.querySelector('a'));
+  const hasLegacyAltField = linkIndex >= 5;
   const ctaLabelCell = linkIndex > 3 ? cells[linkIndex - 1] : null;
+  const cta = getLinkFromCell(cells[linkIndex]);
 
   return {
-    href,
-    ctaLabelCell,
-    imageAlt: hasNewFieldOrder ? textFromCell(cells[3]) : null,
+    location: textFromCell(cells[0]),
+    title: textFromCell(cells[1]),
+    image: cells[2]?.querySelector('picture, img'),
+    imageAlt: hasLegacyAltField ? textFromCell(cells[3]) : null,
+    href: cta.href,
+    ctaLabel: textFromCell(ctaLabelCell) || cta.label,
+    darkOverlay: true,
     openInNewTab: false,
   };
 }
 
 function buildIntro(rows) {
-  const [titleRow, subtitleRow] = rows;
+  const hasAnchor = rows.length > 2;
+  const [anchorRow, titleRow, subtitleRow] = hasAnchor ? rows : [null, ...rows];
 
   const intro = document.createElement('div');
   intro.className = 'destination-cards-intro';
+
+  const anchorId = textFromCell(anchorRow?.firstElementChild || anchorRow);
+  if (anchorId) intro.dataset.anchorId = anchorId.replace(/^#/, '');
 
   const title = textFromCell(titleRow?.firstElementChild || titleRow);
   if (title) {
@@ -61,9 +106,7 @@ function buildIntro(rows) {
   return intro;
 }
 
-function buildCta(labelCell, href, openInNewTab) {
-  const label = textFromCell(labelCell);
-
+function buildCta(label, href, openInNewTab) {
   if (!label && !href) return null;
 
   const cta = document.createElement('a');
@@ -74,20 +117,18 @@ function buildCta(labelCell, href, openInNewTab) {
 }
 
 function buildCard(row) {
-  const cells = [...row.children];
-  if (cells.length < 3) return null;
-
-  const location = textFromCell(cells[0]);
-  const title = textFromCell(cells[1]);
-  const image = cells[2]?.querySelector('picture, img');
   const {
+    location,
+    title,
+    image,
     href,
-    ctaLabelCell,
+    ctaLabel,
     imageAlt,
+    darkOverlay,
     openInNewTab,
-  } = getCardFields(cells);
+  } = getCardFields(row);
 
-  const cta = buildCta(ctaLabelCell, href, openInNewTab);
+  const cta = buildCta(ctaLabel, href, openInNewTab);
 
   // Ignore rows that have no authored content at all.
   if (!location && !title && !image && !cta) {
@@ -103,12 +144,13 @@ function buildCard(row) {
 
   const media = document.createElement('figure');
   media.className = 'destination-cards-media';
+  if (!darkOverlay) media.classList.add('destination-cards-media-no-overlay');
 
   const mediaContent = href ? document.createElement('a') : document.createElement('div');
   mediaContent.className = 'destination-cards-media-link';
   if (href) {
     setLinkAttributes(mediaContent, href, openInNewTab);
-    mediaContent.setAttribute('aria-label', `${title || location || 'Destination'}: ${textFromCell(ctaLabelCell) || 'Explore'}`);
+    mediaContent.setAttribute('aria-label', `${title || location || 'Destination'}: ${ctaLabel || 'Explore'}`);
   }
 
   if (image) {
@@ -154,14 +196,18 @@ function buildCard(row) {
 
 export default function decorate(block) {
   const rows = [...block.children];
-  if (rows.length < INTRO_ROWS) return;
+  if (!rows.length) return;
 
-  const intro = buildIntro(rows.slice(0, INTRO_ROWS));
+  const introRows = getIntroRows(rows);
+  const intro = buildIntro(introRows);
+  const { anchorId } = intro.dataset;
+  if (anchorId) block.id = anchorId;
+  delete intro.dataset.anchorId;
 
   const list = document.createElement('ul');
   list.className = 'destination-cards-list';
 
-  rows.slice(INTRO_ROWS).forEach((row) => {
+  rows.slice(introRows.length).forEach((row) => {
     const card = buildCard(row);
     if (card) list.append(card);
   });

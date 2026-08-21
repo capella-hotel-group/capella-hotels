@@ -59,7 +59,9 @@
         "dm-showcase",
         "newsletter-form",
         "culturist-carousel",
-        "destination-cards"
+        "destination-cards",
+        "interactive-asset",
+        "filters-grid"
       ]
     }
   ]
