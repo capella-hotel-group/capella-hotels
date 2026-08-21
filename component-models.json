@@ -330,7 +330,7 @@
     "fields": [
       {
         "component": "text",
-        "name": "content_location",
+        "name": "location",
         "label": "Location Eyebrow",
         "valueType": "string",
         "required": true,
@@ -338,7 +338,7 @@
       },
       {
         "component": "richtext",
-        "name": "content_headline",
+        "name": "title",
         "label": "Card Headline",
         "valueType": "string",
         "required": true,
@@ -346,7 +346,7 @@
       },
       {
         "component": "reference",
-        "name": "media_image",
+        "name": "image",
         "label": "Card Background Image",
         "valueType": "string",
         "multi": false,
@@ -354,7 +354,7 @@
       },
       {
         "component": "text",
-        "name": "media_imageAlt",
+        "name": "imageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
         "required": true,
@@ -362,14 +362,14 @@
       },
       {
         "component": "aem-content",
-        "name": "cta_link",
+        "name": "ctaLink",
         "label": "Card CTA URL",
         "valueType": "string",
         "required": true
       },
       {
         "component": "text",
-        "name": "cta_linkText",
+        "name": "ctaName",
         "label": "Card CTA Label",
         "valueType": "string",
         "required": true,
@@ -377,7 +377,7 @@
       },
       {
         "component": "select",
-        "name": "settings_darkOverlay",
+        "name": "darkOverlay",
         "label": "Darkened layer over image",
         "valueType": "string",
         "value": "true",
@@ -394,7 +394,7 @@
       },
       {
         "component": "boolean",
-        "name": "settings_openInNewTab",
+        "name": "openInNewTab",
         "label": "Open in new tab",
         "valueType": "boolean",
         "value": false

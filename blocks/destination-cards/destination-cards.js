@@ -64,6 +64,8 @@ function getCardFields(row) {
   const hasLegacyAltField = linkIndex >= 5;
   const ctaLabelCell = linkIndex > 3 ? cells[linkIndex - 1] : null;
   const cta = getLinkFromCell(cells[linkIndex]);
+  const darkOverlayCell = linkIndex >= 0 ? cells[linkIndex + 1] : null;
+  const openInNewTabCell = linkIndex >= 0 ? cells[linkIndex + 2] : null;
 
   return {
     location: textFromCell(cells[0]),
@@ -72,8 +74,8 @@ function getCardFields(row) {
     imageAlt: hasLegacyAltField ? textFromCell(cells[3]) : null,
     href: cta.href,
     ctaLabel: textFromCell(ctaLabelCell) || cta.label,
-    darkOverlay: true,
-    openInNewTab: false,
+    darkOverlay: isEnabled(darkOverlayCell, true),
+    openInNewTab: isEnabled(openInNewTabCell, false),
   };
 }
 
