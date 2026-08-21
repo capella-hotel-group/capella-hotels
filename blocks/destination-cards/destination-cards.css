@@ -1,6 +1,1 @@
 /* Destination Cards styles temporarily disabled for authoring/debugging validation. */
-    .destination-cards .destination-cards-card-title {
-        font-size: var(--heading-font-size-l);
-        line-height: 1;
-    }
-}
