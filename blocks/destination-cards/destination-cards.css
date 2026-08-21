@@ -6,7 +6,7 @@
 
 .destination-cards .destination-cards-intro {
 	display: grid;
-	gap: 16px;
+	gap: 12px;
 	justify-items: center;
 	text-align: center;
 	margin: 0 auto 32px;
@@ -186,8 +186,8 @@
 	}
 
 	.destination-cards .destination-cards-intro {
-		gap: 20px;
-		margin-bottom: 48px;
+		gap: 16px;
+		margin-bottom: 32px;
 	}
 
 	.destination-cards .destination-cards-list {
@@ -210,8 +210,8 @@
 	}
 
 	.destination-cards .destination-cards-intro {
-		gap: 24px;
-		margin-bottom: 56px;
+		gap: 16px;
+		margin-bottom: 32px;
 	}
 
 	.destination-cards .destination-cards-intro > * {
@@ -221,13 +221,13 @@
 	.destination-cards .destination-cards-title {
 		font-size: var(--heading-font-size-xl);
 		width: 420px;
-		height: 96px;
+		height: auto;
 		max-width: none;
 	}
 
 	.destination-cards .destination-cards-subtitle {
 		width: 628px;
-		height: 72px;
+		height: auto;
 		max-width: none;
 	}
 
