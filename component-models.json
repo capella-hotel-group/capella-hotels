@@ -752,23 +752,6 @@
     ]
   },
   {
-    "id": "text-interactive-asset",
-    "fields": [
-      {
-        "component": "aem-content",
-        "name": "reference",
-        "label": "Reference",
-        "valueType": "string"
-      },
-      {
-        "component": "aem-content",
-        "name": "assetPath",
-        "label": "Asset Path",
-        "valueType": "string"
-      }
-    ]
-  },
-  {
     "id": "text-with-image",
     "fields": [
       {
