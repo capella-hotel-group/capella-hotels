@@ -41,7 +41,7 @@
           "component": "text",
           "name": "title",
           "valueType": "string",
-          "label": "Main Section Title",
+          "label": "Section Title",
           "required": true
         },
         {
@@ -55,20 +55,20 @@
           "component": "text",
           "name": "cta",
           "valueType": "string",
-          "label": "CTA Button Label"
+          "label": "CTA Label"
         },
         {
           "component": "aem-content",
           "name": "cta_link",
           "valueType": "string",
-          "label": "CTA Button URL"
+          "label": "CTA Link"
         },
         {
           "component": "boolean",
           "name": "cta_openInNewTab",
           "valueType": "boolean",
           "value": false,
-          "label": "CTA Open in new tab"
+          "label": "Open CTA in new tab"
         }
       ]
     },
@@ -90,17 +90,10 @@
           "required": true
         },
         {
-          "component": "text",
-          "valueType": "string",
-          "name": "title",
-          "label": "Award Text",
-          "required": true
-        },
-        {
           "component": "richtext",
           "valueType": "string",
           "name": "description",
-          "label": "Card Description"
+          "label": "Award Text"
         }
       ]
     }
