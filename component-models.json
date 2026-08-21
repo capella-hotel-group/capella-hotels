@@ -156,36 +156,66 @@
     ]
   },
   {
-    "id": "awards-carousel",
+    "id": "awards-list",
     "fields": [
       {
         "component": "text",
         "name": "title",
         "valueType": "string",
-        "label": "Carousel Title"
+        "label": "Main Section Title",
+        "required": true
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "valueType": "string",
+        "label": "Section Description",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "cta",
+        "valueType": "string",
+        "label": "CTA Button Label"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "valueType": "string",
+        "label": "CTA Button URL"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "valueType": "boolean",
+        "value": false,
+        "label": "CTA Open in new tab"
       }
     ]
   },
   {
-    "id": "carousel-cards",
+    "id": "awards-list-item",
     "fields": [
       {
         "component": "reference",
         "valueType": "string",
         "name": "image",
-        "label": "Image"
+        "label": "Award Logo",
+        "required": true
       },
       {
         "component": "text",
         "valueType": "string",
-        "name": "alt",
-        "label": "Alt Text"
+        "name": "imageAlt",
+        "label": "Award Logo Alt Text",
+        "required": true
       },
       {
         "component": "text",
         "valueType": "string",
         "name": "title",
-        "label": "Card Title"
+        "label": "Award Text",
+        "required": true
       },
       {
         "component": "richtext",

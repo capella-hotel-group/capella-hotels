@@ -54,12 +54,14 @@
         "text-with-image",
         "hero-banner",
         "section-intro",
-        "awards-carousel",
+        "awards-list",
         "turneo-proxy-test",
         "dm-showcase",
         "newsletter-form",
         "culturist-carousel",
-        "destination-cards"
+        "destination-cards",
+        "filters-grid",
+        "offers-carousel"
       ]
     }
   ]

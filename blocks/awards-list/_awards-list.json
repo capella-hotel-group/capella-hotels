@@ -1,0 +1,117 @@
+{
+  "definitions": [
+    {
+      "title": "Awards List",
+      "id": "awards-list",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Awards List",
+              "model": "awards-list",
+              "filter": "awards-list",
+              "title":""
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Awards List Item",
+      "id": "awards-list-item",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Awards List Item",
+              "model": "awards-list-item"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "awards-list",
+      "fields": [
+        {
+          "component": "text",
+          "name": "title",
+          "valueType": "string",
+          "label": "Main Section Title",
+          "required": true
+        },
+        {
+          "component": "richtext",
+          "name": "description",
+          "valueType": "string",
+          "label": "Section Description",
+          "required": true
+        },
+        {
+          "component": "text",
+          "name": "cta",
+          "valueType": "string",
+          "label": "CTA Button Label"
+        },
+        {
+          "component": "aem-content",
+          "name": "cta_link",
+          "valueType": "string",
+          "label": "CTA Button URL"
+        },
+        {
+          "component": "boolean",
+          "name": "cta_openInNewTab",
+          "valueType": "boolean",
+          "value": false,
+          "label": "CTA Open in new tab"
+        }
+      ]
+    },
+    {
+      "id": "awards-list-item",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Award Logo",
+          "required": true
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "imageAlt",
+          "label": "Award Logo Alt Text",
+          "required": true
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Award Text",
+          "required": true
+        },
+        {
+          "component": "richtext",
+          "valueType": "string",
+          "name": "description",
+          "label": "Card Description"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "awards-list",
+      "components": [
+        "awards-list-item"
+      ]
+    }
+  ]
+}
+
