@@ -214,7 +214,8 @@
         "component": "richtext",
         "valueType": "string",
         "name": "description",
-        "label": "Award Text"
+        "label": "Award Text",
+        "required": true
       }
     ]
   },
