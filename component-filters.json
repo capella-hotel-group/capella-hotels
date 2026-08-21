@@ -67,13 +67,7 @@
     "components": [
       "destination-card-item"
     ]
-  },
-  {
-    "id": "destination-tabs",
-    "components": [
-      "destination-tabs-item"
-    ]
-  },
+  }
   {
     "id": "filters-grid",
     "components": [
