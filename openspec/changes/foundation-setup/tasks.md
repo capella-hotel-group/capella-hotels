@@ -26,15 +26,15 @@
 
 ## 5. Add new block without config edits (verification)
 
-- [ ] 5.1 Add a temporary test block at `src/blocks/foundation-smoke-test/foundation-smoke-test.ts` without editing `vite.config.ts` or `vite.config-editor.ts`; verify `npm run build` produces its output bundle automatically, then remove the temporary block
+- [x] 5.1 Add a temporary test block at `src/blocks/foundation-smoke-test/foundation-smoke-test.ts` without editing `vite.config.ts` or `vite.config-editor.ts`; verify `npm run build` produces its output bundle automatically, then remove the temporary block
 
 ## 6. Universal Editor JSON pipeline
 
-- [ ] 6.1 Move `models/_component-definition.json`, `models/_component-models.json`, `models/_component-filters.json` and the shared field fragments `_button.json`, `_image.json`, `_page.json`, `_section.json`, `_text.json`, `_title.json` into `src/models/`, keeping `src/models/` and `src/blocks/` as siblings (mirroring today's `models/`/`blocks/` relationship) so their relative and glob-based include paths keep resolving unchanged; verify their content is unchanged from the pre-move versions
-- [ ] 6.2 Update the `build:json:*` scripts in `package.json` to read fragments from `src/models/`; verify `npm run build:json` produces `component-definition.json`, `component-models.json`, and `component-filters.json` at the repo root
-- [ ] 6.3 Diff the newly generated root JSON files against the pre-migration versions; verify they are equivalent in content/shape
-- [ ] 6.4 Edit a fragment under `src/models/` and re-run `npm run build:json`; verify the edit is reflected in the corresponding root JSON file
-- [ ] 6.5 Introduce an intentionally invalid fragment JSON file temporarily and run `npm run build:json`; verify the command exits non-zero and the previously valid root JSON file is not overwritten, then revert the invalid fragment
+- [x] 6.1 Move `models/_component-definition.json`, `models/_component-models.json`, `models/_component-filters.json` and the shared field fragments `_button.json`, `_image.json`, `_page.json`, `_section.json`, `_text.json`, `_title.json` into `src/models/`, keeping `src/models/` and `src/blocks/` as siblings (mirroring today's `models/`/`blocks/` relationship) so their relative and glob-based include paths keep resolving unchanged; verify their content is unchanged from the pre-move versions
+- [x] 6.2 Update the `build:json:*` scripts in `package.json` to read fragments from `src/models/`; verify `npm run build:json` produces `component-definition.json`, `component-models.json`, and `component-filters.json` at the repo root
+- [x] 6.3 Diff the newly generated root JSON files against the pre-migration versions; verify they are equivalent in content/shape
+- [x] 6.4 Edit a fragment under `src/models/` and re-run `npm run build:json`; verify the edit is reflected in the corresponding root JSON file
+- [x] 6.5 Introduce an intentionally invalid fragment JSON file temporarily and run `npm run build:json`; verify the command exits non-zero and the previously valid root JSON file is not overwritten, then revert the invalid fragment
 
 ## 7. package.json scripts
 

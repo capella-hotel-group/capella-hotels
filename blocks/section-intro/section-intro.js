@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:29:57.867Z */
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:31:20.733Z */
 //#region src/blocks/section-intro/section-intro.ts
 function decorate(block) {
 	const rows = [...block.children];

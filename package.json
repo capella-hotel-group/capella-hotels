@@ -9,9 +9,9 @@
     "lint": "npm run lint:js && npm run lint:css",
     "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix",
     "build:json": "npm-run-all -p build:json:models build:json:definitions build:json:filters",
-    "build:json:models": "merge-json-cli -i \"models/_component-models.json\" -o \"component-models.json\"",
-    "build:json:definitions": "merge-json-cli -i \"models/_component-definition.json\" -o \"component-definition.json\"",
-    "build:json:filters": "merge-json-cli -i \"models/_component-filters.json\" -o \"component-filters.json\"",
+    "build:json:models": "merge-json-cli -i \"src/models/_component-models.json\" -o \"component-models.json\"",
+    "build:json:definitions": "merge-json-cli -i \"src/models/_component-definition.json\" -o \"component-definition.json\"",
+    "build:json:filters": "merge-json-cli -i \"src/models/_component-filters.json\" -o \"component-filters.json\"",
     "prepare": "husky"
   },
   "repository": {
