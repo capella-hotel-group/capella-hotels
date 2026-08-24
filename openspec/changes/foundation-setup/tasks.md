@@ -47,9 +47,9 @@
 
 - [x] 8.1 Add `typescript-eslint` and configure ESLint to lint `.ts` sources alongside the existing `eslint-plugin-xwalk` rules; verify `npm run lint` passes on the migrated codebase and fails when a rule is intentionally violated (then revert the violation)
 - [x] 8.2 Add Prettier configuration and a `format:check` script; verify `npm run format:check` passes on the migrated codebase and fails on an intentionally misformatted file (then revert)
-- [ ] 8.3 Add `lint-staged` configuration scoping lint/format checks to staged files; verify `npx lint-staged` runs successfully against a staged change
-- [ ] 8.4 Update the Husky pre-commit hook to run `lint-staged`; verify a commit with a failing staged file is blocked, and a commit with passing staged files succeeds
-- [ ] 8.5 Document the Conventional Commits requirement in `CONTRIBUTING.md`; verify the section is present and describes the expected commit message format
+- [x] 8.3 Add `lint-staged` configuration scoping lint/format checks to staged files; verify `npx lint-staged` runs successfully against a staged change
+- [x] 8.4 Update the Husky pre-commit hook to run `lint-staged`; verify a commit with a failing staged file is blocked, and a commit with passing staged files succeeds
+- [x] 8.5 Document the Conventional Commits requirement in `CONTRIBUTING.md`; verify the section is present and describes the expected commit message format
 
 ## 9. Final verification
 

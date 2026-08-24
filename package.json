@@ -23,6 +23,21 @@
     "build:json:filters": "merge-json-cli -i \"src/models/_component-filters.json\" -o \"component-filters.json\"",
     "prepare": "husky"
   },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,mjs}": [
+      "eslint --fix"
+    ],
+    "*.css": [
+      "stylelint --fix"
+    ],
+    "*.json": [
+      "eslint --fix"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/adobe/aem-boilerplate.git"

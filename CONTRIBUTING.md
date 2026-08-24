@@ -41,7 +41,22 @@ Each commit message that is not part of a pull request:
 * Should contain the issue ID like `#123`
 * Can contain the tag `[trivial]` for trivial changes that don't relate to an issue
 
+## Commit Message Format
 
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) format for commit messages:
+
+```
+<type>(<optional scope>): <description>
+```
+
+Common `<type>` values: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `build`. For example:
+
+```
+feat(newsletter-form): add hCaptcha support
+fix(header): correct mobile menu close behavior
+```
+
+A Husky pre-commit hook runs `lint-staged` (ESLint, Prettier, and Stylelint on staged files) before every commit.
 
 ## Coding Styleguides
 
