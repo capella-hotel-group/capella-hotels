@@ -12,11 +12,11 @@ export default defineConfig([
     ignores: [
       'dist/',
       'blocks/*/*.js',
+      'chunks/',
       'scripts/aem.js',
       'scripts/scripts.js',
       'scripts/delayed.js',
       'scripts/editor-support.js',
-      'scripts/vendor/',
       'scripts/dompurify.min.js',
       'package-lock.json',
       'helix-importer-ui',

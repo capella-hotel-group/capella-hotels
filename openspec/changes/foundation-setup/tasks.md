@@ -73,3 +73,17 @@ The first pass of this change (tasks 1-9) delivered a working TS/Vite toolchain.
 - [x] 10.8 Update `package.json` scripts/devDependencies to match the reference project's naming and versions (ESLint 9, flat config, `type: module`); verify `npm install`, `npm run build`, `npm run lint`, `npm run format:check`, and `npm run build:json` all succeed
 - [x] 10.9 Align `tsconfig.json` with the reference project's stricter compiler flags (`target`/`module: ES2022`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`) while keeping `strict: true` and `noUncheckedIndexedAccess` (stricter than the reference); verify `npx tsc --noEmit` passes after fixing any newly-surfaced violations
 - [x] 10.10 Final verification: run `npm run build`, `npm run build:json`, `npm run lint`, and `npm run format:check` from a clean state and confirm all four exit with status zero; diff the regenerated root JSON files against the pre-realignment versions to confirm no content drift
+
+## 11. Build pipeline parity with reference implementation
+
+The runtime build (`vite.config.ts`) still differed from the reference project's actual bundling behavior: unminified output, block CSS copied verbatim instead of running through Rollup, and hashed vendor-chunk paths. This task group closes that gap.
+
+- [x] 11.1 Remove `minify: false` from `vite.config.ts` and `vite.config-editor.ts` so production builds are minified (esbuild default), matching the reference project
+- [x] 11.2 Register each block's CSS (when present) as a sibling Rollup entry (`blocks/<name>/<name>--style`) instead of copying it verbatim, so block CSS is minified and receives the version banner like every other asset; add `styles/styles.css`, `styles/lazy-styles.css`, `styles/fonts.css` as real Rollup CSS entries for the same reason
+- [x] 11.3 Add an `assetFileNames` resolver that routes processed CSS back to its expected delivery path (`blocks/<name>/<name>.css`, `styles/<name>.css`), matching the reference project's routing logic
+- [x] 11.4 Rename the vendor/chunk output directory from `scripts/vendor/` to `chunks/`, and give known shared chunks (`aem-core`, `env`, `dompurify`) stable non-hashed filenames (`chunks/<name>.js`) while everything else keeps a content hash
+- [x] 11.5 Switch `preserveEntrySignatures` from `'strict'` to `'exports-only'` (dropping the earlier `treeshake: false` workaround) now that CSS/JS entries are fully declared; verify `scripts/aem.js` and `scripts/scripts.js` still re-export every name legacy/runtime code depends on
+- [x] 11.6 Set `modulePreload: false` and `cssCodeSplit: true` explicitly, matching the reference project
+- [x] 11.7 Handle the edge case where a block's source CSS has no real rules (only comments/whitespace, e.g. `fragment.css`) and Rollup therefore emits no asset for it: fall back to copying the source file verbatim so the AEM runtime's per-block CSS fetch doesn't 404
+- [x] 11.8 Update `eslint.config.js` ignores (`chunks/` instead of `scripts/vendor/`) and remove the now-orphaned `scripts/vendor/` output directory
+- [x] 11.9 Final verification: run `npm run build`, `npx tsc --noEmit`, `npm run lint`, `npm run format:check`, and `npm run build:json` (diffed against pre-change root JSON) and confirm all succeed; spot-check that per-block `index.html` authoring files are still copied

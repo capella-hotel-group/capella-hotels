@@ -19,7 +19,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(ROOT, 'scripts'),
     emptyOutDir: false,
-    minify: false,
     target: 'es2022',
     rollupOptions: {
       input: {
@@ -34,7 +33,7 @@ export default defineConfig({
         entryFileNames: '[name].js',
         format: 'es',
       },
-      preserveEntrySignatures: 'strict',
+      preserveEntrySignatures: 'exports-only',
     },
   },
   plugins: [versionBannerPlugin(getPackageVersion())],
