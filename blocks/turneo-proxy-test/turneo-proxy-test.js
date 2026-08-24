@@ -1,7 +1,7 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["scripts/vendor/dompurify.min-BxMOesXB.js","scripts/vendor/rolldown-runtime-FmiF8asD.js"])))=>i.map(i=>d[i]);
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:35:53.938Z */
-import { n as __toESM } from "../../scripts/vendor/rolldown-runtime-FmiF8asD.js";
-import { t as __vitePreload } from "../../scripts/vendor/preload-helper-BZ1SQCPK.js";
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["scripts/vendor/dompurify.min-C7MS4SKE.js","scripts/vendor/rolldown-runtime-B_Uza9ts.js"])))=>i.map(i=>d[i]);
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:45:39.054Z */
+import { n as __toESM } from "../../scripts/vendor/rolldown-runtime-B_Uza9ts.js";
+import { t as __vitePreload } from "../../scripts/vendor/preload-helper-DOm51mKg.js";
 //#region src/blocks/turneo-proxy-test/turneo-appbuilder-api.ts
 /**
 * Turneo App Builder API service module.
@@ -28,7 +28,7 @@ async function fetchExperiencesViaAppBuilder(params) {
 //#region src/blocks/turneo-proxy-test/turneo-proxy-test.ts
 /** Lazy-load DOMPurify (UMD sets window.DOMPurify as a side-effect). */
 async function loadDOMPurify() {
-	if (!window.DOMPurify) await __vitePreload(() => import("../../scripts/vendor/dompurify.min-BxMOesXB.js").then((m) => /* @__PURE__ */ __toESM(m.default)), __vite__mapDeps([0,1]));
+	if (!window.DOMPurify) await __vitePreload(() => import("../../scripts/vendor/dompurify.min-C7MS4SKE.js").then((m) => /* @__PURE__ */ __toESM(m.default)), __vite__mapDeps([0,1]));
 	return window.DOMPurify ?? null;
 }
 function buildError(error) {

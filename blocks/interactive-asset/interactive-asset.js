@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:35:53.938Z */
-import { r as getPublishBaseUrl } from "../../scripts/vendor/env-0ww78MbC.js";
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:45:39.054Z */
+import { r as getPublishBaseUrl } from "../../scripts/vendor/env-CjPLqzEn.js";
 //#region src/blocks/interactive-asset/interactive-asset.ts
 var TAB_LIST_QUERY = "/graphql/execute.json/capella-hotels/TabList";
 var PATH_KEY = "_path";

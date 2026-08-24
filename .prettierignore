@@ -1,0 +1,11 @@
+node_modules
+component-definition.json
+component-models.json
+component-filters.json
+scripts/aem.js
+scripts/scripts.js
+scripts/delayed.js
+scripts/vendor/
+scripts/dompurify.min.js
+blocks/*/*.js
+package-lock.json

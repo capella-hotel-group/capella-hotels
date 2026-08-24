@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:35:53.938Z */
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:45:39.054Z */
 import { loadSections } from "../../scripts/aem.js";
 import { decorateMain } from "../../scripts/scripts.js";
 //#region src/blocks/fragment/fragment.ts

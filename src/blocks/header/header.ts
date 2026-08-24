@@ -1,7 +1,10 @@
 import { getMetadata } from '@/app/aem.js';
 import { loadFragment } from '@/blocks/fragment/fragment.js';
 import {
-  moveInstrumentation, SUPPORTED_SITES, LANG_MAP, VALID_LANG_PRIMARIES,
+  moveInstrumentation,
+  SUPPORTED_SITES,
+  LANG_MAP,
+  VALID_LANG_PRIMARIES,
 } from '@/app/scripts.js';
 
 // Detect touch capability and add class to <html> for CSS hooks
@@ -29,7 +32,8 @@ function getFragmentBasePath(): string {
 
   const afterSite = siteIdx !== -1 ? segments.slice(siteIdx + 1) : segments;
   const rawLang = afterSite[0]?.toLowerCase() ?? '';
-  const isLang = rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0] ?? ''));
+  const isLang =
+    rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0] ?? ''));
   const lang = isLang ? rawLang : '';
 
   const parts = [site, lang].filter(Boolean);
@@ -51,11 +55,13 @@ function buildLangZone(sourceList: Element): HTMLDivElement {
 
   // Find the option whose href best matches the current page path
   const currentPath = window.location.pathname;
-  const activeItem = sourceItems.find((item) => {
-    const href = item.querySelector('a')?.getAttribute('href');
-    return href && currentPath.startsWith(href);
-  }) ?? sourceItems[0];
-  const activeLabel = (activeItem?.querySelector('a')?.textContent ?? activeItem?.textContent)?.trim() ?? 'ENGLISH';
+  const activeItem =
+    sourceItems.find((item) => {
+      const href = item.querySelector('a')?.getAttribute('href');
+      return href && currentPath.startsWith(href);
+    }) ?? sourceItems[0];
+  const activeLabel =
+    (activeItem?.querySelector('a')?.textContent ?? activeItem?.textContent)?.trim() ?? 'ENGLISH';
 
   const trigger = document.createElement('button');
   trigger.className = 'header-lang-trigger';
@@ -140,8 +146,12 @@ function buildLangZone(sourceList: Element): HTMLDivElement {
 function buildDropdown(srcItem: Element): HTMLDivElement {
   const label = srcItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
   const subUls = [...srcItem.querySelectorAll(':scope > ul')];
-  // eslint-disable-next-line no-console
-  if (subUls.length > 1) console.warn(`[header] "${label}": multiple nested lists detected — merge applied. Fix authoring in /nav.`);
+  if (subUls.length > 1) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[header] "${label}": multiple nested lists detected — merge applied. Fix authoring in /nav.`,
+    );
+  }
   const subItems = subUls.flatMap((ul) => [...ul.querySelectorAll(':scope > li')]);
 
   const wrapper = document.createElement('div');
@@ -193,8 +203,12 @@ function buildDropdown(srcItem: Element): HTMLDivElement {
     panels.append(panel);
 
     catBtn.addEventListener('click', () => {
-      categories.querySelectorAll('.header-nav-dropdown-cat').forEach((b) => b.classList.remove('is-active'));
-      panels.querySelectorAll('.header-nav-dropdown-panel').forEach((p) => p.classList.remove('is-active'));
+      categories
+        .querySelectorAll('.header-nav-dropdown-cat')
+        .forEach((b) => b.classList.remove('is-active'));
+      panels
+        .querySelectorAll('.header-nav-dropdown-panel')
+        .forEach((p) => p.classList.remove('is-active'));
       catBtn.classList.add('is-active');
       panel.classList.add('is-active');
     });
@@ -338,55 +352,61 @@ function buildMobilePanel(navItems: Element[], langList: Element): HTMLDivElemen
   // Track all accordion { toggle, list } for mutual exclusion via data-open
   const accordions: Accordion[] = [];
 
-  navItems.filter((li) => li.textContent?.trim()).forEach((srcItem) => {
-    const directP = srcItem.querySelector(':scope > p');
-    const srcA = directP?.querySelector('a') ?? srcItem.querySelector(':scope > a');
-    const label = (srcA?.textContent ?? directP?.textContent)?.trim() ?? '';
-    const subUls = [...srcItem.querySelectorAll(':scope > ul')];
+  navItems
+    .filter((li) => li.textContent?.trim())
+    .forEach((srcItem) => {
+      const directP = srcItem.querySelector(':scope > p');
+      const srcA = directP?.querySelector('a') ?? srcItem.querySelector(':scope > a');
+      const label = (srcA?.textContent ?? directP?.textContent)?.trim() ?? '';
+      const subUls = [...srcItem.querySelectorAll(':scope > ul')];
 
-    if (subUls.length) {
-      // Accordion toggle for items with sub-categories (e.g. Destinations)
-      const toggle = document.createElement('button');
-      toggle.className = 'header-mobile-nav-toggle';
-      toggle.textContent = label;
-      menuCard.append(toggle);
+      if (subUls.length) {
+        // Accordion toggle for items with sub-categories (e.g. Destinations)
+        const toggle = document.createElement('button');
+        toggle.className = 'header-mobile-nav-toggle';
+        toggle.textContent = label;
+        menuCard.append(toggle);
 
-      // Build flat list: category heading + links beneath it
-      const list = document.createElement('ul');
-      list.className = 'header-mobile-nav-list';
+        // Build flat list: category heading + links beneath it
+        const list = document.createElement('ul');
+        list.className = 'header-mobile-nav-list';
 
-      subUls.flatMap((ul) => [...ul.querySelectorAll(':scope > li')]).forEach((catItem) => {
-        const catLabel = catItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
-        const catLinks = [...(catItem.querySelector(':scope > ul')?.querySelectorAll('li') ?? [])];
+        subUls
+          .flatMap((ul) => [...ul.querySelectorAll(':scope > li')])
+          .forEach((catItem) => {
+            const catLabel = catItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
+            const catLinks = [
+              ...(catItem.querySelector(':scope > ul')?.querySelectorAll('li') ?? []),
+            ];
 
-        const heading = document.createElement('li');
-        heading.className = 'header-mobile-nav-list-heading';
-        heading.textContent = catLabel;
-        list.append(heading);
+            const heading = document.createElement('li');
+            heading.className = 'header-mobile-nav-list-heading';
+            heading.textContent = catLabel;
+            list.append(heading);
 
-        catLinks.forEach((srcLi) => {
-          const li = document.createElement('li');
-          const srcLiA = srcLi.querySelector('a');
-          const a = document.createElement('a');
-          a.href = srcLiA?.getAttribute('href') ?? '#';
-          a.textContent = (srcLiA?.textContent ?? srcLi.textContent)?.trim() ?? '';
-          if (srcLiA) moveInstrumentation(srcLiA, a);
-          li.append(a);
-          list.append(li);
-        });
-      });
+            catLinks.forEach((srcLi) => {
+              const li = document.createElement('li');
+              const srcLiA = srcLi.querySelector('a');
+              const a = document.createElement('a');
+              a.href = srcLiA?.getAttribute('href') ?? '#';
+              a.textContent = (srcLiA?.textContent ?? srcLi.textContent)?.trim() ?? '';
+              if (srcLiA) moveInstrumentation(srcLiA, a);
+              li.append(a);
+              list.append(li);
+            });
+          });
 
-      accordions.push({ toggle, list });
-      panel.append(list);
-    } else {
-      // Plain link
-      const a = document.createElement('a');
-      a.className = 'header-mobile-nav-link';
-      a.href = srcA?.getAttribute('href') ?? '#';
-      a.textContent = label;
-      menuCard.append(a);
-    }
-  });
+        accordions.push({ toggle, list });
+        panel.append(list);
+      } else {
+        // Plain link
+        const a = document.createElement('a');
+        a.className = 'header-mobile-nav-link';
+        a.href = srcA?.getAttribute('href') ?? '#';
+        a.textContent = label;
+        menuCard.append(a);
+      }
+    });
 
   // Languages accordion
   const langToggle = document.createElement('button');
@@ -399,7 +419,9 @@ function buildMobilePanel(navItems: Element[], langList: Element): HTMLDivElemen
   [...langList.querySelectorAll('li')].forEach((srcItem) => {
     const li = document.createElement('li');
     li.textContent = srcItem.textContent?.trim() ?? '';
-    li.addEventListener('click', () => { langUl.dataset.open = 'false'; });
+    li.addEventListener('click', () => {
+      langUl.dataset.open = 'false';
+    });
     langUl.append(li);
   });
 
@@ -411,7 +433,9 @@ function buildMobilePanel(navItems: Element[], langList: Element): HTMLDivElemen
     toggle.addEventListener('click', () => {
       const isOpen = list.dataset.open === 'true';
       // Close all
-      accordions.forEach(({ list: l }) => { l.dataset.open = 'false'; });
+      accordions.forEach(({ list: l }) => {
+        l.dataset.open = 'false';
+      });
       // Open this one if it was closed
       if (!isOpen) list.dataset.open = 'true';
     });
@@ -423,11 +447,14 @@ function buildMobilePanel(navItems: Element[], langList: Element): HTMLDivElemen
   // Close button
   const closeBtn = document.createElement('button');
   closeBtn.className = 'header-mobile-close';
-  closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 14"><polyline points="38.7,12.7 20,1.5 1.3,12.7" fill="none" stroke="#242F3A" stroke-width="1.75"/></svg>';
+  closeBtn.innerHTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 14"><polyline points="38.7,12.7 20,1.5 1.3,12.7" fill="none" stroke="#242F3A" stroke-width="1.75"/></svg>';
   closeBtn.setAttribute('aria-label', 'Close navigation menu');
   closeBtn.addEventListener('click', () => {
     panel.classList.remove('is-open');
-    accordions.forEach(({ list: l }) => { l.dataset.open = 'false'; });
+    accordions.forEach(({ list: l }) => {
+      l.dataset.open = 'false';
+    });
     document.body.style.overflow = '';
   });
 
@@ -450,14 +477,19 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : null;
   const hide = () => {
-    const headerEl = (block.closest('header') ?? block.closest('.header-wrapper') ?? block) as HTMLElement;
+    const headerEl = (block.closest('header') ??
+      block.closest('.header-wrapper') ??
+      block) as HTMLElement;
     headerEl.style.display = 'none';
   };
 
   // Option 1: metadata-driven path. Option 2: compute from URL site + lang segments.
   let fragment = navPath ? await loadFragment(navPath) : null;
   if (!fragment) fragment = await loadFragment(`${getFragmentBasePath()}/nav`);
-  if (!fragment) { hide(); return; }
+  if (!fragment) {
+    hide();
+    return;
+  }
 
   const sections = [...fragment.children];
 
@@ -465,7 +497,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // AEM EDS wraps section children in div.default-content-wrapper — target that first.
   const navContent = sections[0]?.querySelector('.default-content-wrapper') ?? sections[0];
   const topLevelItems = navContent
-    ? [...navContent.querySelectorAll(':scope > ul')].flatMap((ul) => [...ul.querySelectorAll(':scope > li')])
+    ? [...navContent.querySelectorAll(':scope > ul')].flatMap((ul) => [
+        ...ul.querySelectorAll(':scope > li'),
+      ])
     : [];
   const langList = topLevelItems[0]?.querySelector('ul'); // nested ul inside Languages li
   const navItems = topLevelItems.slice(1); // Destinations, Experiences, …
@@ -495,14 +529,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // Use the active language root path so the link stays in the current locale.
   // Fallback: URL-derived base path (/{site}/{lang}/) if langList hrefs don't match.
   const currentPath = window.location.pathname;
-  const activeLangHref = [...langList.querySelectorAll('li a')]
-    .map((a) => a.getAttribute('href'))
-    .filter((href): href is string => !!href)
-    .find((href) => currentPath.startsWith(href))
-    ?? `${getFragmentBasePath()}/`;
+  const activeLangHref =
+    [...langList.querySelectorAll('li a')]
+      .map((a) => a.getAttribute('href'))
+      .filter((href): href is string => !!href)
+      .find((href) => currentPath.startsWith(href)) ?? `${getFragmentBasePath()}/`;
 
   const emblemImg = document.createElement('img');
-  emblemImg.src = (logoPicture?.querySelector('img')?.src) ?? '/icons/capella-emblem.svg';
+  emblemImg.src = logoPicture?.querySelector('img')?.src ?? '/icons/capella-emblem.svg';
   emblemImg.alt = 'Capella Hotels — Home';
   const emblem = document.createElement('a');
   emblem.className = 'header-emblem';

@@ -1,2 +1,10 @@
 helix-importer-ui
 dompurify.min.js
+*.min.js
+
+# Vite build output (generated from src/, not hand-authored)
+scripts/aem.js
+scripts/scripts.js
+scripts/delayed.js
+scripts/vendor/
+blocks/*/*.js
