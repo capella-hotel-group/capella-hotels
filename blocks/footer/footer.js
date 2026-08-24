@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:24:10.299Z */
-import { l as getMetadata } from "../../scripts/vendor/aem-DT0e_OxR.js";
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:29:57.867Z */
+import { getMetadata } from "../../scripts/aem.js";
 import { LANG_MAP, SUPPORTED_SITES, VALID_LANG_PRIMARIES, moveInstrumentation } from "../../scripts/scripts.js";
 import { loadFragment } from "../fragment/fragment.js";
 //#region src/blocks/footer/footer.ts

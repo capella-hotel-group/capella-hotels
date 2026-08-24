@@ -12,8 +12,14 @@
  *   <meta name="turneo-dynamic-mock"  content="false">
  */
 
-function getTurneoConfig() {
-  const get = (name) => document.head.querySelector(`meta[name="${name}"]`)?.content ?? '';
+interface TurneoConfig {
+  baseUrl: string;
+  apiKey: string;
+  dynamicMock: string;
+}
+
+function getTurneoConfig(): TurneoConfig {
+  const get = (name: string) => document.head.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content ?? '';
   return {
     baseUrl: get('turneo-api-base-url') || 'https://api.turneo.com/v1',
     apiKey: get('turneo-api-key'),
@@ -23,11 +29,8 @@ function getTurneoConfig() {
 
 /**
  * Fetch a list of experiences.
- *
- * @param {object} [params]
- * @returns {Promise<Array>}
  */
-export async function fetchExperiences(params) {
+export async function fetchExperiences(params?: Record<string, string | undefined>): Promise<unknown[]> {
   const config = getTurneoConfig();
   const url = new URL(`${config.baseUrl}/experiences`);
 
@@ -55,14 +58,7 @@ export async function fetchExperiences(params) {
   return data.results;
 }
 
-/**
- * @param {string} experienceId
- * @param {string} rateId
- * @param {string} from
- * @param {string} until
- * @returns {Promise<object|null>}
- */
-async function fetchRateDetail(experienceId, rateId, from, until) {
+async function fetchRateDetail(experienceId: string, rateId: string, from: string, until: string): Promise<unknown | null> {
   const config = getTurneoConfig();
   const url = new URL(
     `${config.baseUrl}/experiences/${experienceId}/rates/${rateId}`,
@@ -87,13 +83,16 @@ async function fetchRateDetail(experienceId, rateId, from, until) {
   return response.json();
 }
 
+export interface FetchRatesParams {
+  experienceId: string;
+  from: string;
+  until: string;
+}
+
 /**
  * Fetch rates for a given experience.
- *
- * @param {object} params
- * @returns {Promise<Array>}
  */
-export async function fetchRates(params) {
+export async function fetchRates(params: FetchRatesParams): Promise<unknown[]> {
   const config = getTurneoConfig();
 
   // Step 1: list all rate IDs
@@ -120,12 +119,12 @@ export async function fetchRates(params) {
   const listData = await listResponse.json();
 
   // Extract rate IDs from nested array structure [[["id1"]], [["id2"]]]
-  const rateIds = [];
+  const rateIds: string[] = [];
   if (listData.results) {
-    listData.results.forEach((group) => {
+    (listData.results as unknown[][][]).forEach((group) => {
       group.forEach((inner) => {
         inner.forEach((id) => {
-          if (id) rateIds.push(id);
+          if (id) rateIds.push(String(id));
         });
       });
     });

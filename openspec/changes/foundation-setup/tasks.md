@@ -19,10 +19,10 @@
 
 ## 4. Block migration
 
-- [ ] 4.1 For each existing block under `blocks/<name>/` (e.g. `cards`, `columns`, `hero`, `header`, `footer`, etc.), create `src/blocks/<name>/<name>.ts` ported from `<name>.js` with type annotations, and move the block's CSS and its `_<name>.json` model fragment alongside it as one unit; verify each block builds via `npm run build` and its output bundle is emitted without editing `vite.config.ts`
-- [ ] 4.2 For blocks with additional helper `.js` files beyond the main entry (e.g. `turneo-proxy-test`'s `turneo-api.js`, `turneo-appbuilder-api.js`, `turneo-proxy-api.js`), port them to `.ts` and import them from the block's entry file; verify the build does NOT emit separate output bundles for the helper files
-- [ ] 4.3 Verify each migrated block renders and behaves correctly on a local `aem up` page containing that block, with no console errors
-- [ ] 4.4 Remove the corresponding legacy root-level `blocks/<name>/<name>.js` source file once its `src/` counterpart is verified working, keeping only the build output at that path
+- [x] 4.1 For each existing block under `blocks/<name>/` (e.g. `cards`, `columns`, `hero`, `header`, `footer`, etc.), create `src/blocks/<name>/<name>.ts` ported from `<name>.js` with type annotations, and move the block's CSS and its `_<name>.json` model fragment alongside it as one unit; verify each block builds via `npm run build` and its output bundle is emitted without editing `vite.config.ts`
+- [x] 4.2 For blocks with additional helper `.js` files beyond the main entry (e.g. `turneo-proxy-test`'s `turneo-api.js`, `turneo-appbuilder-api.js`, `turneo-proxy-api.js`), port them to `.ts` and import them from the block's entry file; verify the build does NOT emit separate output bundles for the helper files
+- [x] 4.3 Verify each migrated block renders and behaves correctly on a local `aem up` page containing that block, with no console errors
+- [x] 4.4 Remove the corresponding legacy root-level `blocks/<name>/<name>.js` source file once its `src/` counterpart is verified working, keeping only the build output at that path
 
 ## 5. Add new block without config edits (verification)
 

@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:24:10.299Z */
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:29:57.867Z */
 import { moveInstrumentation } from "../../scripts/scripts.js";
 //#region src/blocks/destination-cards/destination-cards.ts
 function textFromCell(cell) {

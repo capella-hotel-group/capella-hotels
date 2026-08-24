@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:24:10.299Z */
-import { n as createOptimizedPicture } from "../../scripts/vendor/aem-DT0e_OxR.js";
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:29:57.867Z */
+import { createOptimizedPicture } from "../../scripts/aem.js";
 import { moveInstrumentation } from "../../scripts/scripts.js";
 //#region src/blocks/cards/cards.ts
 function decorate(block) {

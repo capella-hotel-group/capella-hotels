@@ -10,27 +10,33 @@
 // eslint-disable-next-line max-len
 const APP_BUILDER_URL = 'https://3599957-turneoapp-stage.adobeioruntime.net/api/v1/web/turneo-app/get-experience-data.json';
 
+export interface TurneoExperience {
+  id: string;
+  title: string;
+  description: string;
+  highlight: string;
+  image: string;
+  duration: string;
+  dateRange: { availableFrom: string | null; from: string; until: string };
+  address: string;
+  fullLocation: { city: string; country: string; latitude: number; longitude: number };
+  included: string[];
+  minPrice: { amount: number; currency: string; unit: string };
+  maxPrice: { amount: number; currency: string; unit: string };
+}
+
+export interface AppBuilderParams {
+  storeId?: string;
+  country?: string;
+  from?: string;
+  until?: string;
+}
+
 /**
  * Fetch experiences from the App Builder runtime.
  * All params are optional and can be combined freely.
- *
- * @param {{ storeId?: string, country?: string, from?: string, until?: string }} [params]
- * @returns {Promise<Array<{
- *   id: string,
- *   title: string,
- *   description: string,
- *   highlight: string,
- *   image: string,
- *   duration: string,
- *   dateRange: { availableFrom: string|null, from: string, until: string },
- *   address: string,
- *   fullLocation: { city: string, country: string, latitude: number, longitude: number },
- *   included: string[],
- *   minPrice: { amount: number, currency: string, unit: string },
- *   maxPrice: { amount: number, currency: string, unit: string },
- * }>>}
  */
-export async function fetchExperiencesViaAppBuilder(params) {
+export async function fetchExperiencesViaAppBuilder(params?: AppBuilderParams): Promise<TurneoExperience[]> {
   const url = new URL(APP_BUILDER_URL);
 
   if (params) {

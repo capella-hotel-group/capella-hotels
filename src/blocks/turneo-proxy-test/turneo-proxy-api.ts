@@ -7,8 +7,8 @@
  *   <meta name="turneo-proxy-base-url" content="https://your-proxy.example.com/api/turneo">
  */
 
-function getTurneoProxyConfig() {
-  const baseUrl = document.head.querySelector('meta[name="turneo-proxy-base-url"]')?.content ?? '';
+function getTurneoProxyConfig(): { baseUrl: string } {
+  const baseUrl = document.head.querySelector<HTMLMetaElement>('meta[name="turneo-proxy-base-url"]')?.content ?? '';
   return { baseUrl };
 }
 
@@ -16,11 +16,8 @@ function getTurneoProxyConfig() {
 
 /**
  * Search experiences via proxy.
- *
- * @param {object} [params]
- * @returns {Promise<Array>}
  */
-export async function fetchExperiencesViaProxy(params) {
+export async function fetchExperiencesViaProxy(params?: Record<string, string | undefined>): Promise<unknown[]> {
   const { baseUrl } = getTurneoProxyConfig();
   const url = new URL(`${baseUrl}/experiences`);
 
@@ -44,13 +41,16 @@ export async function fetchExperiencesViaProxy(params) {
 
 // ─── Rates ────────────────────────────────────────────────────────────────────
 
+export interface ProxyRatesParams {
+  experienceId: string;
+  from: string;
+  until: string;
+}
+
 /**
  * Get rates for an experience via proxy.
- *
- * @param {{ experienceId: string, from: string, until: string }} params
- * @returns {Promise<Array>}
  */
-export async function fetchRatesViaProxy(params) {
+export async function fetchRatesViaProxy(params: ProxyRatesParams): Promise<unknown> {
   const { baseUrl } = getTurneoProxyConfig();
   const url = new URL(`${baseUrl}/experiences/${params.experienceId}/rates`);
   url.searchParams.set('from', params.from);
@@ -71,13 +71,8 @@ export async function fetchRatesViaProxy(params) {
 
 /**
  * Get availabilities for an experience via proxy.
- *
- * @param {string} experienceId
- * @param {string} from
- * @param {string} until
- * @returns {Promise<unknown>}
  */
-export async function fetchAvailabilitiesViaProxy(experienceId, from, until) {
+export async function fetchAvailabilitiesViaProxy(experienceId: string, from: string, until: string): Promise<unknown> {
   const { baseUrl } = getTurneoProxyConfig();
   const url = new URL(`${baseUrl}/experiences/${experienceId}/availabilities`);
   url.searchParams.set('from', from);
@@ -96,13 +91,15 @@ export async function fetchAvailabilitiesViaProxy(experienceId, from, until) {
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
+export interface CreateOrderParams {
+  travelerInformation: Record<string, unknown>;
+  bookings: unknown[];
+}
+
 /**
  * Create a new order via proxy.
- *
- * @param {{ travelerInformation: object, bookings: Array }} params
- * @returns {Promise<object>}
  */
-export async function createOrderViaProxy(params) {
+export async function createOrderViaProxy(params: CreateOrderParams): Promise<unknown> {
   const { baseUrl } = getTurneoProxyConfig();
 
   const response = await fetch(`${baseUrl}/orders`, {
@@ -123,11 +120,8 @@ export async function createOrderViaProxy(params) {
 
 /**
  * Confirm an order via proxy.
- *
- * @param {string} orderId
- * @returns {Promise<object>}
  */
-export async function confirmOrderViaProxy(orderId) {
+export async function confirmOrderViaProxy(orderId: string): Promise<unknown> {
   const { baseUrl } = getTurneoProxyConfig();
 
   const response = await fetch(`${baseUrl}/orders/${orderId}/confirm`, {
@@ -144,12 +138,8 @@ export async function confirmOrderViaProxy(orderId) {
 
 /**
  * Add a booking to an existing order via proxy.
- *
- * @param {string} orderId
- * @param {object} booking
- * @returns {Promise<object>}
  */
-export async function addBookingViaProxy(orderId, booking) {
+export async function addBookingViaProxy(orderId: string, booking: Record<string, unknown>): Promise<unknown> {
   const { baseUrl } = getTurneoProxyConfig();
 
   const response = await fetch(`${baseUrl}/orders/${orderId}/add`, {
@@ -170,12 +160,8 @@ export async function addBookingViaProxy(orderId, booking) {
 
 /**
  * Remove a booking from an order via proxy.
- *
- * @param {string} orderId
- * @param {string} bookingId
- * @returns {Promise<object>}
  */
-export async function removeBookingViaProxy(orderId, bookingId) {
+export async function removeBookingViaProxy(orderId: string, bookingId: string): Promise<unknown> {
   const { baseUrl } = getTurneoProxyConfig();
 
   const response = await fetch(`${baseUrl}/orders/${orderId}/remove`, {
