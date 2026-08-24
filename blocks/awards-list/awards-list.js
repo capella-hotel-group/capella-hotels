@@ -63,6 +63,8 @@ function buildAward(row) {
 
 export default function decorate(block) {
   const rows = [...block.children];
+  const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent.trim();
+  if (blockId) block.id = blockId;
   const title = textFromCell(rows[0]);
   const description = rows[1]?.firstElementChild;
   const cta = buildCta(rows[2]?.firstElementChild);
