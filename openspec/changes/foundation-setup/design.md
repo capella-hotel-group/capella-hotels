@@ -5,16 +5,18 @@ See [proposal.md](proposal.md) - Why. Today `blocks/`, `scripts/`, `styles/`, `m
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Single source of truth under `src/`, compiled by Vite into the existing AEM EDS root-level delivery layout (`scripts/`, `styles/`, block folders as build output).
 - Zero manual config edits when adding a new block (`src/blocks/<name>/<name>.ts`).
 - Keep `component-definition.json`, `component-models.json`, `component-filters.json` byte-shape-compatible with today's merge output.
 - Pre-commit enforcement that is fast enough not to disrupt normal commit flow (lint-staged scoped to staged files only).
 
 **Non-Goals:**
+
 - Rewriting block business logic or visual behavior - this is a toolchain/type migration, not a feature change.
 - Migrating away from `aem up` / Adobe Helix CLI for local dev.
 - Introducing a test runner or test suite (out of scope for this change).
-- Changing the UE JSON output *content*, only its build source location.
+- Changing the UE JSON output _content_, only its build source location.
 
 ## Decisions
 
@@ -47,3 +49,14 @@ See [proposal.md](proposal.md) - Why. Today `blocks/`, `scripts/`, `styles/`, `m
 5. Update `package.json` scripts (`start`, `build`, `tsc:watch`) to the new toolchain; remove now-superseded legacy scripts.
 6. Add ESLint TS config, Prettier config, `lint-staged`, and the Husky pre-commit hook last, once source has moved, so hooks lint the final file set.
 7. Rollback strategy: each step is a separate commit; reverting to the prior commit restores the plain-JS root-level setup since legacy root files are removed only after their `src/` counterpart is verified working.
+
+## Addendum: Realignment with reference implementation
+
+After this change was first archived, `capella-hotel-group-poc` — a sibling project's more mature evolution of the same TS/Vite toolchain — was reviewed as a reference and this change was reopened (task group 10) to realign with it:
+
+- **`config.ts` + `vite.helpers.ts` instead of one `vite.shared.ts`**: separating path constants from entry-discovery/plugin logic mirrors the reference project's structure and keeps each file single-purpose.
+- **Content-hashed version banners**: banners are now derived from each chunk/asset's own content hash instead of `Date.now()`, so rebuilding without source changes no longer produces a spurious diff in every output file.
+- **`vite.config-editor.ts` builds only `editor-support.ts`**: the Universal Editor integration script is the only thing that needs a dedicated build; it references the runtime's `scripts/scripts.js` / `scripts/aem.js` as externals instead of re-running the entire block+app build a second time in an `editor` mode. This matches the actual AEM EDS/UE contract (`scripts/editor-support.js` is a small inject script, not a parallel app build) and was the reference project's approach. `scripts/editor-support.js` and `scripts/editor-support-rte.js` were ported to TypeScript under `src/app/editor/` to make this possible.
+- **ESLint flat config, Prettier config file, no Stylelint**: replaced the legacy `.eslintrc.js` (airbnb-base + babel parser) with `eslint.config.js` (ESLint 9, `@eslint/js` + `typescript-eslint` + `eslint-plugin-xwalk` + `eslint-config-prettier`), replaced `.prettierrc.json` with `prettier.config.js`, and dropped Stylelint in favor of Prettier-only CSS formatting — all matching the reference project's tooling. The project-specific `xwalk/max-cells` override for `newsletter-form` was preserved since it reflects this project's own content model, not the reference project's.
+- **Stricter `tsconfig.json`**: adopted the reference project's `target`/`module: ES2022` and additional strictness flags (`noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`) while keeping this project's `strict: true` and `noUncheckedIndexedAccess`, which are stricter than the reference project's `strict: false` (+ individual flags) approach.
+- **Not carried over**: the reference project's `src/configs`/`src/utils` split for environment config, its npm-package-based DOMPurify usage, and its watch-mode `dist/` + root-sync build strategy were left as-is/out of scope — none were required to make the toolchain realignment coherent, and changing them carried migration risk disproportionate to the benefit.

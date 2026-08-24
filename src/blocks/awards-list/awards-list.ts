@@ -7,7 +7,9 @@ function textFromCell(cell?: Element | null): string {
 function getCtaFields(cell?: Element | null) {
   const elements = [...(cell?.children || [])];
   const link = cell?.querySelector('a');
-  const label = elements.find((element) => !element.querySelector('a') && textFromCell(element) !== 'true' && textFromCell(element) !== 'false');
+  const label = elements.find(
+    (element) => !element.querySelector('a') && textFromCell(element) !== 'true' && textFromCell(element) !== 'false',
+  );
   const openInNewTab = elements.some((element) => textFromCell(element).toLowerCase() === 'true');
   return { label: textFromCell(label), href: link?.getAttribute('href') || '', openInNewTab };
 }
@@ -93,10 +95,13 @@ export default function decorate(block: HTMLElement): void {
 
   const grid = document.createElement('ul');
   grid.className = 'awards-list-grid';
-  rows.slice(3).filter((row) => row.querySelector(':scope > div')).forEach((row) => {
-    const award = buildAward(row);
-    if (award) grid.append(award);
-  });
+  rows
+    .slice(3)
+    .filter((row) => row.querySelector(':scope > div'))
+    .forEach((row) => {
+      const award = buildAward(row);
+      if (award) grid.append(award);
+    });
 
   const wrapper = document.createElement('div');
   wrapper.className = 'awards-list-content';

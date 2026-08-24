@@ -1,6 +1,6 @@
-import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '../../../scripts/env.js';
-import { getPageLang } from '@/app/scripts.js';
 import type { HCaptchaApi } from '@/types/hcaptcha.js';
+import { getPageLang } from '@/app/scripts.js';
+import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '../../../scripts/env.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
@@ -173,7 +173,6 @@ async function fetchRawList(path: string): Promise<unknown[]> {
     if (!response.ok) return [];
     return collectRawItems(await response.json());
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Newsletter list fetch error:', path, error);
     return [];
   }
@@ -183,9 +182,7 @@ async function fetchRawList(path: string): Promise<unknown[]> {
  * Fetches dropdown options from a Content Fragment as { value, label } pairs.
  */
 async function fetchOptions(path: string): Promise<NormalizedOption[]> {
-  return (await fetchRawList(path))
-    .map(normalizeOption)
-    .filter((opt): opt is NormalizedOption => !!opt && !!opt.value);
+  return (await fetchRawList(path)).map(normalizeOption).filter((opt): opt is NormalizedOption => !!opt && !!opt.value);
 }
 
 interface NormalizedProperty {
@@ -223,7 +220,10 @@ function normalizeProperty(item: unknown): NormalizedProperty | null {
   // Only `code` is mandatory now (it is the submitted value). `name` is optional.
   if (!code) return null;
   const keysStr = Array.isArray(keysRaw) ? keysRaw.join(' ') : String(keysRaw ?? name);
-  const keys = keysStr.toLowerCase().split(/[,\s/_-]+/).filter(Boolean);
+  const keys = keysStr
+    .toLowerCase()
+    .split(/[,\s/_-]+/)
+    .filter(Boolean);
   if (!keys.length) return null;
   return { keys, name: String(name).trim(), code: String(code).trim() };
 }
@@ -232,9 +232,7 @@ function normalizeProperty(item: unknown): NormalizedProperty | null {
  * Fetches the location → Property/Source mapping from a Content Fragment.
  */
 async function fetchProperties(path: string): Promise<NormalizedProperty[]> {
-  return (await fetchRawList(path))
-    .map(normalizeProperty)
-    .filter((p): p is NormalizedProperty => !!p);
+  return (await fetchRawList(path)).map(normalizeProperty).filter((p): p is NormalizedProperty => !!p);
 }
 
 /**
@@ -273,9 +271,11 @@ function resolveFallbackCode(): string {
  * `hcaptcha-site-key` <meta> tag when no environment key is configured.
  */
 function getHCaptchaSiteKey(): string {
-  return getEnvHCaptchaSiteKey()
-    || document.head.querySelector<HTMLMetaElement>('meta[name="hcaptcha-site-key"]')?.content?.trim()
-    || '';
+  return (
+    getEnvHCaptchaSiteKey() ||
+    document.head.querySelector<HTMLMetaElement>('meta[name="hcaptcha-site-key"]')?.content?.trim() ||
+    ''
+  );
 }
 
 // Single shared promise so the hCaptcha API script is loaded at most once, even
@@ -313,7 +313,11 @@ interface CaptchaController {
  * On any failure the submit button is left enabled so the form still works —
  * server-side verification remains the source of truth.
  */
-async function setupCaptcha(container: HTMLElement, siteKey: string, submitBtn: HTMLButtonElement): Promise<CaptchaController> {
+async function setupCaptcha(
+  container: HTMLElement,
+  siteKey: string,
+  submitBtn: HTMLButtonElement,
+): Promise<CaptchaController> {
   let token = '';
   let widgetId: string | undefined;
   try {
@@ -334,7 +338,6 @@ async function setupCaptcha(container: HTMLElement, siteKey: string, submitBtn: 
       },
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Newsletter captcha error:', error);
     submitBtn.disabled = false;
     return { getToken: () => '', reset: () => {} };
@@ -414,7 +417,11 @@ function buildInput(name: string, type: string, placeholder?: string): HTMLInput
  * shows above the form. Closing is wired to: the ✕ button, a backdrop click,
  * and the Escape key.
  */
-function buildModal(form: HTMLFormElement, triggerLabel: string, title: string): { overlay: HTMLDivElement; trigger: HTMLButtonElement } {
+function buildModal(
+  form: HTMLFormElement,
+  triggerLabel: string,
+  title: string,
+): { overlay: HTMLDivElement; trigger: HTMLButtonElement } {
   const trigger = document.createElement('button');
   trigger.type = 'button';
   trigger.className = 'newsletter-trigger';
@@ -482,14 +489,16 @@ interface SubmitConfig {
  * application/x-www-form-urlencoded (so the Sling servlet's getParameter()
  * can read each field).
  */
-async function submitForm(form: HTMLFormElement, config: SubmitConfig, message: HTMLElement, submitBtn: HTMLButtonElement): Promise<void> {
+async function submitForm(
+  form: HTMLFormElement,
+  config: SubmitConfig,
+  message: HTMLElement,
+  submitBtn: HTMLButtonElement,
+): Promise<void> {
   // Gather all named fields the visitor entered, trimming whitespace so that
   // spaces-only values (which satisfy HTML5 `required`) are treated as empty.
   const payload: Record<string, string> = Object.fromEntries(
-    [...new FormData(form).entries()].map(([key, value]) => [
-      key,
-      typeof value === 'string' ? value.trim() : value,
-    ]),
+    [...new FormData(form).entries()].map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
   ) as Record<string, string>;
 
   // All fields are mandatory: if any is missing or blank, fail fast and do not
@@ -557,7 +566,7 @@ async function submitForm(form: HTMLFormElement, config: SubmitConfig, message: 
   } catch (error) {
     message.textContent = 'Sorry, something went wrong. Please try again.';
     message.classList.add('is-error');
-    // eslint-disable-next-line no-console
+
     console.error('Newsletter submission error:', error);
     // The used token is now invalid; force a fresh challenge before retrying.
     if (config.captcha) config.captcha.reset();
@@ -626,24 +635,17 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   nameRow.className = 'newsletter-name-row';
   nameRow.append(firstName, lastName);
 
-  const email = buildField(
-    'newsletter-email',
-    cfg.emailLabel,
-    buildInput('email', 'email', cfg.emailLabel),
-  );
+  const email = buildField('newsletter-email', cfg.emailLabel, buildInput('email', 'email', cfg.emailLabel));
 
-  const country = buildField(
-    'newsletter-country',
-    cfg.countryLabel,
-    buildSelect('country', 'Select', countryOptions),
-  );
+  const country = buildField('newsletter-country', cfg.countryLabel, buildSelect('country', 'Select', countryOptions));
 
   // Consent notice — an informational line (no checkbox). By submitting the
   // form the visitor agrees to this statement.
   const consentWrapper = document.createElement('div');
   consentWrapper.className = 'newsletter-consent';
-  consentWrapper.innerHTML = cfg.consentHTML
-    || 'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
+  consentWrapper.innerHTML =
+    cfg.consentHTML ||
+    'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
 
   // hCaptcha widget mount point. When a site key is configured the submit button
   // starts disabled and is enabled by the captcha callback (see setupCaptcha).
@@ -661,22 +663,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   message.className = 'newsletter-message';
   message.setAttribute('aria-live', 'polite');
 
-  form.append(
-    title,
-    salutation,
-    nameRow,
-    email,
-    country,
-    consentWrapper,
-    captchaWrapper,
-    submitBtn,
-    message,
-  );
+  form.append(title, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
 
   // Render the captcha (if configured) and gate the submit button on it.
-  const captcha = siteKey
-    ? await setupCaptcha(captchaWrapper, siteKey, submitBtn)
-    : null;
+  const captcha = siteKey ? await setupCaptcha(captchaWrapper, siteKey, submitBtn) : null;
 
   // ── Wire up submission ───────────────────────────────────────────────────
   form.addEventListener('submit', (event) => {

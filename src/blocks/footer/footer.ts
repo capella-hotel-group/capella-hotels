@@ -1,8 +1,6 @@
 import { getMetadata } from '@/app/aem.js';
 import { loadFragment } from '@/blocks/fragment/fragment.js';
-import {
-  moveInstrumentation, SUPPORTED_SITES, LANG_MAP, VALID_LANG_PRIMARIES,
-} from '@/app/scripts.js';
+import { moveInstrumentation, SUPPORTED_SITES, LANG_MAP, VALID_LANG_PRIMARIES } from '@/app/scripts.js';
 
 function getFragmentBasePath(): string {
   const segments = window.location.pathname.split('/').filter(Boolean);

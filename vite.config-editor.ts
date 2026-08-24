@@ -1,38 +1,41 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
-import {
-  getAllEntries,
-  manualChunks,
-  versionBanner,
-  cleanGeneratedOutputs,
-  copyBlockAssets,
-} from './vite.shared.ts';
+import { versionBannerPlugin, getPackageVersion } from './vite.helpers.ts';
+import { ROOT, SRC_DIR } from './config.ts';
 
-// Universal Editor build: same entries/aliasing as the runtime build, built in
-// 'editor' mode so blocks can branch on import.meta.env.MODE if UE-only behavior
-// is ever needed, without duplicating the entry-discovery/alias/vendor-chunk rules.
+const scriptsEntry = path.resolve(SRC_DIR, 'app', 'scripts.ts');
+const aemEntry = path.resolve(SRC_DIR, 'app', 'aem.ts');
+
+// Universal Editor build: builds only the UE integration script. It is emitted
+// to scripts/editor-support.js (the fixed path the Universal Editor inject
+// mechanism expects) and references the already-built scripts/scripts.js and
+// scripts/aem.js as externals instead of re-bundling the whole app + block set.
 export default defineConfig({
-  mode: 'editor',
   resolve: {
     alias: {
       '@': new URL('./src', import.meta.url).pathname,
     },
   },
   build: {
-    outDir: '.',
+    outDir: path.resolve(ROOT, 'scripts'),
     emptyOutDir: false,
     minify: false,
-    target: 'es2020',
+    target: 'es2022',
     rollupOptions: {
-      input: getAllEntries(),
-      treeshake: false,
-      preserveEntrySignatures: 'strict',
-      output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: 'scripts/vendor/[name]-[hash].js',
-        manualChunks,
-        banner: versionBanner(),
+      input: {
+        'editor-support': path.resolve(SRC_DIR, 'app', 'editor', 'editor-support.ts'),
       },
+      external: [scriptsEntry, aemEntry],
+      output: {
+        paths: {
+          [scriptsEntry]: '/scripts/scripts.js',
+          [aemEntry]: '/scripts/aem.js',
+        },
+        entryFileNames: '[name].js',
+        format: 'es',
+      },
+      preserveEntrySignatures: 'strict',
     },
   },
-  plugins: [cleanGeneratedOutputs(), copyBlockAssets()],
+  plugins: [versionBannerPlugin(getPackageVersion())],
 });

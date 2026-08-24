@@ -24,8 +24,9 @@ export default function decorate(block: HTMLElement): void {
   const ctaHref = ctaLinkEl?.getAttribute('href') || '';
   const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
   const ctaText = ctaTextEl?.textContent?.trim() || '';
-  const openInNewTabEl = [...(ctaGroup?.children || [])]
-    .find((element) => /^(true|false)$/i.test(element.textContent?.trim() ?? ''));
+  const openInNewTabEl = [...(ctaGroup?.children || [])].find((element) =>
+    /^(true|false)$/i.test(element.textContent?.trim() ?? ''),
+  );
   const openInNewTabValue = openInNewTabEl?.textContent?.trim().toLowerCase() || '';
   const openInNewTab = openInNewTabValue === 'true';
 

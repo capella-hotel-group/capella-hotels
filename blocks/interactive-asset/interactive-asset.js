@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
-import { r as getPublishBaseUrl } from "../../scripts/vendor/env-3zKwudH3.js";
+/*! v1.3.0 | h8db2992e */
+import { r as getPublishBaseUrl } from "../../scripts/vendor/env-Bvky9kZQ.js";
 //#region src/blocks/interactive-asset/interactive-asset.ts
 var TAB_LIST_QUERY = "/graphql/execute.json/capella-hotels/TabList";
 var PATH_KEY = "_path";
@@ -184,7 +184,7 @@ function renderModalContent(body, cfData, fallbackLabel) {
 		body.append(empty);
 	}
 }
-function positionHotspotModal(modal, panel, hotspotElement, block) {
+function positionHotspotModal(_modal, panel, hotspotElement, block) {
 	if (!hotspotElement || !panel) return;
 	if (!(window.innerWidth >= 900)) {
 		const mediaWrap = block.querySelector(".interactive-asset-media-wrap");

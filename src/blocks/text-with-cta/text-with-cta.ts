@@ -26,9 +26,7 @@ function openSubscriptionModal(): boolean {
 }
 
 export default function decorate(block: HTMLElement): void {
-  const [
-    titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow,
-  ] = [...block.children];
+  const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = [...block.children];
 
   const theme = textOf(themeRow);
   const ctaStyle = textOf(styleRow);

@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
-import { getMetadata } from "../../scripts/aem.js";
+/*! v1.3.0 | h71b636d5 */
+import { l as getMetadata } from "../../scripts/vendor/aem-core-TetbwNGB.js";
 import { LANG_MAP, SUPPORTED_SITES, VALID_LANG_PRIMARIES, moveInstrumentation } from "../../scripts/scripts.js";
 import { loadFragment } from "../fragment/fragment.js";
 //#region src/blocks/header/header.ts

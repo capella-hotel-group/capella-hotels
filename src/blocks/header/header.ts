@@ -1,11 +1,6 @@
 import { getMetadata } from '@/app/aem.js';
 import { loadFragment } from '@/blocks/fragment/fragment.js';
-import {
-  moveInstrumentation,
-  SUPPORTED_SITES,
-  LANG_MAP,
-  VALID_LANG_PRIMARIES,
-} from '@/app/scripts.js';
+import { moveInstrumentation, SUPPORTED_SITES, LANG_MAP, VALID_LANG_PRIMARIES } from '@/app/scripts.js';
 
 // Detect touch capability and add class to <html> for CSS hooks
 if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
@@ -32,8 +27,7 @@ function getFragmentBasePath(): string {
 
   const afterSite = siteIdx !== -1 ? segments.slice(siteIdx + 1) : segments;
   const rawLang = afterSite[0]?.toLowerCase() ?? '';
-  const isLang =
-    rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0] ?? ''));
+  const isLang = rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0] ?? ''));
   const lang = isLang ? rawLang : '';
 
   const parts = [site, lang].filter(Boolean);
@@ -60,8 +54,7 @@ function buildLangZone(sourceList: Element): HTMLDivElement {
       const href = item.querySelector('a')?.getAttribute('href');
       return href && currentPath.startsWith(href);
     }) ?? sourceItems[0];
-  const activeLabel =
-    (activeItem?.querySelector('a')?.textContent ?? activeItem?.textContent)?.trim() ?? 'ENGLISH';
+  const activeLabel = (activeItem?.querySelector('a')?.textContent ?? activeItem?.textContent)?.trim() ?? 'ENGLISH';
 
   const trigger = document.createElement('button');
   trigger.className = 'header-lang-trigger';
@@ -147,10 +140,7 @@ function buildDropdown(srcItem: Element): HTMLDivElement {
   const label = srcItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
   const subUls = [...srcItem.querySelectorAll(':scope > ul')];
   if (subUls.length > 1) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[header] "${label}": multiple nested lists detected — merge applied. Fix authoring in /nav.`,
-    );
+    console.warn(`[header] "${label}": multiple nested lists detected — merge applied. Fix authoring in /nav.`);
   }
   const subItems = subUls.flatMap((ul) => [...ul.querySelectorAll(':scope > li')]);
 
@@ -203,12 +193,8 @@ function buildDropdown(srcItem: Element): HTMLDivElement {
     panels.append(panel);
 
     catBtn.addEventListener('click', () => {
-      categories
-        .querySelectorAll('.header-nav-dropdown-cat')
-        .forEach((b) => b.classList.remove('is-active'));
-      panels
-        .querySelectorAll('.header-nav-dropdown-panel')
-        .forEach((p) => p.classList.remove('is-active'));
+      categories.querySelectorAll('.header-nav-dropdown-cat').forEach((b) => b.classList.remove('is-active'));
+      panels.querySelectorAll('.header-nav-dropdown-panel').forEach((p) => p.classList.remove('is-active'));
       catBtn.classList.add('is-active');
       panel.classList.add('is-active');
     });
@@ -375,9 +361,7 @@ function buildMobilePanel(navItems: Element[], langList: Element): HTMLDivElemen
           .flatMap((ul) => [...ul.querySelectorAll(':scope > li')])
           .forEach((catItem) => {
             const catLabel = catItem.querySelector(':scope > p')?.textContent?.trim() ?? '';
-            const catLinks = [
-              ...(catItem.querySelector(':scope > ul')?.querySelectorAll('li') ?? []),
-            ];
+            const catLinks = [...(catItem.querySelector(':scope > ul')?.querySelectorAll('li') ?? [])];
 
             const heading = document.createElement('li');
             heading.className = 'header-mobile-nav-list-heading';
@@ -477,9 +461,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : null;
   const hide = () => {
-    const headerEl = (block.closest('header') ??
-      block.closest('.header-wrapper') ??
-      block) as HTMLElement;
+    const headerEl = (block.closest('header') ?? block.closest('.header-wrapper') ?? block) as HTMLElement;
     headerEl.style.display = 'none';
   };
 
@@ -497,9 +479,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // AEM EDS wraps section children in div.default-content-wrapper — target that first.
   const navContent = sections[0]?.querySelector('.default-content-wrapper') ?? sections[0];
   const topLevelItems = navContent
-    ? [...navContent.querySelectorAll(':scope > ul')].flatMap((ul) => [
-        ...ul.querySelectorAll(':scope > li'),
-      ])
+    ? [...navContent.querySelectorAll(':scope > ul')].flatMap((ul) => [...ul.querySelectorAll(':scope > li')])
     : [];
   const langList = topLevelItems[0]?.querySelector('ul'); // nested ul inside Languages li
   const navItems = topLevelItems.slice(1); // Destinations, Experiences, …
@@ -511,13 +491,11 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const logoPicture = sections[2]?.querySelector('picture');
 
   if (!langList) {
-    // eslint-disable-next-line no-console
     console.warn('[header] Nav structure invalid: missing language list. Check /nav document.');
     hide();
     return;
   }
   if (!navItems.length) {
-    // eslint-disable-next-line no-console
     console.warn('[header] Nav structure invalid: no nav items found. Check /nav document.');
     hide();
     return;
@@ -556,14 +534,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const inner = document.createElement('div');
   inner.className = 'header-inner';
-  inner.append(
-    langZone,
-    buildNavZone(navItems),
-    emblem,
-    buildCtaZone(ctaAnchor),
-    mobileToggle,
-    mobileCta,
-  );
+  inner.append(langZone, buildNavZone(navItems), emblem, buildCtaZone(ctaAnchor), mobileToggle, mobileCta);
 
   block.replaceChildren(inner, mobilePanel);
 

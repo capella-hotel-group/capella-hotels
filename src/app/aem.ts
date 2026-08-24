@@ -48,31 +48,32 @@ declare global {
   }
 }
 
-/* eslint-env browser */
 const sampleRUM: SampleRUMFn = (checkpoint, data) => {
-  // eslint-disable-next-line max-len
-  const timeShift = () => (window.performance ? window.performance.now() : Date.now() - (window.hlx.rum?.firstReadTime ?? 0));
+  const timeShift = () =>
+    window.performance ? window.performance.now() : Date.now() - (window.hlx.rum?.firstReadTime ?? 0);
   try {
     window.hlx = window.hlx || ({} as Window['hlx']);
     if (!window.hlx.rum || !window.hlx.rum.collector) {
       sampleRUM.enhance = () => {};
       const params = new URLSearchParams(window.location.search);
       const { currentScript } = document;
-      const rate = params.get('rum')
-        || window.SAMPLE_PAGEVIEWS_AT_RATE
-        || params.get('optel')
-        || ((currentScript as HTMLScriptElement)?.dataset.rate);
-      const rateValue = ({
-        on: 1,
-        off: 0,
-        high: 10,
-        low: 1000,
-      } as Record<string, number>)[rate ?? ''];
+      const rate =
+        params.get('rum') ||
+        window.SAMPLE_PAGEVIEWS_AT_RATE ||
+        params.get('optel') ||
+        (currentScript as HTMLScriptElement)?.dataset.rate;
+      const rateValue = (
+        {
+          on: 1,
+          off: 0,
+          high: 10,
+          low: 1000,
+        } as Record<string, number>
+      )[rate ?? ''];
       const weight = rateValue !== undefined ? rateValue : 100;
       const id = window.hlx.rum?.id || crypto.randomUUID().slice(-9);
-      const isSelected = window.hlx.rum?.isSelected
-        || (weight > 0 && Math.random() * weight < 1);
-      // eslint-disable-next-line object-curly-newline, max-len
+      const isSelected = window.hlx.rum?.isSelected || (weight > 0 && Math.random() * weight < 1);
+
       window.hlx.rum = {
         weight,
         id,
@@ -131,7 +132,6 @@ const sampleRUM: SampleRUMFn = (checkpoint, data) => {
         sampleRUM.baseURL = sampleRUM.baseURL || new URL(window.RUM_BASE || '/', new URL('https://ot.aem.live'));
         sampleRUM.collectBaseURL = sampleRUM.collectBaseURL || sampleRUM.baseURL;
         sampleRUM.sendPing = (ck: string, time: number, pingData: RumData = {}) => {
-          // eslint-disable-next-line max-len, object-curly-newline
           const rumData = JSON.stringify({
             weight,
             id,
@@ -140,18 +140,14 @@ const sampleRUM: SampleRUMFn = (checkpoint, data) => {
             t: time,
             ...pingData,
           });
-          const urlParams = window.RUM_PARAMS
-            ? new URLSearchParams(window.RUM_PARAMS).toString() || ''
-            : '';
+          const urlParams = window.RUM_PARAMS ? new URLSearchParams(window.RUM_PARAMS).toString() || '' : '';
           const { href: url, origin } = new URL(
             `.rum/${weight}${urlParams ? `?${urlParams}` : ''}`,
             sampleRUM.collectBaseURL,
           );
-          const body = origin === window.location.origin
-            ? new Blob([rumData], { type: 'application/json' })
-            : rumData;
+          const body = origin === window.location.origin ? new Blob([rumData], { type: 'application/json' }) : rumData;
           navigator.sendBeacon(url, body);
-          // eslint-disable-next-line no-console
+
           console.debug(`ping:${ck}`, pingData);
         };
         sampleRUM.sendPing('top', timeShift());
@@ -205,7 +201,6 @@ function setup() {
         window.hlx.codeBasePath = scriptURL.href.split('/scripts/scripts.js')[0] ?? '';
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.log(error);
     }
   }
@@ -228,10 +223,10 @@ function init() {
 function toClassName(name: string): string {
   return typeof name === 'string'
     ? name
-      .toLowerCase()
-      .replace(/[^0-9a-z]/gi, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
+        .toLowerCase()
+        .replace(/[^0-9a-z]/gi, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
     : '';
 }
 
@@ -249,7 +244,6 @@ function toCamelCase(name: string): string {
  * @param {Element} block The block element
  * @returns {object} The block config
  */
-// eslint-disable-next-line import/prefer-default-export
 function readBlockConfig(block: Element): Record<string, unknown> {
   const config: Record<string, unknown> = {};
   block.querySelectorAll(':scope > div').forEach((row) => {
@@ -415,21 +409,7 @@ function decorateTemplateAndTheme(): void {
  * @param {Element} block the block element
  */
 function wrapTextNodes(block: Element): void {
-  const validWrappers = [
-    'P',
-    'PRE',
-    'UL',
-    'OL',
-    'PICTURE',
-    'TABLE',
-    'H1',
-    'H2',
-    'H3',
-    'H4',
-    'H5',
-    'H6',
-    'HR',
-  ];
+  const validWrappers = ['P', 'PRE', 'UL', 'OL', 'PICTURE', 'TABLE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HR'];
 
   const wrap = (el: Element) => {
     const wrapper = document.createElement('p');
@@ -437,9 +417,10 @@ function wrapTextNodes(block: Element): void {
     [...el.attributes]
       // move the instrumentation from the cell to the new paragraph, also keep the class
       // in case the content is a buttton and the cell the button-container
-      .filter(({ nodeName }) => nodeName === 'class'
-        || nodeName.startsWith('data-aue')
-        || nodeName.startsWith('data-richtext'))
+      .filter(
+        ({ nodeName }) =>
+          nodeName === 'class' || nodeName.startsWith('data-aue') || nodeName.startsWith('data-richtext'),
+      )
       .forEach(({ nodeName, nodeValue }) => {
         wrapper.setAttribute(nodeName, nodeValue ?? '');
         el.removeAttribute(nodeName);
@@ -449,13 +430,14 @@ function wrapTextNodes(block: Element): void {
 
   block.querySelectorAll(':scope > div > div').forEach((blockColumn) => {
     if (blockColumn.hasChildNodes()) {
-      const hasWrapper = !!blockColumn.firstElementChild
-        && validWrappers.some((tagName) => blockColumn.firstElementChild?.tagName === tagName);
+      const hasWrapper =
+        !!blockColumn.firstElementChild &&
+        validWrappers.some((tagName) => blockColumn.firstElementChild?.tagName === tagName);
       if (!hasWrapper) {
         wrap(blockColumn);
       } else if (
-        blockColumn.firstElementChild?.tagName === 'PICTURE'
-        && (blockColumn.children.length > 1 || !!blockColumn.textContent?.trim())
+        blockColumn.firstElementChild?.tagName === 'PICTURE' &&
+        (blockColumn.children.length > 1 || !!blockColumn.textContent?.trim())
       ) {
         wrap(blockColumn);
       }
@@ -479,19 +461,19 @@ function decorateButtons(element: Element): void {
           up.classList.add('button-container');
         }
         if (
-          up.childNodes.length === 1
-          && up.tagName === 'STRONG'
-          && twoup.childNodes.length === 1
-          && twoup.tagName === 'P'
+          up.childNodes.length === 1 &&
+          up.tagName === 'STRONG' &&
+          twoup.childNodes.length === 1 &&
+          twoup.tagName === 'P'
         ) {
           a.className = 'button primary';
           twoup.classList.add('button-container');
         }
         if (
-          up.childNodes.length === 1
-          && up.tagName === 'EM'
-          && twoup.childNodes.length === 1
-          && twoup.tagName === 'P'
+          up.childNodes.length === 1 &&
+          up.tagName === 'EM' &&
+          twoup.childNodes.length === 1 &&
+          twoup.tagName === 'P'
         ) {
           a.className = 'button secondary';
           twoup.classList.add('button-container');
@@ -593,7 +575,7 @@ function buildBlock(blockName: string, content: BlockContent): HTMLDivElement {
     const rowEl = document.createElement('div');
     row.forEach((col) => {
       const colEl = document.createElement('div');
-      const vals = (col && typeof col === 'object' && 'elems' in col) ? col.elems : [col];
+      const vals = col && typeof col === 'object' && 'elems' in col ? col.elems : [col];
       vals.forEach((val) => {
         if (val) {
           if (typeof val === 'string') {
@@ -632,7 +614,6 @@ async function loadBlock(block: HTMLElement): Promise<HTMLElement> {
               await mod.default(block);
             }
           } catch (error) {
-            // eslint-disable-next-line no-console
             console.error(`failed to load module for ${blockName}`, error);
           }
           resolve();
@@ -640,7 +621,6 @@ async function loadBlock(block: HTMLElement): Promise<HTMLElement> {
       });
       await Promise.all([cssLoaded, decorationComplete]);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(`failed to load block ${blockName}`, error);
     }
     block.dataset.blockStatus = 'loaded';
@@ -722,14 +702,13 @@ async function waitForFirstImage(section: Element): Promise<void> {
  */
 async function loadSection(
   section: HTMLElement,
-  loadCallback?: (section: HTMLElement) => Promise<void>,
+  loadCallback?: (sectionEl: HTMLElement) => Promise<void>,
 ): Promise<void> {
   const status = section.dataset.sectionStatus;
   if (!status || status === 'initialized') {
     section.dataset.sectionStatus = 'loading';
     const blocks = [...section.querySelectorAll<HTMLElement>('div.block')];
     for (let i = 0; i < blocks.length; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
       await loadBlock(blocks[i]!);
     }
     if (loadCallback) await loadCallback(section);
@@ -745,7 +724,6 @@ async function loadSection(
 async function loadSections(element: Element): Promise<void> {
   const sections = [...element.querySelectorAll<HTMLElement>('div.section')];
   for (let i = 0; i < sections.length; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
     await loadSection(sections[i]!);
     if (i === 0 && sampleRUM.enhance) {
       sampleRUM.enhance();

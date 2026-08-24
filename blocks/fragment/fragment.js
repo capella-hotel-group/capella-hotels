@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
-import { loadSections } from "../../scripts/aem.js";
+/*! v1.3.0 | h4cae9a85 */
+import { g as loadSections } from "../../scripts/vendor/aem-core-TetbwNGB.js";
 import { decorateMain } from "../../scripts/scripts.js";
 //#region src/blocks/fragment/fragment.ts
 /**

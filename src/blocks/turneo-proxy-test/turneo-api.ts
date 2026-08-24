@@ -49,20 +49,21 @@ export async function fetchExperiences(params?: Record<string, string | undefine
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Turneo API error: ${response.status} ${response.statusText}`,
-    );
+    throw new Error(`Turneo API error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
   return data.results;
 }
 
-async function fetchRateDetail(experienceId: string, rateId: string, from: string, until: string): Promise<unknown | null> {
+async function fetchRateDetail(
+  experienceId: string,
+  rateId: string,
+  from: string,
+  until: string,
+): Promise<unknown | null> {
   const config = getTurneoConfig();
-  const url = new URL(
-    `${config.baseUrl}/experiences/${experienceId}/rates/${rateId}`,
-  );
+  const url = new URL(`${config.baseUrl}/experiences/${experienceId}/rates/${rateId}`);
   url.searchParams.set('from', from);
   url.searchParams.set('until', until);
 
@@ -75,7 +76,6 @@ async function fetchRateDetail(experienceId: string, rateId: string, from: strin
   });
 
   if (!response.ok) {
-    // eslint-disable-next-line no-console
     console.error(`[turneo-api] Failed to fetch rate ${rateId}: ${response.status}`);
     return null;
   }
@@ -96,9 +96,7 @@ export async function fetchRates(params: FetchRatesParams): Promise<unknown[]> {
   const config = getTurneoConfig();
 
   // Step 1: list all rate IDs
-  const listUrl = new URL(
-    `${config.baseUrl}/experiences/${params.experienceId}/rates`,
-  );
+  const listUrl = new URL(`${config.baseUrl}/experiences/${params.experienceId}/rates`);
   listUrl.searchParams.set('from', params.from);
   listUrl.searchParams.set('until', params.until);
 
@@ -111,9 +109,7 @@ export async function fetchRates(params: FetchRatesParams): Promise<unknown[]> {
   });
 
   if (!listResponse.ok) {
-    throw new Error(
-      `Turneo API error: ${listResponse.status} ${listResponse.statusText}`,
-    );
+    throw new Error(`Turneo API error: ${listResponse.status} ${listResponse.statusText}`);
   }
 
   const listData = await listResponse.json();
@@ -134,9 +130,7 @@ export async function fetchRates(params: FetchRatesParams): Promise<unknown[]> {
 
   // Step 2: fetch each rate detail in parallel
   const { experienceId, from, until } = params;
-  const rateDetails = await Promise.all(
-    rateIds.map((rateId) => fetchRateDetail(experienceId, rateId, from, until)),
-  );
+  const rateDetails = await Promise.all(rateIds.map((rateId) => fetchRateDetail(experienceId, rateId, from, until)));
 
   return rateDetails.filter((r) => r !== null);
 }

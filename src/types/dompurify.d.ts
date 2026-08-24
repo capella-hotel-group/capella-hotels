@@ -1,7 +1,7 @@
 declare module '*dompurify.min.js';
 
 interface DOMPurifyApi {
-  sanitize: (html: string) => string;
+  sanitize: (html: string, options?: Record<string, unknown>) => string;
 }
 
 interface Window {

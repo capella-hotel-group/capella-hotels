@@ -2,9 +2,7 @@ import { moveInstrumentation } from '@/app/scripts.js';
 
 function textFromCell(cell?: Element | null): string {
   if (!cell) return '';
-  const textNodes = [...cell.children]
-    .map((child) => child.textContent?.trim() ?? '')
-    .filter(Boolean);
+  const textNodes = [...cell.children].map((child) => child.textContent?.trim() ?? '').filter(Boolean);
   return textNodes.length > 1 ? textNodes.join('\n') : (cell.textContent?.trim() ?? '');
 }
 
@@ -142,12 +140,17 @@ function buildCard(row: Element): HTMLLIElement {
   mediaContent.className = 'destination-cards-media-link';
   if (fields.href && mediaContent instanceof HTMLAnchorElement) {
     setLinkAttributes(mediaContent, fields.href, fields.openInNewTab);
-    mediaContent.setAttribute('aria-label', `${fields.title || fields.location || 'Destination'}: ${fields.ctaLabel || 'Explore'}`);
+    mediaContent.setAttribute(
+      'aria-label',
+      `${fields.title || fields.location || 'Destination'}: ${fields.ctaLabel || 'Explore'}`,
+    );
   }
 
   if (fields.image) {
-    const mediaNode = fields.image.tagName.toLowerCase() === 'picture' ? fields.image : (fields.image.closest('picture') || fields.image);
-    const imageElement = mediaNode.querySelector('img') || (mediaNode.tagName === 'IMG' ? (mediaNode as HTMLImageElement) : null);
+    const mediaNode =
+      fields.image.tagName.toLowerCase() === 'picture' ? fields.image : fields.image.closest('picture') || fields.image;
+    const imageElement =
+      mediaNode.querySelector('img') || (mediaNode.tagName === 'IMG' ? (mediaNode as HTMLImageElement) : null);
     if (imageElement && fields.imageAlt !== null) imageElement.alt = fields.imageAlt;
     mediaContent.append(mediaNode);
   } else {

@@ -15,11 +15,13 @@ The repository is currently a plain JS AEM EDS boilerplate (blocks/, scripts/, s
 ## Capabilities
 
 ### New Capabilities
+
 - `build-toolchain`: TypeScript + Vite build system for AEM EDS blocks, including automatic discovery of block entry points, dual runtime/editor build configs, vendor chunk splitting, version banner injection, and output-directory cleanup.
 - `code-quality-tooling`: ESLint (TypeScript-aware, `eslint-plugin-xwalk`) + Prettier configuration, Husky pre-commit hook, and `lint-staged` enforcement gating commits on lint/format checks and Conventional Commits.
 - `ue-json-pipeline`: the JSON model merge pipeline (`build:json` / `merge-json-cli`), covering the root fragment files, the shared field-model fragments they include, and the per-block model fragments each block contributes, all re-pointed at `src/models/` and `src/blocks/` while still emitting `component-definition.json`, `component-models.json`, and `component-filters.json` at the repo root with unchanged content shape.
 
 ### Modified Capabilities
+
 <!-- none - no existing spec documents this behavior today -->
 
 ## Impact

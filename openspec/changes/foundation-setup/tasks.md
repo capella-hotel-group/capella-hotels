@@ -58,3 +58,18 @@
 - [x] 9.3 Run `npm run build:json`, `npm run lint`, and `npm run format:check` and confirm all three exit with status zero
 - [x] 9.4 Make a trivial staged edit and attempt a commit to confirm the Husky pre-commit hook runs `lint-staged` without errors
 - [x] 9.5 Load the local site end-to-end via `aem up` and confirm the eager/lazy/delayed loading order holds with no console errors
+
+## 10. Toolchain realignment with reference implementation
+
+The first pass of this change (tasks 1-9) delivered a working TS/Vite toolchain. After archiving, a more mature sibling project (`capella-hotel-group-poc`) was reviewed as a reference and this change was reopened to realign the toolchain with its patterns.
+
+- [x] 10.1 Split `vite.shared.ts` into `config.ts` (path constants) and `vite.helpers.ts` (entry discovery, chunking, plugins); verify `npm run build` still produces the expected output tree
+- [x] 10.2 Switch the version-banner plugin from a static `Date.now()`-based banner to a per-chunk/per-asset content-hash banner (`renderChunk`/`generateBundle`), so the banner only changes when a file's actual output changes; verify banners appear in built `blocks/*/*.js`, `scripts/*.js`, and CSS output
+- [x] 10.3 Rework `vite.config-editor.ts` to build only `src/app/editor/editor-support.ts` (marking `src/app/scripts.ts` / `src/app/aem.ts` as externals mapped to `/scripts/scripts.js` / `/scripts/aem.js`) instead of re-running the full block+app build in an `editor` mode; verify `npm run build:editor` emits only `scripts/editor-support.js`
+- [x] 10.4 Port `scripts/editor-support.js` and `scripts/editor-support-rte.js` to `src/app/editor/editor-support.ts` and `src/app/editor/editor-support-rte.ts` with type annotations; verify `npx tsc --noEmit` passes and `npm run build:editor` produces an equivalent `scripts/editor-support.js`
+- [x] 10.5 Replace `.eslintrc.js` + `.eslintignore` (legacy/airbnb-base config) with a flat `eslint.config.js` (ESLint 9, `@eslint/js` + `typescript-eslint` + `eslint-plugin-xwalk` + `eslint-config-prettier`), preserving the `xwalk/max-cells` override for `newsletter-form`; verify `npm run lint` passes with zero errors
+- [x] 10.6 Replace `.prettierrc.json` with `prettier.config.js` (printWidth 120, CSS `tabWidth: 4` override); verify `npm run format:check` passes
+- [x] 10.7 Remove Stylelint (`.stylelintrc.json`, `stylelint`/`stylelint-config-standard` deps, `lint:css` script) in favor of Prettier-only CSS formatting, matching the reference project; update `CONTRIBUTING.md` and `AGENTS.md` mentions accordingly
+- [x] 10.8 Update `package.json` scripts/devDependencies to match the reference project's naming and versions (ESLint 9, flat config, `type: module`); verify `npm install`, `npm run build`, `npm run lint`, `npm run format:check`, and `npm run build:json` all succeed
+- [x] 10.9 Align `tsconfig.json` with the reference project's stricter compiler flags (`target`/`module: ES2022`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`) while keeping `strict: true` and `noUncheckedIndexedAccess` (stricter than the reference); verify `npx tsc --noEmit` passes after fixing any newly-surfaced violations
+- [x] 10.10 Final verification: run `npm run build`, `npm run build:json`, `npm run lint`, and `npm run format:check` from a clean state and confirm all four exit with status zero; diff the regenerated root JSON files against the pre-realignment versions to confirm no content drift

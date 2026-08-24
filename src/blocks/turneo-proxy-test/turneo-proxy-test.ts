@@ -78,7 +78,10 @@ function buildCard(exp: TurneoExperience, purify: { sanitize: (html: string) => 
 
 // ─── Grid helpers ─────────────────────────────────────────────────────────────
 
-function buildGridChildren(experiences: TurneoExperience[], purify: { sanitize: (html: string) => string } | null): HTMLElement[] {
+function buildGridChildren(
+  experiences: TurneoExperience[],
+  purify: { sanitize: (html: string) => string } | null,
+): HTMLElement[] {
   if (!experiences.length) {
     const empty = document.createElement('p');
     empty.className = 'turneo-proxy-test-empty';
@@ -115,8 +118,9 @@ function buildDateField(id: string, label: string): HTMLDivElement {
   icon.setAttribute('viewBox', '0 0 20 20');
   icon.setAttribute('fill', 'none');
   icon.setAttribute('aria-hidden', 'true');
-  // eslint-disable-next-line max-len
-  icon.innerHTML = '<rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
+
+  icon.innerHTML =
+    '<rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.5"/><path d="M6 2v4M14 2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
 
   const input = document.createElement('input');
   input.type = 'date';

@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
+/*! v1.3.0 | hfb41f4a2 */
 //#region scripts/env.js
 /**
 * Environment detection and AEM asset URL resolution.

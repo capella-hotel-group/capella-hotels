@@ -58,9 +58,27 @@ export const LANG_MAP: Record<string, string> = {
 // Valid ISO 639-1 language primaries supported by this site.
 // Used to distinguish language codes (ar, en) from market/country codes (qa, sa, ae).
 export const VALID_LANG_PRIMARIES = new Set([
-  'ar', 'en', 'fr', 'de', 'ja', 'ko', 'zh',
-  'he', 'fa', 'ur', 'it', 'es', 'pt', 'ru',
-  'nl', 'tr', 'hi', 'vi', 'th', 'id', 'ms',
+  'ar',
+  'en',
+  'fr',
+  'de',
+  'ja',
+  'ko',
+  'zh',
+  'he',
+  'fa',
+  'ur',
+  'it',
+  'es',
+  'pt',
+  'ru',
+  'nl',
+  'tr',
+  'hi',
+  'vi',
+  'th',
+  'id',
+  'ms',
 ]);
 
 /** * Detects the page language from the URL path and normalizes it to a BCP 47 tag.
@@ -115,7 +133,6 @@ function buildAutoBlocks(): void {
   try {
     // TODO: add auto block, if needed
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Auto Blocking failed', error);
   }
 }
@@ -124,7 +141,6 @@ function buildAutoBlocks(): void {
  * Decorates the main element.
  * @param {Element} main The main element
  */
-// eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main: Element): void {
   // hopefully forward compatible button decoration
   decorateButtons(main);
@@ -188,7 +204,6 @@ async function loadLazy(doc: Document): Promise<void> {
  * without impacting the user experience.
  */
 function loadDelayed(): void {
-  // eslint-disable-next-line import/no-cycle
   window.setTimeout(() => import('./delayed.js'), 3000);
   // load anything that can be postponed to the latest here
 }

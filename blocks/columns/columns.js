@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
+/*! v1.3.0 | h679ba67b */
 //#region src/blocks/columns/columns.ts
 function decorate(block) {
 	const cols = [...block.firstElementChild?.children ?? []];

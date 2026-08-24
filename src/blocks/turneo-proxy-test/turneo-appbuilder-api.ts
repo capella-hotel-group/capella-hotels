@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 /**
  * Turneo App Builder API service module.
  * Calls the Adobe App Builder runtime which proxies the Turneo API server-side.
@@ -7,8 +6,8 @@
  * Base URL: https://3599957-turneoapp-stage.adobeioruntime.net/api/v1/web/turneo-app/get-experience-data.json
  */
 
-// eslint-disable-next-line max-len
-const APP_BUILDER_URL = 'https://3599957-turneoapp-stage.adobeioruntime.net/api/v1/web/turneo-app/get-experience-data.json';
+const APP_BUILDER_URL =
+  'https://3599957-turneoapp-stage.adobeioruntime.net/api/v1/web/turneo-app/get-experience-data.json';
 
 export interface TurneoExperience {
   id: string;

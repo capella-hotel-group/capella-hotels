@@ -1,6 +1,6 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
+/*! v1.3.0 | hd2517d41 */
 import { getPageLang } from "../../scripts/scripts.js";
-import { n as getHCaptchaSiteKey$1, t as getBasePathBasedOnEnv } from "../../scripts/vendor/env-3zKwudH3.js";
+import { n as getHCaptchaSiteKey$1, t as getBasePathBasedOnEnv } from "../../scripts/vendor/env-Bvky9kZQ.js";
 //#region src/blocks/newsletter-form/newsletter-form.ts
 var API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
 var OPTIONS_GRAPHQL_QUERY = "/graphql/execute.json/capella-hotels/ListCF";

@@ -25,7 +25,10 @@ function buildBgVideo(desktopSrc: string, mobileSrc: string): HTMLVideoElement {
 
   mqMobile.addEventListener('change', () => {
     const next = pickSrc(desktopSrc, mobileSrc);
-    if (source.src !== next) { source.src = next; video.load(); }
+    if (source.src !== next) {
+      source.src = next;
+      video.load();
+    }
   });
 
   return video;
@@ -59,6 +62,7 @@ function buildModal(desktopSrc: string, mobileSrc: string): HTMLDivElement {
   overlay.append(inner);
 
   // Mutual reference: close() needs keyHandler ref; assign before registering
+  // eslint-disable-next-line prefer-const
   let keyHandler: (e: KeyboardEvent) => void;
   const close = () => {
     modalVideo.pause();
@@ -66,10 +70,14 @@ function buildModal(desktopSrc: string, mobileSrc: string): HTMLDivElement {
     document.body.style.overflow = '';
     document.removeEventListener('keydown', keyHandler);
   };
-  keyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+  keyHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') close();
+  };
 
   closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
   document.addEventListener('keydown', keyHandler);
 
   return overlay;
@@ -152,13 +160,18 @@ export default function decorate(block: HTMLElement): void {
     placeholder.className = 'hero-banner-placeholder';
 
     const bgVideo = buildBgVideo(desktopSrc, mobileSrc);
-    bgVideo.addEventListener('loadeddata', () => placeholder.classList.add('hidden'), { once: true });
+    bgVideo.addEventListener('loadeddata', () => placeholder.classList.add('hidden'), {
+      once: true,
+    });
     if (bgVideo.readyState >= 2) placeholder.classList.add('hidden');
 
     block.append(placeholder, bgVideo);
   } else {
     const pic = rows[1]?.querySelector('picture');
-    if (pic) { pic.className = 'hero-banner-image'; block.append(pic); }
+    if (pic) {
+      pic.className = 'hero-banner-image';
+      block.append(pic);
+    }
   }
 
   // Content overlay
@@ -189,8 +202,8 @@ export default function decorate(block: HTMLElement): void {
     overlay.append(iconWrapper);
 
     const scrollToNext = () => {
-      const nextSection = block.closest('.hero-banner-wrapper')?.nextElementSibling
-        ?? block.closest('div')?.nextElementSibling;
+      const nextSection =
+        block.closest('.hero-banner-wrapper')?.nextElementSibling ?? block.closest('div')?.nextElementSibling;
       if (nextSection) {
         nextSection.scrollIntoView({ behavior: 'smooth' });
       } else {
@@ -198,13 +211,13 @@ export default function decorate(block: HTMLElement): void {
       }
     };
     iconWrapper.addEventListener('click', scrollToNext);
-    iconWrapper.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') scrollToNext(); });
+    iconWrapper.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') scrollToNext();
+    });
 
     const content = document.createElement('div');
     content.className = 'hero-banner-content';
-    const lines = [...contentEl.querySelectorAll('p')]
-      .map((p) => p.textContent?.trim() ?? '')
-      .filter(Boolean);
+    const lines = [...contentEl.querySelectorAll('p')].map((p) => p.textContent?.trim() ?? '').filter(Boolean);
     content.innerHTML = lines.join('<br>');
     overlay.append(content);
   }

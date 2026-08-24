@@ -63,17 +63,21 @@ function parseCard(row: Element): CardData | null {
   const links = [...ctaCell.querySelectorAll('a')];
   const toggles = readToggleTexts(ctaCell);
 
-  const primary = links[0] ? {
-    href: links[0].getAttribute('href') || '#',
-    label: links[0].textContent?.trim() || 'ENQUIRE',
-    openInNewTab: toggles[0] === 'true',
-  } : null;
+  const primary = links[0]
+    ? {
+        href: links[0].getAttribute('href') || '#',
+        label: links[0].textContent?.trim() || 'ENQUIRE',
+        openInNewTab: toggles[0] === 'true',
+      }
+    : null;
 
-  const secondary = links[1] ? {
-    href: links[1].getAttribute('href') || '#',
-    label: links[1].textContent?.trim() || 'DETAILS',
-    openInNewTab: toggles[1] === 'true',
-  } : null;
+  const secondary = links[1]
+    ? {
+        href: links[1].getAttribute('href') || '#',
+        label: links[1].textContent?.trim() || 'DETAILS',
+        openInNewTab: toggles[1] === 'true',
+      }
+    : null;
 
   return {
     media,
@@ -93,9 +97,8 @@ function createCard(card: CardData, row: Element): HTMLLIElement {
   const mediaWrap = document.createElement('div');
   mediaWrap.className = 'offers-carousel-card-media';
 
-  const mediaNode = card.media.tagName.toLowerCase() === 'picture'
-    ? card.media
-    : card.media.closest('picture') || card.media;
+  const mediaNode =
+    card.media.tagName.toLowerCase() === 'picture' ? card.media : card.media.closest('picture') || card.media;
   mediaWrap.append(mediaNode);
 
   const overlay = document.createElement('div');
@@ -222,9 +225,7 @@ export default function decorate(block: HTMLElement): void {
   const title = textFromCell(rows[1]?.firstElementChild || rows[1]);
 
   const cardRows = rows.slice(2);
-  const cardsData = cardRows
-    .map((row) => parseCard(row))
-    .filter((card): card is CardData => card !== null);
+  const cardsData = cardRows.map((row) => parseCard(row)).filter((card): card is CardData => card !== null);
 
   if (!cardsData.length) return;
 

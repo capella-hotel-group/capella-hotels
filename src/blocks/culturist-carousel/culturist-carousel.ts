@@ -10,7 +10,7 @@ function resolveAssetUrl(damPath?: string | null): string | null {
 
 function resolveLinkHref(internalRef: unknown, externalLink?: string | null): string | null {
   // internalRef may be a plain path string or a reference object like { _path }
-  const { _path: refPath } = (typeof internalRef === 'object' && internalRef) as { _path?: string } || {};
+  const { _path: refPath } = ((typeof internalRef === 'object' && internalRef) as { _path?: string }) || {};
   const internalPath = typeof internalRef === 'string' ? internalRef : refPath;
   if (internalPath) return resolveAssetUrl(internalPath);
   if (externalLink) return externalLink;
@@ -34,7 +34,6 @@ async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | nul
     });
 
     if (!response.ok) {
-      // eslint-disable-next-line no-console
       console.error(`[culturist-carousel] GraphQL request failed (${response.status}) for ${cfPath}`);
       return null;
     }
@@ -42,12 +41,10 @@ async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | nul
     const data = await response.json();
     const item = data.data?.tabDetailsByPath?.item || null;
     if (!item) {
-      // eslint-disable-next-line no-console
       console.error(`[culturist-carousel] No tabDetailsByPath item returned for ${cfPath}`, data);
     }
     return item;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(`[culturist-carousel] Failed to fetch CF details for ${cfPath}`, error);
     return null;
   }
@@ -189,7 +186,6 @@ async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): 
     try {
       track.append(buildCarouselCard(card));
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[culturist-carousel] Skipping malformed card', card, error);
     }
   });
@@ -311,7 +307,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const updateDestinationBtn = () => {
     const tabCells = itemRows[currentTabIndex]?.querySelectorAll(':scope > div');
-    const tabNameText = (tabCells && tabCells[0]) ? tabCells[0].textContent?.trim() : `Destination ${currentTabIndex + 1}`;
+    const tabNameText =
+      tabCells && tabCells[0] ? tabCells[0].textContent?.trim() : `Destination ${currentTabIndex + 1}`;
     destinationLabel.textContent = tabNameText || `Destination ${currentTabIndex + 1}`;
   };
 

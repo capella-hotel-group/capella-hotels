@@ -63,7 +63,9 @@ function getAuthoredField(block: HTMLElement, index: number, richText = false): 
 }
 
 function addDamPrefix(path: string): string {
-  const normalizedPath = normalizeAssetCandidate(path).replace(/[#?].*$/, '').replace(/^\/+|\/+$/g, '');
+  const normalizedPath = normalizeAssetCandidate(path)
+    .replace(/[#?].*$/, '')
+    .replace(/^\/+|\/+$/g, '');
   if (!normalizedPath) return '';
   return normalizedPath.startsWith('content/dam/') ? `/${normalizedPath}` : `/content/dam/${normalizedPath}`;
 }
@@ -114,7 +116,8 @@ function parseImageMap(imageMapValue: string): Hotspot[] {
   const raw = typeof imageMapValue === 'string' ? imageMapValue : JSON.stringify(imageMapValue);
   if (!raw) return [];
 
-  const pattern = /\[\s*circle\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\)\s*"([^"]+)"\s*\|\s*"([^"]*)"\s*\|\s*"([^"]*)"\s*\]/gi;
+  const pattern =
+    /\[\s*circle\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\)\s*"([^"]+)"\s*\|\s*"([^"]*)"\s*\|\s*"([^"]*)"\s*\]/gi;
   const hotspots: Hotspot[] = [];
   let match = pattern.exec(raw);
 
@@ -130,10 +133,9 @@ function parseImageMap(imageMapValue: string): Hotspot[] {
     match = pattern.exec(raw);
   }
 
-  return hotspots.filter((spot) => Number.isFinite(spot.x)
-    && Number.isFinite(spot.y)
-    && Number.isFinite(spot.radius)
-    && !!spot.href);
+  return hotspots.filter(
+    (spot) => Number.isFinite(spot.x) && Number.isFinite(spot.y) && Number.isFinite(spot.radius) && !!spot.href,
+  );
 }
 
 function resolveHotspotHref(href: string): string {
@@ -225,7 +227,11 @@ function renderModalError(body: HTMLElement | null, message: string): void {
   body.append(error);
 }
 
-function renderModalContent(body: HTMLElement | null, cfData: Record<string, any> | null, fallbackLabel?: string): void {
+function renderModalContent(
+  body: HTMLElement | null,
+  cfData: Record<string, any> | null,
+  fallbackLabel?: string,
+): void {
   if (!body) return;
   body.innerHTML = '';
 
@@ -266,7 +272,7 @@ function renderModalContent(body: HTMLElement | null, cfData: Record<string, any
 }
 
 function positionHotspotModal(
-  modal: ModalElement,
+  _modal: ModalElement,
   panel: HTMLElement | null,
   hotspotElement: HTMLElement | null,
   block: HTMLElement,
@@ -290,13 +296,10 @@ function positionHotspotModal(
     const gap = 0.75 * parseFloat(getComputedStyle(document.documentElement).fontSize || '16');
     const margin = 12;
     const left = Math.min(
-      Math.max(hotspotRect.left + (hotspotRect.width / 2) - (panelRect.width / 2), margin),
+      Math.max(hotspotRect.left + hotspotRect.width / 2 - panelRect.width / 2, margin),
       window.innerWidth - panelRect.width - margin,
     );
-    const top = Math.min(
-      hotspotRect.bottom + gap,
-      window.innerHeight - panelRect.height - margin,
-    );
+    const top = Math.min(hotspotRect.bottom + gap, window.innerHeight - panelRect.height - margin);
     panel.style.left = `${Math.max(margin, left)}px`;
     panel.style.top = `${Math.max(margin, top)}px`;
   }
@@ -403,12 +406,8 @@ function renderInteractiveAsset(
     const syncHotspots = () => {
       const sourceWidth = media.naturalWidth || fallbackWidth;
       const sourceHeight = media.naturalHeight || fallbackHeight;
-      applyHotspotLayout(
-        hotspotLayer,
-        hotspots,
-        sourceWidth,
-        sourceHeight,
-        (spot, hotspotElement) => openHotspotModal(block, spot, hotspotElement),
+      applyHotspotLayout(hotspotLayer, hotspots, sourceWidth, sourceHeight, (spot, hotspotElement) =>
+        openHotspotModal(block, spot, hotspotElement),
       );
     };
 
@@ -470,11 +469,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   try {
     const cfData = await fetchTabDetailsData(cfPath);
-    const assetPathText = cfData?.image?.[PATH_KEY]
-      || cfData?.asset?.[PATH_KEY]
-      || cfData?.assetPath
-      || cfData?.imagePath
-      || '';
+    const assetPathText =
+      cfData?.image?.[PATH_KEY] || cfData?.asset?.[PATH_KEY] || cfData?.assetPath || cfData?.imagePath || '';
     const assetPath = addDamPrefix(assetPathText);
     if (!assetPath) {
       renderFailure(block, 'No asset path was found in the Content Fragment.');

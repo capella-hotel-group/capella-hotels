@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
+/*! v1.3.0 | hdd88b3df */
 import { moveInstrumentation } from "../../scripts/scripts.js";
 //#region src/blocks/awards-list/awards-list.ts
 function textFromCell(cell) {
