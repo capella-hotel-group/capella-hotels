@@ -1,1 +1,1 @@
-// add delayed functionality here
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:08:21.319Z */

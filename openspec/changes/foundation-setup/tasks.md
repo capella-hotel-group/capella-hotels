@@ -1,16 +1,16 @@
 ## 1. Toolchain scaffolding
 
 - [x] 1.1 Add `tsconfig.json` with strict mode enabled and `@/*` path alias to `src/*`; verify `npx tsc --noEmit` runs (no source files yet, so it should complete with no errors)
-- [ ] 1.2 Add `vite.config.ts` with block-entry discovery via a `src/blocks/<name>/<name>.ts` glob (entry file name must match its parent block directory; other `.ts` files in the folder are not treated as entries), vendor chunk splitting (`aem-core`, `three-core`), version banner injection, and pre-build output cleanup; verify it loads without error via `npx vite build --config vite.config.ts` against an empty `src/blocks/`
-- [ ] 1.3 Add `vite.config-editor.ts` for the Universal Editor build, sharing the entry-discovery and alias logic with `vite.config.ts`; verify it loads without error via `npx vite build --config vite.config-editor.ts`
-- [ ] 1.4 Add `typescript`, `vite`, and related type packages as devDependencies in `package.json`; verify `npm install` completes without errors
+- [x] 1.2 Add `vite.config.ts` with block-entry discovery via a `src/blocks/<name>/<name>.ts` glob (entry file name must match its parent block directory; other `.ts` files in the folder are not treated as entries), vendor chunk splitting (`aem-core`, `three-core`), version banner injection, and pre-build output cleanup; verify it loads without error via `npx vite build --config vite.config.ts` against an empty `src/blocks/`
+- [x] 1.3 Add `vite.config-editor.ts` for the Universal Editor build, sharing the entry-discovery and alias logic with `vite.config.ts`; verify it loads without error via `npx vite build --config vite.config-editor.ts`
+- [x] 1.4 Add `typescript`, `vite`, and related type packages as devDependencies in `package.json`; verify `npm install` completes without errors
 
 ## 2. Runtime and script migration
 
-- [ ] 2.1 Create `src/app/aem.ts` ported from `scripts/aem.js` with type annotations; verify `npx tsc --noEmit` passes for this file
-- [ ] 2.2 Create `src/app/scripts.ts` ported from `scripts/scripts.js`, preserving eager/lazy/delayed phase boundaries exactly; verify `npx tsc --noEmit` passes
-- [ ] 2.3 Port `scripts/delayed.js` logic into the delayed phase of `src/app/scripts.ts` (or a co-located `src/app/delayed.ts` invoked from the delayed phase); verify phase ordering is unchanged by reading the ported code against the original three-phase structure
-- [ ] 2.4 Build with `npm run build` (once scripts exist) and load the site via `aem up`; verify the browser console shows the eager, then lazy, then delayed phases executing in order with no console errors
+- [x] 2.1 Create `src/app/aem.ts` ported from `scripts/aem.js` with type annotations; verify `npx tsc --noEmit` passes for this file
+- [x] 2.2 Create `src/app/scripts.ts` ported from `scripts/scripts.js`, preserving eager/lazy/delayed phase boundaries exactly; verify `npx tsc --noEmit` passes
+- [x] 2.3 Port `scripts/delayed.js` logic into the delayed phase of `src/app/scripts.ts` (or a co-located `src/app/delayed.ts` invoked from the delayed phase); verify phase ordering is unchanged by reading the ported code against the original three-phase structure
+- [x] 2.4 Build with `npm run build` (once scripts exist) and load the site via `aem up`; verify the browser console shows the eager, then lazy, then delayed phases executing in order with no console errors
 
 ## 3. Styles migration
 

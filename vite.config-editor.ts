@@ -24,6 +24,8 @@ export default defineConfig({
     target: 'es2020',
     rollupOptions: {
       input: getAllEntries(),
+      treeshake: false,
+      preserveEntrySignatures: 'strict',
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: 'scripts/vendor/[name]-[hash].js',

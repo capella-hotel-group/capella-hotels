@@ -1,4 +1,6 @@
-import { readdirSync, existsSync, readFileSync, unlinkSync, mkdirSync, copyFileSync } from 'node:fs';
+import {
+  readdirSync, existsSync, readFileSync, unlinkSync, mkdirSync, copyFileSync, rmSync,
+} from 'node:fs';
 import { join, basename } from 'node:path';
 import type { Plugin } from 'vite';
 
@@ -60,6 +62,10 @@ export function cleanGeneratedOutputs(): Plugin {
         const outFile = join(ROOT, `${name}.js`);
         if (existsSync(outFile)) unlinkSync(outFile);
       });
+      // shared/vendor chunks are always regenerated with a fresh content hash,
+      // so stale ones from a previous build must be cleared every time.
+      const vendorDir = join(ROOT, 'scripts/vendor');
+      if (existsSync(vendorDir)) rmSync(vendorDir, { recursive: true, force: true });
     },
   };
 }
