@@ -858,7 +858,7 @@
     "id": "text-with-cta",
     "fields": [
       {
-        "component": "text",
+        "component": "richtext",
         "name": "title",
         "label": "Main Section Title",
         "valueType": "string",
