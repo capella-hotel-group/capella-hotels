@@ -53,8 +53,8 @@
 
 ## 9. Final verification
 
-- [ ] 9.1 Run `npm run start` and confirm `tsc:watch`, Vite watch, and `aem up` all start successfully together
-- [ ] 9.2 Run `npm run build` from a clean checkout and confirm it succeeds with output matching AEM EDS delivery conventions (`scripts/`, `styles/`, `blocks/*` populated at the repo root)
-- [ ] 9.3 Run `npm run build:json`, `npm run lint`, and `npm run format:check` and confirm all three exit with status zero
-- [ ] 9.4 Make a trivial staged edit and attempt a commit to confirm the Husky pre-commit hook runs `lint-staged` without errors
-- [ ] 9.5 Load the local site end-to-end via `aem up` and confirm the eager/lazy/delayed loading order holds with no console errors
+- [x] 9.1 Run `npm run start` and confirm `tsc:watch`, Vite watch, and `aem up` all start successfully together
+- [x] 9.2 Run `npm run build` from a clean checkout and confirm it succeeds with output matching AEM EDS delivery conventions (`scripts/`, `styles/`, `blocks/*` populated at the repo root)
+- [x] 9.3 Run `npm run build:json`, `npm run lint`, and `npm run format:check` and confirm all three exit with status zero
+- [x] 9.4 Make a trivial staged edit and attempt a commit to confirm the Husky pre-commit hook runs `lint-staged` without errors
+- [x] 9.5 Load the local site end-to-end via `aem up` and confirm the eager/lazy/delayed loading order holds with no console errors

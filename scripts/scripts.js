@@ -1,5 +1,6 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:08:21.319Z */
-import { S as waitForFirstImage, a as decorateButtons, c as decorateTemplateAndTheme, d as loadCSS, f as loadFooter, g as loadSections, h as loadSection, i as decorateBlocks, o as decorateIcons, p as loadHeader, s as decorateSections, w as __vitePreload } from "./vendor/aem-CLhvdm5x.js";
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:51:15.167Z */
+import { t as __vitePreload } from "./vendor/preload-helper-CTmLbv-A.js";
+import { decorateBlocks, decorateButtons, decorateIcons, decorateSections, decorateTemplateAndTheme, loadCSS, loadFooter, loadHeader, loadSection, loadSections, waitForFirstImage } from "./aem.js";
 //#region src/app/scripts.ts
 /**
 * Moves all the attributes from a given elmenet to another given element.
