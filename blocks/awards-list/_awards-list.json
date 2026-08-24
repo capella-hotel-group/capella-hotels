@@ -69,6 +69,14 @@
           "valueType": "boolean",
           "value": false,
           "label": "Open CTA in new tab"
+        },
+        {
+          "component": "text",
+          "name": "id",
+          "valueType": "string",
+          "label": "Block ID",
+          "value": "",
+          "placeholder": "e.g., awards"
         }
       ]
     },

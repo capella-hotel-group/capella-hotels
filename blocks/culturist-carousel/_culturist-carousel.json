@@ -51,6 +51,14 @@
           "label": "Section Title Suffix",
           "value": "",
           "required": true
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "id",
+          "label": "Block ID",
+          "value": "",
+          "placeholder": "e.g., culturists"
         }
       ]
     },

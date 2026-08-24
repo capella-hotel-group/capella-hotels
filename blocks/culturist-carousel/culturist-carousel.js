@@ -213,6 +213,11 @@ export default async function decorate(block) {
   const rows = [...block.querySelectorAll(':scope > div')];
   if (!rows.length) return;
 
+  const idRow = rows.find((row) => row.dataset.aueProp === 'id'
+    || row.querySelector('[data-aue-prop="id"]'));
+  const blockId = idRow?.textContent.trim();
+  if (blockId) block.id = blockId;
+
   // Detect if first row is an image (backwards compatibility with old authored blocks)
   let firstDataRowIndex = 0;
   const hasImage = rows[0]?.querySelector('picture, img');
@@ -223,6 +228,7 @@ export default async function decorate(block) {
   const titlePrefixRow = rows[firstDataRowIndex];
   const titleSuffixRow = rows[firstDataRowIndex + 1];
   const itemRows = rows.slice(firstDataRowIndex + 2).filter((row) => {
+    if (row === idRow) return false;
     const cells = [...row.querySelectorAll(':scope > div')];
     return cells.some((cell) => cell.textContent.trim() !== '');
   });
