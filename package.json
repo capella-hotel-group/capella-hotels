@@ -1,26 +1,36 @@
 {
   "name": "@adobe/aem-boilerplate",
-  "private": true,
   "version": "1.3.0",
+  "private": true,
   "description": "Starter project for Adobe Helix",
+  "homepage": "https://github.com/adobe/aem-boilerplate#readme",
+  "bugs": {
+    "url": "https://github.com/adobe/aem-boilerplate/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adobe/aem-boilerplate.git"
+  },
+  "license": "Apache License 2.0",
+  "author": "Adobe",
   "type": "module",
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format:check": "prettier --check \"src/**/*.ts\" \"*.ts\"",
-    "format:fix": "prettier --write \"src/**/*.ts\" \"*.ts\"",
-    "tsc:watch": "tsc --watch --noEmit",
-    "build:runtime": "vite build --config vite.config.ts",
-    "build:editor": "vite build --config vite.config-editor.ts",
-    "build": "tsc --noEmit && npm run build:runtime && npm run build:editor",
     "aem:up": "aem up --no-open",
-    "start": "npm-run-all -p tsc:watch build:runtime:watch aem:up",
-    "build:runtime:watch": "vite build --watch --config vite.config.ts",
+    "build": "tsc --noEmit && npm run build:runtime && npm run build:editor",
+    "build:editor": "vite build --config vite.config-editor.ts",
     "build:json": "npm-run-all -p build:json:models build:json:definitions build:json:filters",
-    "build:json:models": "merge-json-cli -i \"src/models/_component-models.json\" -o \"component-models.json\"",
     "build:json:definitions": "merge-json-cli -i \"src/models/_component-definition.json\" -o \"component-definition.json\"",
     "build:json:filters": "merge-json-cli -i \"src/models/_component-filters.json\" -o \"component-filters.json\"",
-    "prepare": "husky"
+    "build:json:models": "merge-json-cli -i \"src/models/_component-models.json\" -o \"component-models.json\"",
+    "build:runtime": "vite build --config vite.config.ts",
+    "build:runtime:watch": "vite build --watch --config vite.config.ts",
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.ts\"",
+    "format:fix": "prettier --write \"src/**/*.ts\" \"*.ts\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky",
+    "start": "npm-run-all -p tsc:watch build:runtime:watch aem:up",
+    "tsc:watch": "tsc --watch --noEmit"
   },
   "lint-staged": {
     "*.{js,mjs,ts}": [
@@ -34,16 +44,6 @@
       "prettier --write"
     ]
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/adobe/aem-boilerplate.git"
-  },
-  "author": "Adobe",
-  "license": "Apache License 2.0",
-  "bugs": {
-    "url": "https://github.com/adobe/aem-boilerplate/issues"
-  },
-  "homepage": "https://github.com/adobe/aem-boilerplate#readme",
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@types/node": "26.2.0",
@@ -60,5 +60,8 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.67.0",
     "vite": "8.2.2"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
