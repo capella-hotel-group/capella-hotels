@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:31:20.733Z */
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:35:53.938Z */
 import { getMetadata } from "../../scripts/aem.js";
 import { LANG_MAP, SUPPORTED_SITES, VALID_LANG_PRIMARIES, moveInstrumentation } from "../../scripts/scripts.js";
 import { loadFragment } from "../fragment/fragment.js";

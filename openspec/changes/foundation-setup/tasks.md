@@ -38,10 +38,10 @@
 
 ## 7. package.json scripts
 
-- [ ] 7.1 Add `tsc:watch` script (`tsc --watch --noEmit` or equivalent); verify it starts and reports zero errors against the migrated source
-- [ ] 7.2 Update `build` script to run type-checking followed by the Vite production build (runtime + editor); verify `npm run build` completes successfully end-to-end
-- [ ] 7.3 Add `start` script that runs `tsc:watch`, Vite watch/dev, and `aem up` concurrently (e.g. via `npm-run-all -p` or `concurrently`); verify `npm run start` brings up a working local dev environment and a saved change under `src/` is reflected without a manual rebuild
-- [ ] 7.4 Remove now-superseded legacy scripts from `package.json` that duplicate the new toolchain; verify `npm run lint`, `npm run build`, `npm run build:json`, and `npm run start` are the canonical entry points
+- [x] 7.1 Add `tsc:watch` script (`tsc --watch --noEmit` or equivalent); verify it starts and reports zero errors against the migrated source
+- [x] 7.2 Update `build` script to run type-checking followed by the Vite production build (runtime + editor); verify `npm run build` completes successfully end-to-end
+- [x] 7.3 Add `start` script that runs `tsc:watch`, Vite watch/dev, and `aem up` concurrently (e.g. via `npm-run-all -p` or `concurrently`); verify `npm run start` brings up a working local dev environment and a saved change under `src/` is reflected without a manual rebuild
+- [x] 7.4 Remove now-superseded legacy scripts from `package.json` that duplicate the new toolchain; verify `npm run lint`, `npm run build`, `npm run build:json`, and `npm run start` are the canonical entry points
 
 ## 8. Code quality tooling
 
