@@ -14,8 +14,8 @@
 
 ## 3. Styles migration
 
-- [ ] 3.1 Move `styles/styles.css`, `styles/lazy-styles.css`, `styles/fonts.css` into `src/styles/` unchanged; verify Vite build copies them to the expected root `styles/` output paths
-- [ ] 3.2 Verify a page loaded via `aem up` renders with the same styling as before the move (visual spot check of header, hero, and one content block)
+- [x] 3.1 Move `styles/styles.css`, `styles/lazy-styles.css`, `styles/fonts.css` into `src/styles/` unchanged; verify Vite build copies them to the expected root `styles/` output paths
+- [x] 3.2 Verify a page loaded via `aem up` renders with the same styling as before the move (visual spot check of header, hero, and one content block)
 
 ## 4. Block migration
 
