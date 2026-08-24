@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:19:03.201Z */
-import { l as getMetadata } from "../../scripts/vendor/aem-CVevxmZV.js";
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:21:40.878Z */
+import { l as getMetadata } from "../../scripts/vendor/aem-CeI3ZFrV.js";
 import { LANG_MAP, SUPPORTED_SITES, VALID_LANG_PRIMARIES, moveInstrumentation } from "../../scripts/scripts.js";
 import { loadFragment } from "../fragment/fragment.js";
 //#region src/blocks/footer/footer.ts

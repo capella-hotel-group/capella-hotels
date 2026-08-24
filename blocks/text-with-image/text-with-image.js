@@ -1,4 +1,4 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:19:03.201Z */
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:21:40.878Z */
 //#region src/blocks/text-with-image/text-with-image.ts
 function decorate(block) {
 	const rows = [...block.children];
