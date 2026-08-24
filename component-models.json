@@ -938,6 +938,7 @@
         "component": "aem-content",
         "name": "ctaTargetUrl",
         "label": "CTA Target Action / URL",
+        "description": "Pop-up Form Modal: path to the fragment holding the form. Navigate to External URL: the destination URL.",
         "valueType": "string",
         "required": true
       },
