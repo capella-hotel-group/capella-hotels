@@ -1,5 +1,5 @@
-/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:21:40.878Z */
-import { g as loadSections } from "../../scripts/vendor/aem-CeI3ZFrV.js";
+/*! @adobe/aem-boilerplate v1.3.0 - built 2026-08-24T09:24:10.299Z */
+import { g as loadSections } from "../../scripts/vendor/aem-DT0e_OxR.js";
 import { decorateMain } from "../../scripts/scripts.js";
 //#region src/blocks/fragment/fragment.ts
 /**
