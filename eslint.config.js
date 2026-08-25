@@ -22,6 +22,7 @@ export default defineConfig([
       'component-filters.json',
       'package-lock.json',
       'helix-importer-ui',
+      '.agents/', // vendored third-party skill scripts, not app code
     ],
   },
 

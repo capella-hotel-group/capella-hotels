@@ -200,6 +200,7 @@ With this information, you can construct URLs for the preview environment (same 
 - Consider the rules in [David's Model](https://www.aem.live/docs/davidsmodel)
 - Search the web with `site:www.aem.live`
 - Search the full text of the documentation with `curl -s https://www.aem.live/docpages-index.json | jq -r '.data[] | select(.content | test("KEYWORD"; "i")) | "\(.path): \(.title)"'`
+- Fetch `https://www.aem.live/llms.txt` for an AI-optimized overview of AEM Edge Delivery Services with links to key docs
 
 ## Security Considerations
 
