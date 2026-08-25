@@ -1,14 +1,13 @@
 import {
   decorateBlock,
   decorateBlocks,
-  decorateButtons,
   decorateIcons,
   decorateSections,
   loadBlock,
   loadScript,
   loadSections,
 } from '@/app/aem';
-import { decorateMain } from '@/app/scripts';
+import { decorateButtons, decorateMain } from '@/app/scripts';
 import { decorateRichtext } from './editor-support-rte';
 
 let promiseChanges$: Promise<boolean> = Promise.resolve(false);

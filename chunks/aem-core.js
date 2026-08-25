@@ -119,11 +119,23 @@ var e = (function () {
             (i.baseURL = i.baseURL || new URL(window.RUM_BASE || `/`, new URL(`https://ot.aem.live`))),
             (i.collectBaseURL = i.collectBaseURL || i.baseURL),
             (i.sendPing = (e, t, n = {}) => {
-              let r = JSON.stringify({ weight: a, id: o, referer: window.location.href, checkpoint: e, t, ...n }),
-                s = (window.RUM_PARAMS && new URLSearchParams(window.RUM_PARAMS).toString()) || ``,
-                { href: c, origin: l } = new URL(`.rum/${a}${s ? `?${s}` : ``}`, i.collectBaseURL),
-                u = l === window.location.origin ? new Blob([r], { type: `application/json` }) : r;
-              (navigator.sendBeacon(c, u), console.debug(`ping:${e}`, n));
+              let r =
+                  navigator.webdriver && !navigator.userAgent.includes(`+http`)
+                    ? { ua: `${navigator.userAgent} +http://navigator.webdriver` }
+                    : {},
+                s = JSON.stringify({
+                  weight: a,
+                  id: o,
+                  referer: window.location.origin + window.location.pathname,
+                  checkpoint: e,
+                  t,
+                  ...n,
+                  ...r,
+                }),
+                c = (window.RUM_PARAMS && new URLSearchParams(window.RUM_PARAMS).toString()) || ``,
+                { href: l, origin: u } = new URL(`.rum/${a}${c ? `?${c}` : ``}`, i.collectBaseURL),
+                d = u === window.location.origin ? new Blob([s], { type: `application/json` }) : s;
+              (navigator.sendBeacon(l, d), console.debug(`ping:${e}`, n));
             }),
             i.sendPing(`top`, n()),
             (i.enhance = () => {
@@ -227,30 +239,30 @@ function f(e, t = document) {
   return [...t.head.querySelectorAll(`meta[${n}="${e}"]`)].map((e) => e.content).join(`, `) || ``;
 }
 function p(e, t = ``, n = !1, r = [{ media: `(min-width: 600px)`, width: `2000` }, { width: `750` }]) {
-  let i = new URL(e, window.location.href),
+  let i = e.startsWith(`http`) ? new URL(e) : new URL(e, window.location.href),
     a = document.createElement(`picture`),
-    { pathname: o } = i,
-    s = o.substring(o.lastIndexOf(`.`) + 1);
+    { origin: o, pathname: s } = i,
+    c = s.substring(s.lastIndexOf(`.`) + 1);
   return (
     r.forEach((e) => {
       let t = document.createElement(`source`);
       (e.media && t.setAttribute(`media`, e.media),
         t.setAttribute(`type`, `image/webp`),
-        t.setAttribute(`srcset`, `${o}?width=${e.width}&format=webply&optimize=medium`),
+        t.setAttribute(`srcset`, `${o}${s}?width=${e.width}&format=webply&optimize=medium`),
         a.appendChild(t));
     }),
     r.forEach((e, i) => {
       if (i < r.length - 1) {
         let t = document.createElement(`source`);
         (e.media && t.setAttribute(`media`, e.media),
-          t.setAttribute(`srcset`, `${o}?width=${e.width}&format=${s}&optimize=medium`),
+          t.setAttribute(`srcset`, `${o}${s}?width=${e.width}&format=${c}&optimize=medium`),
           a.appendChild(t));
       } else {
         let r = document.createElement(`img`);
         (r.setAttribute(`loading`, n ? `eager` : `lazy`),
           r.setAttribute(`alt`, t),
           a.appendChild(r),
-          r.setAttribute(`src`, `${o}?width=${e.width}&format=${s}&optimize=medium`));
+          r.setAttribute(`src`, `${o}${s}?width=${e.width}&format=${c}&optimize=medium`));
       }
     }),
     a
@@ -286,31 +298,7 @@ function h(e) {
         : n(e));
   });
 }
-function g(e) {
-  e.querySelectorAll(`a`).forEach((e) => {
-    if (((e.title = e.title || e.textContent || ``), e.href !== e.textContent)) {
-      let t = e.parentElement,
-        n = e.parentElement?.parentElement;
-      t &&
-        n &&
-        !e.querySelector(`img`) &&
-        (t.childNodes.length === 1 &&
-          (t.tagName === `P` || t.tagName === `DIV`) &&
-          ((e.className = `button`), t.classList.add(`button-container`)),
-        t.childNodes.length === 1 &&
-          t.tagName === `STRONG` &&
-          n.childNodes.length === 1 &&
-          n.tagName === `P` &&
-          ((e.className = `button primary`), n.classList.add(`button-container`)),
-        t.childNodes.length === 1 &&
-          t.tagName === `EM` &&
-          n.childNodes.length === 1 &&
-          n.tagName === `P` &&
-          ((e.className = `button secondary`), n.classList.add(`button-container`)));
-    }
-  });
-}
-function _(e, t = ``, n = ``) {
+function g(e, t = ``, n = ``) {
   let r = Array.from(e.classList)
       .find((e) => e.startsWith(`icon-`))
       ?.substring(5),
@@ -323,12 +311,12 @@ function _(e, t = ``, n = ``) {
     (i.height = 16),
     e.append(i));
 }
-function v(e, t = ``) {
+function _(e, t = ``) {
   e.querySelectorAll(`span.icon`).forEach((e) => {
-    _(e, t);
+    g(e, t);
   });
 }
-function y(e) {
+function v(e) {
   e.querySelectorAll(`:scope > div:not([data-section-status])`).forEach((e) => {
     let t = [],
       n = !1;
@@ -359,7 +347,7 @@ function y(e) {
     }
   });
 }
-function b(e, t) {
+function y(e, t) {
   let n = Array.isArray(t) ? t : [[t]],
     r = document.createElement(`div`);
   return (
@@ -378,7 +366,7 @@ function b(e, t) {
     r
   );
 }
-async function x(e) {
+async function b(e) {
   let t = e.dataset.blockStatus;
   if (t !== `loading` && t !== `loaded`) {
     e.dataset.blockStatus = `loading`;
@@ -404,7 +392,7 @@ async function x(e) {
   }
   return e;
 }
-function S(e) {
+function x(e) {
   let t = e.classList[0];
   if (t && !e.dataset.blockStatus) {
     (e.classList.add(`block`),
@@ -413,21 +401,21 @@ function S(e) {
       h(e),
       e.parentElement?.classList.add(`${t}-wrapper`));
     let n = e.closest(`.section`);
-    (n && n.classList.add(`${t}-container`), g(e));
+    n && n.classList.add(`${t}-container`);
   }
 }
-function C(e) {
-  e.querySelectorAll(`div.section > div > div`).forEach(S);
+function S(e) {
+  e.querySelectorAll(`div.section > div > div`).forEach(x);
+}
+async function C(e) {
+  let t = y(`header`, ``);
+  return (e.append(t), x(t), b(t));
 }
 async function w(e) {
-  let t = b(`header`, ``);
-  return (e.append(t), S(t), x(t));
+  let t = y(`footer`, ``);
+  return (e.append(t), x(t), b(t));
 }
 async function T(e) {
-  let t = b(`footer`, ``);
-  return (e.append(t), S(t), x(t));
-}
-async function E(e) {
   let t = e.querySelector(`img`);
   await new Promise((e) => {
     t && !t.complete
@@ -437,43 +425,42 @@ async function E(e) {
       : e();
   });
 }
-async function D(e, t) {
+async function E(e, t) {
   let n = e.dataset.sectionStatus;
   if (!n || n === `initialized`) {
     e.dataset.sectionStatus = `loading`;
     let n = [...e.querySelectorAll(`div.block`)];
-    for (let e = 0; e < n.length; e += 1) await x(n[e]);
+    for (let e = 0; e < n.length; e += 1) await b(n[e]);
     (t && (await t(e)), (e.dataset.sectionStatus = `loaded`), (e.style.display = ``));
   }
 }
-async function O(e) {
+async function D(e) {
   let t = [...e.querySelectorAll(`div.section`)];
-  for (let e = 0; e < t.length; e += 1) (await D(t[e]), e === 0 && i.enhance && i.enhance());
+  for (let e = 0; e < t.length; e += 1) (await E(t[e]), e === 0 && i.enhance && i.enhance());
 }
 o();
 export {
-  h as C,
-  E as S,
-  l as _,
-  g as a,
-  c as b,
-  m as c,
-  u as d,
-  T as f,
-  O as g,
+  r as C,
+  h as S,
+  i as _,
+  _ as a,
+  s as b,
+  f as c,
+  w as d,
+  C as f,
+  l as g,
   D as h,
-  C as i,
-  f as l,
-  d as m,
+  S as i,
+  b as l,
+  E as m,
   p as n,
   v as o,
-  w as p,
-  S as r,
-  y as s,
-  b as t,
-  x as u,
-  i as v,
-  r as w,
-  s as x,
-  a as y,
+  d as p,
+  x as r,
+  m as s,
+  y as t,
+  u,
+  a as v,
+  T as x,
+  c as y,
 };

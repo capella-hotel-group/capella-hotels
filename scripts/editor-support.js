@@ -1,14 +1,13 @@
 import {
   decorateBlock as e,
   decorateBlocks as t,
-  decorateButtons as n,
-  decorateIcons as r,
-  decorateSections as i,
-  loadBlock as a,
-  loadScript as o,
-  loadSections as s,
+  decorateIcons as n,
+  decorateSections as r,
+  loadBlock as i,
+  loadScript as a,
+  loadSections as o,
 } from '/scripts/aem.js';
-import { decorateMain as c } from '/scripts/scripts.js';
+import { decorateButtons as s, decorateMain as c } from '/scripts/scripts.js';
 function l(e = document) {
   function t(e) {
     (delete e.dataset.richtextResource,
@@ -65,7 +64,7 @@ async function d(d) {
   if (!h?.length) return !1;
   let g = h[0]?.content;
   if (!g) return !1;
-  await o(`${window.hlx.codeBasePath}/scripts/dompurify.min.js`);
+  await a(`${window.hlx.codeBasePath}/scripts/dompurify.min.js`);
   let _ = window.DOMPurify?.sanitize(g, { USE_PROFILES: { html: !0 } }) ?? ``,
     v = new DOMParser().parseFromString(_, `text/html`),
     y = document.querySelector(`[data-aue-resource="${m}"]`);
@@ -77,48 +76,48 @@ async function d(d) {
           y.insertAdjacentElement(`afterend`, e),
           c(e),
           l(e),
-          await s(e),
+          await o(e),
           y.remove(),
           (e.style.display = ``),
           f(e),
           !0)
         : !1;
     }
-    let o = y.parentElement?.closest(`.block[data-aue-resource]`) || y.closest(`.block[data-aue-resource]`);
-    if (o) {
-      let t = o.getAttribute(`data-aue-resource`),
-        i = v.querySelector(`[data-aue-resource="${t}"]`);
-      if (i)
+    let a = y.parentElement?.closest(`.block[data-aue-resource]`) || y.closest(`.block[data-aue-resource]`);
+    if (a) {
+      let t = a.getAttribute(`data-aue-resource`),
+        r = v.querySelector(`[data-aue-resource="${t}"]`);
+      if (r)
         return (
-          (i.style.display = `none`),
-          o.insertAdjacentElement(`afterend`, i),
-          n(i),
-          r(i),
-          e(i),
-          l(i),
-          await a(i),
-          o.remove(),
-          (i.style.display = ``),
+          (r.style.display = `none`),
+          a.insertAdjacentElement(`afterend`, r),
+          s(r),
+          n(r),
+          e(r),
+          l(r),
+          await i(r),
+          a.remove(),
+          (r.style.display = ``),
           !0
         );
     } else {
       let e = v.querySelectorAll(`[data-aue-resource="${m}"],[data-richtext-resource="${m}"]`);
       if (e.length) {
-        let { parentElement: a } = y,
-          [o] = e;
+        let { parentElement: i } = y,
+          [a] = e;
         return (
-          y.matches(`.section`) && a && o
-            ? ((o.style.display = `none`),
-              y.insertAdjacentElement(`afterend`, o),
-              n(o),
-              r(o),
-              l(o),
-              i(a),
-              t(a),
-              await s(a),
+          y.matches(`.section`) && i && a
+            ? ((a.style.display = `none`),
+              y.insertAdjacentElement(`afterend`, a),
+              s(a),
+              n(a),
+              l(a),
+              r(i),
+              t(i),
+              await o(i),
               y.remove(),
-              (o.style.display = ``))
-            : a && (y.replaceWith(...e), n(a), r(a), l(a)),
+              (a.style.display = ``))
+            : i && (y.replaceWith(...e), s(i), n(i), l(i)),
           !0
         );
       }
