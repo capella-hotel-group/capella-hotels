@@ -1,18 +1,17 @@
 {
-  "name": "@adobe/aem-boilerplate",
-  "version": "1.3.0",
+  "name": "capella-hotels",
+  "version": "0.1.0",
   "private": true,
-  "description": "Starter project for Adobe Helix",
-  "homepage": "https://github.com/adobe/aem-boilerplate#readme",
+  "description": "Capella Hotels website built on Adobe Edge Delivery Services (EDS) with Universal Editor (xwalk) authoring",
+  "homepage": "https://github.com/capella-hotel-group/capella-hotels#readme",
   "bugs": {
-    "url": "https://github.com/adobe/aem-boilerplate/issues"
+    "url": "https://github.com/capella-hotel-group/capella-hotels/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adobe/aem-boilerplate.git"
+    "url": "git+https://github.com/capella-hotel-group/capella-hotels.git"
   },
   "license": "Apache License 2.0",
-  "author": "Adobe",
   "type": "module",
   "scripts": {
     "aem:up": "aem up --no-open",
