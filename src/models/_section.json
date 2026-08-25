@@ -42,6 +42,31 @@
   "filters": [
     {
       "id": "section",
+      "components": [
+        "text",
+        "image",
+        "button",
+        "title",
+        "hero",
+        "cards",
+        "columns",
+        "fragment",
+        "text-with-image",
+        "hero-banner",
+        "section-intro",
+        "awards-list",
+        "turneo-proxy-test",
+        "newsletter-form",
+        "culturist-carousel",
+        "destination-cards",
+        "interactive-asset",
+        "filters-grid",
+        "offers-carousel",
+        "text-with-cta"
+      ]
+    },
+    {
+      "id": "richtext",
       "rte": {
         "toolbar": {
           "format": ["bold", "italic", "underline", "strike", "code_inline", "text_color"],
@@ -66,35 +91,9 @@
             "editor",
             "advanced"
           ]
-        },
-        "actions": {
-          "classes": {
-            "options": []
-          }
         }
       },
-      "components": [
-        "text",
-        "image",
-        "button",
-        "title",
-        "hero",
-        "cards",
-        "columns",
-        "fragment",
-        "text-with-image",
-        "hero-banner",
-        "section-intro",
-        "awards-list",
-        "turneo-proxy-test",
-        "newsletter-form",
-        "culturist-carousel",
-        "destination-cards",
-        "interactive-asset",
-        "filters-grid",
-        "offers-carousel",
-        "text-with-cta"
-      ]
+      "components": ["richtext"]
     }
   ]
 }

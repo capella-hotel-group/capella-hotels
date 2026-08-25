@@ -190,6 +190,14 @@
         "valueType": "boolean",
         "value": false,
         "label": "Open CTA in new tab"
+      },
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "value": "",
+        "placeholder": "e.g., awards"
       }
     ]
   },
@@ -275,6 +283,14 @@
         "label": "Section Title Suffix",
         "value": "",
         "required": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "id",
+        "label": "Block ID",
+        "value": "",
+        "placeholder": "e.g., culturists"
       }
     ]
   },
@@ -1018,6 +1034,14 @@
         "label": "CTA Open in new tab",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Block ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., about-capella"
       }
     ]
   },

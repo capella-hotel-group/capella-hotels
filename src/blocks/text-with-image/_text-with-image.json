@@ -38,7 +38,7 @@
             }
           ]
         },
-                {
+        {
           "component": "text",
           "name": "eyebrow",
           "label": "Eyebrow Text",
@@ -102,6 +102,14 @@
           "label": "CTA Open in new tab",
           "valueType": "boolean",
           "value": false
+        },
+        {
+          "component": "text",
+          "name": "id",
+          "label": "Block ID",
+          "valueType": "string",
+          "value": "",
+          "placeholder": "e.g., about-capella"
         }
       ]
     }

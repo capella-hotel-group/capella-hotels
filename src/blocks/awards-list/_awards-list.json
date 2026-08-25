@@ -11,7 +11,7 @@
               "name": "Awards List",
               "model": "awards-list",
               "filter": "awards-list",
-              "title":""
+              "title": ""
             }
           }
         }
@@ -69,6 +69,14 @@
           "valueType": "boolean",
           "value": false,
           "label": "Open CTA in new tab"
+        },
+        {
+          "component": "text",
+          "name": "id",
+          "valueType": "string",
+          "label": "Block ID",
+          "value": "",
+          "placeholder": "e.g., awards"
         }
       ]
     },
@@ -102,10 +110,7 @@
   "filters": [
     {
       "id": "awards-list",
-      "components": [
-        "awards-list-item"
-      ]
+      "components": ["awards-list-item"]
     }
   ]
 }
-

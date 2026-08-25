@@ -1,5 +1,7 @@
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children];
+  const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
+  if (blockId) block.id = blockId;
 
   // row 0: eyebrow
   // row 1: title
