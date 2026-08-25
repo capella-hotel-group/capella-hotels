@@ -141,4 +141,8 @@ function f(e) {
 }
 (f(document.querySelector(`main`)),
   l(),
-  new MutationObserver(() => l()).observe(document, { attributeFilter: [`data-richtext-prop`], subtree: !0 }));
+  new MutationObserver(() => l()).observe(document, {
+    attributes: !0,
+    attributeFilter: [`data-richtext-prop`],
+    subtree: !0,
+  }));

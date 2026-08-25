@@ -9,8 +9,8 @@
     },
     {
       "matchPackageNames": ["eslint"],
-      "allowedVersions": "^8.0.0",
-      "description": "Pin ESLint to v8 until airbnb-base supports v9+"
+      "allowedVersions": "^9.0.0",
+      "description": "Pin ESLint to v9"
     }
   ]
 }

@@ -130,4 +130,4 @@ decorateRichtext();
 // in cases where the block decoration is not done in one synchronous iteration we need to listen
 // for new richtext-instrumented elements. this happens for example when using experimentation.
 const observer = new MutationObserver(() => decorateRichtext());
-observer.observe(document, { attributeFilter: ['data-richtext-prop'], subtree: true });
+observer.observe(document, { attributes: true, attributeFilter: ['data-richtext-prop'], subtree: true });

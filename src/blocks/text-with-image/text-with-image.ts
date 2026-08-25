@@ -72,7 +72,7 @@ export default function decorate(block: HTMLElement): void {
   desc.className = 'description';
 
   if (descriptionEl) {
-    desc.innerHTML += descriptionEl.innerHTML;
+    desc.append(...descriptionEl.childNodes);
   }
 
   textCol.append(desc);

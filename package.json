@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/capella-hotel-group/capella-hotels.git"
   },
-  "license": "Apache License 2.0",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "aem:up": "aem up --no-open",
