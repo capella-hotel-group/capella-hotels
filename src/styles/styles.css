@@ -9,6 +9,8 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+@import './tokens.css';
+
 :root {
     /* colors */
     --background-color: white;
@@ -19,9 +21,9 @@
     --link-hover-color: #1d3ecf;
 
     /* fonts */
-    --body-font-family: "Calibre", "Arial", sans-serif;
-    --heading-font-family: "Goudy Regular", "Times", "Times New Roman", serif;
-    --heading-light-font-family: "Goudy Light", "Times", "Times New Roman", serif;
+    --body-font-family: 'Calibre', 'Arial', sans-serif;
+    --heading-font-family: 'Goudy Regular', 'Times', 'Times New Roman', serif;
+    --heading-light-font-family: 'Goudy Light', 'Times', 'Times New Roman', serif;
 
     /* body sizes */
     --body-font-size-m: 22px;
@@ -52,13 +54,13 @@
 @font-face {
     font-family: calibre-fallback;
     size-adjust: 99.529%;
-    src: local("Arial");
+    src: local('Arial');
 }
 
 @font-face {
     font-family: goudy-wtc-fallback;
     size-adjust: 97%;
-    src: local("Georgia");
+    src: local('Georgia');
 }
 
 @media (width >=900px) {
@@ -105,49 +107,52 @@ footer .footer {
     visibility: hidden;
 }
 
-header .header[data-block-status="loaded"],
-footer .footer[data-block-status="loaded"] {
+header .header[data-block-status='loaded'],
+footer .footer[data-block-status='loaded'] {
     visibility: visible;
 }
 
-/* 
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  margin-top: 0.8em;
-  margin-bottom: 0.25em;
-  font-family: var(--heading-font-family);
-  font-weight: 600;
-  line-height: 1.25;
-  scroll-margin: 40px;
+    margin-top: 0.8em;
+    margin-bottom: 0.25em;
+    font-family: var(--heading-font-family);
+    font-weight: var(--font-weight-heading);
+    line-height: 1.25;
+    scroll-margin: 40px;
 }
 
 h1 {
-  font-size: var(--heading-font-size-xxl);
+    font-size: var(--font-size-heading-h1);
+    line-height: var(--line-height-heading-h1);
 }
 
 h2 {
-  font-size: var(--heading-font-size-xl);
+    font-size: var(--font-size-heading-h2);
+    line-height: var(--line-height-heading-h2);
 }
 
 h3 {
-  font-size: var(--heading-font-size-l);
+    font-size: var(--font-size-heading-h3);
+    line-height: var(--line-height-heading-h3);
 }
 
-h4 {
-  font-size: var(--heading-font-size-m);
-}
-
-h5 {
-  font-size: var(--heading-font-size-s);
-}
-
+/* h5/h6 share the smallest defined heading step; the token scale stops at h4 */
+h4,
+h5,
 h6 {
-  font-size: var(--heading-font-size-xs);
-} */
+    font-size: var(--font-size-heading-h4);
+    line-height: var(--line-height-heading-h4);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
 
 p,
 dl,
@@ -184,7 +189,7 @@ main:has(.hero-banner) {
 }
 
 /* Authoring: cap height to prevent layout issues in the Universal Editor */
-.adobe-ue-edit  main:has(.hero-banner) {
+.adobe-ue-edit main:has(.hero-banner) {
     padding-top: 1080px;
 }
 
@@ -314,18 +319,18 @@ main .section.highlight {
 
 /* ── RTL / Arabic overrides ──────────────────────────────── */
 
-[dir="rtl"] body {
+[dir='rtl'] body {
     line-height: 1.8;
     letter-spacing: 0;
     word-spacing: 0;
 }
 
 /* Directional icons — flip horizontally in RTL */
-[dir="rtl"] [class*="icon-arrow"],
-[dir="rtl"] [class*="icon-chevron"],
-[dir="rtl"] [class*="icon-back"],
-[dir="rtl"] [class*="icon-forward"],
-[dir="rtl"] [class*="icon-next"],
-[dir="rtl"] [class*="icon-prev"] {
+[dir='rtl'] [class*='icon-arrow'],
+[dir='rtl'] [class*='icon-chevron'],
+[dir='rtl'] [class*='icon-back'],
+[dir='rtl'] [class*='icon-forward'],
+[dir='rtl'] [class*='icon-next'],
+[dir='rtl'] [class*='icon-prev'] {
     transform: scaleX(-1);
 }
