@@ -8,7 +8,10 @@ helix-importer-ui
 *.bak
 .idea
 
-.vscode
+# IDEs
+.vscode/*
+!.vscode/mcp.json
+!.vscode/tasks.json
 
 # Ensure these files are tracked
 !CLAUDE.md
