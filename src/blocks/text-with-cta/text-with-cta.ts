@@ -1,41 +1,97 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { loadFragment } from '@/blocks/fragment/fragment.js';
 
 const THEMES = ['light-neutral', 'soft-sand'];
 const CTA_STYLES = ['underlined-text-link', 'solid-button'];
 const cellOf = (row?: Element) => row?.firstElementChild;
 const textOf = (row?: Element) => cellOf(row)?.textContent?.trim() || '';
 
+// Fragments are fetched once per path and shared by every CTA on the page.
+const fragmentCache = new Map<string, Promise<Node[] | null>>();
+
 /**
- * Opens the Salesforce mailing-list modal rendered by the newsletter-form block.
- * Returns false when no newsletter form is present on the page.
+ * Returns the nodes to show in the modal. When the authored fragment holds a block
+ * that already modal-ises itself, its dialog content is unwrapped so the block's own
+ * on-page trigger and duplicate close control are left behind.
  */
-function openSubscriptionModal(): boolean {
-  const trigger = document.querySelector<HTMLElement>('.newsletter-trigger');
-  if (trigger) {
-    trigger.click();
-    return true;
+function extractModalContent(fragment: HTMLElement): Node[] {
+  const nestedDialog = fragment.querySelector<HTMLElement>('[role="dialog"]');
+  const source = nestedDialog?.firstElementChild || nestedDialog || fragment;
+  source.querySelectorAll('[aria-label="Close"]').forEach((node) => node.remove());
+  return [...source.childNodes];
+}
+
+function loadModalContent(path: string): Promise<Node[] | null> {
+  if (!fragmentCache.has(path)) {
+    fragmentCache.set(
+      path,
+      loadFragment(path).then((fragment) => (fragment ? extractModalContent(fragment) : null)),
+    );
   }
+  return fragmentCache.get(path)!;
+}
 
-  const overlay = document.querySelector<HTMLElement>('.newsletter-overlay');
-  if (!overlay) return false;
+/** Builds an empty overlay dialog appended to <body>. */
+function buildModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'text-with-cta-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.hidden = true;
 
-  overlay.classList.add('is-open');
-  document.body.classList.add('newsletter-modal-open');
-  overlay.querySelector<HTMLElement>('.newsletter-dialog-close')?.focus();
-  return true;
+  const panel = document.createElement('div');
+  panel.className = 'text-with-cta-modal-panel';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'text-with-cta-modal-close';
+  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.innerHTML = '&times;';
+
+  const body = document.createElement('div');
+  body.className = 'text-with-cta-modal-body';
+
+  panel.append(closeBtn, body);
+  overlay.append(panel);
+
+  let lastFocused: HTMLElement | null = null;
+
+  const close = () => {
+    overlay.hidden = true;
+    document.body.classList.remove('text-with-cta-modal-open');
+    lastFocused?.focus();
+  };
+
+  const open = () => {
+    lastFocused = document.activeElement as HTMLElement | null;
+    overlay.hidden = false;
+    document.body.classList.add('text-with-cta-modal-open');
+    closeBtn.focus();
+  };
+
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) close();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !overlay.hidden) close();
+  });
+
+  document.body.append(overlay);
+  return { body, open };
 }
 
 export default function decorate(block: HTMLElement): void {
   const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = [...block.children];
 
-  const theme = textOf(themeRow);
-  const ctaStyle = textOf(styleRow);
+  const theme = THEMES.includes(textOf(themeRow)) ? textOf(themeRow) : THEMES[0];
+  const ctaStyle = CTA_STYLES.includes(textOf(styleRow)) ? textOf(styleRow) : CTA_STYLES[0];
   const action = textOf(actionRow);
   const label = textOf(labelRow);
   const href = urlRow?.querySelector('a')?.getAttribute('href') || '#';
   const openInNewTab = textOf(newTabRow).toLowerCase() === 'true';
 
-  block.classList.add(`text-with-cta-theme-${THEMES.includes(theme) ? theme : THEMES[0]}`);
+  block.classList.add(`text-with-cta-theme-${theme}`, `text-with-cta-style-${ctaStyle}`);
 
   const content = document.createElement('div');
   content.className = 'text-with-cta-content';
@@ -57,7 +113,7 @@ export default function decorate(block: HTMLElement): void {
 
   const cta = document.createElement('a');
   cta.className = 'text-with-cta-cta';
-  cta.classList.add(`text-with-cta-cta-${CTA_STYLES.includes(ctaStyle) ? ctaStyle : CTA_STYLES[0]}`);
+  cta.classList.add(`text-with-cta-cta-${ctaStyle}`);
   cta.href = href;
   cta.textContent = label;
 
@@ -65,9 +121,15 @@ export default function decorate(block: HTMLElement): void {
   if (labelSource) moveInstrumentation(labelSource, cta);
 
   if (action === 'popup-form-modal') {
+    let modal: { body: HTMLElement; open: () => void } | null = null;
     cta.setAttribute('aria-haspopup', 'dialog');
-    cta.addEventListener('click', (event) => {
-      if (openSubscriptionModal()) event.preventDefault();
+    cta.addEventListener('click', async (event) => {
+      event.preventDefault();
+      if (!modal) modal = buildModal();
+      modal.open();
+      if (modal.body.hasChildNodes()) return;
+      const nodes = await loadModalContent(href);
+      if (nodes?.length) modal.body.append(...nodes);
     });
   } else if (openInNewTab) {
     cta.target = '_blank';
