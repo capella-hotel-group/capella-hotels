@@ -1,5 +1,5 @@
 import { moveInstrumentation } from '@/app/scripts.js';
-import { getPublishBaseUrl } from '../../../scripts/env.js';
+import { getPublishBaseUrl } from '@/utils/env.js';
 
 function resolveAssetUrl(damPath?: string | null): string | null {
   if (!damPath) return null;

@@ -1,4 +1,4 @@
-import { resolveDAMUrl } from '../../../scripts/env.js';
+import { resolveDAMUrl } from '@/utils/env.js';
 
 // Rows (authored): 0=media type, 1=mediaAsset, 2=mediaAssetMobile, 3=ctaLabel, 4=content
 

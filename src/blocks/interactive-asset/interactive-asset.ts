@@ -1,4 +1,4 @@
-import { getPublishBaseUrl } from '../../../scripts/env.js';
+import { getPublishBaseUrl } from '@/utils/env.js';
 
 const TAB_LIST_QUERY = '/graphql/execute.json/capella-hotels/TabList';
 const PATH_KEY = '_path';

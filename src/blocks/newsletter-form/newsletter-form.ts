@@ -1,6 +1,6 @@
 import type { HCaptchaApi } from '@/types/hcaptcha.js';
 import { getPageLang } from '@/app/scripts.js';
-import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '../../../scripts/env.js';
+import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
