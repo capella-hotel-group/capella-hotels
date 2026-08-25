@@ -60,7 +60,7 @@ export function getPackageVersion(): string {
  */
 export function manualChunks(id: string): string | undefined {
   if (id.includes(join(SRC_DIR, 'app', 'aem.ts'))) return 'aem-core';
-  if (id.endsWith('scripts/env.js')) return 'env';
+  if (id.includes(join(SRC_DIR, 'utils', 'env.ts')) || id.includes(join(SRC_DIR, 'configs', 'env.ts'))) return 'env';
   if (id.endsWith('scripts/dompurify.min.js')) return 'dompurify';
   if (!id.includes('node_modules')) return undefined;
   return 'aem-core';
@@ -93,22 +93,27 @@ function shortHash(content: string): string {
 
 /**
  * Prepends a `/*! v{version} | h{hash} *\/` banner to every built JS chunk and
- * CSS asset, hashed off that file's own content so the banner (and the resulting
- * git diff) only changes when the file's actual output changes.
+ * CSS asset, hashed off that file's own content so the banner (and the
+ * resulting git diff) only changes when the file's actual output changes.
+ *
+ * Banners are injected in `generateBundle` by mutating the bundle object's
+ * `code`/`source` directly, not via `renderChunk` or `output.banner`: on this
+ * Rolldown-backed Vite version, both of those hooks fire correctly but their
+ * returned/produced content is silently discarded before the final chunk is
+ * written to disk. Mutating the `generateBundle` bundle - the same object Vite
+ * writes verbatim afterwards - is the one place that reliably survives.
  */
 export function versionBannerPlugin(version: string): Plugin {
   return {
     name: 'version-banner',
     enforce: 'post',
-    renderChunk(code) {
-      const banner = `/*! v${version} | h${shortHash(code)} */`;
-      return { code: `${banner}\n${code}`, map: null };
-    },
     generateBundle(_opts, bundle) {
       Object.values(bundle).forEach((file) => {
-        if (file.type === 'asset' && typeof file.source === 'string' && file.fileName.endsWith('.css')) {
+        if (file.type === 'chunk') {
+          const banner = `/*! v${version} | h${shortHash(file.code)} */`;
+          file.code = `${banner}\n${file.code}`;
+        } else if (typeof file.source === 'string' && file.fileName.endsWith('.css')) {
           const banner = `/*! v${version} | h${shortHash(file.source)} */`;
-
           file.source = `${banner}\n${file.source}`;
         }
       });
