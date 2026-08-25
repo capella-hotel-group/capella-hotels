@@ -19,9 +19,10 @@ The repository provides the basic structure, blocks, and configuration needed to
 ## Setup Commands
 
 - Install dependencies: `npm install`
-- Start local development: `npx -y @adobe/aem-cli up --no-open --forward-browser-logs` (run in background, if possible)
-  - Install the AEM CLI globally by running `npm install -g @adobe/aem-cli` then `aem up` is equivalent to the command above
+- Start local development: `npm start` (run in background, if possible)
+  - This runs `tsc --watch`, a Vite watch build of `src/` into `scripts/`, `styles/`, `blocks/*`, and the AEM CLI dev server in parallel, so edits under `src/` are picked up automatically.
   - The dev server runs at `http://localhost:3000` with auto-reload. Open it in playwright, puppeteer, or a browser. If none are available, ask the human to open it and give feedback.
+  - If you only need the AEM CLI without the `src/` watch build, run `npx -y @adobe/aem-cli up --no-open --forward-browser-logs` (or install it globally with `npm install -g @adobe/aem-cli` and run `aem up`) — but then rebuild manually after touching `src/` with `npm run build:runtime`.
 - Run linting before committing: `npm run lint`
 - Auto-Fix linting issues: `npm run lint:fix`
 - Build the runtime + editor bundles from `src/`: `npm run build`
@@ -32,17 +33,16 @@ The repository provides the basic structure, blocks, and configuration needed to
 ```
 ├── src/                         # TypeScript source (compiled by Vite/tsc, see Code Style Guidelines below)
     ├── app/                        # Page/runtime entry points
-    ├── blocks/                     # Block source, mirrors blocks/{blockname} output
+    ├── blocks/                     # Block source: {blockname}.ts, {blockname}.css, and the hand-authored _{blockname}.json model (source of truth, merged by build:json)
     ├── configs/                    # Shared configuration
-    ├── models/                     # Block/section/page _{name}.json fragments, merged into the root component-*.json files
+    ├── models/                     # Shared _{name}.json fragments (page, section, text, title, image, button) + the root _component-*.json aggregation entry points
     ├── styles/                     # Style source, mirrors styles/ output
     ├── types/                      # Shared TypeScript types
     └── utils/                      # Shared utilities
-├── blocks/                      # Generated per-block output (never hand-edit the .js/.css here)
+├── blocks/                      # Generated per-block output (never hand-edit; no _{blockname}.json here, that lives in src/blocks/)
     └── {blockname}/                  - Individual block directory
         ├── {blockname}.js              # Block's JavaScript (built from src/blocks)
         └── {blockname}.css             # Block's styles (built from src/styles or co-located source)
-        └── _{blockname}.json           # Block's component definitions, models and filters for Universal Editor (hand-authored, not generated)
 ├── styles/                      # Generated global styles and CSS (never hand-edit)
     ├── styles.css                   # Minimal global styling and layout for your website required for LCP
     ├── lazy-styles.css              # Additional global styling and layout for below the fold/post LCP content
@@ -58,9 +58,9 @@ The repository provides the basic structure, blocks, and configuration needed to
 ├── icons/                       # SVG icons
 ├── head.html                    # Global HTML head content
 ├── 404.html                     # Custom 404 page
-├── component-definition.json    # Generated: aggregate of component definitions from src/models/
-├── component-models.json        # Generated: aggregate of component models from src/models/
-└── component-filters.json       # Generated: aggregate of component filters from src/models/
+├── component-definition.json    # Generated: aggregate of src/models/_component-definition.json + src/blocks/*/_*.json definitions
+├── component-models.json        # Generated: aggregate of src/models/_component-models.json + src/blocks/*/_*.json models
+└── component-filters.json       # Generated: aggregate of src/models/_component-filters.json + src/blocks/*/_*.json filters
 ```
 
 ## Code Style Guidelines
@@ -106,7 +106,7 @@ You can inspect the contents of any page with `curl http://localhost:3000/path/t
 
 Modeling the content for blocks and sections must follow the best practices on https://www.aem.live/developer/component-model-definitions
 
-After making changes to the models in partial files (`_{blockname}` for example) run `npm run build:json` to regenerate the arragated files definitions, models and filters.
+Each block's `definitions`/`models`/`filters` are hand-authored in `src/blocks/{blockname}/_{blockname}.json`; shared fragments (page, section, text, title, image, button) live in `src/models/_{name}.json`. After changing any of these partials, run `npm run build:json` to regenerate the aggregated root `component-definition.json`, `component-models.json`, and `component-filters.json` — those root files and the root `blocks/*/_*.json` path are generated/consumed, never hand-edited.
 
 Use `npm run lint` to verify the models follow the best practices. You can refer to https://github.com/adobe-rnd/eslint-plugin-xwalk?tab=readme-ov-file#rules for more details about the applied rules.
 
