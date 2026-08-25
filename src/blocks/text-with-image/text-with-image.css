@@ -1,7 +1,6 @@
 .text-with-image-container {
-    background: #F9F6F6;
+    background: #f9f6f6;
     padding: 40px 0;
-
 }
 
 .text-with-image {
@@ -29,7 +28,7 @@
     text-transform: uppercase;
     line-height: 1;
     letter-spacing: 0;
-    color: #1B364B;
+    color: #1b364b;
     margin: 0;
     width: 100%;
     max-width: 345px;
@@ -44,7 +43,7 @@
     line-height: 22px;
     letter-spacing: 0;
     text-transform: uppercase;
-    color: #1B364B;
+    color: #1b364b;
     margin: 0 0 14px;
 }
 
@@ -92,7 +91,7 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
-    color: #1B364B;
+    color: #1b364b;
     padding-inline-start: 32px;
 }
 

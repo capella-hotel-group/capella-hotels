@@ -109,15 +109,11 @@
   "filters": [
     {
       "id": "filters-grid",
-      "components": [
-        "filters-grid-tab"
-      ]
+      "components": ["filters-grid-tab"]
     },
     {
       "id": "filters-grid-tab",
-      "components": [
-        "filters-grid-filter"
-      ]
+      "components": ["filters-grid-filter"]
     }
   ]
 }

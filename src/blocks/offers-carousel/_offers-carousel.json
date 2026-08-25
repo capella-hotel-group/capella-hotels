@@ -151,9 +151,7 @@
   "filters": [
     {
       "id": "offers-carousel",
-      "components": [
-        "offers-carousel-item"
-      ]
+      "components": ["offers-carousel-item"]
     }
   ]
 }

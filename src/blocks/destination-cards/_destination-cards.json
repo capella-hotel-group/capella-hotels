@@ -134,9 +134,7 @@
   "filters": [
     {
       "id": "destination-cards",
-      "components": [
-        "destination-card-item"
-      ]
+      "components": ["destination-card-item"]
     }
   ]
 }
