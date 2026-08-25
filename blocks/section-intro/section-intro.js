@@ -1,1 +1,2 @@
+/*! v0.1.0 | ha2b72f75 */
 function e(e){let t=[...e.children],n=t[0]?.querySelector(`div`)?.textContent?.trim(),r=document.createElement(`h2`);r.textContent=n??``,t[0]?.replaceWith(r);let i=document.createElement(`div`);i.classList.add(`section-intro-text`);let a=[`subtext`,`desc`];t.slice(1).forEach((e,t)=>{let n=e.querySelector(`div`);if(n){let e=a[t];e&&n.classList.add(e),i.appendChild(n)}e.remove()}),e.appendChild(i)}export{e as default};
