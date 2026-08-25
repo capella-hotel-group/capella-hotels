@@ -61,7 +61,7 @@ export function getPackageVersion(): string {
 export function manualChunks(id: string): string | undefined {
   if (id.includes(join(SRC_DIR, 'app', 'aem.ts'))) return 'aem-core';
   if (id.includes(join(SRC_DIR, 'utils', 'env.ts')) || id.includes(join(SRC_DIR, 'configs', 'env.ts'))) return 'env';
-  if (id.endsWith('scripts/dompurify.min.js')) return 'dompurify';
+  if (id.includes(join('node_modules', 'dompurify'))) return 'dompurify';
   if (!id.includes('node_modules')) return undefined;
   return 'aem-core';
 }

@@ -7,7 +7,6 @@ scripts/scripts.js
 scripts/delayed.js
 scripts/editor-support.js
 scripts/vendor/
-scripts/dompurify.min.js
 chunks/
 styles/
 blocks/*/*.js

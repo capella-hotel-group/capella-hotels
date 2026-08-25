@@ -17,7 +17,6 @@ export default defineConfig([
       'scripts/scripts.js',
       'scripts/delayed.js',
       'scripts/editor-support.js',
-      'scripts/dompurify.min.js',
       'component-definition.json',
       'component-models.json',
       'component-filters.json',

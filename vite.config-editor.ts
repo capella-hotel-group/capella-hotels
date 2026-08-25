@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
-import { versionBannerPlugin, getPackageVersion } from './vite.helpers.ts';
+import { versionBannerPlugin, getPackageVersion, manualChunks } from './vite.helpers.ts';
 import { ROOT, SRC_DIR } from './config.ts';
 
 const scriptsEntry = path.resolve(SRC_DIR, 'app', 'scripts.ts');
@@ -17,7 +17,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve(ROOT, 'scripts'),
+    outDir: ROOT,
     emptyOutDir: false,
     target: 'es2022',
     rollupOptions: {
@@ -30,7 +30,9 @@ export default defineConfig({
           [scriptsEntry]: '/scripts/scripts.js',
           [aemEntry]: '/scripts/aem.js',
         },
-        entryFileNames: '[name].js',
+        entryFileNames: 'scripts/[name].js',
+        manualChunks,
+        chunkFileNames: 'chunks/[name].js',
         format: 'es',
       },
       preserveEntrySignatures: 'exports-only',

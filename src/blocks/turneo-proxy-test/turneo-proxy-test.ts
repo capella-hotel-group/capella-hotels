@@ -2,12 +2,10 @@ import { fetchExperiencesViaAppBuilder, type TurneoExperience } from './turneo-a
 
 // ─── DOMPurify ────────────────────────────────────────────────────────────────
 
-/** Lazy-load DOMPurify (UMD sets window.DOMPurify as a side-effect). */
+/** Lazy-load DOMPurify so it stays in its own code-split chunk. */
 async function loadDOMPurify() {
-  if (!window.DOMPurify) {
-    await import('../../../scripts/dompurify.min.js');
-  }
-  return window.DOMPurify ?? null;
+  const { default: DOMPurify } = await import('dompurify');
+  return DOMPurify;
 }
 
 // ─── Error state ──────────────────────────────────────────────────────────────

@@ -1,12 +1,4 @@
-import {
-  decorateBlock,
-  decorateBlocks,
-  decorateIcons,
-  decorateSections,
-  loadBlock,
-  loadScript,
-  loadSections,
-} from '@/app/aem';
+import { decorateBlock, decorateBlocks, decorateIcons, decorateSections, loadBlock, loadSections } from '@/app/aem';
 import { decorateButtons, decorateMain } from '@/app/scripts';
 import { decorateRichtext } from './editor-support-rte';
 
@@ -28,10 +20,8 @@ async function applyChanges(event: Event): Promise<boolean> {
   const content = updates[0]?.content;
   if (!content) return false;
 
-  // load dompurify
-  await loadScript(`${window.hlx.codeBasePath}/scripts/dompurify.min.js`);
-
-  const sanitizedContent = window.DOMPurify?.sanitize(content, { USE_PROFILES: { html: true } }) ?? '';
+  const { default: DOMPurify } = await import('dompurify');
+  const sanitizedContent = DOMPurify.sanitize(content, { USE_PROFILES: { html: true } });
   const parsedUpdate = new DOMParser().parseFromString(sanitizedContent, 'text/html');
   const element = document.querySelector<HTMLElement>(`[data-aue-resource="${resource}"]`);
 
