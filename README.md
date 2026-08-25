@@ -31,6 +31,7 @@ npm start
 
 ## Documentation
 
+- [DEVELOPMENT.md](./DEVELOPMENT.md) – start-here guide for contributors: workflow, local testing, quality gates, troubleshooting
 - [AGENTS.md](./AGENTS.md) – project structure, conventions, and workflow for contributors and AI agents
 - [docs/](./docs) – topic guides (RTL/Arabic CSS, header/footer fragment resolution, header nav authoring)
 - Edge Delivery Services docs: https://www.aem.live/docs/
