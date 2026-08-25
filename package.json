@@ -32,14 +32,14 @@
     "tsc:watch": "tsc --watch --noEmit"
   },
   "lint-staged": {
-    "*.{js,mjs,ts}": [
+    "**/*.{js,mjs,ts}": [
       "eslint --fix",
       "prettier --write"
     ],
     "src/**/*.css": [
       "prettier --write"
     ],
-    "*.{json,html,md}": [
+    "**/*.{json,html,md}": [
       "prettier --write"
     ]
   },

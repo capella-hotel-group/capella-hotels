@@ -5,7 +5,11 @@ component-filters.json
 scripts/aem.js
 scripts/scripts.js
 scripts/delayed.js
+scripts/editor-support.js
 scripts/vendor/
 scripts/dompurify.min.js
+chunks/
+styles/
 blocks/*/*.js
+blocks/*/*.css
 package-lock.json
