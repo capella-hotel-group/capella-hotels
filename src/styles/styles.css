@@ -121,32 +121,32 @@ h6 {
     margin-top: 0.8em;
     margin-bottom: 0.25em;
     font-family: var(--heading-font-family);
-    font-weight: var(--font-weight-heading);
+    font-weight: var(--type-font-weight-heading);
     line-height: 1.25;
     scroll-margin: 40px;
 }
 
 h1 {
-    font-size: var(--font-size-heading-h1);
-    line-height: var(--line-height-heading-h1);
+    font-size: var(--typography-fontsize-heading-h1);
+    line-height: var(--typography-line-height-heading-h1);
 }
 
 h2 {
-    font-size: var(--font-size-heading-h2);
-    line-height: var(--line-height-heading-h2);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
 }
 
 h3 {
-    font-size: var(--font-size-heading-h3);
-    line-height: var(--line-height-heading-h3);
+    font-size: var(--typography-fontsize-heading-h3);
+    line-height: var(--typography-line-height-heading-h3);
 }
 
 /* h5/h6 share the smallest defined heading step; the token scale stops at h4 */
 h4,
 h5,
 h6 {
-    font-size: var(--font-size-heading-h4);
-    line-height: var(--line-height-heading-h4);
+    font-size: var(--typography-fontsize-heading-h4);
+    line-height: var(--typography-line-height-heading-h4);
 }
 
 img {

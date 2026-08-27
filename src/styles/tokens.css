@@ -1,17 +1,46 @@
 /*
  * Design tokens extracted from Figma "Capella Revamp 2026 - WF - VN team"
- * (file SfErNxnm2pvTO5c6P1OhQ5, Mockup canvas 4001:3, variable set 5-831).
+ * (file SfErNxnm2pvTO5c6P1OhQ5, node 4032:3088 "Homepage", 1440px desktop
+ * frame - confirmed via the Figma MCP `get_variable_defs` tool).
+ *
+ * NAMING CONVENTION: every custom property below is the literal Figma
+ * variable path with "/" (and spaces) replaced by "-", lowercased - e.g.
+ * the Figma variable `color/surface/primary-default` becomes
+ * `--color-surface-primary-default`. This lets CSS copied straight from
+ * Figma Dev Mode (`var(--the-figma-name)`) be pasted in without renaming
+ * anything. Figma-side quirks are kept verbatim on purpose (do not "fix"
+ * without checking Figma first, or paste-compatibility breaks):
+ *   - `component/toogle/*` has a typo in Figma itself (missing a "g") -
+ *     kept as `--component-toogle-*`.
+ *   - `typography/fontsize/*` has no hyphen between "font" and "size".
+ *   - Figma's `typography/line-height/body/md` variable is shared by BOTH
+ *     the Body M and Body L text styles (there is no separate "body/l"
+ *     line-height variable), so both sizes below reference the same value.
+ *
+ * Font-weight tokens store the numeric CSS equivalent of Figma's named
+ * style ("regular"/"light"/"semibold") since the raw string is not a valid
+ * `font-weight` value. Font-family tokens alias the fallback-chain
+ * variables already declared in styles.css (--body-font-family /
+ * --heading-font-family) instead of duplicating the chain.
+ *
  * Figma mocks up the "Homepage" frame at 3 canvas widths - Mobile 393px,
  * Tablet 834px, Desktop 1440px - but those are just the artboard sizes used
  * to draw the mockup, not the CSS breakpoints. The agreed spec breakpoints
  * are: mobile up to 767px, tablet 768-1199px, desktop 1200px+ (design ref
  * 768/1440). Tablet values below are sampled from the 834px artboard and
  * applied starting at the 768px breakpoint; desktop values are sampled from
- * the 1440px artboard and applied starting at the 1200px breakpoint.
- * Properties with no sampled tablet value keep the mobile value until the
- * desktop override (noted inline).
- * Font-family tokens intentionally reuse the existing --body-font-family /
- * --heading-font-family variables declared in styles.css (calibre / GoudyWtcT).
+ * the 1440px artboard (this file's source node) and applied starting at
+ * the 1200px breakpoint. Properties with no sampled tablet value keep the
+ * mobile value until the desktop override (noted inline).
+ *
+ * Known open items - not modeled yet, need dedicated mobile/tablet sampling
+ * before adding (avoid repeating the past mistake of guessing values):
+ *   - `typography/paragraph spacing/*` scale (heading h1-h3, body s/m).
+ *   - `dimension/layout/module/padding/inline-xs` (52px at desktop).
+ *   - Figma also exposes a standalone `spacing/2XS` variable (= 8) besides
+ *     the 9-step `dimension/spacing/general/*` scale sampled below; treated
+ *     as the same token here (`--dimension-spacing-general-2xs`) - confirm
+ *     with design whether these are meant to be different variables.
  */
 :root {
     /* breakpoints (reference only - CSS media queries can't consume custom
@@ -23,105 +52,112 @@
     --breakpoint-desktop-min: 1200px;
 
     /* color / surface */
-    --color-surface-page: #fff;
-    --color-surface-primary-default: #fff;
+    --color-surface-page: #ffffff;
+    --color-surface-primary-default: #ffffff;
     --color-surface-general-subtle: #f9f6f6;
     --color-surface-general-light: #ece5e3;
-    --color-surface-general-opaque: rgb(38 39 39 / 10%);
+    --color-surface-general-opaque: #2627271a;
     --color-surface-action-default: #1b364b;
-    --color-surface-action-inverse-default: #fff;
-    --color-surface-toggle-inverse-selector-dot: #f7f7f7;
-    --color-surface-toggle-inverse-fill-default: rgb(235 235 235 / 10%);
+    --color-surface-action-inverse-default: #ffffff;
+    --color-surface-component-toggle-inverse-selector-dot: #f7f7f7;
+    --color-surface-component-toggle-inverse-fill-default: #ebebeb1a;
 
     /* color / text */
     --color-text-main-heading: #1b364b;
     --color-text-main-body: #262727;
-    --color-text-main-inverse-heading: #fff;
-    --color-text-main-inverse-body: #fff;
+    --color-text-main-inverse-heading: #ffffff;
+    --color-text-main-inverse-body: #ffffff;
     --color-text-main-disabled: #6e6e6c;
     --color-text-action-default: #1b364b;
-    --color-text-action-inactive: rgb(27 54 75 / 50%);
-    --color-text-action-inverse-default: #fff;
-    --color-text-action-inverse-inactive: rgb(235 235 235 / 50%);
-    --color-text-on-action-default: #fff;
+    --color-text-action-inactive: #1b364b80;
+    --color-text-action-inverse-default: #ffffff;
+    --color-text-action-inverse-inactive: #ebebeb80;
+    --color-text-on-action-default: #ffffff;
     --color-text-on-action-inverse-default: #1b364b;
 
     /* color / icon */
     --color-icon-main-primary: #1b364b;
     --color-icon-action-default: #1b364b;
-    --color-icon-on-action-default: #fff;
+    --color-icon-on-action-default: #ffffff;
 
     /* color / stroke */
     --color-stroke-main-primary: #898987;
     --color-stroke-action-default: #1b364b;
-    --color-stroke-action-inverse-default: #fff;
+    --color-stroke-action-inverse-default: #ffffff;
 
     /* type / font weight (Figma weight names mapped to numeric CSS values) */
-    --font-weight-body-regular: 400;
-    --font-weight-body-bold: 600;
-    --font-weight-heading: 400;
-    --font-weight-subtitle: 400;
-    --font-weight-text-link: 300;
-    --font-weight-button: 300;
+    --type-font-weight-body-reg: 400;
+    --type-font-weight-body-bold: 600;
+    --type-font-weight-heading: 400;
+    --type-font-weight-subtitle: 400;
+    --type-font-weight-text-link: 300;
+    --type-font-weight-button: 300;
+
+    /* type / font family (aliases the fallback chains in styles.css) */
+    --type-font-family-body: var(--body-font-family);
+    --type-font-family-heading: var(--heading-font-family);
+    --type-font-family-subtitle: var(--heading-font-family);
+    --type-font-family-cta: var(--body-font-family);
 
     /* typography / heading scale (mobile default) */
-    --font-size-heading-h1: 36px;
-    --line-height-heading-h1: 36px;
-    --font-size-heading-h2: 28px;
-    --line-height-heading-h2: 32px;
-    --font-size-heading-h3: 24px;
-    --line-height-heading-h3: 28px;
-    --font-size-heading-h4: 22px;
-    --line-height-heading-h4: 24px;
-    --font-size-heading-subtitle: 20px;
-    --line-height-heading-subtitle: 22px;
+    --typography-fontsize-heading-h1: 36px;
+    --typography-line-height-heading-h1: 36px;
+    --typography-fontsize-heading-h2: 28px;
+    --typography-line-height-heading-h2: 32px;
+    --typography-fontsize-heading-h3: 24px;
+    --typography-line-height-heading-h3: 28px;
+    --typography-fontsize-heading-h4: 22px;
+    --typography-line-height-heading-h4: 24px;
+    --typography-fontsize-heading-subtitle: 20px;
+    --typography-line-height-heading-subtitle: 22px;
 
     /* typography / body scale (mobile default) */
-    --font-size-body-l: 20px;
-    --line-height-body-l: 20px;
-    --font-size-body-m: 16px;
-    --line-height-body-m: 20px;
-    --font-size-body-s: 12px;
-    --line-height-body-s: 16px;
+    --typography-fontsize-body-l: 20px;
+    --typography-fontsize-body-m: 16px;
+    --typography-line-height-body-md: 20px;
+    --typography-fontsize-body-s: 12px;
+    --typography-line-height-body-sm: 16px;
 
-    /* spacing scale (breakpoint-independent) */
-    --spacing-min: 0px;
-    --spacing-2xs: 4px;
-    --spacing-xs: 8px;
-    --spacing-s: 12px;
-    --spacing-m: 16px;
-    --spacing-l: 20px;
-    --spacing-xl: 24px;
-    --spacing-2xl: 32px;
-    --spacing-3xl: 40px;
-    --spacing-4xl: 64px;
-    --spacing-5xl: 80px;
-    --spacing-eyebrow-to-title: 12px;
-    --spacing-eyebrow-to-text: 12px;
-    --spacing-title-to-content: 32px;
-    --spacing-module-to-text: 32px;
+    /* dimension / spacing scale (breakpoint-independent) */
+    --dimension-spacing-general-min: 0px;
+    --dimension-spacing-general-2xs: 4px;
+    --dimension-spacing-general-xs: 8px;
+    --dimension-spacing-general-s: 12px;
+    --dimension-spacing-general-m: 16px;
+    --dimension-spacing-general-l: 20px;
+    --dimension-spacing-general-xl: 24px;
+    --dimension-spacing-general-2xl: 32px;
+    --dimension-spacing-general-3xl: 40px;
+    --dimension-spacing-general-4xl: 64px;
+    --dimension-spacing-general-5xl: 80px;
+    --dimension-spacing-eyebrow-to-title: 12px;
+    --dimension-spacing-eyebrow-to-text: 12px;
+    --dimension-spacing-heading-to-content: 32px;
+    --dimension-spacing-vertical-module-to-text: 32px;
 
-    /* layout / module (mobile default) */
-    --layout-module-padding-top: 96px;
-    --layout-module-padding-block: 48px;
-    --layout-module-padding-block-s: 40px;
-    --layout-module-padding-inline-s: 24px;
-    --layout-module-padding-inline-l: 48px;
-    --layout-module-gutter-none: 0px;
-    --layout-module-gutter-xs: 12px;
-    --layout-module-gutter-s: 16px;
-    --layout-module-gutter-m: 24px;
-    --layout-module-gutter-l: 32px;
-    --layout-module-gutter-xl: 40px;
-    --layout-module-gutter-2xl: 48px;
+    /* dimension / layout / module (mobile default) */
+    --dimension-layout-module-padding-top: 96px;
+    --dimension-layout-module-padding-block: 48px;
+    --dimension-layout-module-padding-block-s: 40px;
+    --dimension-layout-module-padding-inline-s: 24px;
+    --dimension-layout-module-padding-inline-l: 48px;
+    --dimension-layout-module-gutter-none: 0px;
+    --dimension-layout-module-gutter-xs: 12px;
+    --dimension-layout-module-gutter-s: 16px;
+    --dimension-layout-module-gutter-m: 24px;
+    --dimension-layout-module-gutter-l: 32px;
+    --dimension-layout-module-gutter-xl: 40px;
+    --dimension-layout-module-gutter-2xl: 48px;
 
-    /* layout / card (mobile default) */
-    --layout-card-padding-block: 20px;
-    --layout-card-padding-inline: 20px;
+    /* dimension / layout / card (mobile default; Figma models top/bottom
+       padding as separate variables, not a single symmetric "block" one) */
+    --dimension-layout-card-padding-top: 20px;
+    --dimension-layout-card-padding-bottom: 20px;
+    --dimension-layout-card-padding-inline: 20px;
 
-    /* layout / carousel */
-    --layout-carousel-item-gap-l: 20px;
-    --layout-carousel-item-gap-s: 4px;
+    /* dimension / layout / carousel */
+    --dimension-layout-carousel-item-gap-l: 20px;
+    --dimension-layout-carousel-item-gap-s: 4px;
 
     /* corner radius */
     --corner-radius-none: 0px;
@@ -134,99 +170,103 @@
     --icon-stroke-32: 2px;
 
     /* component / button (mobile default) */
-    --button-gap: 4px;
-    --button-padding-inline: 24px;
-    --button-padding-block: 4px;
-    --button-height: 40px;
-    --button-corner-standard: 2px;
-    --button-corner-playbtn: var(--corner-radius-round);
+    --component-button-gap: 4px;
+    --component-button-padding-inline: 24px;
+    --component-button-padding-block: 4px;
+    --component-button-height: 40px;
+    --component-button-corner-standard: 2px;
+    --component-button-corner-playbtn: var(--corner-radius-round);
 
     /* component / input field */
-    --input-field-height: 48px;
-    --input-field-padding-inline: 0px;
-    --input-field-padding-block: 8px;
-    --input-field-gap: 4px;
+    --component-input-field-height: 48px;
+    --component-input-field-padding-inline: 0px;
+    --component-input-field-padding-block: 8px;
+    --component-input-field-gap: 4px;
 
-    /* component / toggle (mobile default) */
-    --toggle-selector-dot: 20px;
-    --toggle-padding: 4px;
-    --toggle-width: 64px;
-    --toggle-height: 28px;
-    --toggle-corner: var(--corner-radius-round);
+    /* component / toggle (mobile default; "toogle" is Figma's own typo) */
+    --component-toogle-selector-dot: 20px;
+    --component-toogle-padding: 4px;
+    --component-toogle-width: 64px;
+    --component-toogle-height: 28px;
+    --component-toogle-corner: var(--corner-radius-round);
 }
 
 @media (width >= 768px) {
     /* tablet breakpoint (spec); values sampled from the 834px Figma artboard */
     :root {
         /* typography / heading scale (tablet) */
-        --font-size-heading-h1: 40px;
-        --line-height-heading-h1: 48px;
-        --font-size-heading-h2: 40px;
-        --line-height-heading-h2: 40px;
-        --font-size-heading-h3: 36px;
-        --line-height-heading-h3: 36px;
-        --font-size-heading-h4: 28px;
-        --line-height-heading-h4: 28px;
-        --font-size-heading-subtitle: 24px;
-        --line-height-heading-subtitle: 24px;
+        --typography-fontsize-heading-h1: 40px;
+        --typography-line-height-heading-h1: 48px;
+        --typography-fontsize-heading-h2: 40px;
+        --typography-line-height-heading-h2: 40px;
+        --typography-fontsize-heading-h3: 36px;
+        --typography-line-height-heading-h3: 36px;
+        --typography-fontsize-heading-h4: 28px;
+        --typography-line-height-heading-h4: 28px;
+        --typography-fontsize-heading-subtitle: 24px;
+        --typography-line-height-heading-subtitle: 24px;
 
         /* typography / body scale (tablet) */
-        --font-size-body-m: 18px;
-        --font-size-body-s: 14px;
+        --typography-fontsize-body-m: 18px;
+        --typography-fontsize-body-s: 14px;
 
-        --spacing-2xs: 8px;
-        --spacing-eyebrow-to-title: 14px;
-        --spacing-eyebrow-to-text: 16px;
-        --spacing-title-to-content: 48px;
+        --dimension-spacing-general-2xs: 8px;
+        --dimension-spacing-eyebrow-to-title: 14px;
+        --dimension-spacing-eyebrow-to-text: 16px;
+        --dimension-spacing-heading-to-content: 48px;
 
-        /* layout / module (tablet) */
-        --layout-module-padding-block: 64px;
-        --layout-module-padding-inline-s: 48px;
-        --layout-module-padding-inline-l: 142px;
-        --layout-module-gutter-s: 24px;
-        --layout-module-gutter-2xl: 64px;
+        /* dimension / layout / module (tablet) */
+        --dimension-layout-module-padding-block: 64px;
+        --dimension-layout-module-padding-inline-s: 48px;
+        --dimension-layout-module-padding-inline-l: 142px;
+        --dimension-layout-module-gutter-s: 24px;
+        --dimension-layout-module-gutter-2xl: 64px;
 
-        /* layout / card (tablet) */
-        --layout-card-padding-block: 28px;
-        --layout-card-padding-inline: 28px;
+        /* dimension / layout / card (tablet) */
+        --dimension-layout-card-padding-top: 28px;
+        --dimension-layout-card-padding-bottom: 28px;
+        --dimension-layout-card-padding-inline: 28px;
 
         /* component / button (tablet) */
-        --button-gap: 8px;
-        --button-padding-inline: 32px;
-        --button-padding-block: 16px;
+        --component-button-gap: 8px;
+        --component-button-padding-inline: 32px;
+        --component-button-padding-block: 16px;
 
         /* component / toggle (tablet) */
-        --toggle-width: 72px;
-        --toggle-height: 32px;
+        --component-toogle-width: 72px;
+        --component-toogle-height: 32px;
     }
 }
 
 @media (width >= 1200px) {
-    /* desktop breakpoint (spec); values sampled from the 1440px Figma artboard */
+    /* desktop breakpoint (spec); values sampled from the 1440px Figma
+       artboard (node 4032:3088, confirmed via get_variable_defs) */
     :root {
         /* typography / heading scale (desktop) */
-        --font-size-heading-h1: 48px;
+        --typography-fontsize-heading-h1: 48px;
 
         /* typography / body scale (desktop) */
-        --line-height-body-l: 22px;
-        --line-height-body-m: 22px;
+        --typography-line-height-body-md: 22px;
 
-        --spacing-eyebrow-to-text: 20px;
-        --spacing-title-to-content: 56px;
+        --dimension-spacing-eyebrow-to-text: 20px;
+        --dimension-spacing-heading-to-content: 56px;
 
-        /* layout / module (desktop; padding-top and gutter-xs/l have no
-           sampled tablet value, so they still step up directly here) */
-        --layout-module-padding-top: 120px;
-        --layout-module-gutter-xs: 16px;
-        --layout-module-gutter-l: 40px;
-        --layout-module-padding-inline-s: 80px;
-        --layout-module-padding-inline-l: 296px;
+        /* dimension / layout / module (desktop; padding-top and gutter-xs/l
+           have no sampled tablet value, so they still step up directly here) */
+        --dimension-layout-module-padding-top: 120px;
+        --dimension-layout-module-gutter-xs: 16px;
+        --dimension-layout-module-gutter-l: 40px;
+        --dimension-layout-module-padding-inline-s: 80px;
+        --dimension-layout-module-padding-inline-l: 296px;
 
-        /* layout / card (desktop; no sampled tablet value) */
-        --layout-card-padding-2xl: 64px;
+        /* dimension / layout / card: confirmed unchanged from tablet
+           (20px -> 28px happened at the tablet step; the previous
+           "--layout-card-padding-2xl: 64px" desktop override here was a
+           stale/orphaned token that never matched a base variable name and
+           contradicted the actual 1440px sample - removed) */
 
         /* component / toggle (desktop) */
-        --toggle-selector-dot: 24px;
-        --toggle-width: 80px;
+        --component-toogle-selector-dot: 24px;
+        --component-toogle-width: 80px;
     }
 }
