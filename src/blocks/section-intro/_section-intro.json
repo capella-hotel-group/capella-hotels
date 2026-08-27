@@ -26,7 +26,7 @@
           "label": "Component Anchor ID",
           "valueType": "string",
           "value": "",
-          "placeholder": "e.g., gataway-section-header"
+          "placeholder": "e.g., getaway-section-header"
         },
         {
           "component": "richtext",
