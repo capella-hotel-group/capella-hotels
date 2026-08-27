@@ -10,7 +10,8 @@ Website for Capella Hotels & Resorts, built on Adobe Edge Delivery Services (EDS
 
 ## Prerequisites
 
-- Node.js 18.3.x or newer
+- Node.js 24.x and npm 11.x (pinned in `.nvmrc` and `package.json#engines`)
+- `@adobe/aem-cli` installed globally (`npm install -g @adobe/aem-cli`) — required for `npm start`
 - AEM Cloud Service release 2024.8 or newer (>= `17465`)
 
 ## Getting started
