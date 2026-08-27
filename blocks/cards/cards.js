@@ -1,23 +1,2 @@
-import { createOptimizedPicture } from '../../scripts/aem.js';
-import { moveInstrumentation } from '../../scripts/scripts.js';
-
-export default function decorate(block) {
-  /* change to ul, li */
-  const ul = document.createElement('ul');
-  [...block.children].forEach((row) => {
-    const li = document.createElement('li');
-    moveInstrumentation(row, li);
-    while (row.firstElementChild) li.append(row.firstElementChild);
-    [...li.children].forEach((div) => {
-      if (div.children.length === 1 && div.querySelector('picture')) div.className = 'cards-card-image';
-      else div.className = 'cards-card-body';
-    });
-    ul.append(li);
-  });
-  ul.querySelectorAll('picture > img').forEach((img) => {
-    const optimizedPic = createOptimizedPicture(img.src, img.alt, false, [{ width: '750' }]);
-    moveInstrumentation(img, optimizedPic.querySelector('img'));
-    img.closest('picture').replaceWith(optimizedPic);
-  });
-  block.replaceChildren(ul);
-}
+/*! v0.1.0 | hd90d4255 */
+import{n as e}from"../../chunks/aem-core.js";import{moveInstrumentation as t}from"../../scripts/scripts.js";function n(n){let r=document.createElement(`ul`);[...n.children].forEach(e=>{let n=document.createElement(`li`);for(t(e,n);e.firstElementChild;)n.append(e.firstElementChild);[...n.children].forEach(e=>{e.className=e.children.length===1&&e.querySelector(`picture`)?`cards-card-image`:`cards-card-body`}),r.append(n)}),r.querySelectorAll(`picture > img`).forEach(n=>{let r=e(n.src,n.alt,!1,[{width:`750`}]);t(n,r.querySelector(`img`)),n.closest(`picture`)?.replaceWith(r)}),n.replaceChildren(r)}export{n as default};

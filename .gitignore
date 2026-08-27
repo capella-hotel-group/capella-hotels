@@ -7,3 +7,11 @@ helix-importer-ui
 .DS_Store
 *.bak
 .idea
+
+# IDEs
+.vscode/*
+!.vscode/tasks.json
+
+# Ensure these files are tracked
+!CLAUDE.md
+!AGENTS.md

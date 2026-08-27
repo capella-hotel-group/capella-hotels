@@ -1,8 +1,16 @@
 {
   "extends": ["config:recommended"],
-  "packageRules": [{
+  "packageRules": [
+    {
       "matchDepTypes": ["devDependencies"],
-      "labels": ["ignore-psi-check"], 
-      "automerge": true
-  }]
+      "labels": ["ignore-psi-check"],
+      "automerge": true,
+      "ignoreTests": false
+    },
+    {
+      "matchPackageNames": ["eslint"],
+      "allowedVersions": "^9.0.0",
+      "description": "Pin ESLint to v9"
+    }
+  ]
 }

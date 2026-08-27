@@ -1,8 +1,4 @@
 {
-  "mappings": [
-    "/content/capella-hotels/:/"
-  ],
-  "includes": [
-    "/content/capella-hotels/"
-  ]
+  "mappings": ["/content/capella-hotels/:/"],
+  "includes": ["/content/capella-hotels/"]
 }

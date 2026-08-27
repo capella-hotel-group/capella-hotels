@@ -1,0 +1,217 @@
+.text-with-image-container {
+    background: #f9f6f6;
+    padding: 40px 0;
+}
+
+.text-with-image {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    gap: 0;
+    align-items: center;
+    max-width: 1440px;
+    margin: 0 auto 120px;
+    padding: 0;
+}
+
+/* Text column */
+.text-with-image .text-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 64px 52px 64px 80px;
+}
+
+.text-with-image .text-col h3 {
+    font-size: 3rem;
+    font-family: var(--heading-font-family);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: 0;
+    color: #1b364b;
+    margin: 0;
+    width: 100%;
+    max-width: 345px;
+    padding-inline-start: 32px;
+    text-indent: -32px;
+}
+
+.text-with-image .text-col .eyebrow {
+    font-family: var(--body-font-family);
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 22px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: #1b364b;
+    margin: 0 0 14px;
+}
+
+.text-with-image .description {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-inline-start: 32px;
+    margin-top: 56px;
+}
+
+.text-with-image .description h4 {
+    font-family: var(--heading-font-family);
+    font-weight: 400;
+    color: #262727;
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 0;
+    line-height: 24px;
+}
+
+.text-with-image .description p {
+    font-family: var(--body-font-family);
+    font-weight: 400;
+    color: #262727;
+    line-height: 24px;
+    font-size: 1.25rem;
+    margin: 0;
+    letter-spacing: 0;
+}
+
+.text-with-image .description p:empty {
+    display: none;
+}
+
+.text-with-image .cta-link {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 32px;
+    font-size: 1.125rem;
+    font-family: var(--body-font-family);
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    color: #1b364b;
+    padding-inline-start: 32px;
+}
+
+.text-with-image .cta-link:hover {
+    opacity: 0.6;
+}
+
+/* Image column */
+.text-with-image .image-col {
+    overflow: hidden;
+}
+
+.text-with-image.image-left .image-col {
+    order: -1;
+}
+
+.text-with-image.image-left {
+    grid-template-columns: 60% 40%;
+}
+
+/* .text-with-image .image-col picture {
+    display: block;
+    width: calc(100% - 40px);
+    height: auto;
+} */
+
+.text-with-image .image-col img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Tablet */
+@media (width <=1024px) {
+    .text-with-image {
+        grid-template-columns: 50% 50%;
+    }
+
+    .text-with-image .text-col {
+        padding: 64px 48px;
+    }
+
+    .text-with-image .text-col h3 {
+        font-size: 2.5rem;
+    }
+
+    .text-with-image .description p {
+        font-size: 1.5rem;
+        line-height: 24px;
+    }
+
+    .text-with-image .image-col.has-mobile-image {
+        aspect-ratio: 4 / 5;
+    }
+
+    .text-with-image .image-col.has-mobile-image img {
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+/* Mobile */
+@media (width <=767px) {
+    .text-with-image .text-col h3 {
+        font-size: 2.25rem;
+        line-height: 36px;
+    }
+
+    .text-with-image {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 48px 0;
+        margin-bottom: 80px;
+    }
+
+    .text-with-image.image-left {
+        grid-template-columns: 1fr;
+    }
+
+    .text-with-image .text-col {
+        padding: 48px 24px;
+    }
+
+    .text-with-image .text-col .eyebrow {
+        font-size: 1rem;
+        line-height: 20px;
+        margin-bottom: 12px;
+    }
+
+    .text-with-image .description {
+        margin-top: 32px;
+        gap: 12px;
+    }
+
+    .text-with-image .description h4 {
+        font-size: 1.25rem;
+        line-height: 22px;
+    }
+
+    .text-with-image .description p {
+        font-size: 1.125rem;
+        line-height: 20px;
+    }
+
+    .text-with-image .cta-link {
+        font-size: 1rem;
+        line-height: 20px;
+    }
+
+    .text-with-image .image-col {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+    }
+
+    .text-with-image .image-col img {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .text-with-image.image-left .image-col {
+        order: 0;
+    }
+}

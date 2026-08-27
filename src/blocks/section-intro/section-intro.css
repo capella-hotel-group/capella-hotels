@@ -1,0 +1,115 @@
+/* section-intro styles */
+.section-intro-wrapper {
+    max-width: 1366px;
+    margin-inline: auto;
+    position: relative;
+    margin-bottom: 60px;
+}
+
+.section-intro {
+    width: 91.66%;
+    margin-inline-start: auto;
+    position: relative;
+}
+
+.section-intro h2 {
+    font-size: 3.125em;
+    font-family: var(--heading-light-font-family);
+    font-weight: 300;
+    margin: 0 0 85px;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: 2.5px;
+}
+
+@media (width <=1366px) {
+    .section-intro h2 {
+        font-size: 2.75rem;
+    }
+}
+
+@media (width <=1020px) {
+    .section-intro h2 {
+        font-size: 2.375rem;
+    }
+}
+
+@media (width <=767px) {
+    .section-intro h2 {
+        font-size: 1.875rem;
+        margin-bottom: 25px;
+    }
+}
+
+.section-intro .section-intro-text {
+    display: flex;
+    gap: 10px;
+}
+
+/* .section-intro .section-intro-text > div {
+  flex: 1;
+} */
+
+.section-intro .subtext {
+    font-size: 2rem;
+    font-family: var(--heading-font-family);
+    font-weight: 300;
+    width: 36.3636%;
+    line-height: 1.2;
+}
+
+.section-intro .subtext p {
+    margin: 0;
+    padding: 0;
+    font-family: var(--heading-font-family);
+    font-weight: 300;
+}
+
+@media (width <=767px) {
+    .section-intro .section-intro-text {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+@media (width <=767px) {
+    .section-intro .subtext {
+        width: 100%;
+        font-size: 1.375rem;
+        padding-inline-end: 35px;
+        margin-bottom: 35px;
+    }
+}
+
+.section-intro .desc {
+    font-family: var(--body-font-family);
+    color: #919191;
+    line-height: 1.2;
+    font-size: 1.063rem;
+    margin-top: 7px;
+    width: 27.2727%;
+    letter-spacing: 0.16px;
+}
+
+.section-intro .desc p {
+    margin: 0;
+    padding: 0;
+    font-family: var(--body-font-family);
+    letter-spacing: 0.16px;
+
+    /* font-weight: 300; */
+}
+
+@media (width <=1020px) {
+    .section-intro .desc {
+        width: 45.4545%;
+    }
+}
+
+@media (width <=767px) {
+    .section-intro .desc {
+        width: 100%;
+        margin-inline-start: 0;
+        padding-inline: 55px 35px;
+    }
+}

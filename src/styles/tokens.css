@@ -1,0 +1,232 @@
+/*
+ * Design tokens extracted from Figma "Capella Revamp 2026 - WF - VN team"
+ * (file SfErNxnm2pvTO5c6P1OhQ5, Mockup canvas 4001:3, variable set 5-831).
+ * Figma mocks up the "Homepage" frame at 3 canvas widths - Mobile 393px,
+ * Tablet 834px, Desktop 1440px - but those are just the artboard sizes used
+ * to draw the mockup, not the CSS breakpoints. The agreed spec breakpoints
+ * are: mobile up to 767px, tablet 768-1199px, desktop 1200px+ (design ref
+ * 768/1440). Tablet values below are sampled from the 834px artboard and
+ * applied starting at the 768px breakpoint; desktop values are sampled from
+ * the 1440px artboard and applied starting at the 1200px breakpoint.
+ * Properties with no sampled tablet value keep the mobile value until the
+ * desktop override (noted inline).
+ * Font-family tokens intentionally reuse the existing --body-font-family /
+ * --heading-font-family variables declared in styles.css (calibre / Goudy).
+ */
+:root {
+    /* breakpoints (reference only - CSS media queries can't consume custom
+       properties; keep these in sync with the @media rules below and with
+       any JS matchMedia() usage) */
+    --breakpoint-mobile-max: 767px;
+    --breakpoint-tablet-min: 768px;
+    --breakpoint-tablet-max: 1199px;
+    --breakpoint-desktop-min: 1200px;
+
+    /* color / surface */
+    --color-surface-page: #fff;
+    --color-surface-primary-default: #fff;
+    --color-surface-general-subtle: #f9f6f6;
+    --color-surface-general-light: #ece5e3;
+    --color-surface-general-opaque: rgb(38 39 39 / 10%);
+    --color-surface-action-default: #1b364b;
+    --color-surface-action-inverse-default: #fff;
+    --color-surface-toggle-inverse-selector-dot: #f7f7f7;
+    --color-surface-toggle-inverse-fill-default: rgb(235 235 235 / 10%);
+
+    /* color / text */
+    --color-text-main-heading: #1b364b;
+    --color-text-main-body: #262727;
+    --color-text-main-inverse-heading: #fff;
+    --color-text-main-inverse-body: #fff;
+    --color-text-main-disabled: #6e6e6c;
+    --color-text-action-default: #1b364b;
+    --color-text-action-inactive: rgb(27 54 75 / 50%);
+    --color-text-action-inverse-default: #fff;
+    --color-text-action-inverse-inactive: rgb(235 235 235 / 50%);
+    --color-text-on-action-default: #fff;
+    --color-text-on-action-inverse-default: #1b364b;
+
+    /* color / icon */
+    --color-icon-main-primary: #1b364b;
+    --color-icon-action-default: #1b364b;
+    --color-icon-on-action-default: #fff;
+
+    /* color / stroke */
+    --color-stroke-main-primary: #898987;
+    --color-stroke-action-default: #1b364b;
+    --color-stroke-action-inverse-default: #fff;
+
+    /* type / font weight (Figma weight names mapped to numeric CSS values) */
+    --font-weight-body-regular: 400;
+    --font-weight-body-bold: 600;
+    --font-weight-heading: 400;
+    --font-weight-subtitle: 400;
+    --font-weight-text-link: 300;
+    --font-weight-button: 300;
+
+    /* typography / heading scale (mobile default) */
+    --font-size-heading-h1: 36px;
+    --line-height-heading-h1: 36px;
+    --font-size-heading-h2: 28px;
+    --line-height-heading-h2: 32px;
+    --font-size-heading-h3: 24px;
+    --line-height-heading-h3: 28px;
+    --font-size-heading-h4: 22px;
+    --line-height-heading-h4: 24px;
+    --font-size-heading-subtitle: 20px;
+    --line-height-heading-subtitle: 22px;
+
+    /* typography / body scale (mobile default) */
+    --font-size-body-l: 20px;
+    --line-height-body-l: 20px;
+    --font-size-body-m: 16px;
+    --line-height-body-m: 20px;
+    --font-size-body-s: 12px;
+    --line-height-body-s: 16px;
+
+    /* spacing scale (breakpoint-independent) */
+    --spacing-min: 0px;
+    --spacing-2xs: 4px;
+    --spacing-xs: 8px;
+    --spacing-s: 12px;
+    --spacing-m: 16px;
+    --spacing-l: 20px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+    --spacing-3xl: 40px;
+    --spacing-4xl: 64px;
+    --spacing-5xl: 80px;
+    --spacing-eyebrow-to-title: 12px;
+    --spacing-eyebrow-to-text: 12px;
+    --spacing-title-to-content: 32px;
+    --spacing-module-to-text: 32px;
+
+    /* layout / module (mobile default) */
+    --layout-module-padding-top: 96px;
+    --layout-module-padding-block: 48px;
+    --layout-module-padding-block-s: 40px;
+    --layout-module-padding-inline-s: 24px;
+    --layout-module-padding-inline-l: 48px;
+    --layout-module-gutter-none: 0px;
+    --layout-module-gutter-xs: 12px;
+    --layout-module-gutter-s: 16px;
+    --layout-module-gutter-m: 24px;
+    --layout-module-gutter-l: 32px;
+    --layout-module-gutter-xl: 40px;
+    --layout-module-gutter-2xl: 48px;
+
+    /* layout / card (mobile default) */
+    --layout-card-padding-block: 20px;
+    --layout-card-padding-inline: 20px;
+
+    /* layout / carousel */
+    --layout-carousel-item-gap-l: 20px;
+    --layout-carousel-item-gap-s: 4px;
+
+    /* corner radius */
+    --corner-radius-none: 0px;
+    --corner-radius-round: 8000px;
+
+    /* stroke weight */
+    --stroke-weight-s: 1px;
+    --stroke-weight-m: 2px;
+    --icon-stroke-24: 1px;
+    --icon-stroke-32: 2px;
+
+    /* component / button (mobile default) */
+    --button-gap: 4px;
+    --button-padding-inline: 24px;
+    --button-padding-block: 4px;
+    --button-height: 40px;
+    --button-corner-standard: 2px;
+    --button-corner-playbtn: var(--corner-radius-round);
+
+    /* component / input field */
+    --input-field-height: 48px;
+    --input-field-padding-inline: 0px;
+    --input-field-padding-block: 8px;
+    --input-field-gap: 4px;
+
+    /* component / toggle (mobile default) */
+    --toggle-selector-dot: 20px;
+    --toggle-padding: 4px;
+    --toggle-width: 64px;
+    --toggle-height: 28px;
+    --toggle-corner: var(--corner-radius-round);
+}
+
+@media (width >= 768px) {
+    /* tablet breakpoint (spec); values sampled from the 834px Figma artboard */
+    :root {
+        /* typography / heading scale (tablet) */
+        --font-size-heading-h1: 40px;
+        --line-height-heading-h1: 48px;
+        --font-size-heading-h2: 40px;
+        --line-height-heading-h2: 40px;
+        --font-size-heading-h3: 36px;
+        --line-height-heading-h3: 36px;
+        --font-size-heading-h4: 28px;
+        --line-height-heading-h4: 28px;
+        --font-size-heading-subtitle: 24px;
+        --line-height-heading-subtitle: 24px;
+
+        /* typography / body scale (tablet) */
+        --font-size-body-m: 18px;
+        --font-size-body-s: 14px;
+
+        --spacing-2xs: 8px;
+        --spacing-eyebrow-to-title: 14px;
+        --spacing-eyebrow-to-text: 16px;
+        --spacing-title-to-content: 48px;
+
+        /* layout / module (tablet) */
+        --layout-module-padding-block: 64px;
+        --layout-module-padding-inline-s: 48px;
+        --layout-module-padding-inline-l: 142px;
+        --layout-module-gutter-s: 24px;
+        --layout-module-gutter-2xl: 64px;
+
+        /* layout / card (tablet) */
+        --layout-card-padding-block: 28px;
+        --layout-card-padding-inline: 28px;
+
+        /* component / button (tablet) */
+        --button-gap: 8px;
+        --button-padding-inline: 32px;
+        --button-padding-block: 16px;
+
+        /* component / toggle (tablet) */
+        --toggle-width: 72px;
+        --toggle-height: 32px;
+    }
+}
+
+@media (width >= 1200px) {
+    /* desktop breakpoint (spec); values sampled from the 1440px Figma artboard */
+    :root {
+        /* typography / heading scale (desktop) */
+        --font-size-heading-h1: 48px;
+
+        /* typography / body scale (desktop) */
+        --line-height-body-l: 22px;
+        --line-height-body-m: 22px;
+
+        --spacing-eyebrow-to-text: 20px;
+        --spacing-title-to-content: 56px;
+
+        /* layout / module (desktop; padding-top and gutter-xs/l have no
+           sampled tablet value, so they still step up directly here) */
+        --layout-module-padding-top: 120px;
+        --layout-module-gutter-xs: 16px;
+        --layout-module-gutter-l: 40px;
+        --layout-module-padding-inline-s: 80px;
+        --layout-module-padding-inline-l: 296px;
+
+        /* layout / card (desktop; no sampled tablet value) */
+        --layout-card-padding-2xl: 64px;
+
+        /* component / toggle (desktop) */
+        --toggle-selector-dot: 24px;
+        --toggle-width: 80px;
+    }
+}

@@ -1,0 +1,119 @@
+{
+  "definitions": [
+    {
+      "title": "Filters Grid",
+      "id": "filters-grid",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Filters Grid",
+              "model": "filters-grid",
+              "filter": "filters-grid"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Filters Grid Tab",
+      "id": "filters-grid-tab",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Filters Grid Tab",
+              "model": "filters-grid-tab",
+              "filter": "filters-grid-tab"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Filters Grid Filter",
+      "id": "filters-grid-filter",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Filters Grid Filter",
+              "model": "filters-grid-filter"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "filters-grid",
+      "fields": [
+        {
+          "component": "aem-content",
+          "name": "cfRootPath",
+          "label": "Content Fragment Root Path",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
+          "name": "revealMoreLabel",
+          "label": "Reveal More CTA Text",
+          "valueType": "string",
+          "value": "Reveal More"
+        }
+      ]
+    },
+    {
+      "id": "filters-grid-tab",
+      "fields": [
+        {
+          "component": "text",
+          "name": "tabKey",
+          "label": "Tab Key",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "tabLabel",
+          "label": "Tab Label",
+          "valueType": "string",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "filters-grid-filter",
+      "fields": [
+        {
+          "component": "text",
+          "name": "title",
+          "label": "Filter Title",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "tags",
+          "label": "Tags (comma separated, used to fetch CFs)",
+          "valueType": "string",
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "filters-grid",
+      "components": ["filters-grid-tab"]
+    },
+    {
+      "id": "filters-grid-tab",
+      "components": ["filters-grid-filter"]
+    }
+  ]
+}

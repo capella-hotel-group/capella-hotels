@@ -1,0 +1,99 @@
+{
+  "definitions": [
+    {
+      "title": "Section",
+      "id": "section",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/section/v1/section",
+            "template": {
+              "model": "section"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "section",
+      "fields": [
+        {
+          "component": "text",
+          "name": "name",
+          "label": "Section Name",
+          "description": "The label shown for this section in the Content Tree"
+        },
+        {
+          "component": "multiselect",
+          "name": "style",
+          "label": "Style",
+          "options": [
+            {
+              "name": "Highlight",
+              "value": "highlight"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "section",
+      "components": [
+        "text",
+        "image",
+        "button",
+        "title",
+        "hero",
+        "cards",
+        "columns",
+        "fragment",
+        "text-with-image",
+        "hero-banner",
+        "section-intro",
+        "awards-list",
+        "turneo-proxy-test",
+        "newsletter-form",
+        "culturist-carousel",
+        "destination-cards",
+        "interactive-asset",
+        "filters-grid",
+        "offers-carousel",
+        "text-with-cta"
+      ]
+    },
+    {
+      "id": "richtext",
+      "rte": {
+        "toolbar": {
+          "format": ["bold", "italic", "underline", "strike", "code_inline", "text_color"],
+          "alignment": ["left", "center", "right", "justify"],
+          "direction": ["rtl", "ltr"],
+          "indentation": ["indent", "outdent"],
+          "blocks": ["paragraph", "h1", "h2", "h3", "h4", "h5", "h6", "code_block", "blockquote"],
+          "list": ["bullet_list", "ordered_list"],
+          "insert": ["link", "unlink", "image", "table", "special_characters"],
+          "sr_script": ["superscript", "subscript"],
+          "editor": ["removeformat", "clean_unsupported_tags", "paste_text", "fullscreen", "find_and_replace"],
+          "advanced": ["classes"],
+          "sections": [
+            "format",
+            "alignment",
+            "direction",
+            "indentation",
+            "blocks",
+            "list",
+            "insert",
+            "sr_script",
+            "editor",
+            "advanced"
+          ]
+        }
+      },
+      "components": ["richtext"]
+    }
+  ]
+}
