@@ -166,6 +166,9 @@
     "id": "offers-carousel",
     "components": [
       "offers-carousel-item"
-    ]
+    ],
+    "minItems": 1,
+    "maxItems": 3,
+    "customErrorMsg": "Add between 1 and 3 offer cards."
   }
 ]

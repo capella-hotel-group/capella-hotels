@@ -8,36 +8,32 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 32px;
-    align-items: center;
-    padding: 40px 20px;
+    align-items: start;
+    padding: 96px 24px;
 }
 
 .offers-carousel .offers-carousel-copy {
     display: grid;
     gap: 12px;
-    justify-items: center;
-    text-align: center;
+    justify-items: start;
+    text-align: left;
 }
 
 .offers-carousel .offers-carousel-eyebrow {
     margin: 0;
     font-family: var(--body-font-family);
-    font-size: 12px;
-    line-height: 1;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 16px;
+    line-height: 20px;
     color: #1b364b;
 }
 
 .offers-carousel .offers-carousel-title {
     margin: 0;
-    max-width: 330px;
-    font-family: var(--heading-light-font-family);
-    font-size: var(--heading-font-size-xl);
-    font-weight: 300;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    max-width: 345px;
+    font-family: var(--heading-font-family);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 36px;
     color: #1b364b;
     white-space: pre-line;
 }
@@ -47,34 +43,38 @@
 }
 
 .offers-carousel .offers-carousel-title-line:nth-of-type(2) {
-    margin-left: 72px;
+    margin-left: 32px;
 }
 
 .offers-carousel .offers-carousel-stage {
     position: relative;
     width: 100%;
-    max-width: 620px;
-    min-height: 300px;
+    max-width: 100%;
+    min-height: 429px;
     margin: 0 auto;
-    overflow: visible;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
     touch-action: pan-y;
 }
 
 .offers-carousel .offers-carousel-cards {
-    position: relative;
+    display: flex;
+    gap: 16px;
     width: 100%;
-    height: 300px;
+    height: 429px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
 .offers-carousel .offers-carousel-card {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    position: relative;
+    flex: 0 0 260px;
+    width: 260px;
+    height: 300px;
     cursor: pointer;
+    scroll-snap-align: center;
     transition:
         transform 0.35s ease,
         opacity 0.35s ease;
@@ -107,7 +107,7 @@
 
 .offers-carousel .offers-carousel-card-overlay {
     position: absolute;
-    inset: 14px;
+    inset: 32px;
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -117,32 +117,33 @@
 .offers-carousel .offers-carousel-card-eyebrow {
     margin: 0;
     font-family: var(--body-font-family);
-    font-size: 10px;
-    line-height: 1;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 16px;
+    line-height: 20px;
 }
 
 .offers-carousel .offers-carousel-card-body {
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 12px;
+    justify-content: center;
+    gap: 16px;
 }
 
 .offers-carousel .offers-carousel-card-title {
     margin: 0;
     font-family: var(--heading-font-family);
-    font-size: var(--heading-font-size-l);
-    line-height: 1;
+    font-size: 28px;
+    line-height: 32px;
     font-weight: 400;
+    text-align: center;
 }
 
 .offers-carousel .offers-carousel-card-description {
-    max-width: 340px;
+    max-width: none;
     font-family: var(--body-font-family);
-    font-size: 14px;
-    line-height: 1.3;
+    font-size: 16px;
+    line-height: 20px;
+    text-align: center;
 }
 
 .offers-carousel .offers-carousel-card-description p {
@@ -150,9 +151,9 @@
 }
 
 .offers-carousel .offers-carousel-card-ctas {
-    display: inline-flex;
+    display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 16px;
     align-items: center;
     justify-content: flex-end;
     margin-top: auto;
@@ -160,9 +161,8 @@
 
 .offers-carousel .offers-carousel-card-cta {
     font-family: var(--body-font-family);
-    font-size: var(--body-font-size-xs);
-    line-height: 1;
-    letter-spacing: 0.04em;
+    font-size: 16px;
+    line-height: 20px;
     text-transform: uppercase;
     color: #fff;
     text-decoration: underline;
@@ -183,37 +183,12 @@
     color: rgb(255 255 255 / 70%);
 }
 
-.offers-carousel .offers-carousel-card.is-active {
-    z-index: 4;
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-}
-
-.offers-carousel .offers-carousel-card.is-next-1 {
-    z-index: 3;
-    opacity: 0.9;
-    transform: translate(52px, -18px) scale(0.92);
-}
-
-.offers-carousel .offers-carousel-card.is-next-2 {
-    z-index: 2;
-    opacity: 0.75;
-    transform: translate(96px, -36px) scale(0.84);
-}
-
-.offers-carousel .offers-carousel-card.is-hidden {
-    z-index: 1;
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(128px, -54px) scale(0.78);
-}
-
 @media (width >= 768px) {
     .offers-carousel .offers-carousel-layout {
-        grid-template-columns: minmax(220px, 34%) minmax(0, 66%);
-        gap: 28px;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 48px;
         align-items: center;
-        padding: 52px 40px;
+        padding: 64px 48px;
     }
 
     .offers-carousel .offers-carousel-copy {
@@ -222,51 +197,150 @@
     }
 
     .offers-carousel .offers-carousel-title {
-        max-width: 310px;
-        font-size: var(--heading-font-size-xxl);
+        max-width: 378px;
+        font-size: 40px;
+        line-height: 48px;
     }
 
     .offers-carousel .offers-carousel-stage {
-        max-width: 680px;
-        min-height: 330px;
+        width: 360px;
+        min-height: 532px;
         margin: 0;
     }
 
     .offers-carousel .offers-carousel-cards {
-        height: 330px;
+        position: relative;
+        display: block;
+        height: 532px;
+    }
+    .offers-carousel .offers-carousel-card {
+        position: absolute;
+        width: 280px;
+        height: 336px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .offers-carousel .offers-carousel-card.is-active {
+        z-index: 4;
+        right: 40px;
+        top: 0;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(0, 0);
+    }
+
+    .offers-carousel .offers-carousel-card.is-next-1 {
+        z-index: 3;
+        right: 20px;
+        top: 50px;
+        width: 320px;
+        height: 384px;
+        opacity: 0.9;
+        pointer-events: auto;
+        transform: translate(0, 0);
+    }
+
+    .offers-carousel .offers-carousel-card.is-next-2 {
+        z-index: 2;
+        right: 0;
+        bottom: 0;
+        width: 360px;
+        height: 432px;
+        opacity: 0.8;
+        pointer-events: auto;
+        transform: translate(0, 0);
+    }
+
+    .offers-carousel .offers-carousel-card.is-hidden {
+        opacity: 0;
+        pointer-events: none;
     }
 }
 
 @media (width >= 1200px) {
     .offers-carousel .offers-carousel-layout {
-        grid-template-columns: minmax(260px, 36%) minmax(0, 64%);
-        gap: 38px;
-        padding: 70px 48px;
+        grid-template-columns: 576px minmax(0, 1fr);
+        gap: 0;
+        max-width: 1440px;
+        min-height: 688px;
+        margin: 0 auto;
+        padding: 0;
     }
 
     .offers-carousel .offers-carousel-title {
-        max-width: 420px;
+        max-width: 416px;
+        padding: 0 80px;
+        font-size: 48px;
+        line-height: 48px;
     }
 
     .offers-carousel .offers-carousel-title-line:nth-of-type(2) {
-        margin-left: 84px;
+        margin-left: 32px;
     }
 
     .offers-carousel .offers-carousel-stage {
-        max-width: 760px;
-        min-height: 360px;
+        width: auto;
+        min-height: 688px;
+        padding: 120px 80px 120px 0;
     }
 
     .offers-carousel .offers-carousel-cards {
-        height: 360px;
+        width: 100%;
+        height: 448px;
     }
 
     .offers-carousel .offers-carousel-card.is-next-1 {
-        transform: translate(64px, -22px) scale(0.92);
+        top: 60px;
+        right: auto;
+        left: 52px;
+        width: 680px;
+        height: 328px;
+        opacity: 0.9;
     }
 
     .offers-carousel .offers-carousel-card.is-next-2 {
-        transform: translate(118px, -42px) scale(0.84);
+        top: 120px;
+        right: auto;
+        bottom: auto;
+        left: 0;
+        width: 680px;
+        height: 328px;
+        opacity: 0.8;
+    }
+
+    .offers-carousel .offers-carousel-card.is-active {
+        right: 0;
+        width: 680px;
+        height: 328px;
+    }
+
+    .offers-carousel .offers-carousel-card-overlay {
+        inset: 32px;
+    }
+
+    .offers-carousel .offers-carousel-card-title {
+        font-size: 40px;
+        line-height: 40px;
+        text-align: left;
+    }
+
+    .offers-carousel .offers-carousel-card-description {
+        max-width: 400px;
+        font-size: 18px;
+        line-height: 22px;
+        text-align: left;
+    }
+
+    .offers-carousel .offers-carousel-card-ctas {
+        justify-content: flex-end;
+    }
+
+    .offers-carousel .offers-carousel-card-eyebrow,
+    .offers-carousel .offers-carousel-eyebrow,
+    .offers-carousel .offers-carousel-card-cta {
+        font-size: 18px;
+        line-height: 22px;
     }
 }
 
