@@ -21,6 +21,14 @@
       "id": "text-with-cta",
       "fields": [
         {
+          "component": "text",
+          "name": "id",
+          "valueType": "string",
+          "label": "Component Anchor ID",
+          "value": "",
+          "placeholder": "e.g., destination-cards"
+        },
+        {
           "component": "richtext",
           "name": "title",
           "label": "Main Section Title",
