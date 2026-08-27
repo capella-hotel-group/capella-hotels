@@ -411,6 +411,15 @@
     color: #1b364b;
 }
 
+.culturist-carousel-quote-content {
+    margin: 0;
+    color: rgb(38 39 39);
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
 @media (width >= 900px) {
     .culturist-carousel-quote {
         font-size: 28px;
@@ -419,6 +428,10 @@
 }
 
 .culturist-carousel-quote p {
+    margin: 0;
+}
+
+.culturist-carousel-quote-content p {
     margin: 0;
 }
 

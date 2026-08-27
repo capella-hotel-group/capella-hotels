@@ -27,6 +27,13 @@ function isPopupEnabled(value: unknown): boolean {
   return value === true || value === 'true' || value === 1 || value === '1';
 }
 
+function hasQuoteClass(html: string): boolean {
+  const content = document.createElement('div');
+  content.innerHTML = html;
+  return Boolean(content.querySelector('blockquote')) || [...content.querySelectorAll('[class]')].some((element) =>
+    element.classList.contains('quote') || element.classList.contains('culturist-carousel-quote'));
+}
+
 async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | null> {
   try {
     const publishBase = getPublishBaseUrl();
@@ -97,8 +104,9 @@ async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<v
   contentScroll.className = 'culturist-carousel-content-scroll';
 
   if (cfData.quote?.html) {
-    const quoteEl = document.createElement('blockquote');
-    quoteEl.className = 'culturist-carousel-quote';
+    const isQuote = hasQuoteClass(cfData.quote.html);
+    const quoteEl = document.createElement(isQuote ? 'blockquote' : 'div');
+    quoteEl.className = isQuote ? 'culturist-carousel-quote' : 'culturist-carousel-quote-content';
     quoteEl.innerHTML = cfData.quote.html;
     contentScroll.append(quoteEl);
   }
