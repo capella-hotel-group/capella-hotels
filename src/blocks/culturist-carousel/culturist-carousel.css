@@ -324,7 +324,7 @@
     grid-template-columns: auto 1fr;
     gap: 2rem;
     align-items: start;
-    transition: opacity 0.28s ease;
+        /* transition: opacity 0.28s ease; */
 }
 
 @media (width >= 900px) {
@@ -651,7 +651,7 @@
     overflow: hidden;
     min-height: 300px;
     background-color: #ddd;
-    transition: opacity 0.28s ease;
+        /* transition: opacity 0.28s ease; */
 }
 
 .culturist-carousel-info-slot.is-fading,
@@ -678,11 +678,6 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
-    transition: opacity 0.18s ease;
-}
-
-.culturist-carousel-carousel-track.is-wrapping {
-    opacity: 0;
 }
 
 .culturist-carousel-carousel-track::-webkit-scrollbar {
@@ -758,7 +753,7 @@
     background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
     pointer-events: none;
     z-index: 2;
-    transition: background 0.3s ease;
+        /* transition: inset 0.3s ease, background 0.3s ease; */
 }
 
 @media (hover: hover) {
@@ -767,7 +762,8 @@
     }
 
     .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:hover)::after {
-        background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+        inset: 0;
+        background: rgb(0 0 0 / 20%);
     }
 }
 
@@ -776,7 +772,8 @@
 }
 
 .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:active)::after {
-    background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -840,7 +837,6 @@
 /* Card Title Overlay */
 .culturist-carousel-card-title {
     position: absolute;
-    transition: transform 0.3s ease;
 
     /* Figma: pad T80 L64 */
     top: 80px;
@@ -857,16 +853,6 @@
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
-}
-
-@media (hover: hover) {
-    .culturist-carousel-card-content:hover .culturist-carousel-card-title {
-        transform: translateY(-4px);
-    }
-}
-
-.culturist-carousel-card-content:active .culturist-carousel-card-title {
-    transform: translateY(-4px);
 }
 
 /* Narrow cards (below 1024px, two-up layout) need tighter padding and a smaller title */
@@ -1049,5 +1035,12 @@ body.culturist-carousel-modal-open {
 
     .culturist-carousel-carousel-next {
         right: 20px;
+    }
+}
+
+@media (width < 1024px) {
+    .culturist-carousel-content-scroll {
+        max-height: none;
+        overflow-y: visible;
     }
 }

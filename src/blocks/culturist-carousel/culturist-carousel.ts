@@ -283,15 +283,11 @@ async function renderGalleryCarousel(
   const jumpToBoundary = (position: number) => {
     const previousSnapType = track.style.scrollSnapType;
     const previousScrollBehavior = track.style.scrollBehavior;
-    track.classList.add('is-wrapping');
     track.style.scrollSnapType = 'none';
     track.style.scrollBehavior = 'auto';
-    requestAnimationFrame(() => {
-      track.scrollLeft = position;
-      track.style.scrollSnapType = previousSnapType;
-      track.style.scrollBehavior = previousScrollBehavior;
-      requestAnimationFrame(() => track.classList.remove('is-wrapping'));
-    });
+    track.scrollLeft = position;
+    track.style.scrollSnapType = previousSnapType;
+    track.style.scrollBehavior = previousScrollBehavior;
   };
 
   const scrollByCard = (direction: number) => {
