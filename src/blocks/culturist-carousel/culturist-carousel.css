@@ -188,7 +188,7 @@
     transition: opacity 0.2s ease;
     line-height: 1;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: flex-end;
     width: 100%;
     overflow-wrap: break-word;
@@ -220,12 +220,20 @@
 }
 
 .culturist-carousel-destination-arrow {
-    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
     margin-left: 0.25rem;
 }
 
-.culturist-carousel-destination-arrow--spacer {
-    display: none;
+.culturist-carousel-destination-arrow::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentcolor;
+    border-bottom: 2px solid currentcolor;
+    transform: rotate(45deg) translate(-0.08em, -0.08em);
 }
 
 /* Destination Dropdown List */
@@ -316,7 +324,7 @@
     grid-template-columns: auto 1fr;
     gap: 2rem;
     align-items: start;
-    transition: opacity 0.28s ease;
+        /* transition: opacity 0.28s ease; */
 }
 
 @media (width >= 900px) {
@@ -401,7 +409,8 @@
     line-height: 18px;
 }
 
-.culturist-carousel-quote {
+.culturist-carousel-quote,
+.culturist-carousel-quote-content {
     font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
     font-size: 1.5rem;
     font-weight: 400;
@@ -411,17 +420,9 @@
     color: #1b364b;
 }
 
-.culturist-carousel-quote-content {
-    margin: 0;
-    color: rgb(38 39 39);
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 20px;
-}
-
 @media (width >= 900px) {
-    .culturist-carousel-quote {
+    .culturist-carousel-quote,
+    .culturist-carousel-quote-content {
         font-size: 28px;
         line-height: 32px;
     }
@@ -431,20 +432,16 @@
     margin: 0;
 }
 
+.culturist-carousel-quote p:first-child::before {
+    content: '"';
+}
+
+.culturist-carousel-quote p:last-child::after {
+    content: '"';
+}
+
 .culturist-carousel-quote-content p {
     margin: 0;
-}
-
-.culturist-carousel-quote.style-emphasis {
-    font-size: 2rem;
-    font-style: italic;
-    color: #8a6d3b;
-}
-
-.culturist-carousel-quote.style-plain {
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    font-size: 1.1rem;
-    text-transform: none;
 }
 
 .culturist-carousel-description {
@@ -559,7 +556,8 @@
         padding-top: 4px;
     }
 
-    .culturist-carousel-quote {
+    .culturist-carousel-quote,
+    .culturist-carousel-quote-content {
         font-size: 18px;
         line-height: 1.3;
     }
@@ -653,7 +651,7 @@
     overflow: hidden;
     min-height: 300px;
     background-color: #ddd;
-    transition: opacity 0.28s ease;
+        /* transition: opacity 0.28s ease; */
 }
 
 .culturist-carousel-info-slot.is-fading,
@@ -755,7 +753,7 @@
     background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
     pointer-events: none;
     z-index: 2;
-    transition: background 0.3s ease;
+        /* transition: inset 0.3s ease, background 0.3s ease; */
 }
 
 @media (hover: hover) {
@@ -764,7 +762,8 @@
     }
 
     .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:hover)::after {
-        background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+        inset: 0;
+        background: rgb(0 0 0 / 20%);
     }
 }
 
@@ -773,7 +772,8 @@
 }
 
 .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:active)::after {
-    background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -837,7 +837,6 @@
 /* Card Title Overlay */
 .culturist-carousel-card-title {
     position: absolute;
-    transition: transform 0.3s ease;
 
     /* Figma: pad T80 L64 */
     top: 80px;
@@ -854,16 +853,6 @@
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
-}
-
-@media (hover: hover) {
-    .culturist-carousel-card-content:hover .culturist-carousel-card-title {
-        transform: translateY(-4px);
-    }
-}
-
-.culturist-carousel-card-content:active .culturist-carousel-card-title {
-    transform: translateY(-4px);
 }
 
 /* Narrow cards (below 1024px, two-up layout) need tighter padding and a smaller title */
@@ -1046,5 +1035,12 @@ body.culturist-carousel-modal-open {
 
     .culturist-carousel-carousel-next {
         right: 20px;
+    }
+}
+
+@media (width < 1024px) {
+    .culturist-carousel-content-scroll {
+        max-height: none;
+        overflow-y: visible;
     }
 }

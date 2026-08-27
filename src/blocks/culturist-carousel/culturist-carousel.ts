@@ -27,11 +27,14 @@ function isPopupEnabled(value: unknown): boolean {
   return value === true || value === 'true' || value === 1 || value === '1';
 }
 
-function hasQuoteClass(html: string): boolean {
+function containsBlockquote(html: string): boolean {
   const content = document.createElement('div');
   content.innerHTML = html;
-  return Boolean(content.querySelector('blockquote')) || [...content.querySelectorAll('[class]')].some((element) =>
-    element.classList.contains('quote') || element.classList.contains('culturist-carousel-quote'));
+  return Boolean(content.querySelector('blockquote'));
+}
+
+function removePlainQuoteMarks(html: string): string {
+  return html.replace(/^(\s*<p>)(?:&quot;|")([\s\S]*?)(?:&quot;|")(\s*<\/p>\s*)$/i, '$1$2$3');
 }
 
 async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | null> {
@@ -104,10 +107,10 @@ async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<v
   contentScroll.className = 'culturist-carousel-content-scroll';
 
   if (cfData.quote?.html) {
-    const isQuote = hasQuoteClass(cfData.quote.html);
+    const isQuote = containsBlockquote(cfData.quote.html);
     const quoteEl = document.createElement(isQuote ? 'blockquote' : 'div');
     quoteEl.className = isQuote ? 'culturist-carousel-quote' : 'culturist-carousel-quote-content';
-    quoteEl.innerHTML = cfData.quote.html;
+    quoteEl.innerHTML = isQuote ? cfData.quote.html : removePlainQuoteMarks(cfData.quote.html);
     contentScroll.append(quoteEl);
   }
 
@@ -277,22 +280,97 @@ async function renderGalleryCarousel(
   prevBtn.hidden = !hasMultiple;
   nextBtn.hidden = !hasMultiple;
 
+  const jumpToBoundary = (position: number) => {
+    const previousSnapType = track.style.scrollSnapType;
+    const previousScrollBehavior = track.style.scrollBehavior;
+    track.style.scrollSnapType = 'none';
+    track.style.scrollBehavior = 'auto';
+    track.scrollLeft = position;
+    track.style.scrollSnapType = previousSnapType;
+    track.style.scrollBehavior = previousScrollBehavior;
+  };
+
   const scrollByCard = (direction: number) => {
     const card = track.querySelector('.culturist-carousel-carousel-card');
     if (!card) return;
     const amount = card.getBoundingClientRect().width + 4;
     const maxScrollLeft = track.scrollWidth - track.clientWidth;
     if (direction > 0 && track.scrollLeft >= maxScrollLeft - 1) {
-      track.scrollTo({ left: 0, behavior: 'smooth' });
+      jumpToBoundary(0);
       return;
     }
     if (direction < 0 && track.scrollLeft <= 0) {
-      track.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
+      jumpToBoundary(maxScrollLeft);
       return;
     }
     track.scrollBy({ left: direction * amount, behavior: 'smooth' });
   };
 
+  if (track.dataset.loopEvents !== 'true') {
+    let touchStartX: number | null = null;
+    let touchStartedAtBoundary = false;
+    let isScrollSettled = true;
+    let boundaryTimer: number | undefined;
+    track.dataset.loopEvents = 'true';
+
+    const wrapAtBoundary = (direction: number): boolean => {
+      const maxScrollLeft = track.scrollWidth - track.clientWidth;
+      const atEnd = track.scrollLeft >= maxScrollLeft - 1;
+      const atStart = track.scrollLeft <= 0;
+      if (!isScrollSettled) return false;
+      if (direction > 0 && atEnd) {
+        jumpToBoundary(0);
+        isScrollSettled = false;
+        return true;
+      }
+      if (direction < 0 && atStart) {
+        jumpToBoundary(maxScrollLeft);
+        isScrollSettled = false;
+        return true;
+      }
+      return false;
+    };
+
+    const updateBoundary = () => {
+      isScrollSettled = true;
+    };
+
+    track.addEventListener('scroll', () => {
+      isScrollSettled = false;
+      window.clearTimeout(boundaryTimer);
+      boundaryTimer = window.setTimeout(updateBoundary, 200);
+    });
+
+    track.addEventListener('wheel', (event) => {
+      if (wrapAtBoundary(event.deltaX || event.deltaY)) event.preventDefault();
+    }, { passive: false });
+
+    track.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'touch') {
+        touchStartX = event.clientX;
+        const maxScrollLeft = track.scrollWidth - track.clientWidth;
+        touchStartedAtBoundary = isScrollSettled
+          && (track.scrollLeft <= 0 || track.scrollLeft >= maxScrollLeft - 1);
+      }
+    });
+
+    track.addEventListener('pointerup', (event) => {
+      if (touchStartX === null) return;
+      const direction = touchStartX - event.clientX;
+      touchStartX = null;
+      if (touchStartedAtBoundary && Math.abs(direction) > 30) wrapAtBoundary(direction);
+      touchStartedAtBoundary = false;
+    });
+
+    track.addEventListener('pointercancel', () => {
+      touchStartX = null;
+    });
+
+    track.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' && wrapAtBoundary(1)) event.preventDefault();
+      if (event.key === 'ArrowLeft' && wrapAtBoundary(-1)) event.preventDefault();
+    });
+  }
   prevBtn.onclick = () => scrollByCard(-1);
   nextBtn.onclick = () => scrollByCard(1);
 }
@@ -355,13 +433,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   destinationBtn.setAttribute('aria-haspopup', 'listbox');
   destinationBtn.setAttribute('aria-expanded', 'false');
 
-  // Invisible spacer mirrors the arrow's width so the label stays visually centered
-  const destinationSpacer = document.createElement('span');
-  destinationSpacer.className = 'culturist-carousel-destination-arrow culturist-carousel-destination-arrow--spacer';
-  destinationSpacer.setAttribute('aria-hidden', 'true');
-  destinationSpacer.textContent = '⌄';
-  destinationBtn.append(destinationSpacer);
-
   const destinationLabel = document.createElement('span');
   destinationLabel.className = 'culturist-carousel-destination-label';
   destinationBtn.append(destinationLabel);
@@ -369,7 +440,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const destinationArrow = document.createElement('span');
   destinationArrow.className = 'culturist-carousel-destination-arrow';
   destinationArrow.setAttribute('aria-hidden', 'true');
-  destinationArrow.textContent = '⌄';
   destinationArrow.hidden = !hasMultipleDestinations;
   destinationBtn.append(destinationArrow);
 
