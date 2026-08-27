@@ -23,6 +23,10 @@ function applyLinkTarget(anchor: HTMLAnchorElement, openInNewTab?: boolean): voi
   anchor.rel = 'noopener noreferrer';
 }
 
+function isPopupEnabled(value: unknown): boolean {
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
 async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | null> {
   try {
     const publishBase = getPublishBaseUrl();
@@ -195,7 +199,7 @@ function buildCarouselCard(card: Record<string, any>, openCardModal: (card: Reco
   slide.className = 'culturist-carousel-carousel-card';
 
   const cardHref = resolveLinkHref(card.cardLink, card.cardExternalLink);
-  const openAsPopup = card.openAsPopup === true;
+  const openAsPopup = isPopupEnabled(card.openAsPopup);
   let cardContent: HTMLElement;
   if (openAsPopup) {
     const popupButton = document.createElement('button');
