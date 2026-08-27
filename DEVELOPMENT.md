@@ -4,8 +4,8 @@ Start here if you're a developer (human or AI agent) about to work in this repo.
 
 ## Prerequisites
 
-- Node.js 18.3.x or newer
-- No global installs required — the AEM CLI is run via `npx` (see `npm start`)
+- Node.js 24.x and npm 11.x (pinned in `.nvmrc` and `package.json#engines`; run `nvm use` if you have nvm)
+- `@adobe/aem-cli` installed globally (`npm install -g @adobe/aem-cli`) — it's not a project dependency, but `npm start` and the `aem:up` script call the `aem` binary directly, so it must be resolvable on your `PATH`
 - [GitHub CLI](https://cli.github.com/) (`gh`) — used to check PR/CI status before requesting review
 
 ## First-time setup
@@ -23,7 +23,7 @@ See [README.md](./README.md#common-scripts) for the full list of npm scripts (`b
 
 - Branch off `main`. There's no enforced branch naming convention yet.
 - No commit-msg hook is configured, so there's no enforced commit message format.
-- Every PR must follow [.github/pull_request_template.md](./.github/pull_request_template.md): link the GitHub issue and provide before/after test URLs (the `.aem.page` feature preview for your branch).
+- There's no `.github/pull_request_template.md` yet, but per [AGENTS.md § Publishing Process](./AGENTS.md#publishing-process) every PR description must link to the `.aem.page` feature preview URL for a page that demonstrates your change — PRs without it will be rejected.
 - Before requesting review, run `gh pr checks` to confirm CI is green — CI (`.github/workflows/main.yaml`) runs `npm ci && npm run lint` on every push.
 
 See [AGENTS.md § Deployment](./AGENTS.md#deployment) for the full publishing process (feature preview → PageSpeed check → PR → merge).
