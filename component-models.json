@@ -876,7 +876,7 @@
         "valueType": "string",
         "label": "Component Anchor ID",
         "value": "",
-        "placeholder": "e.g., destination-cards"
+        "placeholder": "e.g., text-with-cta"
       },
       {
         "component": "richtext",
