@@ -2,7 +2,7 @@ Please always provide the [GitHub issue(s)](../issues) your PR is for, as well a
 
 Fix #<gh-issue-id>
 
-URL for testing:
+URL for testing (replace `<base-branch>` with this PR's destination branch and `<branch-name>` with this PR's source branch, and add the page path that shows the change):
 
-- Before: https://main--capella-hotels--capella-hotel-group.aem.live/
-- After: https://main--capella-hotels--capella-hotel-group.aem.live/
+- Before: https://<base-branch>--capella-hotels--capella-hotel-group.aem.page/<path>
+- After: https://<branch-name>--capella-hotels--capella-hotel-group.aem.page/<path>
