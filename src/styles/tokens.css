@@ -1,46 +1,16 @@
 /*
- * Design tokens extracted from Figma "Capella Revamp 2026 - WF - VN team"
- * (file SfErNxnm2pvTO5c6P1OhQ5, node 4032:3088 "Homepage", 1440px desktop
- * frame - confirmed via the Figma MCP `get_variable_defs` tool).
- *
- * NAMING CONVENTION: every custom property below is the literal Figma
- * variable path with "/" (and spaces) replaced by "-", lowercased - e.g.
- * the Figma variable `color/surface/primary-default` becomes
- * `--color-surface-primary-default`. This lets CSS copied straight from
- * Figma Dev Mode (`var(--the-figma-name)`) be pasted in without renaming
- * anything. Figma-side quirks are kept verbatim on purpose (do not "fix"
- * without checking Figma first, or paste-compatibility breaks):
- *   - `component/toogle/*` has a typo in Figma itself (missing a "g") -
- *     kept as `--component-toogle-*`.
- *   - `typography/fontsize/*` has no hyphen between "font" and "size".
- *   - Figma's `typography/line-height/body/md` variable is shared by BOTH
- *     the Body M and Body L text styles (there is no separate "body/l"
- *     line-height variable), so both sizes below reference the same value.
- *
- * Font-weight tokens store the numeric CSS equivalent of Figma's named
- * style ("regular"/"light"/"semibold") since the raw string is not a valid
- * `font-weight` value. Font-family tokens alias the fallback-chain
- * variables already declared in styles.css (--body-font-family /
- * --heading-font-family) instead of duplicating the chain.
- *
- * Figma mocks up the "Homepage" frame at 3 canvas widths - Mobile 393px,
- * Tablet 834px, Desktop 1440px - but those are just the artboard sizes used
- * to draw the mockup, not the CSS breakpoints. The agreed spec breakpoints
- * are: mobile up to 767px, tablet 768-1199px, desktop 1200px+ (design ref
- * 768/1440). Tablet values below are sampled from the 834px artboard and
- * applied starting at the 768px breakpoint; desktop values are sampled from
- * the 1440px artboard (this file's source node) and applied starting at
- * the 1200px breakpoint. Properties with no sampled tablet value keep the
- * mobile value until the desktop override (noted inline).
- *
- * Known open items - not modeled yet, need dedicated mobile/tablet sampling
- * before adding (avoid repeating the past mistake of guessing values):
- *   - `typography/paragraph spacing/*` scale (heading h1-h3, body s/m).
- *   - `dimension/layout/module/padding/inline-xs` (52px at desktop).
- *   - Figma also exposes a standalone `spacing/2XS` variable (= 8) besides
- *     the 9-step `dimension/spacing/general/*` scale sampled below; treated
- *     as the same token here (`--dimension-spacing-general-2xs`) - confirm
- *     with design whether these are meant to be different variables.
+ * Mirrors Figma "Capella Revamp 2026" variables 1:1 (file SfErNxnm2pvTO5c6P1OhQ5,
+ * node 4032:3088 "Homepage", 1440px desktop frame): names are the Figma
+ * variable path with "/" -> "-", lowercased, so CSS copied from Figma Dev
+ * Mode works without renaming. Don't "fix" without checking Figma first:
+ *   - `--component-toogle-*` is Figma's own typo (missing a "g").
+ *   - `--typography-line-height-body-md` covers both Body M and Body L.
+ * Figma artboards are 393/834/1440px; our breakpoints are mobile <=767,
+ * tablet 768-1199 (sampled from 834), desktop >=1200 (sampled from 1440).
+ * Font-weight stores the numeric CSS value for Figma's named style; font-family
+ * aliases the fallback chains in styles.css.
+ * Not modeled yet (need mobile/tablet sampling first): paragraph-spacing
+ * scale, module padding-inline-xs (52px), possible duplicate spacing/2xs.
  */
 :root {
     /* breakpoints (reference only - CSS media queries can't consume custom
