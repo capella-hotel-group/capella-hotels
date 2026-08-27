@@ -23,6 +23,7 @@ The repository provides the basic structure, blocks, and configuration needed to
   - This runs `tsc --watch`, a Vite watch build of `src/` into `scripts/`, `styles/`, `blocks/*`, and the AEM CLI dev server in parallel, so edits under `src/` are picked up automatically.
   - The dev server runs at `http://localhost:3000` with auto-reload. Open it in playwright, puppeteer, or a browser. If none are available, ask the human to open it and give feedback.
   - If you only need the AEM CLI without the `src/` watch build, run `npx -y @adobe/aem-cli up --no-open --forward-browser-logs` (or install it globally with `npm install -g @adobe/aem-cli` and run `aem up`) — but then rebuild manually after touching `src/` with `npm run build:runtime`.
+  - If `npm start` or `npm run build` fails due to TypeScript or Vite errors, stop and fix the compilation errors before proceeding. Do not hand-edit generated output files as a workaround.
 - Run linting before committing: `npm run lint`
 - Auto-Fix linting issues: `npm run lint:fix`
 - Build the runtime + editor bundles from `src/`: `npm run build`
@@ -47,8 +48,8 @@ The repository provides the basic structure, blocks, and configuration needed to
     ├── styles.css                   # Minimal global styling and layout for your website required for LCP
     ├── lazy-styles.css              # Additional global styling and layout for below the fold/post LCP content
     └── fonts.css                    # Font definitions
-├── scripts/                     # Generated JavaScript libraries and utilities (never hand-edit, except aem.js is hand-maintained upstream)
-    ├── aem.js                       # Core AEM Library for Edge Delivery page decoration logic (NEVER MODIFY THIS FILE)
+├── scripts/                     # Generated JavaScript libraries and utilities (never hand-edit)
+    ├── aem.js                       # Core AEM Library for Edge Delivery page decoration logic, maintained upstream by Adobe (NEVER MODIFY THIS FILE — update via the upstream boilerplate instead)
     ├── scripts.js                   # Global JavaScript utilities, main entry point for page decoration
     └── delayed.js                   # Delayed functionality such as martech loading
     └── editor-support.js            # JavaScript functions used to enhance the WYSIWYG authoring experience in Universal Editor
@@ -182,7 +183,7 @@ With this information, you can construct URLs for the preview environment (same 
 
 1. Push changes to a feature branch
 2. AEM Code Sync automatically processes changes making them available on feature preview environment for that branch
-3. Run a PageSpeed Insights check at https://developers.google.com/speed/pagespeed/insights/?url=YOUR_URL against the feature preview URL and fix any issues. Target a score of 100
+3. Run a PageSpeed Insights check at https://developers.google.com/speed/pagespeed/insights/?url=YOUR_URL against the feature preview URL. Fix any regressions or issues introduced by your changes. If pre-existing issues prevent a score of 100, document them in the PR description rather than refactoring unrelated code
 4. Open a pull request to merge changes to `main`
    1. in the PR description, include a link to `https://{branch}--{repo}--{owner}.aem.page/{path}` with a path to a file that illustrates the change you've made. This is the same path you have been testing with locally. WITHOUT THIS YOUR PR WILL BE REJECTED
    2. If an existing page to demonstrate your changes doesn't exist, create test content as a static html file and ask the user for help copying it to a cms content page you can link in the PR
