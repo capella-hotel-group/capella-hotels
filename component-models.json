@@ -282,7 +282,7 @@
         "name": "titleSuffix",
         "label": "Section Title Suffix",
         "value": "",
-        "required": true
+        "required": false
       },
       {
         "component": "text",
