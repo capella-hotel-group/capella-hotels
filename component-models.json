@@ -831,6 +831,18 @@
     ]
   },
   {
+    "id": "rte",
+    "fields": [
+      {
+        "component": "richtext",
+        "name": "content",
+        "label": "Content",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "section-intro",
     "fields": [
       {
