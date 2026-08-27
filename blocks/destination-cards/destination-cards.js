@@ -19,7 +19,7 @@ function isEnabled(value, fallback = false) {
 }
 
 function setLinkAttributes(link, href, openInNewTab = false) {
-  link.href = href;
+  link.setAttribute('href', href);
   if (openInNewTab) {
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
@@ -30,7 +30,7 @@ function getLinkFromCell(cell) {
   const authoredLink = cell?.querySelector('a');
   return {
     href: authoredLink?.getAttribute('href') || textFromCell(cell),
-    label: authoredLink?.textContent?.trim() || textFromCell(cell),
+    label: authoredLink?.textContent?.trim() || '',
   };
 }
 
@@ -60,19 +60,22 @@ function getCardFields(row) {
   }
 
   const linkIndex = cells.findIndex((cell, index) => index > 2 && cell.querySelector('a'));
-  const hasLegacyAltField = linkIndex >= 5;
-  const ctaLabelCell = linkIndex >= 0 ? cells[linkIndex + 1] : null;
-  const cta = getLinkFromCell(cells[linkIndex]);
+  const isNewModelOrder = cells[4] && !cells[4].querySelector('a');
+  const ctaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex + 1];
+  const ctaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
+  const hasLegacyAltField = !isNewModelOrder && linkIndex >= 5;
+  const settingsStart = isNewModelOrder ? 6 : linkIndex + 2;
+  const cta = getLinkFromCell(ctaLinkCell);
 
   return {
     location: textFromCell(cells[0]),
     title: textFromCell(cells[1]),
     image: cells[2]?.querySelector('picture, img'),
-    imageAlt: hasLegacyAltField ? textFromCell(cells[3]) : null,
+    imageAlt: isNewModelOrder || hasLegacyAltField ? textFromCell(cells[3]) : null,
     href: cta.href,
     ctaLabel: textFromCell(ctaLabelCell) || cta.label,
-    darkOverlay: isEnabled(cells[linkIndex + 2], true),
-    openInNewTab: isEnabled(cells[linkIndex + 3], false),
+    openInNewTab: isEnabled(cells[settingsStart], false),
+    darkOverlay: isEnabled(cells[settingsStart + 1], true),
   };
 }
 
@@ -104,12 +107,41 @@ function buildIntro(rows) {
 }
 
 function buildCta(label, href, openInNewTab) {
-  if (!label && !href) return null;
+  if (!label || !href) return null;
   const cta = document.createElement('a');
   cta.className = 'destination-cards-cta';
-  cta.textContent = label || 'Explore';
+  cta.textContent = label;
   setLinkAttributes(cta, href || '#', openInNewTab);
   return cta;
+}
+
+function buildCarouselControls(list) {
+  const controls = document.createElement('div');
+  controls.className = 'destination-cards-controls';
+
+  const previous = document.createElement('button');
+  previous.type = 'button';
+  previous.className = 'destination-cards-control destination-cards-control-prev';
+  previous.setAttribute('aria-label', 'Previous destination card');
+  previous.textContent = '<';
+
+  const next = document.createElement('button');
+  next.type = 'button';
+  next.className = 'destination-cards-control destination-cards-control-next';
+  next.setAttribute('aria-label', 'Next destination card');
+  next.textContent = '>';
+
+  const scrollByCard = (direction) => {
+    const firstCard = list.querySelector('.destination-cards-item');
+    const cardWidth = firstCard?.getBoundingClientRect().width || list.clientWidth;
+    const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
+    list.scrollBy({ left: direction * (cardWidth + gap), behavior: 'smooth' });
+  };
+
+  previous.addEventListener('click', () => scrollByCard(-1));
+  next.addEventListener('click', () => scrollByCard(1));
+  controls.append(previous, next);
+  return controls;
 }
 
 function buildCard(row) {
@@ -184,6 +216,13 @@ export default function decorate(block) {
   const list = document.createElement('ul');
   list.className = 'destination-cards-list';
   cardRows.forEach((row) => list.append(buildCard(row)));
-  block.replaceChildren(intro, list);
+  const carousel = document.createElement('div');
+  carousel.className = 'destination-cards-carousel';
+  carousel.append(list);
+  if (cardRows.length > 3) {
+    carousel.classList.add('destination-cards-carousel-with-controls');
+    carousel.append(buildCarouselControls(list));
+  }
+  block.replaceChildren(intro, carousel);
   return block;
 }
