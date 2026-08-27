@@ -848,22 +848,27 @@
     "fields": [
       {
         "component": "text",
-        "name": "title",
-        "label": "Title",
+        "name": "id",
+        "label": "Component Anchor ID",
         "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "subtitle",
-        "label": "Sub Title",
-        "valueType": "string"
+        "value": "",
+        "placeholder": "e.g., gataway-section-header"
       },
       {
         "component": "richtext",
-        "name": "description",
-        "label": "Description",
-        "valueType": "string"
+        "name": "title",
+        "label": "Main Section Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "body",
+        "label": "Narrative Body Copy",
+        "valueType": "string",
+        "required": true,
+        "value": ""
       }
     ]
   },
