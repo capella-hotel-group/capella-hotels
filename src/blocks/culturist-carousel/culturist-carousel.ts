@@ -437,13 +437,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   destinationBtn.setAttribute('aria-haspopup', 'listbox');
   destinationBtn.setAttribute('aria-expanded', 'false');
 
-  // Invisible spacer mirrors the arrow's width so the label stays visually centered
-  const destinationSpacer = document.createElement('span');
-  destinationSpacer.className = 'culturist-carousel-destination-arrow culturist-carousel-destination-arrow--spacer';
-  destinationSpacer.setAttribute('aria-hidden', 'true');
-  destinationSpacer.textContent = '⌄';
-  destinationBtn.append(destinationSpacer);
-
   const destinationLabel = document.createElement('span');
   destinationLabel.className = 'culturist-carousel-destination-label';
   destinationBtn.append(destinationLabel);
@@ -451,7 +444,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const destinationArrow = document.createElement('span');
   destinationArrow.className = 'culturist-carousel-destination-arrow';
   destinationArrow.setAttribute('aria-hidden', 'true');
-  destinationArrow.textContent = '⌄';
   destinationArrow.hidden = !hasMultipleDestinations;
   destinationBtn.append(destinationArrow);
 

@@ -188,7 +188,7 @@
     transition: opacity 0.2s ease;
     line-height: 1;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: flex-end;
     width: 100%;
     overflow-wrap: break-word;
@@ -220,12 +220,20 @@
 }
 
 .culturist-carousel-destination-arrow {
-    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
     margin-left: 0.25rem;
 }
 
-.culturist-carousel-destination-arrow--spacer {
-    display: none;
+.culturist-carousel-destination-arrow::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentcolor;
+    border-bottom: 2px solid currentcolor;
+    transform: rotate(45deg) translate(-0.08em, -0.08em);
 }
 
 /* Destination Dropdown List */
