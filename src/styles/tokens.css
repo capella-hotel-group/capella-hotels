@@ -11,7 +11,7 @@
  * Properties with no sampled tablet value keep the mobile value until the
  * desktop override (noted inline).
  * Font-family tokens intentionally reuse the existing --body-font-family /
- * --heading-font-family variables declared in styles.css (calibre / Goudy).
+ * --heading-font-family variables declared in styles.css (calibre / GoudyWtcT).
  */
 :root {
     /* breakpoints (reference only - CSS media queries can't consume custom

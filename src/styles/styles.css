@@ -21,9 +21,9 @@
     --link-hover-color: #1d3ecf;
 
     /* fonts */
-    --body-font-family: 'Calibre', 'Arial', sans-serif;
-    --heading-font-family: 'Goudy Regular', 'Times', 'Times New Roman', serif;
-    --heading-light-font-family: 'Goudy Light', 'Times', 'Times New Roman', serif;
+    --body-font-family: 'calibre', 'Arial', sans-serif;
+    --heading-font-family: 'GoudyWtcT', 'Times', 'Times New Roman', serif;
+    --heading-light-font-family: 'GoudyWtcT', 'Times', 'Times New Roman', serif;
 
     /* body sizes */
     --body-font-size-m: 22px;
