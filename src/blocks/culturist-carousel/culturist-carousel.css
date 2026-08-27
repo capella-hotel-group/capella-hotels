@@ -176,22 +176,44 @@
 /* Destination Dropdown List */
 .culturist-carousel-destination-list {
     position: absolute;
-    top: calc(100% + 0.5rem);
+    top: calc(100% + 1rem);
     right: 0;
-    width: min(420px, 100%);
+    width: min(319px, calc(100vw - 32px));
+    height: 306px;
+    box-sizing: border-box;
     z-index: 10;
     margin: 0;
-    padding: 0.5rem 0;
+    padding: 28px;
     list-style: none;
-    background: #fff;
-    border: 1px solid rgb(231 225 223);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
-    max-height: 320px;
+    background: #f9f6f6;
+    border: 0;
+    border-radius: 4px;
+    box-shadow: 0 93px 37px rgb(0 0 0 / 1%),
+        0 52px 31px rgb(0 0 0 / 3%),
+        0 23px 23px rgb(0 0 0 / 5%),
+        0 6px 13px rgb(0 0 0 / 6%);
+    max-height: 306px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #1b364b rgb(38 39 39 / 10%);
 }
 
 .culturist-carousel-destination-list[hidden] {
     display: none;
+}
+
+.culturist-carousel-destination-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.culturist-carousel-destination-list::-webkit-scrollbar-track {
+    background: rgb(38 39 39 / 10%);
+    border-radius: 8000px;
+}
+
+.culturist-carousel-destination-list::-webkit-scrollbar-thumb {
+    background: #1b364b;
+    border-radius: 8000px;
 }
 
 .culturist-carousel-destination-option {
@@ -199,27 +221,36 @@
     width: 100%;
     background: transparent;
     border: none;
-    padding: 0.75rem 1.25rem;
+    padding: 0;
     font-family: GoudyWtcT, Georgia, serif;
-    font-size: 1.35rem;
-    letter-spacing: 0.08em;
+    font-size: 28px;
+    line-height: 28px;
+    letter-spacing: 0;
     text-transform: uppercase;
-    color: #1b364b;
+    color: rgb(27 54 75 / 50%);
     text-align: left;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: color 0.2s ease;
+}
+
+.culturist-carousel-destination-list li:not(:last-child) {
+    margin-bottom: 20px;
+}
+
+.culturist-carousel-destination-option[aria-selected='true'] {
+    color: #1b364b;
 }
 
 .culturist-carousel-destination-option:hover,
 .culturist-carousel-destination-option:focus-visible {
-    background-color: rgb(236 229 227);
+    color: #1b364b;
 }
 
 @media (width < 1024px) {
     .culturist-carousel-destination-list {
         left: 15%;
         right: auto;
-        width: min(420px, 85%);
+        width: min(319px, 85vw);
         text-align: left;
     }
 }
@@ -230,6 +261,7 @@
     grid-template-columns: auto 1fr;
     gap: 2rem;
     align-items: start;
+    transition: opacity 0.28s ease;
 }
 
 @media (width >= 900px) {
@@ -336,6 +368,18 @@
 
 .culturist-carousel-quote p {
     margin: 0;
+}
+
+.culturist-carousel-quote.style-emphasis {
+    font-size: 2rem;
+    font-style: italic;
+    color: #8a6d3b;
+}
+
+.culturist-carousel-quote.style-plain {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 1.1rem;
+    text-transform: none;
 }
 
 .culturist-carousel-description {
@@ -550,6 +594,12 @@
     overflow: hidden;
     min-height: 300px;
     background-color: #ddd;
+    transition: opacity 0.28s ease;
+}
+
+.culturist-carousel-info-slot.is-fading,
+.culturist-carousel-carousel-col.is-fading {
+    opacity: 0;
 }
 
 @media (width >= 900px) {
@@ -618,6 +668,11 @@
     height: 100%;
     color: inherit;
     text-decoration: none;
+    overflow: hidden;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
 }
 
 .culturist-carousel-card-slot-img {
@@ -630,6 +685,7 @@
     object-position: center center;
     display: block;
     z-index: 1;
+    transition: transform 0.3s ease;
 }
 
 /* Dark scrim over the bottom half of the image for title legibility */
@@ -640,6 +696,25 @@
     background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
     pointer-events: none;
     z-index: 2;
+    transition: background 0.3s ease;
+}
+
+@media (hover: hover) {
+    .culturist-carousel-card-content:hover .culturist-carousel-card-slot-img {
+        transform: scale(1.05);
+    }
+
+    .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:hover)::after {
+        background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+    }
+}
+
+.culturist-carousel-card-content:active .culturist-carousel-card-slot-img {
+    transform: scale(1.05);
+}
+
+.culturist-carousel-carousel-card:has(.culturist-carousel-card-content:active)::after {
+    background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -703,6 +778,7 @@
 /* Card Title Overlay */
 .culturist-carousel-card-title {
     position: absolute;
+    transition: transform 0.3s ease;
 
     /* Figma: pad T80 L64 */
     top: 80px;
@@ -719,6 +795,16 @@
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
+}
+
+@media (hover: hover) {
+    .culturist-carousel-card-content:hover .culturist-carousel-card-title {
+        transform: translateY(-4px);
+    }
+}
+
+.culturist-carousel-card-content:active .culturist-carousel-card-title {
+    transform: translateY(-4px);
 }
 
 /* Narrow cards (below 1024px, two-up layout) need tighter padding and a smaller title */
@@ -771,4 +857,64 @@
     .culturist-carousel-carousel-card {
         flex: 0 0 52.5%;
     }
+}
+
+.culturist-carousel-card-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgb(0 0 0 / 65%);
+    padding: 1rem;
+}
+
+.culturist-carousel-card-modal.is-open {
+    display: flex;
+}
+
+.culturist-carousel-card-modal-panel {
+    position: relative;
+    width: min(100%, 32rem);
+    max-height: calc(100vh - 2rem);
+    overflow: auto;
+    background: #fff;
+    box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
+}
+
+.culturist-carousel-card-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 85%);
+    color: #1b1b1b;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.culturist-carousel-card-modal-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 22rem;
+    object-fit: cover;
+}
+
+.culturist-carousel-card-modal-title {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    font-family: GoudyWtcT, Georgia, serif;
+    font-size: 1.5rem;
+    color: #1b364b;
+}
+
+body.culturist-carousel-modal-open {
+    overflow: hidden;
 }

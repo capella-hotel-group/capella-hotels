@@ -133,14 +133,80 @@ async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<v
   slot.append(contentCol);
 }
 
-function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
+function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, any>) => void } {
+  const modal = document.createElement('div');
+  modal.className = 'culturist-carousel-card-modal';
+  modal.setAttribute('aria-hidden', 'true');
+
+  const panel = document.createElement('div');
+  panel.className = 'culturist-carousel-card-modal-panel';
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'culturist-carousel-card-modal-close';
+  closeBtn.setAttribute('aria-label', 'Close popup');
+  closeBtn.textContent = 'x';
+
+  const image = document.createElement('img');
+  image.className = 'culturist-carousel-card-modal-image';
+
+  const title = document.createElement('p');
+  title.className = 'culturist-carousel-card-modal-title';
+
+  const closeModal = () => {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('culturist-carousel-modal-open');
+  };
+
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+  });
+
+  panel.append(closeBtn, image, title);
+  modal.append(panel);
+  root.append(modal);
+
+  const openModal = (card: Record<string, any>) => {
+    const { _path: cardImgPath } = card.image || {};
+    image.hidden = !cardImgPath;
+    if (cardImgPath) {
+      image.src = resolveAssetUrl(cardImgPath) ?? '';
+      image.alt = card.imagealt || card.title || '';
+    }
+    title.hidden = !card.title;
+    title.textContent = card.title || '';
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('culturist-carousel-modal-open');
+  };
+
+  return { openModal };
+}
+
+function buildCarouselCard(card: Record<string, any>, openCardModal: (card: Record<string, any>) => void): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'culturist-carousel-carousel-card';
 
   const cardHref = resolveLinkHref(card.cardLink, card.cardExternalLink);
-  const cardContent = cardHref ? document.createElement('a') : document.createElement('div');
+  const openAsPopup = card.openAsPopup === true;
+  let cardContent: HTMLElement;
+  if (openAsPopup) {
+    const popupButton = document.createElement('button');
+    popupButton.type = 'button';
+    popupButton.addEventListener('click', () => openCardModal(card));
+    cardContent = popupButton;
+  } else {
+    cardContent = cardHref ? document.createElement('a') : document.createElement('div');
+  }
   cardContent.className = 'culturist-carousel-card-content';
-  if (cardHref && cardContent instanceof HTMLAnchorElement) {
+  if (!openAsPopup && cardHref && cardContent instanceof HTMLAnchorElement) {
     cardContent.href = cardHref;
     applyLinkTarget(cardContent, card.openInNewTab ?? false);
   }
@@ -164,7 +230,11 @@ function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
   return slide;
 }
 
-async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): Promise<void> {
+async function renderGalleryCarousel(
+  carouselCol: HTMLElement,
+  cfPath: string,
+  openCardModal: (card: Record<string, any>) => void,
+): Promise<void> {
   const track = carouselCol.querySelector<HTMLElement>('.culturist-carousel-carousel-track');
   const prevBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-prev');
   const nextBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-next');
@@ -184,7 +254,7 @@ async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): 
   carouselCol.classList.remove('culturist-carousel-carousel--empty');
   cards.forEach((card) => {
     try {
-      track.append(buildCarouselCard(card));
+            track.append(buildCarouselCard(card, openCardModal));
     } catch (error) {
       console.error('[culturist-carousel] Skipping malformed card', card, error);
     }
@@ -199,6 +269,15 @@ async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): 
     const card = track.querySelector('.culturist-carousel-carousel-card');
     if (!card) return;
     const amount = card.getBoundingClientRect().width + 4;
+    const maxScrollLeft = track.scrollWidth - track.clientWidth;
+    if (direction > 0 && track.scrollLeft >= maxScrollLeft - 1) {
+      track.scrollTo({ left: 0, behavior: 'smooth' });
+      return;
+    }
+    if (direction < 0 && track.scrollLeft <= 0) {
+      track.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
+      return;
+    }
     track.scrollBy({ left: direction * amount, behavior: 'smooth' });
   };
 
@@ -233,6 +312,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   if (!itemRows.length) return;
 
+  const hasMultipleDestinations = itemRows.length > 1;
+
   const wrapper = document.createElement('div');
   wrapper.className = 'culturist-carousel-grid';
 
@@ -244,10 +325,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const titleBlock = document.createElement('div');
   titleBlock.className = 'culturist-carousel-title-block';
 
-  const titleTop = document.createElement('div');
-  titleTop.className = 'culturist-carousel-title-top';
-  titleTop.textContent = titlePrefixRow?.textContent?.trim() || 'MEET YOUR';
-  titleBlock.append(titleTop);
+  const titlePrefixText = titlePrefixRow?.textContent?.trim() || '';
+  if (titlePrefixText) {
+    const titleTop = document.createElement('div');
+    titleTop.className = 'culturist-carousel-title-top';
+    titleTop.textContent = titlePrefixText;
+    titleBlock.append(titleTop);
+  }
 
   // Wrapper positions the dropdown list relative to the button
   const destinationWrapper = document.createElement('div');
@@ -274,6 +358,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   destinationArrow.className = 'culturist-carousel-destination-arrow';
   destinationArrow.setAttribute('aria-hidden', 'true');
   destinationArrow.textContent = '⌄';
+  destinationArrow.hidden = !hasMultipleDestinations;
   destinationBtn.append(destinationArrow);
 
   const destinationList = document.createElement('ul');
@@ -310,6 +395,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   carouselNextBtn.setAttribute('aria-label', 'Next cards');
   carouselCol.append(carouselNextBtn);
 
+  const cardModal = buildCardModal(wrapper);
+
   let currentTabIndex = 0;
 
   const updateDestinationBtn = () => {
@@ -317,6 +404,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const tabNameText =
       tabCells && tabCells[0] ? tabCells[0].textContent?.trim() : `Destination ${currentTabIndex + 1}`;
     destinationLabel.textContent = tabNameText || `Destination ${currentTabIndex + 1}`;
+    destinationList.querySelectorAll('.culturist-carousel-destination-option').forEach((option, index) => {
+      option.setAttribute('aria-selected', String(index === currentTabIndex));
+    });
   };
 
   const selectTab = async (index: number) => {
@@ -324,10 +414,15 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     updateDestinationBtn();
 
     const cfRef = itemRows[currentTabIndex]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
-    if (cfRef) {
-      await renderCulturistInfo(infoSlot, cfRef);
-      await renderGalleryCarousel(carouselCol, cfRef);
-    }
+    if (!cfRef) return;
+
+    infoSlot.classList.add('is-fading');
+    carouselCol.classList.add('is-fading');
+    await new Promise((resolve) => { window.setTimeout(resolve, 280); });
+    await renderCulturistInfo(infoSlot, cfRef);
+    await renderGalleryCarousel(carouselCol, cfRef, cardModal.openModal);
+    infoSlot.classList.remove('is-fading');
+    carouselCol.classList.remove('is-fading');
   };
 
   updateDestinationBtn();
@@ -365,7 +460,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     destinationList.append(listItem);
   });
 
+  updateDestinationBtn();
+
   destinationBtn.addEventListener('click', () => {
+    if (!hasMultipleDestinations) return;
     if (destinationList.hidden) {
       openDestinationList();
     } else {
@@ -389,10 +487,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   destinationWrapper.append(destinationList);
   titleBlock.append(destinationWrapper);
 
-  const titleBottom = document.createElement('div');
-  titleBottom.className = 'culturist-carousel-title-bottom';
-  titleBottom.textContent = titleSuffixRow?.textContent?.trim() || 'CULTURIST';
-  titleBlock.append(titleBottom);
+  const titleSuffixText = titleSuffixRow?.textContent?.trim() || '';
+  if (titleSuffixText) {
+    const titleBottom = document.createElement('div');
+    titleBottom.className = 'culturist-carousel-title-bottom';
+    titleBottom.textContent = titleSuffixText;
+    titleBlock.append(titleBottom);
+  }
 
   infoCol.append(titleBlock);
   infoCol.append(panel);
@@ -404,7 +505,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
   if (initialCfRef) {
     await renderCulturistInfo(infoSlot, initialCfRef);
-    await renderGalleryCarousel(carouselCol, initialCfRef);
+    await renderGalleryCarousel(carouselCol, initialCfRef, cardModal.openModal);
   }
 
   moveInstrumentation(block, wrapper);
