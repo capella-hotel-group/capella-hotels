@@ -64,13 +64,9 @@ Do not edit these root files directly. Their source fragments are:
 
 After changing any source fragment, run `npm run build:json`. This regenerates all three root `component-*.json` files; include the resulting generated files with the source change. For field and filter design guidance, see [AGENTS.md § Content Modeling](./AGENTS.md#content-modeling).
 
-## Coding conventions (summary)
+## Coding conventions
 
-- **TypeScript**: source lives under `src/` (strict mode), compiled by Vite into the plain-JS runtime — never hand-edit generated files. Use the `@/*` path alias for cross-module imports.
-- **CSS**: mobile-first, `min-width` media queries at the `--breakpoint-*` tokens (`src/styles/tokens.css`); scope every selector to the block (`.{blockname} .item`, not `.item`); avoid `{blockname}-container`/`{blockname}-wrapper` class names.
-- **HTML**: semantic HTML5, proper heading hierarchy, ARIA labels.
-
-Full rules: [AGENTS.md § Code Style Guidelines](./AGENTS.md#code-style-guidelines).
+All coding conventions (TypeScript, CSS, HTML, `data-testid` test automation) live in [docs/coding-guidelines.md](./docs/coding-guidelines.md) — read it before writing or modifying code.
 
 ## Quality gates before pushing
 
