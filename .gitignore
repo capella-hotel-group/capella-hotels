@@ -3,6 +3,9 @@ coverage/*
 logs/*
 node_modules/*
 
+# Local-only test content served via `aem up --html-folder drafts`
+drafts/*
+
 helix-importer-ui
 .DS_Store
 *.bak

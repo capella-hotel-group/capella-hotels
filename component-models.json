@@ -419,6 +419,58 @@
     ]
   },
   {
+    "id": "destination-introduction",
+    "fields": [
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "body",
+        "label": "Body",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "footerCta",
+        "label": "Footer CTA",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "destination-introduction-image",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "filters-grid",
     "fields": [
       {
