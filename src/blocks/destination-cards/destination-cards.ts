@@ -166,7 +166,7 @@ function buildCard(row: Element): HTMLLIElement {
     overlay.append(location);
   }
   if (fields.title) {
-    const title = document.createElement('h1');
+    const title = document.createElement('h3');
     title.className = 'destination-cards-card-title';
     title.textContent = fields.title;
     overlay.append(title);
