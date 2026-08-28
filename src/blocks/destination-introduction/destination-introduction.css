@@ -1,0 +1,10 @@
+/* destination-introduction styles — stub, visual design lands in a follow-up change */
+.destination-introduction {
+    display: block;
+}
+
+.destination-introduction img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}

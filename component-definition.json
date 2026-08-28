@@ -222,6 +222,37 @@
           }
         },
         {
+          "title": "Destination Introduction",
+          "id": "destination-introduction",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Destination Introduction",
+                  "model": "destination-introduction",
+                  "filter": "destination-introduction"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Destination Introduction Image",
+          "id": "destination-introduction-image",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Destination Introduction Image",
+                  "model": "destination-introduction-image"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Filters Grid",
           "id": "filters-grid",
           "plugins": {
