@@ -257,8 +257,7 @@
         0 6px 13px rgb(0 0 0 / 6%);
     max-height: 306px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #1b364b rgb(38 39 39 / 10%);
+    scrollbar-width: none;
 }
 
 .culturist-carousel-destination-list[hidden] {
@@ -266,17 +265,30 @@
 }
 
 .culturist-carousel-destination-list::-webkit-scrollbar {
-    width: 6px;
+    display: none;
 }
 
-.culturist-carousel-destination-list::-webkit-scrollbar-track {
+.culturist-carousel-destination-scrollbar {
+    position: absolute;
+    z-index: 11;
+    top: 50%;
+    right: 10px;
+    width: 6px;
+    height: 100px;
+    margin: 0;
+    padding: 0;
     background: rgb(38 39 39 / 10%);
     border-radius: 8000px;
+    pointer-events: none;
 }
 
-.culturist-carousel-destination-list::-webkit-scrollbar-thumb {
+.culturist-carousel-destination-scrollbar-thumb {
+    display: block;
+    width: 6px;
+    height: 20px;
     background: #1b364b;
     border-radius: 8000px;
+    transition: transform 0.15s ease;
 }
 
 .culturist-carousel-destination-option {
@@ -296,7 +308,7 @@
     transition: color 0.2s ease;
 }
 
-.culturist-carousel-destination-list li:not(:last-child) {
+.culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
     margin-bottom: 20px;
 }
 

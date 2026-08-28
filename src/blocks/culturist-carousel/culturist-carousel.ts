@@ -448,6 +448,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   destinationList.setAttribute('role', 'listbox');
   destinationList.hidden = true;
 
+  const destinationScrollbar = document.createElement('div');
+  destinationScrollbar.className = 'culturist-carousel-destination-scrollbar';
+  destinationScrollbar.setAttribute('aria-hidden', 'true');
+  destinationScrollbar.hidden = true;
+  const destinationScrollbarThumb = document.createElement('span');
+  destinationScrollbarThumb.className = 'culturist-carousel-destination-scrollbar-thumb';
+  destinationScrollbar.append(destinationScrollbarThumb);
+
   // Culturist info slot
   const infoSlot = document.createElement('div');
   infoSlot.className = 'culturist-carousel-info-slot';
@@ -511,12 +519,29 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const closeDestinationList = () => {
     destinationList.hidden = true;
+    destinationScrollbar.hidden = true;
     destinationBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  const updateDestinationScrollbar = () => {
+    const maxScrollTop = destinationList.scrollHeight - destinationList.clientHeight;
+    destinationScrollbar.hidden = maxScrollTop <= 0;
+    if (maxScrollTop <= 0) return;
+    const scrollbarTop = destinationList.offsetTop + (destinationList.clientHeight - destinationScrollbar.offsetHeight) / 2;
+    const scrollbarLeft = destinationList.offsetLeft + destinationList.clientWidth
+      - destinationScrollbar.offsetWidth - 10;
+    destinationScrollbar.style.top = `${scrollbarTop}px`;
+    destinationScrollbar.style.left = `${scrollbarLeft}px`;
+    destinationScrollbar.style.right = 'auto';
+    const thumbTravel = 80;
+    const thumbOffset = (destinationList.scrollTop / maxScrollTop) * thumbTravel;
+    destinationScrollbarThumb.style.transform = `translateY(${thumbOffset}px)`;
   };
 
   const openDestinationList = () => {
     destinationList.hidden = false;
     destinationBtn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(updateDestinationScrollbar);
   };
 
   itemRows.forEach((row, index) => {
@@ -541,6 +566,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     listItem.append(optionBtn);
     destinationList.append(listItem);
   });
+
+  destinationList.addEventListener('scroll', updateDestinationScrollbar);
 
   updateDestinationBtn();
 
@@ -567,6 +594,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   destinationWrapper.append(destinationBtn);
   destinationWrapper.append(destinationList);
+  destinationWrapper.append(destinationScrollbar);
   titleBlock.append(destinationWrapper);
 
   const titleSuffixText = titleSuffixRow?.textContent?.trim() || '';
