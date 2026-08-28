@@ -256,7 +256,9 @@ export default function decorate(block: HTMLElement): void {
   const anchorId = getFieldText(block, 'id');
   if (anchorId) block.id = anchorId.replace(/^#/, '');
 
-  const cardRows = rows.filter((row) => row.querySelector('picture, img')).slice(0, 3);
+  const cardRows = rows
+    .filter((row) => row.matches('[data-aue-model="offers-carousel-item"]') || row.querySelector('picture, img'))
+    .slice(0, 3);
   const cardsData = cardRows.map((row) => parseCard(row)).filter((card): card is CardData => card !== null);
 
   if (!cardsData.length) return;
