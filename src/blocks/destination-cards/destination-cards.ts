@@ -132,13 +132,11 @@ function buildCarouselControls(list: HTMLUListElement): HTMLDivElement {
   previous.type = 'button';
   previous.className = 'destination-cards-control destination-cards-control-prev';
   previous.setAttribute('aria-label', 'Previous destination card');
-  previous.textContent = '<';
 
   const next = document.createElement('button');
   next.type = 'button';
   next.className = 'destination-cards-control destination-cards-control-next';
   next.setAttribute('aria-label', 'Next destination card');
-  next.textContent = '>';
 
   const scrollByCard = (direction: number): void => {
     const firstCard = list.querySelector('.destination-cards-item');
@@ -233,7 +231,7 @@ export default function decorate(block: HTMLElement): HTMLElement {
   const carousel = document.createElement('div');
   carousel.className = 'destination-cards-carousel';
   carousel.append(list);
-  if (cardRows.length > 3) {
+  if (cardRows.length > 1) {
     carousel.classList.add('destination-cards-carousel-with-controls');
     carousel.append(buildCarouselControls(list));
   }
