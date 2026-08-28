@@ -132,13 +132,11 @@ function buildCarouselControls(list: HTMLUListElement): HTMLDivElement {
   previous.type = 'button';
   previous.className = 'destination-cards-control destination-cards-control-prev';
   previous.setAttribute('aria-label', 'Previous destination card');
-  previous.textContent = '<';
 
   const next = document.createElement('button');
   next.type = 'button';
   next.className = 'destination-cards-control destination-cards-control-next';
   next.setAttribute('aria-label', 'Next destination card');
-  next.textContent = '>';
 
   const scrollByCard = (direction: number): void => {
     const firstCard = list.querySelector('.destination-cards-item');
