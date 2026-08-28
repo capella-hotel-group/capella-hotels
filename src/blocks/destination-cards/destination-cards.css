@@ -40,8 +40,8 @@
 }
 
 .destination-cards .destination-cards-carousel {
+    position: relative;
     display: grid;
-    gap: 24px;
     justify-items: center;
     width: 100%;
     overflow: hidden;
@@ -159,6 +159,41 @@
     min-height: 12px;
 }
 
+.destination-cards .destination-cards-controls {
+    position: absolute;
+    top: calc(391px / 2);
+    right: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.destination-cards .destination-cards-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #1b364b;
+    border-radius: 50%;
+    background: transparent;
+    color: #1b364b;
+    font-family: var(--body-font-family);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.destination-cards .destination-cards-control:is(:hover, :focus-visible) {
+    background: #1b364b;
+    color: #fff;
+}
+
 .destination-cards .destination-cards-cta {
     display: inline-flex;
     align-items: center;
@@ -201,16 +236,24 @@
 
     .destination-cards .destination-cards-carousel-with-controls .destination-cards-list {
         justify-content: start;
-        width: 100%;
+        width: min(100%, 736px);
+    }
+
+    .destination-cards .destination-cards-controls {
+        width: min(100%, 736px);
     }
 
     .destination-cards .destination-cards-item {
-        flex: 0 1 232px;
+        flex: 0 0 232px;
         width: 232px;
     }
 
     .destination-cards .destination-cards-media {
         aspect-ratio: 232 / 283;
+    }
+
+    .destination-cards .destination-cards-controls {
+        top: calc(283px / 2);
     }
 }
 
@@ -238,8 +281,13 @@
         gap: 20px;
     }
 
+    .destination-cards .destination-cards-carousel-with-controls .destination-cards-list,
+    .destination-cards .destination-cards-controls {
+        width: min(100%, 1120px);
+    }
+
     .destination-cards .destination-cards-item {
-        flex: 0 1 360px;
+        flex: 0 0 360px;
         width: 360px;
     }
 
@@ -249,6 +297,10 @@
 
     .destination-cards .destination-cards-media {
         aspect-ratio: 360 / 440;
+    }
+
+    .destination-cards .destination-cards-controls {
+        top: calc(440px / 2);
     }
 
     .destination-cards .destination-cards-overlay {
@@ -297,6 +349,11 @@
         width: 100%;
         max-width: 345px;
         justify-content: start;
+    }
+
+    .destination-cards .destination-cards-controls {
+        top: calc((100vw - 48px) * 391 / 320 / 2);
+        width: min(100%, 345px);
     }
 
     .destination-cards .destination-cards-overlay {

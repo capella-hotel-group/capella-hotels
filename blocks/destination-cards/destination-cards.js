@@ -1,3 +1,210 @@
-/*! v0.1.0 | h1e0893de */
-import{moveInstrumentation as e}from"../../scripts/scripts.js";function t(e){if(!e)return``;let t=[...e.children].map(e=>e.textContent?.trim()??``).filter(Boolean);return t.length>1?t.join(`
-`):e.textContent?.trim()??``}function n(e,n){return t([...e?.children||[]][n]||e)}function r(e,n=!1){let r=typeof e==`string`?e:t(e);return r?[`true`,`yes`,`enabled`].includes(r.trim().toLowerCase()):n}function i(e,t,n=!1){e.setAttribute(`href`,t),n&&(e.target=`_blank`,e.rel=`noopener noreferrer`)}function a(e){let n=e?.querySelector(`a`);return{href:n?.getAttribute(`href`)||t(e),label:n?.textContent?.trim()||``}}function o(e){return e.children.length>1}function s(e){let i=[...e.children];if(i.length<=4&&i[1]?.querySelector(`picture, img`)){let[e,t,o,s]=i,c=a(o),l=[...s?.children||[]];return{location:n(e,0),title:n(e,1),image:t?.querySelector(`picture, img`),imageAlt:t?.querySelector(`img`)?.getAttribute(`alt`)||n(t,1),href:c.href,ctaLabel:c.label,darkOverlay:r(l[0]||s,!0),openInNewTab:r(l[1],!1)}}let o=i.findIndex((e,t)=>t>2&&!!e.querySelector(`a`)),s=!!i[4]&&!i[4].querySelector(`a`),c=s?i[4]:i[o+1],l=s?i[5]:i[o],u=!s&&o>=5,d=s?6:o+2,f=a(l);return{location:t(i[0]),title:t(i[1]),image:i[2]?.querySelector(`picture, img`),imageAlt:s||u?t(i[3]):null,href:f.href,ctaLabel:t(c)||f.label,openInNewTab:r(i[d],!1),darkOverlay:r(i[d+1],!0)}}function c(e){let[n,r,i]=e.length>2?e:[null,...e],a=document.createElement(`div`);a.className=`destination-cards-intro`;let o=t(n?.firstElementChild||n);o&&(a.dataset.anchorId=o.replace(/^#/,``));let s=t(r?.firstElementChild||r);if(s){let e=document.createElement(`h2`);e.className=`destination-cards-title`,e.textContent=s,a.append(e)}let c=i?.firstElementChild||i;if(c&&t(c)){let e=document.createElement(`div`);for(e.className=`destination-cards-subtitle`;c.firstChild;)e.append(c.firstChild);a.append(e)}return a}function l(e,t,n){if(!e||!t)return null;let r=document.createElement(`a`);return r.className=`destination-cards-cta`,r.textContent=e,i(r,t,n),r}function u(e){let t=document.createElement(`div`);t.className=`destination-cards-controls`;let n=document.createElement(`button`);n.type=`button`,n.className=`destination-cards-control destination-cards-control-prev`,n.setAttribute(`aria-label`,`Previous destination card`),n.textContent=`<`;let r=document.createElement(`button`);r.type=`button`,r.className=`destination-cards-control destination-cards-control-next`,r.setAttribute(`aria-label`,`Next destination card`),r.textContent=`>`;let i=t=>{let n=e.querySelector(`.destination-cards-item`)?.getBoundingClientRect().width||e.clientWidth,r=parseFloat(getComputedStyle(e).columnGap)||0;e.scrollBy({left:t*(n+r),behavior:`smooth`})};return n.addEventListener(`click`,()=>i(-1)),r.addEventListener(`click`,()=>i(1)),t.append(n,r),t}function d(t){let n=s(t),r=l(n.ctaLabel,n.href,n.openInNewTab),a=document.createElement(`li`);a.className=`destination-cards-item`,e(t,a);let o=document.createElement(`article`);o.className=`destination-cards-card`;let c=document.createElement(`figure`);c.className=`destination-cards-media`,n.darkOverlay||c.classList.add(`destination-cards-media-no-overlay`);let u=n.href?document.createElement(`a`):document.createElement(`div`);if(u.className=`destination-cards-media-link`,n.href&&u instanceof HTMLAnchorElement&&(i(u,n.href,n.openInNewTab),u.setAttribute(`aria-label`,`${n.title||n.location||`Destination`}: ${n.ctaLabel||`Explore`}`)),n.image){let e=n.image.tagName.toLowerCase()===`picture`?n.image:n.image.closest(`picture`)||n.image,t=e.querySelector(`img`)||(e.tagName===`IMG`?e:null);t&&n.imageAlt!==null&&(t.alt=n.imageAlt),u.append(e)}else c.classList.add(`destination-cards-media-no-image`);let d=document.createElement(`figcaption`);if(d.className=`destination-cards-overlay`,n.location){let e=document.createElement(`p`);e.className=`destination-cards-location`,e.textContent=n.location,d.append(e)}if(n.title){let e=document.createElement(`h1`);e.className=`destination-cards-card-title`,e.textContent=n.title,d.append(e)}if(u.append(d),c.append(u),o.append(c),r){let e=document.createElement(`div`);e.className=`destination-cards-footer`,e.append(r),o.append(e)}return a.append(o),a}function f(e){let t=[...e.children],n=t.findIndex(o);if(n<0)return e;let r=t.slice(0,n),i=t.slice(n),a=c(r),{anchorId:s}=a.dataset;s&&(e.id=s),delete a.dataset.anchorId;let l=document.createElement(`ul`);l.className=`destination-cards-list`,i.forEach(e=>l.append(d(e)));let f=document.createElement(`div`);return f.className=`destination-cards-carousel`,f.append(l),i.length>3&&(f.classList.add(`destination-cards-carousel-with-controls`),f.append(u(l))),e.replaceChildren(a,f),e}export{f as default};
+/*! v0.1.0 | ha4ddae2a */
+import { moveInstrumentation } from "../../scripts/scripts.js";
+function textFromCell(cell) {
+	if (!cell) return "";
+	const textNodes = [...cell.children].map((child) => child.textContent?.trim() ?? "").filter(Boolean);
+	return textNodes.length > 1 ? textNodes.join("\n") : cell.textContent?.trim() ?? "";
+}
+function textFromPart(cell, index) {
+	return textFromCell([...cell?.children || []][index] || cell);
+}
+function isEnabled(value, fallback = false) {
+	const text = typeof value === "string" ? value : textFromCell(value);
+	if (!text) return fallback;
+	return [
+		"true",
+		"yes",
+		"enabled"
+	].includes(text.trim().toLowerCase());
+}
+function setLinkAttributes(link, href, openInNewTab = false) {
+	link.setAttribute("href", href);
+	if (openInNewTab) {
+		link.target = "_blank";
+		link.rel = "noopener noreferrer";
+	}
+}
+function getLinkFromCell(cell) {
+	const authoredLink = cell?.querySelector("a");
+	return {
+		href: authoredLink?.getAttribute("href") || textFromCell(cell),
+		label: authoredLink?.textContent?.trim() || ""
+	};
+}
+function isCardRow(row) {
+	return row.children.length > 1;
+}
+function getCellByProp(cells, property) {
+	return cells.find((cell) => cell.getAttribute("data-aue-prop") === property || !!cell.querySelector(`[data-aue-prop="${property}"]`));
+}
+function getCardFields(row) {
+	const cells = [...row.children];
+	const isGroupedModel = cells.length <= 4 && !!cells[1]?.querySelector("picture, img");
+	if (isGroupedModel) {
+		const [contentCell, mediaCell, ctaCell, settingsCell] = cells;
+		const cta = getLinkFromCell(ctaCell);
+		const settingsParts = [...settingsCell?.children || []];
+		return {
+			location: textFromPart(contentCell, 0),
+			title: textFromPart(contentCell, 1),
+			image: mediaCell?.querySelector("picture, img"),
+			imageAlt: mediaCell?.querySelector("img")?.getAttribute("alt") || textFromPart(mediaCell, 1),
+			href: cta.href,
+			ctaLabel: cta.label,
+			darkOverlay: isEnabled(settingsParts[0] || settingsCell, true),
+			openInNewTab: isEnabled(settingsParts[1], false)
+		};
+	}
+	const linkIndex = cells.findIndex((cell, index) => index > 2 && !!cell.querySelector("a"));
+	const ctaLinkCell = getCellByProp(cells, "ctaLink");
+	const ctaLabelCell = getCellByProp(cells, "ctaName");
+	const openInNewTabCell = getCellByProp(cells, "openInNewTab");
+	const darkOverlayCell = getCellByProp(cells, "darkOverlay");
+	const imageAltCell = getCellByProp(cells, "imageAlt");
+	const isNewModelOrder = !!ctaLinkCell;
+	const fallbackCtaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
+	const fallbackCtaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex + 1];
+	const hasLegacyAltField = !isNewModelOrder && linkIndex >= 5;
+	const cta = getLinkFromCell(ctaLinkCell || fallbackCtaLinkCell);
+	return {
+		location: textFromCell(cells[0]),
+		title: textFromCell(cells[1]),
+		image: cells[2]?.querySelector("picture, img"),
+		imageAlt: imageAltCell ? textFromCell(imageAltCell) : isNewModelOrder || hasLegacyAltField ? textFromCell(cells[3]) : null,
+		href: cta.href,
+		ctaLabel: textFromCell(ctaLabelCell || fallbackCtaLabelCell) || cta.label,
+		openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : linkIndex + 3], false),
+		darkOverlay: isEnabled(darkOverlayCell || cells[isNewModelOrder ? 7 : linkIndex + 2], true)
+	};
+}
+function buildIntro(rows) {
+	const [anchorRow, titleRow, subtitleRow] = rows.length > 2 ? rows : [null, ...rows];
+	const intro = document.createElement("div");
+	intro.className = "destination-cards-intro";
+	const anchorId = textFromCell(anchorRow?.firstElementChild || anchorRow);
+	if (anchorId) intro.dataset.anchorId = anchorId.replace(/^#/, "");
+	const title = textFromCell(titleRow?.firstElementChild || titleRow);
+	if (title) {
+		const heading = document.createElement("h2");
+		heading.className = "destination-cards-title";
+		heading.textContent = title;
+		intro.append(heading);
+	}
+	const subtitleCell = subtitleRow?.firstElementChild || subtitleRow;
+	if (subtitleCell && textFromCell(subtitleCell)) {
+		const subtitle = document.createElement("div");
+		subtitle.className = "destination-cards-subtitle";
+		while (subtitleCell.firstChild) subtitle.append(subtitleCell.firstChild);
+		intro.append(subtitle);
+	}
+	return intro;
+}
+function buildCta(label, href, openInNewTab) {
+	if (!label || !href) return null;
+	const cta = document.createElement("a");
+	cta.className = "destination-cards-cta";
+	cta.textContent = label;
+	setLinkAttributes(cta, href, openInNewTab);
+	return cta;
+}
+function buildCarouselControls(list) {
+	const controls = document.createElement("div");
+	controls.className = "destination-cards-controls";
+	const previous = document.createElement("button");
+	previous.type = "button";
+	previous.className = "destination-cards-control destination-cards-control-prev";
+	previous.setAttribute("aria-label", "Previous destination card");
+	previous.textContent = "<";
+	const next = document.createElement("button");
+	next.type = "button";
+	next.className = "destination-cards-control destination-cards-control-next";
+	next.setAttribute("aria-label", "Next destination card");
+	next.textContent = ">";
+	const scrollByCard = (direction) => {
+		const firstCard = list.querySelector(".destination-cards-item");
+		const cardWidth = firstCard?.getBoundingClientRect().width || list.clientWidth;
+		const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
+		list.scrollBy({
+			left: direction * (cardWidth + gap),
+			behavior: "smooth"
+		});
+	};
+	previous.addEventListener("click", () => scrollByCard(-1));
+	next.addEventListener("click", () => scrollByCard(1));
+	controls.append(previous, next);
+	return controls;
+}
+function buildCard(row) {
+	const fields = getCardFields(row);
+	const cta = buildCta(fields.ctaLabel, fields.href, fields.openInNewTab);
+	const item = document.createElement("li");
+	item.className = "destination-cards-item";
+	moveInstrumentation(row, item);
+	const article = document.createElement("article");
+	article.className = "destination-cards-card";
+	const media = document.createElement("figure");
+	media.className = "destination-cards-media";
+	if (!fields.darkOverlay) media.classList.add("destination-cards-media-no-overlay");
+	const mediaContent = fields.href ? document.createElement("a") : document.createElement("div");
+	mediaContent.className = "destination-cards-media-link";
+	if (fields.href && mediaContent instanceof HTMLAnchorElement) {
+		setLinkAttributes(mediaContent, fields.href, fields.openInNewTab);
+		mediaContent.setAttribute("aria-label", `${fields.title || fields.location || "Destination"}: ${fields.ctaLabel || "Explore"}`);
+	}
+	if (fields.image) {
+		const mediaNode = fields.image.tagName.toLowerCase() === "picture" ? fields.image : fields.image.closest("picture") || fields.image;
+		const imageElement = mediaNode.querySelector("img") || (mediaNode.tagName === "IMG" ? mediaNode : null);
+		if (imageElement && fields.imageAlt !== null) imageElement.alt = fields.imageAlt;
+		mediaContent.append(mediaNode);
+	} else {
+		media.classList.add("destination-cards-media-no-image");
+	}
+	const overlay = document.createElement("figcaption");
+	overlay.className = "destination-cards-overlay";
+	if (fields.location) {
+		const location = document.createElement("p");
+		location.className = "destination-cards-location";
+		location.textContent = fields.location;
+		overlay.append(location);
+	}
+	if (fields.title) {
+		const title = document.createElement("h1");
+		title.className = "destination-cards-card-title";
+		title.textContent = fields.title;
+		overlay.append(title);
+	}
+	mediaContent.append(overlay);
+	media.append(mediaContent);
+	article.append(media);
+	if (cta) {
+		const footer = document.createElement("div");
+		footer.className = "destination-cards-footer";
+		footer.append(cta);
+		article.append(footer);
+	}
+	item.append(article);
+	return item;
+}
+export default function decorate(block) {
+	const rows = [...block.children];
+	const firstCardIndex = rows.findIndex(isCardRow);
+	if (firstCardIndex < 0) return block;
+	const introRows = rows.slice(0, firstCardIndex);
+	const cardRows = rows.slice(firstCardIndex);
+	const intro = buildIntro(introRows);
+	const { anchorId } = intro.dataset;
+	if (anchorId) block.id = anchorId;
+	delete intro.dataset.anchorId;
+	const list = document.createElement("ul");
+	list.className = "destination-cards-list";
+	cardRows.forEach((row) => list.append(buildCard(row)));
+	const carousel = document.createElement("div");
+	carousel.className = "destination-cards-carousel";
+	carousel.append(list);
+	if (cardRows.length > 3) {
+		carousel.classList.add("destination-cards-carousel-with-controls");
+		carousel.append(buildCarouselControls(list));
+	}
+	block.replaceChildren(intro, carousel);
+	return block;
+}
