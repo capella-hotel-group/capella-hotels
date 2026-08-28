@@ -1,4 +1,3 @@
-/* Destination Cards block */
 .destination-cards {
     padding-block: var(--dimension-layout-module-padding-block);
     padding-inline: var(--dimension-layout-module-padding-inline-s);
@@ -45,6 +44,14 @@
     margin: 0;
 }
 
+.destination-cards .destination-cards-carousel {
+    display: grid;
+    gap: 24px;
+    justify-items: center;
+    width: 100%;
+    overflow: hidden;
+}
+
 .destination-cards .destination-cards-list {
     margin: 0;
     padding: 0;
@@ -67,6 +74,7 @@
 
 .destination-cards .destination-cards-item {
     margin: 0;
+    width: 320px;
     scroll-snap-align: start;
 }
 
@@ -150,7 +158,6 @@
     line-height: var(--typography-line-height-heading-h2);
     letter-spacing: normal;
     align-self: center;
-    text-transform: uppercase;
     white-space: pre-line;
 }
 
@@ -184,17 +191,140 @@
     transform: scale(1.03);
 }
 
-@media (width >= 1200px) {
+@media (width >= 768px) {
+    .destination-cards {
+        padding: 64px 48px;
+    }
+
+    .destination-cards .destination-cards-intro {
+        gap: 48px;
+        margin-bottom: 80px;
+    }
+
     .destination-cards .destination-cards-list {
         display: flex;
-        flex-wrap: wrap;
-        gap: var(--dimension-layout-carousel-item-gap-l);
+        flex-wrap: nowrap;
+        gap: 20px;
         justify-content: center;
-        overflow: visible;
+        overflow-x: auto;
+    }
+
+    .destination-cards .destination-cards-carousel-with-controls .destination-cards-list {
+        justify-content: start;
+        width: 100%;
     }
 
     .destination-cards .destination-cards-item {
-        flex: 0 0 320px;
-        max-width: 320px;
+        flex: 0 1 232px;
+        width: 232px;
+    }
+
+    .destination-cards .destination-cards-media {
+        aspect-ratio: 232 / 283;
+    }
+}
+
+@media (width >= 1200px) {
+    .destination-cards {
+        padding: 64px 80px;
+    }
+
+    .destination-cards .destination-cards-intro {
+        gap: 56px;
+        margin-bottom: 80px;
+    }
+
+    .destination-cards .destination-cards-title {
+        font-size: 48px;
+        line-height: 48px;
+    }
+
+    .destination-cards .destination-cards-subtitle {
+        font-size: 24px;
+        line-height: 24px;
+    }
+
+    .destination-cards .destination-cards-list {
+        gap: 20px;
+    }
+
+    .destination-cards .destination-cards-item {
+        flex: 0 1 360px;
+        width: 360px;
+    }
+
+    .destination-cards .destination-cards-card {
+        gap: 32px;
+    }
+
+    .destination-cards .destination-cards-media {
+        aspect-ratio: 360 / 440;
+    }
+
+    .destination-cards .destination-cards-overlay {
+        inset: 20px;
+    }
+
+    .destination-cards .destination-cards-location {
+        font-size: 20px;
+        line-height: 22px;
+    }
+
+    .destination-cards .destination-cards-cta {
+        font-size: 18px;
+        line-height: 22px;
+    }
+
+    .destination-cards .destination-cards-card-title {
+        font-size: 40px;
+        line-height: 40px;
+    }
+}
+
+@media (width <= 767px) {
+    .destination-cards {
+        padding: 48px 24px;
+    }
+
+    .destination-cards .destination-cards-intro {
+        gap: 32px;
+        margin-bottom: 80px;
+    }
+
+    .destination-cards .destination-cards-title {
+        width: 345px;
+        font-size: 36px;
+        line-height: 36px;
+    }
+
+    .destination-cards .destination-cards-subtitle {
+        width: 345px;
+        font-size: 20px;
+        line-height: 22px;
+    }
+
+    .destination-cards .destination-cards-list {
+        width: 100%;
+        max-width: 345px;
+        justify-content: start;
+    }
+
+    .destination-cards .destination-cards-overlay {
+        inset: 20px;
+    }
+
+    .destination-cards .destination-cards-card-title {
+        font-size: 28px;
+        line-height: 32px;
+    }
+
+    .destination-cards .destination-cards-location {
+        font-size: 20px;
+        line-height: 20px;
+    }
+
+    .destination-cards .destination-cards-cta {
+        font-size: 16px;
+        line-height: 20px;
     }
 }

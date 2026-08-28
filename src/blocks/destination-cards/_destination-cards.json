@@ -38,10 +38,11 @@
       "fields": [
         {
           "component": "text",
-          "name": "anchorId",
-          "label": "User-defined ID",
+          "name": "id",
+          "label": "Component Anchor ID",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "placeholder": "e.g., destination-cards"
         },
         {
           "component": "richtext",
@@ -66,9 +67,8 @@
         {
           "component": "text",
           "name": "location",
-          "label": "Location Eyebrow",
+          "label": "Card Eyebrow",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
@@ -76,7 +76,6 @@
           "name": "title",
           "label": "Card Headline",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
@@ -96,30 +95,17 @@
           "value": ""
         },
         {
-          "component": "aem-content",
-          "name": "ctaLink",
-          "label": "Card CTA URL",
-          "valueType": "string",
-          "required": true
-        },
-        {
           "component": "text",
           "name": "ctaName",
           "label": "Card CTA Label",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
-          "component": "select",
-          "name": "darkOverlay",
-          "label": "Darkened layer over image",
-          "valueType": "string",
-          "value": "true",
-          "options": [
-            { "name": "Enabled", "value": "true" },
-            { "name": "Disabled", "value": "false" }
-          ]
+          "component": "aem-content",
+          "name": "ctaLink",
+          "label": "Card CTA URL",
+          "valueType": "string"
         },
         {
           "component": "boolean",
@@ -127,6 +113,17 @@
           "label": "Open in new tab",
           "valueType": "boolean",
           "value": false
+        },
+        {
+          "component": "select",
+          "name": "darkOverlay",
+          "label": "Dark Image Overlay",
+          "valueType": "string",
+          "value": "true",
+          "options": [
+            { "name": "Enabled", "value": "true" },
+            { "name": "Disabled", "value": "false" }
+          ]
         }
       ]
     }
