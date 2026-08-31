@@ -196,12 +196,14 @@
     left: calc(50% - 10.71px / 2 + 0.36px);
     top: calc(50% - 20px / 2);
     background: #1b364b;
-    /* chevron vector, apex-right by default (next); prev is mirrored below */
-    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    /* exact Figma vector path, left-pointing (prev) by default; next is mirrored below */
+    clip-path: path(
+        'M10.7109 0C6.98094 3.16 3.47094 6.56 0.000937462 10C1.79094 11.78 3.59094 13.56 5.44094 15.27C6.96094 16.68 9.13094 18.69 10.7109 20C7.71094 16.46 2.00098 10 2.00098 10C2.00098 10 9.21257 1.76279 10.7109 0Z'
+    );
 }
 
-.destination-cards .destination-cards-control-prev .destination-cards-control-icon {
-    transform: matrix(-1, 0, 0, 1, 0, 0);
+.destination-cards .destination-cards-control-next .destination-cards-control-icon {
+    transform: scaleX(-1);
 }
 
 .destination-cards .destination-cards-control:is(:hover, :focus-visible) .destination-cards-control-icon {
@@ -260,7 +262,7 @@
     .destination-cards .destination-cards-controls {
         right: auto;
         left: 50%;
-        width: min(736px, 100%);
+        width: min(864px, calc(100% + 128px));
         top: calc(50% - 49.5px);
         transform: translate(-50%, -50%);
     }
