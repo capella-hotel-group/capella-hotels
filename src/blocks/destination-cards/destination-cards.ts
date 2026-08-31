@@ -249,7 +249,7 @@ export default function decorate(block: HTMLElement): HTMLElement {
   const carousel = document.createElement('div');
   carousel.className = 'destination-cards-carousel';
   carousel.append(list);
-  if (cardRows.length > 3) {
+  if (cardRows.length > 1) {
     carousel.classList.add('destination-cards-carousel-with-controls');
     carousel.append(buildCarouselControls(list));
   }

@@ -1,5 +1,5 @@
-/*! v0.1.0 | hd73521c6 */
-import { moveInstrumentation } from "../../scripts/scripts.js";
+/*! v0.1.0 | h212e6e85 */
+import { moveInstrumentation } from "@/app/scripts.js";
 function textFromCell(cell) {
 	if (!cell) return "";
 	const textNodes = [...cell.children].map((child) => child.textContent?.trim() ?? "").filter(Boolean);
@@ -203,7 +203,7 @@ export default function decorate(block) {
 	const carousel = document.createElement("div");
 	carousel.className = "destination-cards-carousel";
 	carousel.append(list);
-	if (cardRows.length > 3) {
+	if (cardRows.length > 1) {
 		carousel.classList.add("destination-cards-carousel-with-controls");
 		carousel.append(buildCarouselControls(list));
 	}
