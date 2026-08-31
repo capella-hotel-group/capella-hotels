@@ -696,6 +696,14 @@
     display: none;
 }
 
+/* Desktop navigates via the prev/next arrows only, no wheel/drag scrolling */
+@media (width >= 1200px) {
+    .culturist-carousel-carousel-track {
+        overflow-x: hidden;
+        scroll-snap-type: none;
+    }
+}
+
 /* First card shows in full, second card peeks partially as a scroll affordance */
 .culturist-carousel-carousel-card {
     position: relative;
