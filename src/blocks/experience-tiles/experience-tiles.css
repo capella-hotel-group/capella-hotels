@@ -27,6 +27,25 @@
     overflow: hidden;
     background: var(--color-text-main-body);
     color: var(--color-text-main-inverse-body);
+    opacity: 0;
+    transition:
+        opacity 0.8s ease,
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+}
+
+.experience-tiles .experience-tiles-visual {
+    transform: translateY(-64px);
+}
+
+.experience-tiles .experience-tiles-details {
+    transform: translateY(64px);
+}
+
+.experience-tiles .experience-tiles-item.is-visible .experience-tiles-visual,
+.experience-tiles .experience-tiles-item.is-visible .experience-tiles-details {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .experience-tiles .experience-tiles-visual::after,
@@ -185,6 +204,16 @@
 
 body.experience-tiles-modal-open {
     overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        opacity: 1;
+        transform: none;
+        transition: none;
+        will-change: auto;
+    }
 }
 
 @media (width >= 768px) {
