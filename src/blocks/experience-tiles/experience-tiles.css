@@ -16,12 +16,13 @@
 
 .experience-tiles .experience-tiles-card {
     display: grid;
+    min-height: 852px;
 }
 
 .experience-tiles .experience-tiles-visual,
 .experience-tiles .experience-tiles-details {
     position: relative;
-    min-height: 296px;
+    min-height: 426px;
     margin: 0;
     overflow: hidden;
     background: var(--color-text-main-body);
@@ -66,14 +67,14 @@
     flex-direction: column;
     justify-content: flex-end;
     box-sizing: border-box;
-    padding: var(--dimension-layout-card-padding-inline);
+    padding: 200px 24px 24px;
 }
 
 .experience-tiles .experience-tiles-details-content {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     align-content: end;
-    gap: var(--dimension-spacing-general-xs);
+    gap: 20px;
 }
 
 .experience-tiles .experience-tiles-eyebrow,
@@ -84,45 +85,58 @@
 }
 
 .experience-tiles .experience-tiles-eyebrow {
-    margin-bottom: var(--dimension-spacing-general-2xs);
+    margin-bottom: 0;
     font-family: var(--type-font-family-body);
-    font-size: 9px;
+    font-size: var(--typography-fontsize-body-m);
     font-weight: var(--type-font-weight-body-reg);
-    line-height: 1.1;
+    line-height: var(--typography-line-height-body-md);
     text-transform: uppercase;
 }
 
 .experience-tiles .experience-tiles-headline,
 .experience-tiles .experience-tiles-detail-title {
-    max-width: 10em;
+    max-width: 345px;
     color: var(--color-text-main-inverse-heading);
     font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h4);
+    font-size: var(--typography-fontsize-heading-h1);
     font-weight: var(--type-font-weight-heading);
-    line-height: var(--typography-line-height-heading-h4);
+    line-height: var(--typography-line-height-heading-h1);
     text-transform: uppercase;
 }
 
+.experience-tiles .experience-tiles-visual-caption {
+    gap: 12px;
+}
+
+.experience-tiles .experience-tiles-detail-title {
+    font-size: var(--typography-fontsize-heading-h3);
+    line-height: var(--typography-line-height-heading-h3);
+}
+
 .experience-tiles .experience-tiles-description {
-    max-width: 24em;
+    max-width: 345px;
     font-family: var(--type-font-family-body);
-    font-size: var(--typography-fontsize-body-s);
-    line-height: var(--typography-line-height-body-sm);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
 }
 
 .experience-tiles .experience-tiles-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--dimension-spacing-general-s);
-    margin-top: var(--dimension-spacing-general-xs);
+    gap: 16px;
+    margin-top: 0;
 }
 
 .experience-tiles .experience-tiles-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 10px 0;
     color: var(--color-text-action-inverse-default);
     font-family: var(--type-font-family-cta);
-    font-size: 10px;
+    font-size: var(--typography-fontsize-body-m);
     font-weight: var(--type-font-weight-button);
-    line-height: 1.2;
+    line-height: var(--typography-line-height-body-md);
     text-decoration: underline;
     text-decoration-thickness: var(--stroke-weight-s);
     text-underline-offset: 3px;
@@ -174,30 +188,131 @@ body.experience-tiles-modal-open {
 }
 
 @media (width >= 768px) {
-    .experience-tiles .experience-tiles-visual,
-    .experience-tiles .experience-tiles-details {
-        min-height: 360px;
+    .experience-tiles .experience-tiles-list {
+        max-width: none;
     }
 
-    .experience-tiles .experience-tiles-visual-caption,
+    .experience-tiles .experience-tiles-card {
+        min-height: 1194px;
+    }
+
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        min-height: 597px;
+    }
+
+    .experience-tiles .experience-tiles-visual-caption {
+        gap: 14px;
+        padding: 0 48px 40px;
+    }
+
     .experience-tiles .experience-tiles-details-content {
-        padding: var(--dimension-layout-card-padding-inline);
+        grid-template-columns: repeat(2, minmax(0, 359px));
+        align-items: start;
+        align-content: end;
+        gap: 20px;
+        padding: 0 48px 40px;
+    }
+
+    .experience-tiles .experience-tiles-eyebrow {
+        margin-bottom: 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-headline {
+        max-width: 738px;
+        font-size: var(--typography-fontsize-heading-h1);
+        line-height: var(--typography-line-height-heading-h1);
+    }
+
+    .experience-tiles .experience-tiles-detail-title {
+        max-width: 359px;
+        font-size: 32px;
+        line-height: var(--typography-line-height-heading-h3);
+    }
+
+    .experience-tiles .experience-tiles-description {
+        max-width: 359px;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-actions {
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .experience-tiles .experience-tiles-action {
+        min-height: 40px;
+        padding: 10px 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
     }
 }
 
 @media (width >= 1200px) {
+    .experience-tiles .experience-tiles-list {
+        max-width: none;
+    }
+
     .experience-tiles .experience-tiles-card {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        min-height: 900px;
     }
 
     .experience-tiles .experience-tiles-visual,
     .experience-tiles .experience-tiles-details {
-        min-height: 360px;
+        min-height: 900px;
     }
 
-    .experience-tiles .experience-tiles-headline,
+    .experience-tiles .experience-tiles-visual-caption {
+        justify-content: flex-start;
+        gap: 14px;
+        padding: 640px 80px 80px;
+    }
+
+    .experience-tiles .experience-tiles-details-content {
+        grid-template-columns: repeat(2, minmax(0, 270px));
+        align-items: start;
+        align-content: end;
+        gap: 20px;
+        padding: 640px 80px 80px;
+    }
+
+    .experience-tiles .experience-tiles-eyebrow {
+        margin-bottom: 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-headline {
+        max-width: 560px;
+        font-size: var(--typography-fontsize-heading-h1);
+        line-height: var(--typography-line-height-heading-h1);
+    }
+
     .experience-tiles .experience-tiles-detail-title {
+        max-width: 270px;
         font-size: var(--typography-fontsize-heading-h3);
         line-height: var(--typography-line-height-heading-h3);
+    }
+
+    .experience-tiles .experience-tiles-description {
+        max-width: 270px;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-actions {
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .experience-tiles .experience-tiles-action {
+        min-height: 40px;
+        padding: 9px 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
     }
 }
