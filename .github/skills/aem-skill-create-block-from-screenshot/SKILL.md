@@ -19,6 +19,8 @@ Scaffold three files at `src/blocks/<block-name>/`:
 - `<block-name>.css` — Block-scoped styles
 - `_<block-name>.json` — AEM xwalk component model
 
+Do not write generated runtime files under root `blocks/`, `scripts/`, or `styles/`; this repository builds those from `src/`.
+
 ---
 
 **Input**: A `blockName` (kebab-case), one or more `screenshots` (image files or a folder path under `.github/screenshots/`), and an optional `description` (free text).
@@ -29,7 +31,7 @@ Screenshots are the **design source**. The recommended location is `.github/scre
 
 The `description` is a free-text brief — use it to describe interactions, animation timing, component state sequences, accessibility requirements, responsive behaviour, or which parts are author-editable that a static image cannot convey. It is optional but **more valuable here than in the Figma flow**, because a screenshot carries no layer names, variants, or design tokens.
 
-**Workflow at a glance:** parse inputs (1) → analyse the viewable image (2) → **present a plan and get explicit approval (3, mandatory gate)** → generate (4) → write (5) → register in AEM (6) → verify build (7) → content prompt (8). No files are created before Step 3 approval.
+**Workflow at a glance:** parse inputs (1) → analyse the viewable image (2) → **present a plan and get explicit approval (3, mandatory gate)** → generate (4) → write (5) → register in AEM (6) → verify lint and build (7) → content prompt (8). No files are created before Step 3 approval.
 
 ---
 
@@ -174,7 +176,7 @@ Present the plan using the **AskUserQuestion tool** (so approval is an explicit 
 >
 > **States / interactions:** \<None / confirmed trigger type + state list\>
 > **Design tokens:** \<tokens to be used; list any unmatched colours needing a decision\>
-> **Registration:** add `<block-name>` to `src/models/_section.json`, then `npm run build:json`
+> **Registration:** add `<block-name>` to `src/models/_section.json` while preserving the existing component order, then `npm run build:json`
 > **Brief:** \<first 100 chars of devBrief, if provided\>
 
 Then ask, via **AskUserQuestion**:
@@ -310,7 +312,7 @@ export default function decorate(_block: HTMLElement): void {
 DOM-restructuring (async, imports `moveInstrumentation`):
 
 ```typescript
-import { moveInstrumentation } from '@/app/scripts';
+import { moveInstrumentation } from '@/app/scripts.js';
 
 export default async function decorate(block: HTMLElement): Promise<void> {
   const rows = [...block.querySelectorAll<HTMLElement>(':scope > div')];
@@ -326,8 +328,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 With images (imports `createOptimizedPicture`):
 
 ```typescript
-import { createOptimizedPicture } from '@/app/aem';
-import { moveInstrumentation } from '@/app/scripts';
+import { createOptimizedPicture } from '@/app/aem.js';
+import { moveInstrumentation } from '@/app/scripts.js';
 
 export default async function decorate(block: HTMLElement): Promise<void> {
   const pictures = [...block.querySelectorAll<HTMLPictureElement>('picture')];
@@ -412,9 +414,15 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     background-color: var(--background-color);
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .<block-name> {
-        /* desktop overrides */
+    /* tablet overrides */
+  }
+}
+
+@media (width >= 1200px) {
+  .<block-name> {
+    /* desktop overrides */
     }
 }
 ```
@@ -455,8 +463,8 @@ Multi-step sequence selectors (append when step-N states are confirmed):
 CSS rules:
 
 - BEM-adjacent naming: `.<block-name>`, `.<block-name>-<element>`, `.<block-name>-<element>--<modifier>`
-- All values use `var(--token-name)` — no hardcoded hex or px (see Step 2 token inference)
-- Modern range media queries: `@media (width >= 900px)`
+- Use `var(--token-name)` for colours, typography, and shared design-system values where available; avoid hardcoded sampled colours (see Step 2 token inference)
+- Modern range media queries using current project breakpoints: `@media (width >= 768px)` and `@media (width >= 1200px)`
 - 4-space indentation
 - No nested selectors — keep flat
 
@@ -485,7 +493,7 @@ Write all three files. When invoked by another agent, return:
 
 ### 6a. Add block to section filter
 
-Open `src/models/_section.json` and add `"<block-name>"` to the `filters[0].components` array in alphabetical order. This makes the block insertable in the Universal Editor.
+Open `src/models/_section.json` and add `"<block-name>"` to the `filters[0].components` array while preserving the existing grouping/order. This makes the block insertable in the Universal Editor.
 
 ### 6b. Regenerate root AEM component JSON files
 
@@ -507,14 +515,21 @@ If `build:json` fails, report the error and instruct the developer to run `npm r
 
 ---
 
-## Step 7 — Verify build
+## Step 7 — Verify lint and build
 
-Run the full Vite build to confirm the new block compiles without errors:
+Run lint first, then the full Vite build to confirm the new block follows repo rules and compiles without errors:
+
+```bash
+npm run lint
+```
+
+Then:
 
 ```bash
 npm run build
 ```
 
+- If lint **fails**: show the relevant lint error, fix it in the generated files, and re-run `npm run lint`.
 - If the build **passes**: confirm to the developer that the block compiled successfully and output is at `blocks/<block-name>/<block-name>.js`
 - If the build **fails**: show the compiler error, identify the likely cause (type error, missing import, invalid CSS token), fix it in the generated files, and re-run `npm run build` until it passes
 - Do NOT leave a failing build — fix all errors before finishing
@@ -578,8 +593,8 @@ When invoked by another agent, include in the returned JSON:
 
 After the block builds successfully, these skills are available if needed:
 
-- **`aem-skill-testing-blocks`** — validate the block in a real browser (lint, responsive check, screenshot). Especially useful here: compare the rendered block against the source screenshot at each viewport.
-- **`aem-skill-code-review`** — self-review before opening a PR (TypeScript patterns, CSS scoping, security)
+- **`testing-blocks`** — validate the block in a real browser (lint, responsive check, screenshot). Especially useful here: compare the rendered block against the source screenshot at each viewport.
+- **`code-review`** — self-review before opening a PR (TypeScript patterns, CSS scoping, security)
 
 These are optional — invoke them if the developer asks or if the block is complex enough to warrant it.
 
@@ -601,7 +616,7 @@ These are optional — invoke them if the developer asks or if the block is comp
 - Trigger type not confirmed → fall back to CSS-only template, no state logic generated
 - Block name not kebab-case → auto-convert and confirm
 - CSS pseudo-class states (`:hover`, `:focus`) → only exception that is always CSS-only without asking
-- No hardcoded hex/px in CSS → map to `var(--token-name)`; surface unmatched colours in the Step 3 plan instead of inlining
+- No hardcoded sampled colours in CSS → map to `var(--token-name)`; surface unmatched colours in the Step 3 plan instead of inlining
 - No relative `../../` imports → use `@/` alias
 - No `innerHTML =` → use `replaceChildren()`
 - Generated code must pass `npm run lint` and `npm run build`
