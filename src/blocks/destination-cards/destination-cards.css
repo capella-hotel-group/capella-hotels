@@ -161,38 +161,51 @@
 
 .destination-cards .destination-cards-controls {
     position: absolute;
-    top: calc(391px / 2);
+    top: calc(50% - 50px);
     right: 0;
     left: 0;
     z-index: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
+    height: 28px;
+    padding: 0 20px;
     pointer-events: none;
     transform: translateY(-50%);
 }
 
 .destination-cards .destination-cards-control {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     padding: 0;
-    border: 1px solid #1b364b;
-    border-radius: 50%;
-    background: transparent;
-    color: #1b364b;
-    font-family: var(--body-font-family);
-    font-size: 18px;
-    line-height: 1;
+    border: 0;
+    background: none;
     cursor: pointer;
     pointer-events: auto;
 }
 
-.destination-cards .destination-cards-control:is(:hover, :focus-visible) {
+.destination-cards .destination-cards-control-icon {
+    position: absolute;
+    width: 10.71px;
+    height: 20px;
+    left: calc(50% - 10.71px / 2 + 0.36px);
+    top: calc(50% - 20px / 2);
     background: #1b364b;
-    color: #fff;
+    /* chevron vector, apex-right by default (next); prev is mirrored below */
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.destination-cards .destination-cards-control-prev .destination-cards-control-icon {
+    transform: matrix(-1, 0, 0, 1, 0, 0);
+}
+
+.destination-cards .destination-cards-control:is(:hover, :focus-visible) .destination-cards-control-icon {
+    opacity: 0.7;
 }
 
 .destination-cards .destination-cards-cta {
@@ -247,7 +260,8 @@
     .destination-cards .destination-cards-controls {
         right: auto;
         left: 50%;
-        width: min(816px, calc(100% + 80px));
+        width: min(736px, 100%);
+        top: calc(50% - 49.5px);
         transform: translate(-50%, -50%);
     }
 
@@ -258,10 +272,6 @@
 
     .destination-cards .destination-cards-media {
         aspect-ratio: 232 / 283;
-    }
-
-    .destination-cards .destination-cards-controls {
-        top: calc(283px / 2);
     }
 }
 
@@ -289,13 +299,13 @@
         gap: 20px;
     }
 
-    .destination-cards .destination-cards-carousel-with-controls .destination-cards-list,
-    .destination-cards .destination-cards-controls {
+    .destination-cards .destination-cards-carousel-with-controls .destination-cards-list {
         width: min(100%, 1120px);
     }
 
     .destination-cards .destination-cards-controls {
-        width: min(1200px, calc(100% + 80px));
+        width: min(1280px, calc(100% + 160px));
+        top: calc(50% - 50px);
     }
 
     .destination-cards .destination-cards-item {
@@ -309,10 +319,6 @@
 
     .destination-cards .destination-cards-media {
         aspect-ratio: 360 / 440;
-    }
-
-    .destination-cards .destination-cards-controls {
-        top: calc(440px / 2);
     }
 
     .destination-cards .destination-cards-overlay {
