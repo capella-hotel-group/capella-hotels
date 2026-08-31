@@ -1,0 +1,203 @@
+.experience-tiles {
+    background: var(--color-surface-page);
+}
+
+.experience-tiles .experience-tiles-list {
+    display: grid;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+}
+
+.experience-tiles .experience-tiles-item {
+    margin: 0;
+}
+
+.experience-tiles .experience-tiles-card {
+    display: grid;
+}
+
+.experience-tiles .experience-tiles-visual,
+.experience-tiles .experience-tiles-details {
+    position: relative;
+    min-height: 296px;
+    margin: 0;
+    overflow: hidden;
+    background: var(--color-text-main-body);
+    color: var(--color-text-main-inverse-body);
+}
+
+.experience-tiles .experience-tiles-visual::after,
+.experience-tiles .experience-tiles-details::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgb(0 0 0 / 8%) 0%, rgb(0 0 0 / 22%) 45%, rgb(0 0 0 / 66%) 100%);
+    pointer-events: none;
+}
+
+.experience-tiles picture,
+.experience-tiles img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.experience-tiles img {
+    object-fit: cover;
+}
+
+.experience-tiles .experience-tiles-visual > picture,
+.experience-tiles .experience-tiles-visual > img,
+.experience-tiles .experience-tiles-details-media {
+    position: absolute;
+    inset: 0;
+}
+
+.experience-tiles .experience-tiles-visual-caption,
+.experience-tiles .experience-tiles-details-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    height: 100%;
+    min-height: inherit;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    padding: var(--dimension-layout-card-padding-inline);
+}
+
+.experience-tiles .experience-tiles-details-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: end;
+    gap: var(--dimension-spacing-general-xs);
+}
+
+.experience-tiles .experience-tiles-eyebrow,
+.experience-tiles .experience-tiles-headline,
+.experience-tiles .experience-tiles-detail-title,
+.experience-tiles .experience-tiles-description p {
+    margin: 0;
+}
+
+.experience-tiles .experience-tiles-eyebrow {
+    margin-bottom: var(--dimension-spacing-general-2xs);
+    font-family: var(--type-font-family-body);
+    font-size: 9px;
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+.experience-tiles .experience-tiles-headline,
+.experience-tiles .experience-tiles-detail-title {
+    max-width: 10em;
+    color: var(--color-text-main-inverse-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h4);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h4);
+    text-transform: uppercase;
+}
+
+.experience-tiles .experience-tiles-description {
+    max-width: 24em;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    line-height: var(--typography-line-height-body-sm);
+}
+
+.experience-tiles .experience-tiles-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dimension-spacing-general-s);
+    margin-top: var(--dimension-spacing-general-xs);
+}
+
+.experience-tiles .experience-tiles-action {
+    color: var(--color-text-action-inverse-default);
+    font-family: var(--type-font-family-cta);
+    font-size: 10px;
+    font-weight: var(--type-font-weight-button);
+    line-height: 1.2;
+    text-decoration: underline;
+    text-decoration-thickness: var(--stroke-weight-s);
+    text-underline-offset: 3px;
+    text-transform: uppercase;
+}
+
+.experience-tiles-modal[hidden] {
+    display: none;
+}
+
+.experience-tiles-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: var(--dimension-layout-module-padding-inline-s);
+    background: rgb(0 0 0 / 62%);
+}
+
+.experience-tiles-modal-panel {
+    position: relative;
+    width: min(100%, 720px);
+    max-height: min(720px, 90vh);
+    overflow: auto;
+    background: var(--color-surface-primary-default);
+    color: var(--color-text-main-body);
+}
+
+.experience-tiles-modal-close {
+    position: absolute;
+    top: var(--dimension-spacing-general-m);
+    right: var(--dimension-spacing-general-m);
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    border: var(--stroke-weight-s) solid var(--color-stroke-action-default);
+    background: var(--color-surface-primary-default);
+    color: var(--color-text-action-default);
+    cursor: pointer;
+}
+
+.experience-tiles-modal-body {
+    padding: var(--dimension-layout-module-padding-inline-s);
+}
+
+body.experience-tiles-modal-open {
+    overflow: hidden;
+}
+
+@media (width >= 768px) {
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        min-height: 360px;
+    }
+
+    .experience-tiles .experience-tiles-visual-caption,
+    .experience-tiles .experience-tiles-details-content {
+        padding: var(--dimension-layout-card-padding-inline);
+    }
+}
+
+@media (width >= 1200px) {
+    .experience-tiles .experience-tiles-card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        min-height: 360px;
+    }
+
+    .experience-tiles .experience-tiles-headline,
+    .experience-tiles .experience-tiles-detail-title {
+        font-size: var(--typography-fontsize-heading-h3);
+        line-height: var(--typography-line-height-heading-h3);
+    }
+}
