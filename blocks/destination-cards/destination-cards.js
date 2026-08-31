@@ -1,5 +1,5 @@
-/*! v0.1.0 | hd73521c6 */
-import { moveInstrumentation } from "../../scripts/scripts.js";
+/*! v0.1.0 | hf18c4f53 */
+import { moveInstrumentation } from "@/app/scripts.js";
 function textFromCell(cell) {
 	if (!cell) return "";
 	const textNodes = [...cell.children].map((child) => child.textContent?.trim() ?? "").filter(Boolean);
@@ -107,19 +107,22 @@ function buildCta(label, href, openInNewTab) {
 	setLinkAttributes(cta, href, openInNewTab);
 	return cta;
 }
+function buildControlButton(direction, label) {
+	const control = document.createElement("button");
+	control.type = "button";
+	control.className = `destination-cards-control destination-cards-control-${direction}`;
+	control.setAttribute("aria-label", label);
+	const icon = document.createElement("span");
+	icon.className = "destination-cards-control-icon";
+	icon.setAttribute("aria-hidden", "true");
+	control.append(icon);
+	return control;
+}
 function buildCarouselControls(list) {
 	const controls = document.createElement("div");
 	controls.className = "destination-cards-controls";
-	const previous = document.createElement("button");
-	previous.type = "button";
-	previous.className = "destination-cards-control destination-cards-control-prev";
-	previous.setAttribute("aria-label", "Previous destination card");
-	previous.textContent = "<";
-	const next = document.createElement("button");
-	next.type = "button";
-	next.className = "destination-cards-control destination-cards-control-next";
-	next.setAttribute("aria-label", "Next destination card");
-	next.textContent = ">";
+	const previous = buildControlButton("prev", "Previous destination card");
+	const next = buildControlButton("next", "Next destination card");
 	const scrollByCard = (direction) => {
 		const firstCard = list.querySelector(".destination-cards-item");
 		const cardWidth = firstCard?.getBoundingClientRect().width || list.clientWidth;
