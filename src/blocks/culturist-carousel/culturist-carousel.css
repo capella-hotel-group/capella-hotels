@@ -708,7 +708,7 @@
 .culturist-carousel-carousel-card {
     position: relative;
     flex: 0 0 100%;
-    min-height: 440px;
+    min-height: 360px;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
@@ -716,7 +716,7 @@
 @media (width >= 768px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 80%;
-        min-height: 440px;
+        min-height: 360px;
     }
 }
 
@@ -971,8 +971,6 @@
     display: block;
     width: 100%;
     height: auto;
-    max-height: 22rem;
-    object-fit: cover;
 }
 
 .culturist-carousel-card-modal-title {
