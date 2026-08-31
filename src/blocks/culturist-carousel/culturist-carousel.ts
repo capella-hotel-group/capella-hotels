@@ -306,7 +306,9 @@ async function renderGalleryCarousel(
     track.scrollBy({ left: direction * amount, behavior: 'smooth' });
   };
 
-  if (track.dataset.loopEvents !== 'true') {
+  // Desktop navigates via the prev/next arrows only; wheel/drag scrolling is a tablet/mobile-only affordance
+  const isDesktop = window.matchMedia('(min-width: 1200px)').matches;
+  if (!isDesktop && track.dataset.loopEvents !== 'true') {
     let touchStartX: number | null = null;
     let touchStartedAtBoundary = false;
     let isScrollSettled = true;

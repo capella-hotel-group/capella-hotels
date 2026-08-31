@@ -696,11 +696,19 @@
     display: none;
 }
 
+/* Desktop navigates via the prev/next arrows only, no wheel/drag scrolling */
+@media (width >= 1200px) {
+    .culturist-carousel-carousel-track {
+        overflow-x: hidden;
+        scroll-snap-type: none;
+    }
+}
+
 /* First card shows in full, second card peeks partially as a scroll affordance */
 .culturist-carousel-carousel-card {
     position: relative;
     flex: 0 0 100%;
-    min-height: 440px;
+    min-height: 360px;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
@@ -708,7 +716,7 @@
 @media (width >= 768px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 80%;
-        min-height: 440px;
+        min-height: 360px;
     }
 }
 
@@ -936,11 +944,36 @@
 
 .culturist-carousel-card-modal-panel {
     position: relative;
-    width: min(100%, 32rem);
-    max-height: calc(100vh - 2rem);
+    width: min(100%, 26rem);
+    max-height: min(75vh, 34rem);
     overflow: auto;
     background: #fff;
     box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
+}
+
+/* No scrollbar-width/scrollbar-color here: they switch Chrome to the native bar and re-add the arrows */
+.culturist-carousel-card-modal-panel::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Drop the stepper arrows, keep the track and thumb */
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-track {
+    background: rgb(0 0 0 / 12%);
+}
+
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-thumb {
+    background: rgb(27 54 75 / 70%);
+    border-radius: 999px;
+}
+
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-thumb:hover {
+    background: rgb(27 54 75 / 90%);
 }
 
 .culturist-carousel-card-modal-close {
@@ -963,8 +996,6 @@
     display: block;
     width: 100%;
     height: auto;
-    max-height: 22rem;
-    object-fit: cover;
 }
 
 .culturist-carousel-card-modal-title {
