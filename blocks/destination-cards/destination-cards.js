@@ -1,4 +1,4 @@
-/*! v0.1.0 | h4c1b5c61 */
+/*! v0.1.0 | hf18c4f53 */
 import { moveInstrumentation } from "@/app/scripts.js";
 function textFromCell(cell) {
 	if (!cell) return "";
@@ -49,8 +49,6 @@ function getCardFields(row) {
 			title: textFromPart(contentCell, 1),
 			image: mediaCell?.querySelector("picture, img"),
 			imageAlt: mediaCell?.querySelector("img")?.getAttribute("alt") || textFromPart(mediaCell, 1),
-			imageMobile: null,
-			imageMobileAlt: null,
 			href: cta.href,
 			ctaLabel: cta.label,
 			darkOverlay: isEnabled(settingsParts[0] || settingsCell, true),
@@ -63,8 +61,6 @@ function getCardFields(row) {
 	const openInNewTabCell = getCellByProp(cells, "openInNewTab");
 	const darkOverlayCell = getCellByProp(cells, "darkOverlay");
 	const imageAltCell = getCellByProp(cells, "imageAlt");
-	const imageMobileCell = getCellByProp(cells, "imageMobile");
-	const imageMobileAltCell = getCellByProp(cells, "imageMobileAlt");
 	const isNewModelOrder = !!ctaLinkCell;
 	const fallbackCtaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
 	const fallbackCtaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex + 1];
@@ -75,8 +71,6 @@ function getCardFields(row) {
 		title: textFromCell(cells[1]),
 		image: cells[2]?.querySelector("picture, img"),
 		imageAlt: imageAltCell ? textFromCell(imageAltCell) : isNewModelOrder || hasLegacyAltField ? textFromCell(cells[3]) : null,
-		imageMobile: imageMobileCell?.querySelector("picture, img"),
-		imageMobileAlt: imageMobileAltCell ? textFromCell(imageMobileAltCell) : null,
 		href: cta.href,
 		ctaLabel: textFromCell(ctaLabelCell || fallbackCtaLabelCell) || cta.label,
 		openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : linkIndex + 3], false),
@@ -164,27 +158,6 @@ function buildCard(row) {
 		const mediaNode = fields.image.tagName.toLowerCase() === "picture" ? fields.image : fields.image.closest("picture") || fields.image;
 		const imageElement = mediaNode.querySelector("img") || (mediaNode.tagName === "IMG" ? mediaNode : null);
 		if (imageElement && fields.imageAlt !== null) imageElement.alt = fields.imageAlt;
-		if (fields.imageMobile && mediaNode.tagName.toLowerCase() === "picture") {
-			const mobileNode = fields.imageMobile.tagName.toLowerCase() === "picture" ? fields.imageMobile : fields.imageMobile.closest("picture") || fields.imageMobile;
-			const mobileImg = mobileNode.querySelector("img") || (mobileNode.tagName === "IMG" ? mobileNode : null);
-			const mobileSrc = mobileNode.querySelector("source")?.getAttribute("srcset") || mobileImg?.getAttribute("src");
-			if (mobileSrc) {
-				const mobileSource = document.createElement("source");
-				mobileSource.media = "(max-width: 767px)";
-				mobileSource.srcset = mobileSrc;
-				mediaNode.prepend(mobileSource);
-			}
-			if (imageElement && fields.imageMobileAlt) {
-				const mobileAlt = fields.imageMobileAlt;
-				const desktopAlt = fields.imageAlt || imageElement.alt;
-				const responsiveQuery = window.matchMedia("(max-width: 767px)");
-				const updateAlt = () => {
-					imageElement.alt = responsiveQuery.matches ? mobileAlt : desktopAlt;
-				};
-				updateAlt();
-				responsiveQuery.addEventListener("change", updateAlt);
-			}
-		}
 		mediaContent.append(mediaNode);
 	} else {
 		media.classList.add("destination-cards-media-no-image");
@@ -233,7 +206,7 @@ export default function decorate(block) {
 	const carousel = document.createElement("div");
 	carousel.className = "destination-cards-carousel";
 	carousel.append(list);
-	if (cardRows.length > 1) {
+	if (cardRows.length > 3) {
 		carousel.classList.add("destination-cards-carousel-with-controls");
 		carousel.append(buildCarouselControls(list));
 	}
