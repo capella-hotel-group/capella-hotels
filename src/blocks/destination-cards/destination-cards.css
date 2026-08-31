@@ -164,6 +164,7 @@
     top: calc(391px / 2);
     right: 0;
     left: 0;
+    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -239,8 +240,15 @@
         width: min(100%, 736px);
     }
 
+    .destination-cards .destination-cards-carousel-with-controls {
+        overflow: visible;
+    }
+
     .destination-cards .destination-cards-controls {
-        width: min(100%, 736px);
+        right: auto;
+        left: 50%;
+        width: min(816px, calc(100% + 80px));
+        transform: translate(-50%, -50%);
     }
 
     .destination-cards .destination-cards-item {
@@ -284,6 +292,10 @@
     .destination-cards .destination-cards-carousel-with-controls .destination-cards-list,
     .destination-cards .destination-cards-controls {
         width: min(100%, 1120px);
+    }
+
+    .destination-cards .destination-cards-controls {
+        width: min(1200px, calc(100% + 80px));
     }
 
     .destination-cards .destination-cards-item {
@@ -352,8 +364,7 @@
     }
 
     .destination-cards .destination-cards-controls {
-        top: calc((100vw - 48px) * 391 / 320 / 2);
-        width: min(100%, 345px);
+        display: none;
     }
 
     .destination-cards .destination-cards-overlay {

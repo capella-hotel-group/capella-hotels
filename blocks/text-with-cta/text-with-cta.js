@@ -1,4 +1,4 @@
-/*! v0.1.0 | h941cab3c */
+/*! v0.1.0 | h8d952be0 */
 import { moveInstrumentation } from "../../scripts/scripts.js";
 import { loadFragment } from "../fragment/fragment.js";
 const THEMES = ["light-neutral", "soft-sand"];
@@ -72,7 +72,6 @@ function buildModal() {
 }
 export default function decorate(block) {
 	const rows = [...block.children];
-	const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = rows;
 	const titleField = fieldOf(block, "title");
 	const subtitleField = fieldOf(block, "subtitle");
 	const themeField = fieldOf(block, "backgroundTheme");
@@ -81,6 +80,9 @@ export default function decorate(block) {
 	const actionField = fieldOf(block, "ctaActionKind");
 	const urlField = fieldOf(block, "ctaTargetUrl");
 	const newTabField = fieldOf(block, "openInNewTab");
+	const hasLegacyAnchorRow = !titleField && rows.length >= 9;
+	const legacyRows = hasLegacyAnchorRow ? rows.slice(1) : rows;
+	const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = legacyRows;
 	const themeValue = textFromField(themeField) || textOf(themeRow);
 	const ctaStyleValue = textFromField(ctaStyleField) || textOf(styleRow);
 	const theme = THEMES.includes(themeValue) ? themeValue : THEMES[0];
@@ -89,7 +91,7 @@ export default function decorate(block) {
 	const label = textFromField(labelField) || textOf(labelRow);
 	const href = urlField?.querySelector("a")?.getAttribute("href") || urlRow?.querySelector("a")?.getAttribute("href") || "#";
 	const openInNewTab = (textFromField(newTabField) || textOf(newTabRow)).toLowerCase() === "true";
-	const anchorId = fieldTextOf(block, "id");
+	const anchorId = fieldTextOf(block, "id") || (hasLegacyAnchorRow ? textOf(rows[0]) : "");
 	if (anchorId) block.id = anchorId.replace(/^#/, "");
 	block.classList.add(`text-with-cta-theme-${theme}`, `text-with-cta-style-${ctaStyle}`);
 	const content = document.createElement("div");

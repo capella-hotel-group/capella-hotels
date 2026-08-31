@@ -1,4 +1,4 @@
-/*! v0.1.0 | ha4ddae2a */
+/*! v0.1.0 | hd73521c6 */
 import { moveInstrumentation } from "../../scripts/scripts.js";
 function textFromCell(cell) {
 	if (!cell) return "";
@@ -32,7 +32,7 @@ function getLinkFromCell(cell) {
 	};
 }
 function isCardRow(row) {
-	return row.children.length > 1;
+	return !!row.querySelector("picture, img");
 }
 function getCellByProp(cells, property) {
 	return cells.find((cell) => cell.getAttribute("data-aue-prop") === property || !!cell.querySelector(`[data-aue-prop="${property}"]`));
@@ -193,7 +193,9 @@ export default function decorate(block) {
 	const cardRows = rows.slice(firstCardIndex);
 	const intro = buildIntro(introRows);
 	const { anchorId } = intro.dataset;
-	if (anchorId) block.id = anchorId;
+	const authoredAnchorId = block.querySelector("[data-aue-prop=\"id\"]")?.textContent?.trim();
+	const resolvedAnchorId = authoredAnchorId || anchorId;
+	if (resolvedAnchorId) block.id = resolvedAnchorId.replace(/^#/, "");
 	delete intro.dataset.anchorId;
 	const list = document.createElement("ul");
 	list.className = "destination-cards-list";

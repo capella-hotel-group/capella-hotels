@@ -33,7 +33,7 @@ function getLinkFromCell(cell?: Element | null): { href: string; label: string }
 }
 
 function isCardRow(row: Element): boolean {
-  return row.children.length > 1;
+  return !!row.querySelector('picture, img');
 }
 
 function getCellByProp(cells: Element[], property: string): Element | undefined {
@@ -238,7 +238,9 @@ export default function decorate(block: HTMLElement): HTMLElement {
   const cardRows = rows.slice(firstCardIndex);
   const intro = buildIntro(introRows);
   const { anchorId } = intro.dataset;
-  if (anchorId) block.id = anchorId;
+  const authoredAnchorId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
+  const resolvedAnchorId = authoredAnchorId || anchorId;
+  if (resolvedAnchorId) block.id = resolvedAnchorId.replace(/^#/, '');
   delete intro.dataset.anchorId;
 
   const list = document.createElement('ul');

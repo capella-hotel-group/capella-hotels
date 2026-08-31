@@ -1,5 +1,5 @@
-/*! v0.1.0 | h2e131ff2 */
-import { moveInstrumentation } from "../../scripts/scripts.js";
+/*! v0.1.0 | h6357f993 */
+import { moveInstrumentation } from "@/app/scripts.js";
 function textFromCell(cell) {
 	return cell?.textContent?.trim() || "";
 }
@@ -204,7 +204,7 @@ export default function decorate(block) {
 	const title = getFieldText(block, "title") || textFromCell(rows[1]?.firstElementChild || rows[1]);
 	const anchorId = getFieldText(block, "id");
 	if (anchorId) block.id = anchorId.replace(/^#/, "");
-	const cardRows = rows.filter((row) => row.querySelector("picture, img")).slice(0, 3);
+	const cardRows = rows.filter((row) => row.matches("[data-aue-model=\"offers-carousel-item\"]") || row.querySelector("picture, img")).slice(0, 3);
 	const cardsData = cardRows.map((row) => parseCard(row)).filter((card) => card !== null);
 	if (!cardsData.length) return;
 	const root = document.createElement("div");
