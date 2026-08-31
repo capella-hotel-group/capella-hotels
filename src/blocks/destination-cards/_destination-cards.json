@@ -95,6 +95,20 @@
           "value": ""
         },
         {
+          "component": "reference",
+          "name": "imageMobile",
+          "label": "Mobile Image (optional)",
+          "valueType": "string",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "name": "imageMobileAlt",
+          "label": "Mobile Asset Alt Text (optional)",
+          "valueType": "string",
+          "value": ""
+        },
+        {
           "component": "text",
           "name": "ctaName",
           "label": "Card CTA Label",
