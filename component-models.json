@@ -416,6 +416,142 @@
     ]
   },
   {
+    "id": "featured-story-card",
+    "fields": [
+      {
+        "component": "select",
+        "name": "imageAlignment",
+        "label": "Image Alignment Position",
+        "valueType": "string",
+        "required": true,
+        "options": [
+          {
+            "name": "Image on Left",
+            "value": "left"
+          },
+          {
+            "name": "Image on Right",
+            "value": "right"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Story Eyebrow Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "headline",
+        "label": "Story Main Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Body Description Copy",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "primaryMedia",
+        "label": "Primary Media Asset (Image or Video)",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "primaryMediaAlt",
+        "label": "Primary Media Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "primaryCtaLabel",
+        "label": "Primary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "primaryCtaUrl",
+        "label": "Primary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "primaryCtaOpenInNewTab",
+        "label": "Primary CTA Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "secondaryCtaLabel",
+        "label": "Secondary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "secondaryCtaUrl",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "secondaryCtaOpenInNewTab",
+        "label": "Secondary CTA Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Enable Dark Image Overlay",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Component Anchor ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., story-sentosa"
+      }
+    ]
+  },
+  {
+    "id": "featured-story-card-item",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "galleryMedia",
+        "label": "Gallery Thumbnail Asset (Image or Video)",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "galleryMediaAlt",
+        "label": "Gallery Thumbnail Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "filters-grid",
     "fields": [
       {

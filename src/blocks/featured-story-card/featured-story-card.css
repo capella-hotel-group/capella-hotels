@@ -1,0 +1,269 @@
+.featured-story-card {
+    width: 100%;
+    margin: 0;
+    background: #f9f6f6;
+}
+
+.featured-story-card .featured-story-card-layout {
+    display: grid;
+    gap: 48px;
+    padding: 48px 24px;
+}
+
+.featured-story-card .featured-story-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    order: 0;
+}
+
+.featured-story-card .featured-story-card-eyebrow {
+    margin: 0;
+    padding-left: 32px;
+    color: #1b364b;
+    font-family: var(--body-font-family);
+    font-size: 16px;
+    line-height: 20px;
+    text-transform: uppercase;
+}
+
+.featured-story-card .featured-story-card-headline {
+    margin: 0;
+    padding-left: 32px;
+    color: #1b364b;
+    font-family: var(--heading-font-family);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 36px;
+}
+
+.featured-story-card .featured-story-card-description {
+    padding-left: 32px;
+    color: #262727;
+    font-family: var(--heading-font-family);
+    font-size: 20px;
+    line-height: 22px;
+}
+
+.featured-story-card .featured-story-card-description p {
+    margin: 0;
+}
+
+.featured-story-card .featured-story-card-gallery {
+    position: relative;
+    order: 1;
+}
+
+.featured-story-card .featured-story-card-viewport {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.featured-story-card .featured-story-card-track {
+    display: flex;
+    transition: transform 0.35s ease;
+}
+
+.featured-story-card .featured-story-card-slide {
+    flex: 0 0 100%;
+    aspect-ratio: 280 / 350;
+}
+
+.featured-story-card .featured-story-card-slide picture,
+.featured-story-card .featured-story-card-slide img,
+.featured-story-card .featured-story-card-slide video {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.featured-story-card .featured-story-card-slide img {
+    object-fit: cover;
+}
+
+.featured-story-card .featured-story-card-slide video {
+    object-fit: cover;
+}
+
+.featured-story-card .featured-story-card-control {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 32px;
+    line-height: 24px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.featured-story-card .featured-story-card-control-prev {
+    left: 12px;
+}
+
+.featured-story-card .featured-story-card-control-next {
+    right: 12px;
+}
+
+.featured-story-card .featured-story-card-thumbnails {
+    display: none;
+}
+
+.featured-story-card .featured-story-card-ctas {
+    display: flex;
+    gap: 16px;
+    padding-left: 32px;
+}
+
+.featured-story-card .featured-story-card-cta {
+    color: #1b364b;
+    font-family: var(--body-font-family);
+    font-size: 16px;
+    line-height: 20px;
+    text-transform: uppercase;
+    text-decoration: underline;
+}
+
+.featured-story-card .featured-story-card-cta + .featured-story-card-cta {
+    position: relative;
+    padding-left: 16px;
+}
+
+.featured-story-card .featured-story-card-cta + .featured-story-card-cta::before {
+    content: '|';
+    position: absolute;
+    left: 0;
+}
+
+@media (width >= 768px) {
+    .featured-story-card .featured-story-card-layout {
+        gap: 48px;
+        padding: 112px 48px;
+    }
+
+    .featured-story-card .featured-story-card-content {
+        order: 0;
+    }
+
+    .featured-story-card .featured-story-card-headline {
+        font-size: 40px;
+        line-height: 48px;
+    }
+
+    .featured-story-card .featured-story-card-description {
+        padding-left: 32px;
+        font-size: 24px;
+        line-height: 24px;
+    }
+
+    .featured-story-card .featured-story-card-slide {
+        aspect-ratio: 738 / 590.4;
+    }
+}
+
+@media (width >= 1200px) {
+    .featured-story-card .featured-story-card-layout {
+        grid-template-columns: minmax(0, 3fr) minmax(444px, 2fr);
+        gap: 0;
+        align-items: stretch;
+        min-height: 691px;
+        padding: 0;
+    }
+
+    .featured-story-card .featured-story-card-layout.image-right .featured-story-card-media {
+        order: 1;
+    }
+
+    .featured-story-card .featured-story-card-layout.image-right .featured-story-card-content {
+        order: 0;
+    }
+
+    .featured-story-card .featured-story-card-media {
+        order: 0;
+    }
+
+    .featured-story-card .featured-story-card-content {
+        justify-content: center;
+        gap: 40px;
+        padding: 64px 80px 0 52px;
+    }
+
+    .featured-story-card .featured-story-card-headline {
+        padding-left: 32px;
+        font-size: 48px;
+        line-height: 48px;
+    }
+
+    .featured-story-card .featured-story-card-description {
+        font-size: 24px;
+        line-height: 24px;
+    }
+
+    .featured-story-card .featured-story-card-gallery,
+    .featured-story-card .featured-story-card-viewport,
+    .featured-story-card .featured-story-card-track,
+    .featured-story-card .featured-story-card-slide {
+        height: 100%;
+    }
+
+    .featured-story-card .featured-story-card-slide {
+        aspect-ratio: auto;
+    }
+
+    .featured-story-card .featured-story-card-control {
+        display: none;
+    }
+
+    .featured-story-card .featured-story-card-thumbnails {
+        display: flex;
+        gap: 4px;
+        margin-top: -175px;
+        padding: 0 32px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .featured-story-card .featured-story-card-thumbnail {
+        width: 140px;
+        height: 175px;
+        padding: 0;
+        border: 0;
+        cursor: pointer;
+    }
+
+    .featured-story-card .featured-story-card-thumbnail[aria-current='true'] {
+        outline: 2px solid #1b364b;
+        outline-offset: 2px;
+    }
+
+    .featured-story-card .featured-story-card-thumbnail picture,
+    .featured-story-card .featured-story-card-thumbnail img,
+    .featured-story-card .featured-story-card-thumbnail video {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .featured-story-card .featured-story-card-thumbnail img {
+        object-fit: cover;
+    }
+
+    .featured-story-card .featured-story-card-thumbnail video {
+        object-fit: cover;
+    }
+}
+
+@media (width < 1200px) {
+    .featured-story-card .featured-story-card-track {
+        width: 100%;
+    }
+
+    .featured-story-card .featured-story-card-slide {
+        flex-basis: 100%;
+    }
+}

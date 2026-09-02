@@ -27,6 +27,7 @@
       "interactive-asset",
       "filters-grid",
       "offers-carousel",
+      "featured-story-card",
       "text-with-cta",
       "rte"
     ]
@@ -149,6 +150,15 @@
     "components": [
       "destination-card-item"
     ]
+  },
+  {
+    "id": "featured-story-card",
+    "components": [
+      "featured-story-card-item"
+    ],
+    "minItems": 1,
+    "maxItems": 3,
+    "customErrorMsg": "Add between 1 and 3 story images."
   },
   {
     "id": "filters-grid",
