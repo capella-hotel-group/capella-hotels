@@ -52,15 +52,12 @@
     max-width: 100%;
     min-height: 429px;
     margin: 0 auto;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
+    overflow: hidden;
     touch-action: pan-y;
 }
 
 .offers-carousel .offers-carousel-cards {
-    display: flex;
-    gap: 16px;
+    position: relative;
     width: 100%;
     height: 429px;
     margin: 0;
@@ -69,15 +66,14 @@
 }
 
 .offers-carousel .offers-carousel-card {
-    position: relative;
-    flex: 0 0 260px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    flex: none;
     width: 260px;
     height: 300px;
     cursor: pointer;
-    scroll-snap-align: center;
-    transition:
-        transform 0.35s ease,
-        opacity 0.35s ease;
+    transition: transform 0.35s ease;
 }
 
 .offers-carousel .offers-carousel-card-media {
@@ -206,10 +202,10 @@
         width: 360px;
         min-height: 532px;
         margin: 0;
+        overflow: hidden;
     }
 
     .offers-carousel .offers-carousel-cards {
-        position: relative;
         display: block;
         height: 532px;
     }
@@ -223,8 +219,11 @@
 
     .offers-carousel .offers-carousel-card.is-active {
         z-index: 4;
-        right: 40px;
-        top: 0;
+        right: 0;
+        left: auto;
+        top: 100px;
+        width: 360px;
+        height: 432px;
         opacity: 1;
         pointer-events: auto;
         transform: translate(0, 0);
@@ -233,21 +232,23 @@
     .offers-carousel .offers-carousel-card.is-next-1 {
         z-index: 3;
         right: 20px;
+        left: auto;
         top: 50px;
         width: 320px;
         height: 384px;
-        opacity: 0.9;
+        opacity: 1;
         pointer-events: auto;
-        transform: translate(0, 0);
     }
 
     .offers-carousel .offers-carousel-card.is-next-2 {
         z-index: 2;
-        right: 0;
-        bottom: 0;
-        width: 360px;
-        height: 432px;
-        opacity: 0.8;
+        right: 40px;
+        left: auto;
+        top: 0;
+        bottom: auto;
+        width: 280px;
+        height: 336px;
+        opacity: 1;
         pointer-events: auto;
         transform: translate(0, 0);
     }
@@ -296,21 +297,24 @@
         left: 52px;
         width: 680px;
         height: 328px;
-        opacity: 0.9;
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .offers-carousel .offers-carousel-card.is-next-2 {
-        top: 120px;
-        right: auto;
+        top: 0;
+        right: 0;
         bottom: auto;
-        left: 0;
+        left: auto;
         width: 680px;
         height: 328px;
-        opacity: 0.8;
+        opacity: 1;
     }
 
     .offers-carousel .offers-carousel-card.is-active {
-        right: 0;
+        top: 120px;
+        right: auto;
+        left: 0;
         width: 680px;
         height: 328px;
     }
@@ -345,24 +349,48 @@
 }
 
 @media (width < 768px) {
-    .offers-carousel .offers-carousel-card-overlay {
-        inset: 12px;
-    }
-
-    .offers-carousel .offers-carousel-card-title {
-        font-size: var(--heading-font-size-l);
-    }
-
-    .offers-carousel .offers-carousel-card-description {
-        max-width: 280px;
-        font-size: 13px;
+    .offers-carousel .offers-carousel-card.is-active {
+        z-index: 4;
+        top: 100px;
+        width: 320px;
+        height: 328px;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%);
     }
 
     .offers-carousel .offers-carousel-card.is-next-1 {
-        transform: translate(30px, -14px) scale(0.9);
+        z-index: 3;
+        top: 50px;
+        width: 290px;
+        height: 335px;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%);
     }
 
     .offers-carousel .offers-carousel-card.is-next-2 {
-        transform: translate(58px, -26px) scale(0.82);
+        z-index: 2;
+        top: 0;
+        width: 260px;
+        height: 300px;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%);
+    }
+
+    .offers-carousel .offers-carousel-card-overlay {
+        inset: 32px;
+    }
+
+    .offers-carousel .offers-carousel-card-title {
+        font-size: 28px;
+        line-height: 32px;
+    }
+
+    .offers-carousel .offers-carousel-card-description {
+        max-width: none;
+        font-size: 16px;
+        line-height: 20px;
     }
 }
