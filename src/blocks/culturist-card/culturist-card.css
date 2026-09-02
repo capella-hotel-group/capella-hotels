@@ -1,0 +1,267 @@
+.culturist-card-wrapper,
+.culturist-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.culturist-card {
+    color: #1e2d3b;
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+}
+
+.culturist-card-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: rgb(236 229 227);
+}
+
+.culturist-card-media {
+    width: 100%;
+    aspect-ratio: 320 / 260;
+    overflow: hidden;
+    background: rgb(236 229 227);
+}
+
+.culturist-card-media picture,
+.culturist-card-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.culturist-card-media img {
+    object-fit: cover;
+}
+
+.culturist-card-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 28px 20px 34px;
+    background: rgb(236 229 227);
+}
+
+.culturist-card-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.culturist-card-avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: fit-content;
+}
+
+.culturist-card-avatar {
+    display: block;
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.culturist-card-signature {
+    display: block;
+    width: 92px;
+    height: auto;
+    margin-top: 10px;
+}
+
+.culturist-card-quote {
+    margin: 0;
+    color: #1b364b;
+    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
+    font-size: 18px;
+    line-height: 1.08;
+}
+
+.culturist-card-quote blockquote,
+.culturist-card-quote p,
+.culturist-card-bio p {
+    margin: 0;
+}
+
+.culturist-card-name,
+.culturist-card-bio {
+    margin: 0;
+    color: #1e2d3b;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.culturist-card-name {
+    font-style: italic;
+}
+
+.culturist-card-experience {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.culturist-card-eyebrow {
+    margin: 0;
+    color: #1b364b;
+    font-size: 10px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.culturist-card-title {
+    margin: 0;
+    color: #1b364b;
+    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.culturist-card-gallery {
+    display: flex;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    overflow-x: auto;
+    list-style: none;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.culturist-card-gallery::-webkit-scrollbar {
+    display: none;
+}
+
+.culturist-card-gallery-item {
+    flex: 0 0 58%;
+    aspect-ratio: 1 / 1;
+    scroll-snap-align: start;
+}
+
+.culturist-card-gallery-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.culturist-card-ctas {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-top: 18px;
+}
+
+.culturist-card-cta-link {
+    color: #1b364b;
+    font-size: 10px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-underline-offset: 3px;
+}
+
+.culturist-card--empty {
+    min-height: 120px;
+}
+
+@media (width >= 768px) {
+    .culturist-card-media {
+        aspect-ratio: 724 / 425;
+    }
+
+    .culturist-card-panel {
+        position: relative;
+        gap: 38px;
+        padding: 54px 112px 64px 42px;
+    }
+
+    .culturist-card-avatar-wrap {
+        position: absolute;
+        top: -40px;
+        right: 42px;
+        align-items: center;
+    }
+
+    .culturist-card-avatar {
+        width: 90px;
+        height: 90px;
+    }
+
+    .culturist-card-signature {
+        width: 108px;
+    }
+
+    .culturist-card-profile {
+        max-width: 410px;
+    }
+
+    .culturist-card-quote {
+        font-size: 20px;
+    }
+
+    .culturist-card-name,
+    .culturist-card-bio,
+    .culturist-card-eyebrow,
+    .culturist-card-cta-link {
+        font-size: 11px;
+    }
+
+    .culturist-card-title {
+        max-width: 420px;
+        font-size: 28px;
+    }
+
+    .culturist-card-gallery {
+        overflow: visible;
+        scroll-snap-type: none;
+    }
+
+    .culturist-card-gallery-item {
+        flex: 0 1 112px;
+        scroll-snap-align: none;
+    }
+}
+
+@media (width >= 1200px) {
+    .culturist-card-layout {
+        display: grid;
+        grid-template-columns: 50% 50%;
+        min-height: 720px;
+    }
+
+    .culturist-card-media {
+        order: 2;
+        height: 720px;
+        aspect-ratio: auto;
+    }
+
+    .culturist-card-panel {
+        order: 1;
+        justify-content: center;
+        gap: 42px;
+        min-height: 720px;
+        padding: 54px 96px;
+    }
+
+    .culturist-card-avatar-wrap {
+        top: 50px;
+        right: 88px;
+    }
+
+    .culturist-card-profile {
+        max-width: 360px;
+    }
+
+    .culturist-card-experience {
+        max-width: 420px;
+    }
+
+    .culturist-card-gallery-item {
+        flex-basis: 120px;
+    }
+}
