@@ -76,7 +76,13 @@ function buildThumbs(track: HTMLUListElement): HTMLUListElement {
     button.dataset.index = String(index);
 
     const picture = slide.querySelector('picture');
-    if (picture) button.append(picture.cloneNode(true));
+    if (picture) {
+      const thumbPicture = picture.cloneNode(true) as Element;
+      // the clone would otherwise carry a copy of the item's data-aue-* attributes,
+      // which makes the editor list every gallery image twice in the content tree
+      [thumbPicture, ...thumbPicture.querySelectorAll('*')].forEach((element) => moveInstrumentation(element, null));
+      button.append(thumbPicture);
+    }
     const alt = slide.querySelector('img')?.alt;
     button.setAttribute('aria-label', alt || `Show image ${index + 1}`);
 
@@ -120,10 +126,11 @@ export default function decorate(block: HTMLElement): void {
 
   block.textContent = '';
   if (header.childElementCount > 0) block.append(header);
-  if (slides.length > 0) block.append(media);
   if (body) block.append(body);
   if (thumbs) block.append(thumbs);
   if (cta) block.append(cta);
+  // appended even when empty so the editor still offers the gallery container
+  block.append(media);
 
   if (!interactive) return;
 
