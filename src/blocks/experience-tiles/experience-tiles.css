@@ -1,0 +1,347 @@
+.experience-tiles {
+    background: var(--color-surface-page);
+}
+
+.experience-tiles .experience-tiles-list {
+    display: grid;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+}
+
+.experience-tiles .experience-tiles-item {
+    margin: 0;
+}
+
+.experience-tiles .experience-tiles-card {
+    display: grid;
+    min-height: 852px;
+}
+
+.experience-tiles .experience-tiles-visual,
+.experience-tiles .experience-tiles-details {
+    position: relative;
+    min-height: 426px;
+    margin: 0;
+    overflow: hidden;
+    background: var(--color-text-main-body);
+    color: var(--color-text-main-inverse-body);
+    opacity: 0;
+    transition:
+        opacity 0.8s ease,
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+}
+
+.experience-tiles .experience-tiles-visual {
+    transform: translateY(-64px);
+}
+
+.experience-tiles .experience-tiles-details {
+    transform: translateY(64px);
+}
+
+.experience-tiles .experience-tiles-item.is-visible .experience-tiles-visual,
+.experience-tiles .experience-tiles-item.is-visible .experience-tiles-details {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.experience-tiles .experience-tiles-visual::after,
+.experience-tiles .experience-tiles-details::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgb(0 0 0 / 8%) 0%, rgb(0 0 0 / 22%) 45%, rgb(0 0 0 / 66%) 100%);
+    pointer-events: none;
+}
+
+.experience-tiles picture,
+.experience-tiles img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.experience-tiles img {
+    object-fit: cover;
+}
+
+.experience-tiles .experience-tiles-visual > picture,
+.experience-tiles .experience-tiles-visual > img,
+.experience-tiles .experience-tiles-details-media {
+    position: absolute;
+    inset: 0;
+}
+
+.experience-tiles .experience-tiles-visual-caption,
+.experience-tiles .experience-tiles-details-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    height: 100%;
+    min-height: inherit;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    padding: 200px 24px 24px;
+}
+
+.experience-tiles .experience-tiles-details-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: end;
+    gap: 20px;
+}
+
+.experience-tiles .experience-tiles-eyebrow,
+.experience-tiles .experience-tiles-headline,
+.experience-tiles .experience-tiles-detail-title,
+.experience-tiles .experience-tiles-description p {
+    margin: 0;
+}
+
+.experience-tiles .experience-tiles-eyebrow {
+    margin-bottom: 0;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
+}
+
+.experience-tiles .experience-tiles-headline,
+.experience-tiles .experience-tiles-detail-title {
+    max-width: 345px;
+    color: var(--color-text-main-inverse-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h1);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h1);
+    text-transform: uppercase;
+}
+
+.experience-tiles .experience-tiles-visual-caption {
+    gap: 12px;
+}
+
+.experience-tiles .experience-tiles-detail-title {
+    font-size: var(--typography-fontsize-heading-h3);
+    line-height: var(--typography-line-height-heading-h3);
+}
+
+.experience-tiles .experience-tiles-description {
+    max-width: 345px;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+}
+
+.experience-tiles .experience-tiles-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 0;
+}
+
+.experience-tiles .experience-tiles-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 10px 0;
+    color: var(--color-text-action-inverse-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-button);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration: underline;
+    text-decoration-thickness: var(--stroke-weight-s);
+    text-underline-offset: 3px;
+    text-transform: uppercase;
+}
+
+.experience-tiles-modal[hidden] {
+    display: none;
+}
+
+.experience-tiles-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: var(--dimension-layout-module-padding-inline-s);
+    background: rgb(0 0 0 / 62%);
+}
+
+.experience-tiles-modal-panel {
+    position: relative;
+    width: min(100%, 720px);
+    max-height: min(720px, 90vh);
+    overflow: auto;
+    background: var(--color-surface-primary-default);
+    color: var(--color-text-main-body);
+}
+
+.experience-tiles-modal-close {
+    position: absolute;
+    top: var(--dimension-spacing-general-m);
+    right: var(--dimension-spacing-general-m);
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    border: var(--stroke-weight-s) solid var(--color-stroke-action-default);
+    background: var(--color-surface-primary-default);
+    color: var(--color-text-action-default);
+    cursor: pointer;
+}
+
+.experience-tiles-modal-body {
+    padding: var(--dimension-layout-module-padding-inline-s);
+}
+
+body.experience-tiles-modal-open {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        opacity: 1;
+        transform: none;
+        transition: none;
+        will-change: auto;
+    }
+}
+
+@media (width >= 768px) {
+    .experience-tiles .experience-tiles-list {
+        max-width: none;
+    }
+
+    .experience-tiles .experience-tiles-card {
+        min-height: 1194px;
+    }
+
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        min-height: 597px;
+    }
+
+    .experience-tiles .experience-tiles-visual-caption {
+        gap: 14px;
+        padding: 0 48px 40px;
+    }
+
+    .experience-tiles .experience-tiles-details-content {
+        grid-template-columns: repeat(2, minmax(0, 359px));
+        align-items: start;
+        align-content: end;
+        gap: 20px;
+        padding: 0 48px 40px;
+    }
+
+    .experience-tiles .experience-tiles-eyebrow {
+        margin-bottom: 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-headline {
+        max-width: 738px;
+        font-size: var(--typography-fontsize-heading-h1);
+        line-height: var(--typography-line-height-heading-h1);
+    }
+
+    .experience-tiles .experience-tiles-detail-title {
+        max-width: 359px;
+        font-size: 32px;
+        line-height: var(--typography-line-height-heading-h3);
+    }
+
+    .experience-tiles .experience-tiles-description {
+        max-width: 359px;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-actions {
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .experience-tiles .experience-tiles-action {
+        min-height: 40px;
+        padding: 10px 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+}
+
+@media (width >= 1200px) {
+    .experience-tiles .experience-tiles-list {
+        max-width: none;
+    }
+
+    .experience-tiles .experience-tiles-card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        min-height: 900px;
+    }
+
+    .experience-tiles .experience-tiles-visual,
+    .experience-tiles .experience-tiles-details {
+        min-height: 900px;
+    }
+
+    .experience-tiles .experience-tiles-visual-caption {
+        justify-content: flex-start;
+        gap: 14px;
+        padding: 640px 80px 80px;
+    }
+
+    .experience-tiles .experience-tiles-details-content {
+        grid-template-columns: repeat(2, minmax(0, 270px));
+        align-items: start;
+        align-content: end;
+        gap: 20px;
+        padding: 640px 80px 80px;
+    }
+
+    .experience-tiles .experience-tiles-eyebrow {
+        margin-bottom: 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-headline {
+        max-width: 560px;
+        font-size: var(--typography-fontsize-heading-h1);
+        line-height: var(--typography-line-height-heading-h1);
+    }
+
+    .experience-tiles .experience-tiles-detail-title {
+        max-width: 270px;
+        font-size: var(--typography-fontsize-heading-h3);
+        line-height: var(--typography-line-height-heading-h3);
+    }
+
+    .experience-tiles .experience-tiles-description {
+        max-width: 270px;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    .experience-tiles .experience-tiles-actions {
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .experience-tiles .experience-tiles-action {
+        min-height: 40px;
+        padding: 9px 0;
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+    }
+}
