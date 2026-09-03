@@ -416,6 +416,58 @@
     ]
   },
   {
+    "id": "destination-introduction",
+    "fields": [
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "body",
+        "label": "Body",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "footerCta",
+        "label": "Footer CTA",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "destination-introduction-image",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "experience-tiles-item",
     "fields": [
       {
@@ -429,7 +481,7 @@
       {
         "component": "richtext",
         "name": "headline",
-        "label": "Main Experience Headline",
+        "label": "Experience Title",
         "valueType": "string",
         "required": true,
         "value": ""
@@ -437,7 +489,7 @@
       {
         "component": "reference",
         "name": "visualImage",
-        "label": "Visual Tile Image Asset",
+        "label": "Tile Image",
         "valueType": "string",
         "required": true,
         "multi": false
@@ -469,7 +521,7 @@
       {
         "component": "reference",
         "name": "detailsImage",
-        "label": "Details Tile Image Asset",
+        "label": "Details Tile Image",
         "valueType": "string",
         "required": true,
         "multi": false
