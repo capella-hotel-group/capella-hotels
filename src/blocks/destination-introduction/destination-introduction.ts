@@ -48,6 +48,34 @@ function buildCopy(row: Element | undefined, field: string): HTMLElement | null 
   return wrapper;
 }
 
+/**
+ * Rewrites `<p>one<br>two</p>` as `<p>one</p><p>two</p>` so a heading written with
+ * soft breaks lines up with one written as separate paragraphs. The stylesheet
+ * indents the second child, which only works when each line is its own element.
+ */
+function splitOnLineBreaks(container: Element): void {
+  [...container.children].forEach((element) => {
+    if (!element.querySelector('br')) return;
+
+    const lines = [document.createDocumentFragment()];
+    [...element.childNodes].forEach((node) => {
+      if (node.nodeName === 'BR') lines.push(document.createDocumentFragment());
+      else lines[lines.length - 1].append(node);
+    });
+
+    const paragraphs = lines
+      .filter((line) => line.textContent?.trim())
+      .map((line) => {
+        // a fresh element rather than a clone, so no data-aue-* attribute is duplicated
+        const paragraph = document.createElement(element.tagName);
+        paragraph.append(line);
+        return paragraph;
+      });
+
+    if (paragraphs.length) element.replaceWith(...paragraphs);
+  });
+}
+
 function buildTrack(rows: Element[]): HTMLUListElement {
   const track = document.createElement('ul');
   track.className = 'destination-introduction-track';
@@ -104,6 +132,7 @@ export default function decorate(block: HTMLElement): void {
   header.className = 'destination-introduction-header';
   const eyebrow = buildCopy(rows[0], COPY_FIELDS[0]);
   const title = buildCopy(rows[1], COPY_FIELDS[1]);
+  if (title) splitOnLineBreaks(title);
   if (eyebrow) header.append(eyebrow);
   if (title) header.append(title);
 
@@ -124,11 +153,17 @@ export default function decorate(block: HTMLElement): void {
 
   const thumbs = interactive ? buildThumbs(track) : null;
 
+  // the copy children share a wrapper so desktop can lay them out as one flex
+  // column beside the media; below desktop the wrapper is `display: contents`
+  const copy = document.createElement('div');
+  copy.className = 'destination-introduction-copy';
+  if (header.childElementCount > 0) copy.append(header);
+  if (body) copy.append(body);
+  if (thumbs) copy.append(thumbs);
+  if (cta) copy.append(cta);
+
   block.textContent = '';
-  if (header.childElementCount > 0) block.append(header);
-  if (body) block.append(body);
-  if (thumbs) block.append(thumbs);
-  if (cta) block.append(cta);
+  block.append(copy);
   // appended even when empty so the editor still offers the gallery container
   block.append(media);
 
