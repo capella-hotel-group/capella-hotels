@@ -32,7 +32,7 @@ The repository provides the basic structure, blocks, and configuration needed to
 ## Project Structure
 
 ```
-├── src/                         # TypeScript source (compiled by Vite/tsc, see Code Style Guidelines below)
+├── src/                         # TypeScript source (compiled by Vite/tsc, see docs/coding-guidelines.md)
     ├── app/                        # Page/runtime entry points
     ├── blocks/                     # Block source: {blockname}.ts, {blockname}.css, and the hand-authored _{blockname}.json model (source of truth, merged by build:json)
     ├── configs/                    # Shared configuration
@@ -66,31 +66,7 @@ The repository provides the basic structure, blocks, and configuration needed to
 
 ## Code Style Guidelines
 
-### JavaScript / TypeScript
-
-- Source lives under `src/` (TypeScript, strict mode); Vite compiles it into the plain-JS `scripts/`, `styles/`, `blocks/*` output the AEM EDS runtime expects — never hand-edit those generated root files
-- Use ES6+ features (arrow functions, destructuring, etc.)
-- ESLint flat config (`eslint.config.js`) + Prettier (`prettier.config.js`) — no Airbnb config
-- Use the `@/*` path alias (maps to `src/*`) for cross-module imports; omit `.ts` extensions
-- Use Unix line endings (LF)
-
-### CSS
-
-- Formatted with Prettier (4-space indent); no Stylelint — keep selectors and features consistent with existing blocks
-- Use modern CSS features (CSS Grid, Flexbox, CSS Custom Properties)
-- Maintain responsive design principles
-  - Declare styles mobile first, use `min-width` media queries at the agreed breakpoints: mobile up to 767px, tablet 768–1199px (`min-width: 768px`), desktop 1200px+ (`min-width: 1200px`) — see `--breakpoint-*` tokens in `src/styles/tokens.css`.
-  - Some older blocks still use ad-hoc `min-width: 600px`/`900px` queries predating this convention; don't copy them into new work, but don't silently rewrite them either unless the task calls for it.
-- Ensure all selectors are scoped to the block.
-  - Bad: `.item-list`
-  - Good: `.{blockname} .item-list`
-- Avoid classes `{blockname}-container` and `{blockname}-wrapper` as those are used on sections and could be confusing.
-
-### HTML
-
-- Use semantic HTML5 elements
-- Ensure accessibility standards (ARIA labels, proper heading hierarchy)
-- Follow AEM markup conventions for blocks and sections
+**Mandatory:** read [docs/coding-guidelines.md](./docs/coding-guidelines.md) before writing or modifying any TypeScript, CSS, or HTML in this repository, and follow it for every code change. It covers TypeScript/JavaScript conventions, CSS conventions (scoping, breakpoints), HTML/accessibility conventions, and the `data-testid` test automation convention.
 
 ## Key Concepts
 
