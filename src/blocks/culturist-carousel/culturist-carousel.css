@@ -944,10 +944,15 @@
 
 .culturist-carousel-card-modal-panel {
     position: relative;
-    width: min(100%, 26rem);
-    max-height: min(75vh, 34rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+    width: min(100%, 792px);
+    max-height: calc(100vh - 2rem);
     overflow: auto;
-    background: #fff;
+    padding: 36px;
+    background: #e0d3d1;
     box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
 }
 
@@ -978,32 +983,159 @@
 
 .culturist-carousel-card-modal-close {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 1;
-    width: 2rem;
-    height: 2rem;
+    top: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
     border: 0;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 85%);
-    color: #1b1b1b;
-    font-size: 1.2rem;
-    line-height: 1;
+    background: transparent;
     cursor: pointer;
 }
 
-.culturist-carousel-card-modal-image {
+.culturist-carousel-card-modal-close-icon {
+    position: relative;
     display: block;
+    width: 28px;
+    height: 28px;
+}
+
+.culturist-carousel-card-modal-close-icon::before,
+.culturist-carousel-card-modal-close-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16.8px;
+    border-top: 2px solid #1b364b;
+}
+
+.culturist-carousel-card-modal-close-icon::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.culturist-carousel-card-modal-close-icon::after {
+    transform: translate(-50%, -50%) rotate(135deg);
+}
+
+.culturist-carousel-card-modal-image-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
     width: 100%;
-    height: auto;
+    aspect-ratio: 720 / 405;
+    padding: 28px;
+    background-color: #000;
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.culturist-carousel-card-modal-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgb(0 0 0 / 40%);
+}
+
+.culturist-carousel-card-modal-title-block {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+}
+
+.culturist-carousel-card-modal-eyebrow {
+    margin: 0;
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    font-size: 18px;
+    line-height: 22px;
+    color: #fff;
 }
 
 .culturist-carousel-card-modal-title {
     margin: 0;
-    padding: 1rem 1.25rem;
     font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-size: 1.5rem;
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 36px;
+    color: #fff;
+}
+
+.culturist-carousel-card-modal-footer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.culturist-carousel-card-modal-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    flex: 0 1 344px;
+}
+
+.culturist-carousel-card-modal-curates {
+    flex: none;
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    font-size: 20px;
+    line-height: 22px;
+    color: #262727;
+}
+
+.culturist-carousel-card-modal-subtitle {
+    margin: 0;
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    font-size: 18px;
+    line-height: 22px;
+    color: #262727;
+}
+
+.culturist-carousel-card-modal-action {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    flex: 1 1 auto;
+    align-self: stretch;
+}
+
+.culturist-carousel-card-modal-link {
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    font-size: 18px;
+    line-height: 22px;
+    text-transform: uppercase;
+    text-decoration: underline;
     color: #1b364b;
+}
+
+@media (width < 768px) {
+    .culturist-carousel-card-modal-panel {
+        gap: 20px;
+        padding: 24px 20px;
+    }
+
+    .culturist-carousel-card-modal-title {
+        font-size: 26px;
+        line-height: 28px;
+    }
+
+    .culturist-carousel-card-modal-footer {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .culturist-carousel-card-modal-action {
+        justify-content: flex-start;
+    }
 }
 
 body.culturist-carousel-modal-open {
