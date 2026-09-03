@@ -1,17 +1,2 @@
-main .rte {
-    font-family: var(--body-font-family);
-    font-size: var(--body-font-size-m);
-}
-
-main .rte pre {
-    overflow-x: auto;
-    white-space: pre-wrap;
-}
-
-main .rte pre code {
-    font-family: monospace;
-}
-
-main .rte .rte-html-content {
-    font: inherit;
-}
+/*! v0.1.0 | h5ee0cf6b */
+main .rte{font-family:var(--body-font-family);font-size:var(--body-font-size-m)}main .rte pre{white-space:pre-wrap;overflow-x:auto}main .rte pre code{font-family:monospace}main .rte .rte-html-content{font:inherit}

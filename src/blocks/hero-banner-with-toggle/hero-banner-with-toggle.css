@@ -1,0 +1,184 @@
+/* ─── Full-page hero with destination/experience toggle ──────────────────── */
+
+.hero-banner-with-toggle {
+    position: relative;
+    width: 100%;
+    height: 100vh; /* fallback */
+    height: 100svh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 40%);
+}
+
+/* ─── Location listing ─────────────────────────────────────────────────────── */
+
+.hero-banner-with-toggle .hero-banner-with-toggle-list {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 448px;
+    padding-inline: var(--dimension-layout-module-padding-inline-s);
+    margin: 0;
+    list-style: none;
+    transform: translate(-50%, -50%);
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-row[hidden] {
+    display: none;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--dimension-spacing-general-l);
+    width: 100%;
+    padding-block: var(--dimension-spacing-general-2xs);
+    text-decoration: none;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-name {
+    flex: 1 0 0;
+    color: var(--color-text-action-inverse-inactive);
+    font-family: var(--type-font-family-heading);
+    font-weight: var(--type-font-weight-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
+    text-align: right;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-row[data-active='true'] .hero-banner-with-toggle-name {
+    color: var(--color-text-action-inverse-default);
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-description {
+    display: flex;
+    flex: 1 0 0;
+    align-items: center;
+    gap: var(--dimension-spacing-general-2xs);
+    font-family: var(--type-font-family-heading);
+    font-weight: var(--type-font-weight-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
+    color: transparent;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-row[data-active='true'] .hero-banner-with-toggle-description {
+    color: var(--color-text-action-inverse-default);
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-icon {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background-image: url('/icons/hero-banner-with-toggle-preview.svg');
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-row:hover .hero-banner-with-toggle-icon,
+.hero-banner-with-toggle .hero-banner-with-toggle-trigger:focus-visible .hero-banner-with-toggle-icon {
+    opacity: 1;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-row[data-active='true'] .hero-banner-with-toggle-icon {
+    background-image: url('/icons/hero-banner-with-toggle-arrow.svg');
+    opacity: 1;
+}
+
+/* ─── Destinations / Experiences toggle switch ────────────────────────────── */
+
+.hero-banner-with-toggle .hero-banner-with-toggle-switch {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-spacing-general-l);
+    padding-block: var(--dimension-layout-card-padding-bottom);
+    transform: translateX(-50%);
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-switch-label {
+    font-family: var(--type-font-family-body);
+    font-weight: var(--type-font-weight-body-reg);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-main-inverse-body);
+    white-space: nowrap;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-switch-control {
+    position: relative;
+    width: var(--component-toogle-width);
+    height: var(--component-toogle-height);
+    padding: 0;
+    background: var(--color-surface-component-toggle-inverse-fill-default);
+    border: var(--stroke-weight-s) solid var(--color-stroke-action-inverse-default);
+    border-radius: var(--component-toogle-corner);
+    cursor: pointer;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-switch-control::before {
+    content: '';
+    position: absolute;
+    top: var(--component-toogle-padding);
+    left: var(--component-toogle-padding);
+    width: var(--component-toogle-selector-dot);
+    height: var(--component-toogle-selector-dot);
+    background: var(--color-surface-component-toggle-inverse-selector-dot);
+    border-radius: var(--corner-radius-round);
+    transition: transform 0.2s ease;
+}
+
+.hero-banner-with-toggle .hero-banner-with-toggle-switch-control[aria-checked='true']::before {
+    transform: translateX(
+        calc(var(--component-toogle-width) - var(--component-toogle-selector-dot) - 2 * var(--component-toogle-padding))
+    );
+}
+
+@media (width >= 768px) {
+    .hero-banner-with-toggle .hero-banner-with-toggle-list {
+        max-width: 640px;
+    }
+}

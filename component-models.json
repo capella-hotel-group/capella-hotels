@@ -482,6 +482,84 @@
     ]
   },
   {
+    "id": "hero-banner-with-toggle",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "backgroundImage",
+        "label": "Background Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Background Image Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "toggleLabelLeft",
+        "label": "Toggle Label (Left)",
+        "valueType": "string",
+        "value": "Destinations"
+      },
+      {
+        "component": "text",
+        "name": "toggleLabelRight",
+        "label": "Toggle Label (Right)",
+        "valueType": "string",
+        "value": "Experiences"
+      }
+    ]
+  },
+  {
+    "id": "hero-banner-with-toggle-item",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Location Name",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link",
+        "valueType": "string"
+      },
+      {
+        "component": "select",
+        "name": "group",
+        "label": "Group",
+        "valueType": "string",
+        "value": "destinations",
+        "options": [
+          {
+            "name": "Destination",
+            "value": "destinations"
+          },
+          {
+            "name": "Experience",
+            "value": "experiences"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "hero-banner",
     "fields": [
       {
