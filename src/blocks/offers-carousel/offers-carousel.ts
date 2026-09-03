@@ -4,12 +4,17 @@ function textFromCell(cell?: Element | null): string {
   return cell?.textContent?.trim() || '';
 }
 
-function readToggleTexts(cell: Element): string[] {
-  const values = [...cell.querySelectorAll('p')]
-    .filter((p) => !p.querySelector('a'))
-    .map((p) => p.textContent?.trim().toLowerCase() ?? '');
+function getField(row: Element, property: string): Element | null {
+  if (row.getAttribute('data-aue-prop') === property) return row;
+  return row.querySelector(`[data-aue-prop="${property}"]`);
+}
 
-  return values;
+function getFieldText(row: Element, property: string): string {
+  return textFromCell(getField(row, property));
+}
+
+function isEnabled(value: string): boolean {
+  return ['true', 'yes', 'enabled'].includes(value.trim().toLowerCase());
 }
 
 function applyTarget(anchor: HTMLAnchorElement, openInNewTab?: boolean): void {
@@ -34,6 +39,24 @@ interface CardLink {
   openInNewTab: boolean;
 }
 
+function getCardLink(
+  row: Element,
+  urlProperty: string,
+  labelProperty: string,
+  targetProperty: string,
+): CardLink | null {
+  const urlField = getField(row, urlProperty);
+  const href = urlField?.querySelector('a')?.getAttribute('href') || textFromCell(urlField);
+  const label = getFieldText(row, labelProperty);
+  if (!href || !label) return null;
+
+  return {
+    href,
+    label,
+    openInNewTab: isEnabled(getFieldText(row, targetProperty)),
+  };
+}
+
 interface CardData {
   media: Element;
   eyebrow: string;
@@ -45,39 +68,36 @@ interface CardData {
 
 function parseCard(row: Element): CardData | null {
   const cells = [...row.children];
-  if (cells.length < 3) return null;
-
-  const mediaCell = cells[0];
-  const contentCell = cells[1];
+  const mediaCell = getField(row, 'media_cardImage') || cells[0];
+  const contentCell = getField(row, 'content_cardDescription') || cells[1];
   const ctaCell = cells[2];
-  if (!mediaCell || !contentCell || !ctaCell) return null;
-
-  const media = mediaCell.querySelector('picture, img');
+  const media = mediaCell?.querySelector('picture, img');
   if (!media) return null;
 
-  const paragraphs = [...contentCell.querySelectorAll('p')];
-  const eyebrow = paragraphs[0]?.textContent?.trim() || '';
-  const headline = paragraphs[1]?.textContent?.trim() || '';
-  const description = contentCell.querySelector('div')?.innerHTML || '';
+  const paragraphs = contentCell ? [...contentCell.querySelectorAll('p')] : [];
+  const eyebrow = getFieldText(row, 'content_cardEyebrow') || paragraphs[0]?.textContent?.trim() || '';
+  const headline = getFieldText(row, 'content_headline') || paragraphs[1]?.textContent?.trim() || '';
+  const descriptionField = getField(row, 'content_cardDescription');
+  const description = descriptionField?.innerHTML || contentCell?.querySelector('div')?.innerHTML || '';
 
-  const links = [...ctaCell.querySelectorAll('a')];
-  const toggles = readToggleTexts(ctaCell);
+  const primary = getCardLink(row, 'ctas_primaryCta', 'ctas_primaryCtaText', 'ctas_primaryCtaOpenInNewTab');
+  const secondary = getCardLink(row, 'ctas_secondaryCta', 'ctas_secondaryCtaText', 'ctas_secondaryCtaOpenInNewTab');
 
-  const primary = links[0]
-    ? {
-        href: links[0].getAttribute('href') || '#',
-        label: links[0].textContent?.trim() || 'ENQUIRE',
-        openInNewTab: toggles[0] === 'true',
-      }
-    : null;
-
-  const secondary = links[1]
-    ? {
-        href: links[1].getAttribute('href') || '#',
-        label: links[1].textContent?.trim() || 'DETAILS',
-        openInNewTab: toggles[1] === 'true',
-      }
-    : null;
+  if (!primary && !secondary && ctaCell) {
+    const links = [...ctaCell.querySelectorAll('a')];
+    const labels = links.map((link) => link.textContent?.trim() || '');
+    const legacyLinks = links.map((link, index) =>
+      labels[index] ? { href: link.getAttribute('href') || '', label: labels[index], openInNewTab: false } : null,
+    );
+    return {
+      media,
+      eyebrow,
+      headline,
+      description,
+      primary: legacyLinks[0] || null,
+      secondary: legacyLinks[1] || null,
+    };
+  }
 
   return {
     media,
@@ -150,6 +170,7 @@ function createCard(card: CardData, row: Element): HTMLLIElement {
   }
 
   body.append(ctas);
+  if (!ctas.children.length) ctas.remove();
   overlay.append(body);
   mediaWrap.append(overlay);
   item.append(mediaWrap);
@@ -195,10 +216,21 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   nextBtn?.addEventListener('click', goNext);
 
   cards.forEach((card, index) => {
+    card.addEventListener('pointerenter', () => {
+      if (window.matchMedia('(hover: hover)').matches) {
+        activeIndex = index;
+        update();
+      }
+    });
+    card.addEventListener('focusin', () => {
+      activeIndex = index;
+      update();
+    });
     card.addEventListener('click', (event) => {
       if ((event.target as Element)?.closest('a')) return;
       activeIndex = index;
       update();
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     });
   });
 
@@ -219,12 +251,14 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
 
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children];
-  if (rows.length < 3) return;
+  const eyebrow = getFieldText(block, 'eyebrow') || textFromCell(rows[0]?.firstElementChild || rows[0]);
+  const title = getFieldText(block, 'title') || textFromCell(rows[1]?.firstElementChild || rows[1]);
+  const anchorId = getFieldText(block, 'id');
+  if (anchorId) block.id = anchorId.replace(/^#/, '');
 
-  const eyebrow = textFromCell(rows[0]?.firstElementChild || rows[0]);
-  const title = textFromCell(rows[1]?.firstElementChild || rows[1]);
-
-  const cardRows = rows.slice(2);
+  const cardRows = rows
+    .filter((row) => row.matches('[data-aue-model="offers-carousel-item"]') || row.querySelector('picture, img'))
+    .slice(0, 3);
   const cardsData = cardRows.map((row) => parseCard(row)).filter((card): card is CardData => card !== null);
 
   if (!cardsData.length) return;

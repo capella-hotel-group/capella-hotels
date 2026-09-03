@@ -38,6 +38,14 @@
       "fields": [
         {
           "component": "text",
+          "name": "id",
+          "valueType": "string",
+          "label": "Component Anchor ID",
+          "value": "",
+          "placeholder": "e.g., offer-cards"
+        },
+        {
+          "component": "text",
           "name": "eyebrow",
           "label": "Primary Eyebrow Text",
           "valueType": "string",
@@ -84,7 +92,6 @@
           "name": "content_headline",
           "label": "Card Title",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
@@ -92,22 +99,19 @@
           "name": "content_cardDescription",
           "label": "Card Description",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
           "component": "aem-content",
           "name": "ctas_primaryCta",
           "label": "Primary CTA URL",
-          "valueType": "string",
-          "required": true
+          "valueType": "string"
         },
         {
           "component": "text",
           "name": "ctas_primaryCtaText",
           "label": "Primary CTA Label",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
@@ -151,7 +155,10 @@
   "filters": [
     {
       "id": "offers-carousel",
-      "components": ["offers-carousel-item"]
+      "components": ["offers-carousel-item"],
+      "minItems": 1,
+      "maxItems": 3,
+      "customErrorMsg": "Add between 1 and 3 offer cards."
     }
   ]
 }

@@ -10,7 +10,7 @@
  * Font-weight stores the numeric CSS value for Figma's named style; font-family
  * aliases the fallback chains in styles.css.
  * Not modeled yet (need mobile/tablet sampling first): paragraph-spacing
- * scale, module padding-inline-xs (52px), possible duplicate spacing/2xs.
+ * scale, possible duplicate spacing/2xs.
  */
 :root {
     /* breakpoints (reference only - CSS media queries can't consume custom
@@ -186,6 +186,7 @@
         --dimension-spacing-heading-to-content: 48px;
 
         /* dimension / layout / module (tablet) */
+        --dimension-layout-module-padding-top: 112px;
         --dimension-layout-module-padding-block: 64px;
         --dimension-layout-module-padding-inline-s: 48px;
         --dimension-layout-module-padding-inline-l: 142px;
@@ -200,7 +201,7 @@
         /* component / button (tablet) */
         --component-button-gap: 8px;
         --component-button-padding-inline: 32px;
-        --component-button-padding-block: 16px;
+        --component-button-padding-block: 8px;
 
         /* component / toggle (tablet) */
         --component-toogle-width: 72px;
@@ -221,11 +222,15 @@
         --dimension-spacing-eyebrow-to-text: 20px;
         --dimension-spacing-heading-to-content: 56px;
 
-        /* dimension / layout / module (desktop; padding-top and gutter-xs/l
-           have no sampled tablet value, so they still step up directly here) */
+        /* dimension / layout / module (desktop; gutter-xs has no sampled
+           tablet value, so it still steps up directly here. padding-inline-xs
+           is declared only here: Figma exposes it on the 1440 artboard and on
+           neither the 834 nor the 393 one) */
         --dimension-layout-module-padding-top: 120px;
         --dimension-layout-module-gutter-xs: 16px;
+        --dimension-layout-module-gutter-m: 32px;
         --dimension-layout-module-gutter-l: 40px;
+        --dimension-layout-module-padding-inline-xs: 52px;
         --dimension-layout-module-padding-inline-s: 80px;
         --dimension-layout-module-padding-inline-l: 296px;
 

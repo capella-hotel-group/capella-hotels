@@ -33,7 +33,13 @@ function getLinkFromCell(cell?: Element | null): { href: string; label: string }
 }
 
 function isCardRow(row: Element): boolean {
-  return row.children.length > 1;
+  return !!row.querySelector('picture, img');
+}
+
+function getCellByProp(cells: Element[], property: string): Element | undefined {
+  return cells.find(
+    (cell) => cell.getAttribute('data-aue-prop') === property || !!cell.querySelector(`[data-aue-prop="${property}"]`),
+  );
 }
 
 interface CardFields {
@@ -69,22 +75,30 @@ function getCardFields(row: Element): CardFields {
   }
 
   const linkIndex = cells.findIndex((cell, index) => index > 2 && !!cell.querySelector('a'));
-  const isNewModelOrder = !!cells[4] && !cells[4].querySelector('a');
-  const ctaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex + 1];
-  const ctaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
+  const ctaLinkCell = getCellByProp(cells, 'ctaLink');
+  const ctaLabelCell = getCellByProp(cells, 'ctaName');
+  const openInNewTabCell = getCellByProp(cells, 'openInNewTab');
+  const darkOverlayCell = getCellByProp(cells, 'darkOverlay');
+  const imageAltCell = getCellByProp(cells, 'imageAlt');
+  const isNewModelOrder = !!ctaLinkCell;
+  const fallbackCtaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
+  const fallbackCtaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex + 1];
   const hasLegacyAltField = !isNewModelOrder && linkIndex >= 5;
-  const settingsStart = isNewModelOrder ? 6 : linkIndex + 2;
-  const cta = getLinkFromCell(ctaLinkCell);
+  const cta = getLinkFromCell(ctaLinkCell || fallbackCtaLinkCell);
 
   return {
     location: textFromCell(cells[0]),
     title: textFromCell(cells[1]),
     image: cells[2]?.querySelector('picture, img'),
-    imageAlt: isNewModelOrder || hasLegacyAltField ? textFromCell(cells[3]) : null,
+    imageAlt: imageAltCell
+      ? textFromCell(imageAltCell)
+      : isNewModelOrder || hasLegacyAltField
+        ? textFromCell(cells[3])
+        : null,
     href: cta.href,
-    ctaLabel: textFromCell(ctaLabelCell) || cta.label,
-    openInNewTab: isEnabled(cells[settingsStart], false),
-    darkOverlay: isEnabled(cells[settingsStart + 1], true),
+    ctaLabel: textFromCell(ctaLabelCell || fallbackCtaLabelCell) || cta.label,
+    openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : linkIndex + 3], false),
+    darkOverlay: isEnabled(darkOverlayCell || cells[isNewModelOrder ? 7 : linkIndex + 2], true),
   };
 }
 
@@ -122,6 +136,20 @@ function buildCta(label: string, href: string, openInNewTab: boolean): HTMLAncho
   cta.textContent = label;
   setLinkAttributes(cta, href, openInNewTab);
   return cta;
+}
+
+function buildControlButton(direction: 'prev' | 'next', label: string): HTMLButtonElement {
+  const control = document.createElement('button');
+  control.type = 'button';
+  control.className = `destination-cards-control destination-cards-control-${direction}`;
+  control.setAttribute('aria-label', label);
+
+  const icon = document.createElement('span');
+  icon.className = 'destination-cards-control-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  control.append(icon);
+
+  return control;
 }
 
 function buildCarouselControls(list: HTMLUListElement): HTMLDivElement {
@@ -222,7 +250,9 @@ export default function decorate(block: HTMLElement): HTMLElement {
   const cardRows = rows.slice(firstCardIndex);
   const intro = buildIntro(introRows);
   const { anchorId } = intro.dataset;
-  if (anchorId) block.id = anchorId;
+  const authoredAnchorId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
+  const resolvedAnchorId = authoredAnchorId || anchorId;
+  if (resolvedAnchorId) block.id = resolvedAnchorId.replace(/^#/, '');
   delete intro.dataset.anchorId;
 
   const list = document.createElement('ul');

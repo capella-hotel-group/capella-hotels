@@ -1,2 +1,22 @@
-/*! v0.1.0 | ha2b72f75 */
-function e(e){let t=[...e.children],n=t[0]?.querySelector(`div`)?.textContent?.trim(),r=document.createElement(`h2`);r.textContent=n??``,t[0]?.replaceWith(r);let i=document.createElement(`div`);i.classList.add(`section-intro-text`);let a=[`subtext`,`desc`];t.slice(1).forEach((e,t)=>{let n=e.querySelector(`div`);if(n){let e=a[t];e&&n.classList.add(e),i.appendChild(n)}e.remove()}),e.appendChild(i)}export{e as default};
+/*! v0.1.0 | h82ae374c */
+export default function decorate(block) {
+	const rows = [...block.children];
+	const fieldOf = (name) => block.querySelector(`[data-aue-prop="${name}"]`);
+	const titleField = fieldOf("title");
+	const bodyField = fieldOf("body");
+	const hasLegacyAnchorRow = !titleField && rows.length >= 3;
+	const anchorRow = hasLegacyAnchorRow ? rows[0] : undefined;
+	const titleRow = rows[hasLegacyAnchorRow ? 1 : 0];
+	const bodyRow = rows[hasLegacyAnchorRow ? 2 : 1];
+	const anchorId = fieldOf("id")?.textContent?.trim() || anchorRow?.textContent?.trim();
+	if (anchorId) block.id = anchorId.replace(/^#/, "");
+	const headingText = titleField?.textContent?.trim() || titleRow?.querySelector("div")?.textContent?.trim() || "";
+	const h2 = document.createElement("h2");
+	h2.className = "section-intro-title";
+	h2.textContent = headingText;
+	const narrative = bodyField || bodyRow?.querySelector("div");
+	const textWrapper = document.createElement("div");
+	textWrapper.className = "section-intro-text";
+	if (narrative) textWrapper.append(narrative);
+	block.replaceChildren(h2, textWrapper);
+}

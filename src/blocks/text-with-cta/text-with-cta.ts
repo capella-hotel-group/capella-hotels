@@ -5,6 +5,9 @@ const THEMES = ['light-neutral', 'soft-sand'];
 const CTA_STYLES = ['underlined-text-link', 'solid-button'];
 const cellOf = (row?: Element) => row?.firstElementChild;
 const textOf = (row?: Element) => cellOf(row)?.textContent?.trim() || '';
+const fieldOf = (block: Element, name: string) => block.querySelector(`[data-aue-prop="${name}"]`);
+const textFromField = (field?: Element | null) => field?.textContent?.trim() || '';
+const fieldTextOf = (block: Element, name: string) => fieldOf(block, name)?.textContent?.trim() || '';
 
 // Fragments are fetched once per path and shared by every CTA on the page.
 const fragmentCache = new Map<string, Promise<Node[] | null>>();
@@ -82,27 +85,43 @@ function buildModal() {
 }
 
 export default function decorate(block: HTMLElement): void {
-  const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = [...block.children];
+  const rows = [...block.children];
+  const titleField = fieldOf(block, 'title');
+  const subtitleField = fieldOf(block, 'subtitle');
+  const themeField = fieldOf(block, 'backgroundTheme');
+  const ctaStyleField = fieldOf(block, 'ctaStyle');
+  const labelField = fieldOf(block, 'ctaLabel');
+  const actionField = fieldOf(block, 'ctaActionKind');
+  const urlField = fieldOf(block, 'ctaTargetUrl');
+  const newTabField = fieldOf(block, 'openInNewTab');
+  const hasLegacyAnchorRow = !titleField && rows.length >= 9;
+  const legacyRows = hasLegacyAnchorRow ? rows.slice(1) : rows;
+  const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = legacyRows;
 
-  const theme = THEMES.includes(textOf(themeRow)) ? textOf(themeRow) : THEMES[0];
-  const ctaStyle = CTA_STYLES.includes(textOf(styleRow)) ? textOf(styleRow) : CTA_STYLES[0];
-  const action = textOf(actionRow);
-  const label = textOf(labelRow);
-  const href = urlRow?.querySelector('a')?.getAttribute('href') || '#';
-  const openInNewTab = textOf(newTabRow).toLowerCase() === 'true';
+  const themeValue = textFromField(themeField) || textOf(themeRow);
+  const ctaStyleValue = textFromField(ctaStyleField) || textOf(styleRow);
+  const theme = THEMES.includes(themeValue) ? themeValue : THEMES[0];
+  const ctaStyle = CTA_STYLES.includes(ctaStyleValue) ? ctaStyleValue : CTA_STYLES[0];
+  const action = textFromField(actionField) || textOf(actionRow);
+  const label = textFromField(labelField) || textOf(labelRow);
+  const href =
+    urlField?.querySelector('a')?.getAttribute('href') || urlRow?.querySelector('a')?.getAttribute('href') || '#';
+  const openInNewTab = (textFromField(newTabField) || textOf(newTabRow)).toLowerCase() === 'true';
+  const anchorId = fieldTextOf(block, 'id') || (hasLegacyAnchorRow ? textOf(rows[0]) : '');
+  if (anchorId) block.id = anchorId.replace(/^#/, '');
 
   block.classList.add(`text-with-cta-theme-${theme}`, `text-with-cta-style-${ctaStyle}`);
 
   const content = document.createElement('div');
   content.className = 'text-with-cta-content';
 
-  const titleCell = cellOf(titleRow);
+  const titleCell = titleField || cellOf(titleRow);
   if (titleCell) {
     titleCell.classList.add('text-with-cta-title');
     content.append(titleCell);
   }
 
-  const subtitleCell = cellOf(subtitleRow);
+  const subtitleCell = subtitleField || cellOf(subtitleRow);
   if (subtitleCell) {
     subtitleCell.classList.add('text-with-cta-subtitle');
     content.append(subtitleCell);
@@ -117,7 +136,7 @@ export default function decorate(block: HTMLElement): void {
   cta.href = href;
   cta.textContent = label;
 
-  const labelSource = labelRow?.querySelector('[data-aue-prop="ctaLabel"]');
+  const labelSource = labelField || labelRow?.querySelector('[data-aue-prop="ctaLabel"]');
   if (labelSource) moveInstrumentation(labelSource, cta);
 
   if (action === 'popup-form-modal') {

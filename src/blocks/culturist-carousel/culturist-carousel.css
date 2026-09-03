@@ -21,7 +21,7 @@
     margin: 0;
 }
 
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-grid {
         gap: 4px;
         padding: 0;
@@ -34,13 +34,13 @@
 }
 
 /* Desktop 1024px+ spec: left/right panels split evenly */
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-grid {
         grid-template-columns: 50% 50%;
     }
 }
 
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-grid {
         grid-template-columns: 50% minmax(0, 1fr);
     }
@@ -106,7 +106,7 @@
     box-sizing: border-box;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-info-col {
         /* Figma 1024px: T64 R52 B64 L80 */
         padding: 64px 52px 64px 80px;
@@ -122,7 +122,7 @@
     gap: 2rem;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-panel {
         gap: 56px;
     }
@@ -151,7 +151,7 @@
     hyphens: auto;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-title-top,
     .culturist-carousel-title-bottom {
         font-size: 52px;
@@ -160,7 +160,7 @@
 }
 
 /* Desktop: title uses a lighter weight, not bold */
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-title-top,
     .culturist-carousel-title-bottom {
         font-weight: 300;
@@ -188,7 +188,7 @@
     transition: opacity 0.2s ease;
     line-height: 1;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: flex-end;
     width: 100%;
     overflow-wrap: break-word;
@@ -199,7 +199,7 @@
     opacity: 0.7;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-destination-btn {
         font-size: 52px;
         line-height: 52px;
@@ -207,7 +207,7 @@
 }
 
 /* Desktop: dropdown location right-aligns, and stays a lighter weight, not bold */
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-destination-btn {
         justify-content: flex-end;
         font-weight: 300;
@@ -220,12 +220,20 @@
 }
 
 .culturist-carousel-destination-arrow {
-    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
     margin-left: 0.25rem;
 }
 
-.culturist-carousel-destination-arrow--spacer {
-    display: none;
+.culturist-carousel-destination-arrow::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentcolor;
+    border-bottom: 2px solid currentcolor;
+    transform: rotate(45deg) translate(-0.08em, -0.08em);
 }
 
 /* Destination Dropdown List */
@@ -249,8 +257,7 @@
         0 6px 13px rgb(0 0 0 / 6%);
     max-height: 306px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #1b364b rgb(38 39 39 / 10%);
+    scrollbar-width: none;
 }
 
 .culturist-carousel-destination-list[hidden] {
@@ -258,17 +265,30 @@
 }
 
 .culturist-carousel-destination-list::-webkit-scrollbar {
-    width: 6px;
+    display: none;
 }
 
-.culturist-carousel-destination-list::-webkit-scrollbar-track {
+.culturist-carousel-destination-scrollbar {
+    position: absolute;
+    z-index: 11;
+    top: 50%;
+    right: 10px;
+    width: 6px;
+    height: 100px;
+    margin: 0;
+    padding: 0;
     background: rgb(38 39 39 / 10%);
     border-radius: 8000px;
+    pointer-events: none;
 }
 
-.culturist-carousel-destination-list::-webkit-scrollbar-thumb {
+.culturist-carousel-destination-scrollbar-thumb {
+    display: block;
+    width: 6px;
+    height: 20px;
     background: #1b364b;
     border-radius: 8000px;
+    transition: transform 0.15s ease;
 }
 
 .culturist-carousel-destination-option {
@@ -288,7 +308,7 @@
     transition: color 0.2s ease;
 }
 
-.culturist-carousel-destination-list li:not(:last-child) {
+.culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
     margin-bottom: 20px;
 }
 
@@ -301,7 +321,7 @@
     color: #1b364b;
 }
 
-@media (width < 1024px) {
+@media (width < 1200px) {
     .culturist-carousel-destination-list {
         left: 15%;
         right: auto;
@@ -316,10 +336,10 @@
     grid-template-columns: auto 1fr;
     gap: 2rem;
     align-items: start;
-    transition: opacity 0.28s ease;
+        /* transition: opacity 0.28s ease; */
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-info-slot {
         gap: 40px;
     }
@@ -340,7 +360,7 @@
     object-fit: cover;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-avatar {
         width: 160px;
         height: 160px;
@@ -361,7 +381,7 @@
     gap: 1rem;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-content-col {
         gap: 20px;
     }
@@ -383,7 +403,7 @@
     display: none; /* Chrome/Safari */
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-content-scroll {
         gap: 20px;
         max-height: 340px;
@@ -401,7 +421,8 @@
     line-height: 18px;
 }
 
-.culturist-carousel-quote {
+.culturist-carousel-quote,
+.culturist-carousel-quote-content {
     font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
     font-size: 1.5rem;
     font-weight: 400;
@@ -411,17 +432,9 @@
     color: #1b364b;
 }
 
-.culturist-carousel-quote-content {
-    margin: 0;
-    color: rgb(38 39 39);
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 20px;
-}
-
-@media (width >= 900px) {
-    .culturist-carousel-quote {
+@media (width >= 768px) {
+    .culturist-carousel-quote,
+    .culturist-carousel-quote-content {
         font-size: 28px;
         line-height: 32px;
     }
@@ -431,20 +444,16 @@
     margin: 0;
 }
 
+.culturist-carousel-quote p:first-child::before {
+    content: '"';
+}
+
+.culturist-carousel-quote p:last-child::after {
+    content: '"';
+}
+
 .culturist-carousel-quote-content p {
     margin: 0;
-}
-
-.culturist-carousel-quote.style-emphasis {
-    font-size: 2rem;
-    font-style: italic;
-    color: #8a6d3b;
-}
-
-.culturist-carousel-quote.style-plain {
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    font-size: 1.1rem;
-    text-transform: none;
 }
 
 .culturist-carousel-description {
@@ -455,7 +464,7 @@
     color: rgb(38 39 39);
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-description {
         font-size: 20px;
         line-height: 22px;
@@ -473,7 +482,7 @@
     text-align: left;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-cta {
         padding-top: 0;
     }
@@ -496,7 +505,7 @@
 }
 
 /* Compact composition (mobile through pre-1024 desktop) to match the approved visual layout */
-@media (width < 1024px) {
+@media (width < 1200px) {
     .culturist-carousel-grid {
         gap: 0;
         padding: 0;
@@ -559,7 +568,8 @@
         padding-top: 4px;
     }
 
-    .culturist-carousel-quote {
+    .culturist-carousel-quote,
+    .culturist-carousel-quote-content {
         font-size: 18px;
         line-height: 1.3;
     }
@@ -585,7 +595,7 @@
 }
 
 /* Sub-1024 overrides: split background, overlapping avatar, right-aligned dropdown */
-@media (width < 1024px) {
+@media (width < 1200px) {
     .culturist-carousel-grid {
         --culturist-carousel-tablet-inline-inset: 32px;
     }
@@ -653,7 +663,7 @@
     overflow: hidden;
     min-height: 300px;
     background-color: #ddd;
-    transition: opacity 0.28s ease;
+        /* transition: opacity 0.28s ease; */
 }
 
 .culturist-carousel-info-slot.is-fading,
@@ -661,7 +671,7 @@
     opacity: 0;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-carousel-col {
         height: 100%;
         min-height: 0;
@@ -686,31 +696,39 @@
     display: none;
 }
 
+/* Desktop navigates via the prev/next arrows only, no wheel/drag scrolling */
+@media (width >= 1200px) {
+    .culturist-carousel-carousel-track {
+        overflow-x: hidden;
+        scroll-snap-type: none;
+    }
+}
+
 /* First card shows in full, second card peeks partially as a scroll affordance */
 .culturist-carousel-carousel-card {
     position: relative;
     flex: 0 0 100%;
-    min-height: 440px;
+    min-height: 360px;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
 
-@media (width >= 900px) {
+@media (width >= 768px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 80%;
-        min-height: 440px;
+        min-height: 360px;
     }
 }
 
 /* Below 1024px: two cards evenly split, filling the row with no peek */
-@media (width >= 480px) and (width < 1024px) {
+@media (width >= 768px) and (width < 1200px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 49.5%;
     }
 }
 
 /* Figma 1024px spec: first card fixed at 589px, remaining space peeks the next card */
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 min(589px, calc(100% - 24px));
         height: 100%;
@@ -755,7 +773,7 @@
     background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
     pointer-events: none;
     z-index: 2;
-    transition: background 0.3s ease;
+        /* transition: inset 0.3s ease, background 0.3s ease; */
 }
 
 @media (hover: hover) {
@@ -764,7 +782,8 @@
     }
 
     .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:hover)::after {
-        background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+        inset: 0;
+        background: rgb(0 0 0 / 20%);
     }
 }
 
@@ -773,7 +792,8 @@
 }
 
 .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:active)::after {
-    background: linear-gradient(to bottom, rgb(0 0 0 / 5%), rgb(0 0 0 / 70%));
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -837,7 +857,6 @@
 /* Card Title Overlay */
 .culturist-carousel-card-title {
     position: absolute;
-    transition: transform 0.3s ease;
 
     /* Figma: pad T80 L64 */
     top: 80px;
@@ -856,18 +875,8 @@
     white-space: normal;
 }
 
-@media (hover: hover) {
-    .culturist-carousel-card-content:hover .culturist-carousel-card-title {
-        transform: translateY(-4px);
-    }
-}
-
-.culturist-carousel-card-content:active .culturist-carousel-card-title {
-    transform: translateY(-4px);
-}
-
 /* Narrow cards (below 1024px, two-up layout) need tighter padding and a smaller title */
-@media (width < 1024px) {
+@media (width < 1200px) {
     .culturist-carousel-card-title {
         top: 24px;
         left: 20px;
@@ -877,7 +886,7 @@
     }
 }
 
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-card-title {
         top: clamp(40px, 5vw, 80px);
         left: clamp(28px, 4vw, 64px);
@@ -888,7 +897,7 @@
 }
 
 /* Sub-1024: 2 full cards + a peek of the 3rd, no arrows (swipe/scroll only) */
-@media (width < 1024px) {
+@media (width < 1200px) {
     /* Inset lives on the non-scrolling column so it stays put while the track scrolls */
     .culturist-carousel-carousel-col {
         background-color: rgb(236 229 227);
@@ -935,11 +944,36 @@
 
 .culturist-carousel-card-modal-panel {
     position: relative;
-    width: min(100%, 32rem);
-    max-height: calc(100vh - 2rem);
+    width: min(100%, 26rem);
+    max-height: min(75vh, 34rem);
     overflow: auto;
     background: #fff;
     box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
+}
+
+/* No scrollbar-width/scrollbar-color here: they switch Chrome to the native bar and re-add the arrows */
+.culturist-carousel-card-modal-panel::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Drop the stepper arrows, keep the track and thumb */
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-track {
+    background: rgb(0 0 0 / 12%);
+}
+
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-thumb {
+    background: rgb(27 54 75 / 70%);
+    border-radius: 999px;
+}
+
+.culturist-carousel-card-modal-panel::-webkit-scrollbar-thumb:hover {
+    background: rgb(27 54 75 / 90%);
 }
 
 .culturist-carousel-card-modal-close {
@@ -962,8 +996,6 @@
     display: block;
     width: 100%;
     height: auto;
-    max-height: 22rem;
-    object-fit: cover;
 }
 
 .culturist-carousel-card-modal-title {
@@ -978,7 +1010,7 @@ body.culturist-carousel-modal-open {
     overflow: hidden;
 }
 
-@media (width >= 1024px) {
+@media (width >= 1200px) {
     .culturist-carousel-grid {
         grid-template-columns: 50% minmax(0, 1fr);
     }
@@ -1046,5 +1078,12 @@ body.culturist-carousel-modal-open {
 
     .culturist-carousel-carousel-next {
         right: 20px;
+    }
+}
+
+@media (width < 1200px) {
+    .culturist-carousel-content-scroll {
+        max-height: none;
+        overflow-y: visible;
     }
 }

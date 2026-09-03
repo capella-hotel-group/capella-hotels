@@ -1,115 +1,80 @@
-/* section-intro styles */
-.section-intro-wrapper {
-    max-width: 1366px;
-    margin-inline: auto;
-    position: relative;
-    margin-bottom: 60px;
-}
-
 .section-intro {
-    width: 91.66%;
-    margin-inline-start: auto;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 96px 24px 40px;
+    background: #fff;
+    text-align: center;
 }
 
-.section-intro h2 {
-    font-size: 3.125em;
-    font-family: var(--heading-light-font-family);
-    font-weight: 300;
-    margin: 0 0 85px;
-    text-transform: uppercase;
-    line-height: 1;
-    letter-spacing: 2.5px;
-}
-
-@media (width <=1366px) {
-    .section-intro h2 {
-        font-size: 2.75rem;
-    }
-}
-
-@media (width <=1020px) {
-    .section-intro h2 {
-        font-size: 2.375rem;
-    }
-}
-
-@media (width <=767px) {
-    .section-intro h2 {
-        font-size: 1.875rem;
-        margin-bottom: 25px;
-    }
+.section-intro .section-intro-title {
+    width: 100%;
+    max-width: 345px;
+    margin: 0;
+    color: #1b364b;
+    font-family: var(--heading-font-family);
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 28px;
+    text-align: center;
 }
 
 .section-intro .section-intro-text {
-    display: flex;
-    gap: 10px;
-}
-
-/* .section-intro .section-intro-text > div {
-  flex: 1;
-} */
-
-.section-intro .subtext {
-    font-size: 2rem;
+    width: 100%;
+    max-width: 345px;
+    color: #262727;
     font-family: var(--heading-font-family);
-    font-weight: 300;
-    width: 36.3636%;
-    line-height: 1.2;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 22px;
+    text-align: center;
 }
 
-.section-intro .subtext p {
+.section-intro .section-intro-text > * {
     margin: 0;
-    padding: 0;
-    font-family: var(--heading-font-family);
-    font-weight: 300;
 }
 
-@media (width <=767px) {
+.section-intro .section-intro-text p + p {
+    margin-top: 16px;
+}
+
+@media (width >= 768px) {
+    .section-intro {
+        gap: 48px;
+        padding: 112px 48px 40px;
+    }
+
+    .section-intro .section-intro-title {
+        max-width: 738px;
+        font-size: 36px;
+        line-height: 40px;
+    }
+
     .section-intro .section-intro-text {
-        flex-direction: column;
-        gap: 0;
+        max-width: 738px;
+        font-size: 24px;
+        line-height: 24px;
     }
 }
 
-@media (width <=767px) {
-    .section-intro .subtext {
-        width: 100%;
-        font-size: 1.375rem;
-        padding-inline-end: 35px;
-        margin-bottom: 35px;
+@media (width >= 1200px) {
+    .section-intro {
+        gap: 56px;
+        padding: 120px 80px 80px;
     }
-}
 
-.section-intro .desc {
-    font-family: var(--body-font-family);
-    color: #919191;
-    line-height: 1.2;
-    font-size: 1.063rem;
-    margin-top: 7px;
-    width: 27.2727%;
-    letter-spacing: 0.16px;
-}
-
-.section-intro .desc p {
-    margin: 0;
-    padding: 0;
-    font-family: var(--body-font-family);
-    letter-spacing: 0.16px;
-
-    /* font-weight: 300; */
-}
-
-@media (width <=1020px) {
-    .section-intro .desc {
-        width: 45.4545%;
+    .section-intro .section-intro-title {
+        max-width: 1280px;
+        font-size: 40px;
+        line-height: 40px;
     }
-}
 
-@media (width <=767px) {
-    .section-intro .desc {
-        width: 100%;
-        margin-inline-start: 0;
-        padding-inline: 55px 35px;
+    .section-intro .section-intro-text {
+        max-width: 800px;
+    }
+
+    .section-intro .section-intro-text p + p {
+        margin-top: 20px;
     }
 }
