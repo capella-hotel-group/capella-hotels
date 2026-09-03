@@ -1,7 +1,8 @@
 /* destination-introduction
    Figma: desktop 6047:27004 (1440), tablet 6048:28574 (834), mobile 6048:30195 (393).
-   Source order is the mobile/tablet reading order; desktop re-places the media
-   into a left column with grid so no node is moved by JS on resize.
+   Source order follows the block's model field order so the Universal Editor lists
+   the gallery items last in the content tree; `order` restores the reading order in
+   the single-column layout, and desktop places every child explicitly instead.
    Everything nests under the block class, so no rule can leak to another block. */
 .destination-introduction {
     display: grid;
@@ -31,6 +32,7 @@
     /* ---------- copy ---------- */
 
     .destination-introduction-header {
+        order: 1;
         padding-inline: var(--dimension-layout-module-padding-inline-s);
 
         @media (width >= 1200px) {
@@ -68,6 +70,7 @@
     }
 
     .destination-introduction-body {
+        order: 3;
         margin-block-start: var(--dimension-spacing-heading-to-content);
         padding-inline: calc(var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl));
         max-width: calc(800px + 2 * var(--dimension-layout-module-padding-inline-s));
@@ -96,6 +99,7 @@
     }
 
     .destination-introduction-cta {
+        order: 4;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -139,6 +143,7 @@
     /* ---------- media ---------- */
 
     .destination-introduction-media {
+        order: 2;
         position: relative;
         min-width: 0;
         margin-block-start: var(--dimension-spacing-heading-to-content);
@@ -272,6 +277,7 @@
     /* ---------- thumbnails (desktop only) ---------- */
 
     .destination-introduction-thumbs {
+        order: 5;
         display: none;
         gap: var(--dimension-layout-carousel-item-gap-s);
         margin: 0;
