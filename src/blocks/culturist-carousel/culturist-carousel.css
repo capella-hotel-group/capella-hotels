@@ -11,14 +11,23 @@
 .culturist-carousel-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--dimension-spacing-general-m);
     background-color: transparent;
-    padding: 2rem 1.5rem;
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    padding: var(--dimension-spacing-general-2xl) var(--dimension-spacing-general-xl);
+    font-family: var(--type-font-family-body);
     color: #1e2d3b;
     box-sizing: border-box;
     width: 100%;
     margin: 0;
+
+    /* avatar/photo-sig-col size: mobile default, overridden per breakpoint below */
+    --culturist-carousel-avatar-size: 120px;
+}
+
+@media (width >= 768px) and (width < 1200px) {
+    .culturist-carousel-grid {
+        --culturist-carousel-avatar-size: 240px;
+    }
 }
 
 @media (width >= 1200px) {
@@ -43,74 +52,31 @@
 @media (width >= 1200px) {
     .culturist-carousel-grid {
         grid-template-columns: 50% minmax(0, 1fr);
+        --culturist-carousel-avatar-size: 160px;
     }
 
     .culturist-carousel-info-col {
         justify-content: center;
     }
-
-    .culturist-carousel-title-block {
-        align-items: flex-end;
-        width: 588px;
-        max-width: 100%;
-        padding-left: 140px;
-        gap: 8px;
-        box-sizing: border-box;
-    }
-
-    .culturist-carousel-title-top,
-    .culturist-carousel-title-bottom {
-        width: 448px;
-        height: 48px;
-        font-size: 48px;
-        line-height: 48px;
-        letter-spacing: 0;
-        box-sizing: border-box;
-    }
-
-    .culturist-carousel-title-bottom {
-        padding-left: 32px;
-    }
-
-    .culturist-carousel-destination-wrapper {
-        width: 303px;
-        height: 48px;
-    }
-
-    .culturist-carousel-destination-btn {
-        height: 48px;
-        font-size: 48px;
-        line-height: 48px;
-        letter-spacing: 0;
-        align-items: center;
-    }
-
-    .culturist-carousel-destination-arrow {
-        width: 40px;
-        height: 40px;
-        margin-left: 0;
-        font-size: 28px;
-        line-height: 40px;
-        text-align: center;
-    }
 }
 
 /* Left Info Column */
 .culturist-carousel-info-col {
-    background-color: rgb(236 229 227);
-    padding: 3rem 2rem 2rem;
+    background-color: var(--color-surface-general-light);
+    padding: var(--dimension-layout-module-padding-block) var(--dimension-spacing-general-2xl)
+        var(--dimension-spacing-general-2xl);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--dimension-spacing-general-2xl);
     height: 100%;
     box-sizing: border-box;
 }
 
 @media (width >= 768px) {
     .culturist-carousel-info-col {
-        /* Figma 1024px: T64 R52 B64 L80 */
-        padding: 64px 52px 64px 80px;
-        gap: 56px;
+        padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-xs)
+            var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
+        gap: var(--dimension-spacing-heading-to-content);
         min-height: 0;
     }
 }
@@ -119,7 +85,7 @@
 .culturist-carousel-panel {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: var(--dimension-spacing-general-2xl);
 }
 
 @media (width >= 768px) {
@@ -132,39 +98,28 @@
 .culturist-carousel-title-block {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0.25rem;
+    gap: var(--dimension-spacing-general-2xs);
+    padding: var(--dimension-layout-module-padding-block, 48px) var(--dimension-layout-card-padding-inline, 20px)
+        var(--dimension-layout-module-padding-block-s, 40px) var(--dimension-layout-card-padding-inline, 20px);
+}
+
+/* Desktop only: no padding on the title block */
+@media (width >= 1200px) {
+    .culturist-carousel-title-block {
+        padding: 0;
+    }
 }
 
 .culturist-carousel-title-top,
-.culturist-carousel-title-bottom {
-    font-size: 1.5rem;
+.culturist-carousel-title-bottom,
+.culturist-carousel-destination-label {
+    color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h1);
+    font-style: normal;
     font-weight: 400;
-    letter-spacing: 0.15em;
+    line-height: var(--typography-line-height-heading-h1);
     text-transform: uppercase;
-    color: #1b364b;
-    margin: 0;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    line-height: 1;
-    overflow-wrap: break-word;
-    hyphens: auto;
-}
-
-@media (width >= 768px) {
-    .culturist-carousel-title-top,
-    .culturist-carousel-title-bottom {
-        font-size: 52px;
-        line-height: 52px;
-    }
-}
-
-/* Desktop: title uses a lighter weight, not bold */
-@media (width >= 1200px) {
-    .culturist-carousel-title-top,
-    .culturist-carousel-title-bottom {
-        font-weight: 300;
-    }
 }
 
 /* Destination Selector Wrapper (positions the dropdown list) */
@@ -178,90 +133,107 @@
     background: transparent;
     border: none;
     padding: 0;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-size: 1.5rem;
-    font-weight: 400;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #1b364b;
     cursor: pointer;
     transition: opacity 0.2s ease;
-    line-height: 1;
     display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    width: 100%;
     overflow-wrap: break-word;
     hyphens: auto;
+    font-size: var(--typography-fontsize-heading-h1);
+    line-height: var(--typography-line-height-heading-h1);
+}
+
+.culturist-carousel-destination-label {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-decoration-thickness: auto;
+    text-underline-offset: auto;
+    text-underline-position: from-font;
+    padding-left: var(--dimension-spacing-general-4xl);
 }
 
 .culturist-carousel-destination-btn:hover {
     opacity: 0.7;
 }
 
-@media (width >= 768px) {
-    .culturist-carousel-destination-btn {
-        font-size: 52px;
-        line-height: 52px;
-    }
-}
-
-/* Desktop: dropdown location right-aligns, and stays a lighter weight, not bold */
-@media (width >= 1200px) {
-    .culturist-carousel-destination-btn {
-        justify-content: flex-end;
-        font-weight: 300;
-    }
-}
-
-.culturist-carousel-destination-label {
-    text-decoration: underline;
-    text-underline-offset: 0.5rem;
-}
-
 .culturist-carousel-destination-arrow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0;
-    margin-left: 0.25rem;
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
 }
 
 .culturist-carousel-destination-arrow::before {
     content: '';
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid currentcolor;
-    border-bottom: 2px solid currentcolor;
-    transform: rotate(45deg) translate(-0.08em, -0.08em);
+    width: 28px;
+    height: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cpath d='M24.3555 8.97754C21.1955 12.7075 17.7955 16.2175 14.3555 19.6875C12.5755 17.8975 10.7955 16.0975 9.08547 14.2475C7.67547 12.7275 5.66547 10.5575 4.35547 8.97754C7.89547 11.9775 11.4155 15.3575 14.7055 18.6275L13.9955 18.6275C17.3555 15.2975 20.7555 12.0375 24.3555 8.97754Z' fill='%231B364B'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+/* Destination Dropdown Box (wraps the list and custom scrollbar) */
+.culturist-carousel-destination-dropdown {
+    position: absolute;
+    top: calc(100% + var(--dimension-spacing-general-m));
+    left: 0;
+    width: min(319px, calc(100vw - var(--dimension-spacing-general-2xl)));
+    height: auto;
+    box-sizing: border-box;
+    z-index: 10;
+    background: var(--color-surface-general-subtle);
+    box-shadow:
+        0 145px 41px 0 rgba(0, 0, 0, 0),
+        0 93px 37px 0 rgba(0, 0, 0, 0.01),
+        0 52px 31px 0 rgba(0, 0, 0, 0.03),
+        0 23px 23px 0 rgba(0, 0, 0, 0.05),
+        0 6px 13px 0 rgba(0, 0, 0, 0.06);
+    margin: 0;
+    border: 0;
+    border-radius: var(--corner-radius-2xs);
+    max-height: 306px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(0) translateY(-8px);
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    /* fades the last visible row to hint there's more to scroll */
+}
+.culturist-carousel-destination-dropdown::after {
+    /* fades the last visible row to hint there's more to scroll */
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, transparent 40%, var(--color-surface-general-subtle) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.culturist-carousel-destination-dropdown.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0) translateY(0);
+}
+
+/* is-open must win even while the hidden attribute is still being toggled off */
+.culturist-carousel-destination-dropdown[hidden].is-open {
+    display: block;
 }
 
 /* Destination Dropdown List */
 .culturist-carousel-destination-list {
-    position: absolute;
-    top: calc(100% + 1rem);
-    right: 0;
-    width: min(319px, calc(100vw - 32px));
-    height: auto;
-    box-sizing: border-box;
-    z-index: 10;
-    margin: 0;
-    padding: 28px;
+    position: relative;
     list-style: none;
-    background: #f9f6f6;
-    border: 0;
-    border-radius: 4px;
-    box-shadow: 0 93px 37px rgb(0 0 0 / 1%),
-        0 52px 31px rgb(0 0 0 / 3%),
-        0 23px 23px rgb(0 0 0 / 5%),
-        0 6px 13px rgb(0 0 0 / 6%);
+    padding: var(--dimension-layout-card-padding-block) var(--dimension-layout-card-padding-inline);
     max-height: 306px;
     overflow-y: auto;
     scrollbar-width: none;
-}
-
-.culturist-carousel-destination-list[hidden] {
-    display: none;
 }
 
 .culturist-carousel-destination-list::-webkit-scrollbar {
@@ -277,17 +249,18 @@
     height: 100px;
     margin: 0;
     padding: 0;
-    background: rgb(38 39 39 / 10%);
-    border-radius: 8000px;
+    background: var(--color-surface-general-opaque);
+    border-radius: var(--corner-radius-round);
     pointer-events: none;
+    transform: translateY(-50%);
 }
 
 .culturist-carousel-destination-scrollbar-thumb {
     display: block;
     width: 6px;
     height: 20px;
-    background: #1b364b;
-    border-radius: 8000px;
+    background: var(--color-surface-action-default);
+    border-radius: var(--corner-radius-round);
     transition: transform 0.15s ease;
 }
 
@@ -297,51 +270,42 @@
     background: transparent;
     border: none;
     padding: 0;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-size: 28px;
-    line-height: 28px;
-    letter-spacing: 0;
     text-transform: uppercase;
-    color: rgb(27 54 75 / 50%);
     text-align: left;
     cursor: pointer;
     transition: color 0.2s ease;
+    color: var(--color-text-action-inactive);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h4);
+    font-style: normal;
+    font-weight: 400;
+    line-height: var(--typography-line-height-heading-h4); /* 100% */
 }
 
 .culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
-    margin-bottom: 20px;
+    margin-bottom: var(--dimension-spacing-general-l);
 }
 
 .culturist-carousel-destination-option[aria-selected='true'] {
-    color: #1b364b;
+    color: var(--color-text-action-default);
 }
 
 .culturist-carousel-destination-option:hover,
 .culturist-carousel-destination-option:focus-visible {
-    color: #1b364b;
-}
-
-@media (width < 1200px) {
-    .culturist-carousel-destination-list {
-        left: 15%;
-        right: auto;
-        width: min(319px, 85vw);
-        text-align: left;
-    }
+    color: var(--color-text-action-default);
 }
 
 /* Culturist Info Slot */
 .culturist-carousel-info-slot {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 2rem;
+    gap: var(--dimension-layout-carousel-item-gap-xl);
     align-items: start;
-        /* transition: opacity 0.28s ease; */
 }
 
 @media (width >= 768px) {
     .culturist-carousel-info-slot {
-        gap: 40px;
+        gap: var(--dimension-layout-carousel-item-gap-xl);
     }
 }
 
@@ -350,21 +314,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    width: var(--culturist-carousel-avatar-size);
 }
 
 .culturist-carousel-avatar {
-    width: 160px;
-    height: 160px;
+    width: var(--culturist-carousel-avatar-size);
+    height: var(--culturist-carousel-avatar-size);
     border-radius: 50%;
     object-fit: cover;
-}
-
-@media (width >= 768px) {
-    .culturist-carousel-avatar {
-        width: 160px;
-        height: 160px;
-    }
 }
 
 .culturist-carousel-signature {
@@ -378,66 +335,43 @@
 .culturist-carousel-content-col {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--dimension-spacing-general-m);
 }
 
 @media (width >= 768px) {
     .culturist-carousel-content-col {
-        gap: 20px;
+        gap: var(--dimension-spacing-general-l);
     }
 }
 
-/* Scrollable area for quote/name/description; fixed height keeps the block from resizing */
+/* quote/name/description stack; grows naturally, no internal scroll */
 .culturist-carousel-content-scroll {
     width: 100%;
-    max-height: 260px;
-    overflow-y: auto;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-}
-
-.culturist-carousel-content-scroll::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-}
-
-@media (width >= 768px) {
-    .culturist-carousel-content-scroll {
-        gap: 20px;
-        max-height: 340px;
-    }
+    gap: var(--dimension-spacing-general-m);
 }
 
 .culturist-carousel-culturist-name {
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    font-size: 14px;
-    font-weight: 400;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
     letter-spacing: 0;
     text-transform: none;
     margin: 0;
-    color: rgb(38 39 39);
-    line-height: 18px;
+    color: var(--color-text-main-body);
+    line-height: var(--typography-line-height-body-sm);
 }
 
 .culturist-carousel-quote,
 .culturist-carousel-quote-content {
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-size: 1.5rem;
-    font-weight: 400;
-    line-height: 1.3;
+    font-family: var(--type-font-family-subtitle);
+    font-size: var(--typography-fontsize-heading-subtitle);
+    font-weight: var(--type-font-weight-subtitle);
+    line-height: var(--typography-line-height-heading-subtitle);
     font-style: normal;
     margin: 0;
-    color: #1b364b;
-}
-
-@media (width >= 768px) {
-    .culturist-carousel-quote,
-    .culturist-carousel-quote-content {
-        font-size: 28px;
-        line-height: 32px;
-    }
+    color: var(--color-text-main-body);
 }
 
 .culturist-carousel-quote p {
@@ -457,18 +391,13 @@
 }
 
 .culturist-carousel-description {
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: rgb(38 39 39);
-}
-
-@media (width >= 768px) {
-    .culturist-carousel-description {
-        font-size: 20px;
-        line-height: 22px;
-    }
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-main-body);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .culturist-carousel-description p {
@@ -478,7 +407,7 @@
 /* CTA Link */
 .culturist-carousel-cta {
     margin-top: auto;
-    padding-top: 1rem;
+    padding-top: var(--dimension-spacing-general-m);
     text-align: left;
 }
 
@@ -489,14 +418,20 @@
 }
 
 .culturist-carousel-cta-link {
-    font-size: 0.75rem;
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
-    letter-spacing: 0.12em;
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    font-family: var(--type-font-family-cta);
+    font-weight: var(--type-font-weight-text-link);
+    color: var(--color-text-action-default);
+    font-style: normal;
+    letter-spacing: 0;
     text-transform: uppercase;
-    color: #1e2d3b;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    font-weight: 700;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-decoration-thickness: 7%;
+    text-underline-offset: 20.5%;
+    text-underline-position: from-font;
     transition: opacity 0.2s;
 }
 
@@ -516,45 +451,16 @@
         gap: 22px;
     }
 
-    .culturist-carousel-title-block {
-        align-items: flex-start;
-        text-align: left;
-        gap: 2px;
-    }
-
-    .culturist-carousel-title-top,
-    .culturist-carousel-title-bottom,
-    .culturist-carousel-destination-btn {
-        font-size: 34px;
-        line-height: 38px;
-        letter-spacing: 0.04em;
-    }
-
-    .culturist-carousel-destination-btn {
-        justify-content: flex-start;
-    }
-
-    .culturist-carousel-destination-arrow {
-        font-size: 14px;
-        margin-left: 6px;
-    }
-
     .culturist-carousel-info-slot {
-        grid-template-columns: 1fr 120px;
-        gap: 16px;
-        padding-top: 20px;
-        border-top: 1px solid rgb(231 225 223);
+        grid-template-columns: 1fr var(--culturist-carousel-avatar-size);
+        gap: var(--dimension-spacing-general-m);
+        padding-top: var(--dimension-spacing-general-l);
+        border-top: var(--stroke-weight-s) solid rgb(231 225 223);
     }
 
     .culturist-carousel-photo-sig-col {
         order: 2;
         align-items: flex-start;
-        gap: 8px;
-    }
-
-    .culturist-carousel-avatar {
-        width: 100px;
-        height: 100px;
     }
 
     .culturist-carousel-signature {
@@ -565,7 +471,7 @@
     .culturist-carousel-content-col {
         order: 1;
         gap: 10px;
-        padding-top: 4px;
+        padding-top: var(--dimension-spacing-general-2xs);
     }
 
     .culturist-carousel-quote,
@@ -574,23 +480,9 @@
         line-height: 1.3;
     }
 
-    .culturist-carousel-culturist-name {
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #6b6b6b;
-        line-height: 14px;
-    }
-
-    .culturist-carousel-description {
-        font-size: 12px;
-        line-height: 17px;
-        color: #6b6b6b;
-    }
-
     .culturist-carousel-cta {
         margin-top: 0;
-        padding-top: 8px;
+        padding-top: var(--dimension-spacing-general-xs);
     }
 }
 
@@ -606,28 +498,17 @@
         gap: 0;
     }
 
-    .culturist-carousel-title-block {
-        padding: 42px var(--culturist-carousel-tablet-inline-inset) 24px;
-    }
-
-    .culturist-carousel-destination-btn {
-        justify-content: flex-start;
-
-        /* little right of the title lines, scales with the title width */
-        padding-left: 15%;
-    }
-
     /* Background starts at the quote row and runs through the CTA */
     .culturist-carousel-panel {
         position: relative;
-        background-color: rgb(236 229 227);
-        padding: 24px var(--culturist-carousel-tablet-inline-inset) 34px;
-        gap: 16px;
+        background-color: var(--color-surface-general-light);
+        padding: var(--dimension-spacing-general-xl) var(--culturist-carousel-tablet-inline-inset) 34px;
+        gap: var(--dimension-spacing-general-m);
     }
 
     .culturist-carousel-info-slot {
         position: relative;
-        grid-template-columns: 1fr 25%;
+        grid-template-columns: 1fr var(--culturist-carousel-avatar-size);
     }
 
     /* Avatar + signature straddle the panel's top edge: half above, half inside */
@@ -635,18 +516,15 @@
         align-items: center;
 
         /* half the column's own width == half the avatar's height, minus the panel's own top padding */
-        padding-top: calc(50% - 24px);
+        padding-top: calc(50% - var(--dimension-spacing-general-xl));
     }
 
     .culturist-carousel-avatar {
         position: absolute;
 
         /* -24px cancels the panel's own top padding, so 0 lines up with the bg boundary */
-        top: -24px;
+        top: calc(var(--dimension-spacing-general-xl) * -1);
         right: 0;
-        width: 25%;
-        height: auto;
-        aspect-ratio: 1;
 
         /* shifts up by exactly half its own height, for an even 50/50 straddle */
         transform: translateY(-50%);
@@ -663,7 +541,7 @@
     overflow: hidden;
     min-height: 300px;
     background-color: #ddd;
-        /* transition: opacity 0.28s ease; */
+    /* transition: opacity 0.28s ease; */
 }
 
 .culturist-carousel-info-slot.is-fading,
@@ -708,7 +586,7 @@
 .culturist-carousel-carousel-card {
     position: relative;
     flex: 0 0 100%;
-    min-height: 360px;
+    aspect-ratio: 0.8180555556;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
@@ -716,7 +594,6 @@
 @media (width >= 768px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 80%;
-        min-height: 360px;
     }
 }
 
@@ -773,7 +650,7 @@
     background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
     pointer-events: none;
     z-index: 2;
-        /* transition: inset 0.3s ease, background 0.3s ease; */
+    /* transition: inset 0.3s ease, background 0.3s ease; */
 }
 
 @media (hover: hover) {
@@ -807,7 +684,7 @@
     height: 48px;
     border: none;
     background: transparent;
-    color: #fff;
+    color: var(--color-icon-on-action-default);
     cursor: pointer;
     padding: 0;
     display: flex;
@@ -833,20 +710,22 @@
 
 .culturist-carousel-carousel-prev::before {
     content: '';
-    width: 12px;
-    height: 12px;
-    border-left: 2px solid currentcolor;
-    border-bottom: 2px solid currentcolor;
-    transform: rotate(45deg);
+    width: 28px;
+    height: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cpath d='M19.71 4C15.98 7.16 12.47 10.56 8.99996 14C10.79 15.78 12.59 17.56 14.44 19.27C15.96 20.68 18.13 22.69 19.71 24C16.71 20.46 11 14 11 14C11 14 18.2116 5.76279 19.71 4Z' fill='white'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
 }
 
 .culturist-carousel-carousel-next::before {
     content: '';
-    width: 12px;
-    height: 12px;
-    border-right: 2px solid currentcolor;
-    border-top: 2px solid currentcolor;
-    transform: rotate(45deg);
+    width: 28px;
+    height: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cpath d='M9 4C12.73 7.16 16.24 10.56 19.71 14C17.92 15.78 16.12 17.56 14.27 19.27C12.75 20.68 10.58 22.69 9 24C12 20.46 17.5 14 17.5 14C17.5 14 10.4984 5.76279 9 4Z' fill='white'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
 }
 
 .culturist-carousel-carousel--empty .culturist-carousel-carousel-prev,
@@ -857,17 +736,16 @@
 /* Card Title Overlay */
 .culturist-carousel-card-title {
     position: absolute;
-
-    /* Figma: pad T80 L64 */
-    top: 80px;
-    left: 64px;
-    right: 64px;
-    color: #fff;
-    font-size: 1.5rem;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-weight: 400;
-    line-height: 1.3;
-    text-shadow: 0 2px 8px rgb(0 0 0 / 60%);
+    top: var(--dimension-layout-card-padding-block);
+    left: var(--dimension-layout-card-padding-inline);
+    right: var(--dimension-layout-card-padding-inline);
+    color: var(--color-text-main-inverse-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h4);
+    font-style: normal;
+    text-align: left;
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h4);
     pointer-events: none;
     z-index: 3;
     word-break: normal;
@@ -875,24 +753,17 @@
     white-space: normal;
 }
 
-/* Narrow cards (below 1024px, two-up layout) need tighter padding and a smaller title */
-@media (width < 1200px) {
+@media (width >= 768px) and (width < 1200px) {
     .culturist-carousel-card-title {
-        top: 24px;
-        left: 20px;
-        right: 20px;
-        font-size: 20px;
-        line-height: 1.25;
+        font-size: var(--typography-fontsize-heading-h3);
+        line-height: var(--typography-line-height-heading-h3);
     }
 }
 
 @media (width >= 1200px) {
     .culturist-carousel-card-title {
-        top: clamp(40px, 5vw, 80px);
-        left: clamp(28px, 4vw, 64px);
-        right: clamp(28px, 4vw, 64px);
-        font-size: clamp(34px, 3.4vw, 52px);
-        line-height: 1;
+        font-size: var(--typography-fontsize-heading-h1);
+        line-height: var(--typography-line-height-heading-h1); /* 100% */
     }
 }
 
@@ -900,7 +771,7 @@
 @media (width < 1200px) {
     /* Inset lives on the non-scrolling column so it stays put while the track scrolls */
     .culturist-carousel-carousel-col {
-        background-color: rgb(236 229 227);
+        background-color: var(--color-surface-general-light);
         padding: 0 0 32px var(--culturist-carousel-tablet-inline-inset);
     }
 
@@ -911,11 +782,6 @@
     .culturist-carousel-carousel-prev,
     .culturist-carousel-carousel-next {
         display: none;
-    }
-
-    .culturist-carousel-card-title {
-        font-size: var(--heading-font-size-l);
-        line-height: 1.2;
     }
 }
 
@@ -947,7 +813,7 @@
     width: min(100%, 26rem);
     max-height: min(75vh, 34rem);
     overflow: auto;
-    background: #fff;
+    background: var(--color-surface-primary-default);
     box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
 }
 
@@ -1001,9 +867,9 @@
 .culturist-carousel-card-modal-title {
     margin: 0;
     padding: 1rem 1.25rem;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
+    font-family: var(--type-font-family-heading);
     font-size: 1.5rem;
-    color: #1b364b;
+    color: var(--color-text-main-heading);
 }
 
 body.culturist-carousel-modal-open {
@@ -1019,51 +885,8 @@ body.culturist-carousel-modal-open {
         justify-content: center;
     }
 
-    .culturist-carousel-title-block {
-        align-items: flex-end;
-        width: 588px;
-        max-width: 100%;
-        padding-left: 140px;
-        gap: 8px;
-        box-sizing: border-box;
-    }
-
-    .culturist-carousel-title-top,
     .culturist-carousel-title-bottom {
-        width: 448px;
-        height: 48px;
-        box-sizing: border-box;
-        font-size: 48px;
-        font-weight: 400;
-        line-height: 48px;
-        letter-spacing: 0;
-    }
-
-    .culturist-carousel-title-bottom {
-        padding-left: 32px;
-    }
-
-    .culturist-carousel-destination-wrapper {
-        width: 303px;
-        height: 48px;
-    }
-
-    .culturist-carousel-destination-btn {
-        height: 48px;
-        align-items: center;
-        font-size: 48px;
-        font-weight: 400;
-        line-height: 48px;
-        letter-spacing: 0;
-    }
-
-    .culturist-carousel-destination-arrow {
-        width: 40px;
-        height: 40px;
-        margin-left: 0;
-        font-size: 28px;
-        line-height: 40px;
-        text-align: center;
+        padding-left: var(--dimension-spacing-general-2xl);
     }
 
     .culturist-carousel-carousel-prev,
@@ -1078,12 +901,5 @@ body.culturist-carousel-modal-open {
 
     .culturist-carousel-carousel-next {
         right: 20px;
-    }
-}
-
-@media (width < 1200px) {
-    .culturist-carousel-content-scroll {
-        max-height: none;
-        overflow-y: visible;
     }
 }

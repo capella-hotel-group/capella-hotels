@@ -205,7 +205,10 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
   return { openModal };
 }
 
-function buildCarouselCard(card: Record<string, any>, openCardModal: (card: Record<string, any>) => void): HTMLLIElement {
+function buildCarouselCard(
+  card: Record<string, any>,
+  openCardModal: (card: Record<string, any>) => void,
+): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'culturist-carousel-carousel-card';
 
@@ -269,7 +272,7 @@ async function renderGalleryCarousel(
   carouselCol.classList.remove('culturist-carousel-carousel--empty');
   cards.forEach((card) => {
     try {
-            track.append(buildCarouselCard(card, openCardModal));
+      track.append(buildCarouselCard(card, openCardModal));
     } catch (error) {
       console.error('[culturist-carousel] Skipping malformed card', card, error);
     }
@@ -343,16 +346,19 @@ async function renderGalleryCarousel(
       boundaryTimer = window.setTimeout(updateBoundary, 200);
     });
 
-    track.addEventListener('wheel', (event) => {
-      if (wrapAtBoundary(event.deltaX || event.deltaY)) event.preventDefault();
-    }, { passive: false });
+    track.addEventListener(
+      'wheel',
+      (event) => {
+        if (wrapAtBoundary(event.deltaX || event.deltaY)) event.preventDefault();
+      },
+      { passive: false },
+    );
 
     track.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'touch') {
         touchStartX = event.clientX;
         const maxScrollLeft = track.scrollWidth - track.clientWidth;
-        touchStartedAtBoundary = isScrollSettled
-          && (track.scrollLeft <= 0 || track.scrollLeft >= maxScrollLeft - 1);
+        touchStartedAtBoundary = isScrollSettled && (track.scrollLeft <= 0 || track.scrollLeft >= maxScrollLeft - 1);
       }
     });
 
@@ -448,7 +454,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const destinationList = document.createElement('ul');
   destinationList.className = 'culturist-carousel-destination-list';
   destinationList.setAttribute('role', 'listbox');
-  destinationList.hidden = true;
 
   const destinationScrollbar = document.createElement('div');
   destinationScrollbar.className = 'culturist-carousel-destination-scrollbar';
@@ -457,6 +462,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const destinationScrollbarThumb = document.createElement('span');
   destinationScrollbarThumb.className = 'culturist-carousel-destination-scrollbar-thumb';
   destinationScrollbar.append(destinationScrollbarThumb);
+
+  // Groups the list and its custom scrollbar into a single dropdown box
+  const destinationDropdown = document.createElement('div');
+  destinationDropdown.className = 'culturist-carousel-destination-dropdown';
+  destinationDropdown.hidden = true;
+  destinationDropdown.append(destinationList, destinationScrollbar);
 
   // Culturist info slot
   const infoSlot = document.createElement('div');
@@ -510,7 +521,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
     infoSlot.classList.add('is-fading');
     carouselCol.classList.add('is-fading');
-    await new Promise((resolve) => { window.setTimeout(resolve, 280); });
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 280);
+    });
     await renderCulturistInfo(infoSlot, cfRef);
     await renderGalleryCarousel(carouselCol, cfRef, cardModal.openModal);
     infoSlot.classList.remove('is-fading');
@@ -520,30 +533,30 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   updateDestinationBtn();
 
   const closeDestinationList = () => {
-    destinationList.hidden = true;
-    destinationScrollbar.hidden = true;
+    if (destinationDropdown.hidden) return;
+    destinationDropdown.classList.remove('is-open');
     destinationBtn.setAttribute('aria-expanded', 'false');
+    window.setTimeout(() => {
+      destinationDropdown.hidden = true;
+    }, 200);
   };
 
   const updateDestinationScrollbar = () => {
     const maxScrollTop = destinationList.scrollHeight - destinationList.clientHeight;
     destinationScrollbar.hidden = maxScrollTop <= 0;
     if (maxScrollTop <= 0) return;
-    const scrollbarTop = destinationList.offsetTop + (destinationList.clientHeight - destinationScrollbar.offsetHeight) / 2;
-    const scrollbarLeft = destinationList.offsetLeft + destinationList.clientWidth
-      - destinationScrollbar.offsetWidth - 10;
-    destinationScrollbar.style.top = `${scrollbarTop}px`;
-    destinationScrollbar.style.left = `${scrollbarLeft}px`;
-    destinationScrollbar.style.right = 'auto';
     const thumbTravel = 80;
     const thumbOffset = (destinationList.scrollTop / maxScrollTop) * thumbTravel;
     destinationScrollbarThumb.style.transform = `translateY(${thumbOffset}px)`;
   };
 
   const openDestinationList = () => {
-    destinationList.hidden = false;
+    destinationDropdown.hidden = false;
     destinationBtn.setAttribute('aria-expanded', 'true');
-    requestAnimationFrame(updateDestinationScrollbar);
+    requestAnimationFrame(() => {
+      destinationDropdown.classList.add('is-open');
+      updateDestinationScrollbar();
+    });
   };
 
   itemRows.forEach((row, index) => {
@@ -575,7 +588,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   destinationBtn.addEventListener('click', () => {
     if (!hasMultipleDestinations) return;
-    if (destinationList.hidden) {
+    if (destinationDropdown.hidden) {
       openDestinationList();
     } else {
       closeDestinationList();
@@ -595,8 +608,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   });
 
   destinationWrapper.append(destinationBtn);
-  destinationWrapper.append(destinationList);
-  destinationWrapper.append(destinationScrollbar);
+  destinationWrapper.append(destinationDropdown);
   titleBlock.append(destinationWrapper);
 
   const titleSuffixText = titleSuffixRow?.textContent?.trim() || '';
