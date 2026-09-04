@@ -146,7 +146,7 @@
     text-decoration-line: underline;
     text-decoration-style: solid;
     text-decoration-skip-ink: auto;
-    text-decoration-thickness: auto;
+    text-decoration-thickness: var(--stroke-weight-m);
     text-underline-offset: auto;
     text-underline-position: from-font;
     padding-left: var(--dimension-spacing-general-4xl);
