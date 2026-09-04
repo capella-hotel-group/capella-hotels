@@ -502,7 +502,8 @@
     .culturist-carousel-panel {
         position: relative;
         background-color: var(--color-surface-general-light);
-        padding: var(--dimension-spacing-general-xl) var(--culturist-carousel-tablet-inline-inset) 34px;
+        padding: var(--dimension-layout-module-padding-block-s) var(--culturist-carousel-tablet-inline-inset)
+            var(--dimension-layout-module-padding-block);
         gap: var(--dimension-spacing-general-m);
     }
 
