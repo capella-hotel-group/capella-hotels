@@ -107,6 +107,7 @@
 @media (width >= 1200px) {
     .culturist-carousel-title-block {
         padding: 0;
+        margin-left: 140px;
     }
 }
 
