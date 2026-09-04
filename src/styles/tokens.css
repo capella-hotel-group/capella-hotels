@@ -188,7 +188,7 @@
         --dimension-spacing-general-2xs: 8px;
         --dimension-spacing-eyebrow-to-title: 14px;
         --dimension-spacing-eyebrow-to-text: 16px;
-        --dimension-spacing-heading-to-content: 48px;
+        --dimension-spacing-heading-to-content: 40px;
 
         /* dimension / layout / module (tablet) */
         --dimension-layout-module-padding-top: 112px;
@@ -225,7 +225,7 @@
         --typography-line-height-body-md: 22px;
 
         --dimension-spacing-eyebrow-to-text: 20px;
-        --dimension-spacing-heading-to-content: 56px;
+        --dimension-spacing-heading-to-content: 48px;
 
         /* dimension / layout / module (desktop; gutter-xs has no sampled
            tablet value, so it still steps up directly here. padding-inline-xs
@@ -244,6 +244,10 @@
            "--layout-card-padding-2xl: 64px" desktop override here was a
            stale/orphaned token that never matched a base variable name and
            contradicted the actual 1440px sample - removed) */
+
+        /* component / button (desktop; confirmed via get_variable_defs on
+           node 6584:34928, "Content-card/offer") */
+        --component-button-padding-block: 16px;
 
         /* component / toggle (desktop) */
         --component-toogle-selector-dot: 24px;
