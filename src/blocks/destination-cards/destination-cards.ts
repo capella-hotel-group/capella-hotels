@@ -138,20 +138,6 @@ function buildCta(label: string, href: string, openInNewTab: boolean): HTMLAncho
   return cta;
 }
 
-function buildControlButton(direction: 'prev' | 'next', label: string): HTMLButtonElement {
-  const control = document.createElement('button');
-  control.type = 'button';
-  control.className = `destination-cards-control destination-cards-control-${direction}`;
-  control.setAttribute('aria-label', label);
-
-  const icon = document.createElement('span');
-  icon.className = 'destination-cards-control-icon';
-  icon.setAttribute('aria-hidden', 'true');
-  control.append(icon);
-
-  return control;
-}
-
 function buildCarouselControls(list: HTMLUListElement): HTMLDivElement {
   const controls = document.createElement('div');
   controls.className = 'destination-cards-controls';
