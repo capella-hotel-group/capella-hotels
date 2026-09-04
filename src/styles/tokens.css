@@ -87,6 +87,9 @@
     --typography-line-height-body-md: 20px;
     --typography-fontsize-body-s: 12px;
     --typography-line-height-body-sm: 16px;
+    --typography-fontsize-body-eyebrow: 12px;
+    --typography-line-height-body-eyebrow: 14px;
+    --typography-letter-spacing-body-eyebrow: 2px;
 
     /* dimension / spacing scale (breakpoint-independent) */
     --dimension-spacing-general-min: 0px;
@@ -179,6 +182,8 @@
         /* typography / body scale (tablet) */
         --typography-fontsize-body-m: 18px;
         --typography-fontsize-body-s: 14px;
+        --typography-fontsize-body-eyebrow: 14px;
+        --typography-line-height-body-eyebrow: 16px;
 
         --dimension-spacing-general-2xs: 8px;
         --dimension-spacing-eyebrow-to-title: 14px;
