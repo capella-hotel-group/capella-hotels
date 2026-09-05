@@ -501,6 +501,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const cardModal = buildCardModal(wrapper);
 
   let currentTabIndex = 0;
+  let selectTabGeneration = 0;
 
   const updateDestinationBtn = () => {
     const tabCells = itemRows[currentTabIndex]?.querySelectorAll(':scope > div');
@@ -516,6 +517,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     currentTabIndex = index;
     updateDestinationBtn();
 
+    // Bump the generation so a slower, superseded call can detect it's stale and bail out below.
+    const generation = ++selectTabGeneration;
+
     const cfRef = itemRows[currentTabIndex]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
     if (!cfRef) return;
 
@@ -524,8 +528,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     await new Promise((resolve) => {
       window.setTimeout(resolve, 280);
     });
+    if (generation !== selectTabGeneration) return;
+
     await renderCulturistInfo(infoSlot, cfRef);
     await renderGalleryCarousel(carouselCol, cfRef, cardModal.openModal);
+    if (generation !== selectTabGeneration) return;
+
     infoSlot.classList.remove('is-fading');
     carouselCol.classList.remove('is-fading');
   };

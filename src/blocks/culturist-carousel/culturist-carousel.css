@@ -302,6 +302,9 @@
     grid-template-columns: auto 1fr;
     gap: var(--dimension-layout-carousel-item-gap-xl);
     align-items: start;
+    transition:
+        opacity 0.28s ease,
+        transform 0.28s ease;
 }
 
 @media (width >= 768px) {
@@ -543,12 +546,15 @@
     overflow: hidden;
     min-height: 300px;
     background-color: #ddd;
-    /* transition: opacity 0.28s ease; */
+    transition:
+        opacity 0.28s ease,
+        transform 0.28s ease;
 }
 
 .culturist-carousel-info-slot.is-fading,
 .culturist-carousel-carousel-col.is-fading {
     opacity: 0;
+    transform: translateY(8px);
 }
 
 @media (width >= 768px) {
