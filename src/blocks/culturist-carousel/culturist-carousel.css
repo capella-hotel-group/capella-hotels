@@ -805,24 +805,60 @@
     position: fixed;
     inset: 0;
     z-index: 9999;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     background: rgb(0 0 0 / 65%);
-    padding: 1rem;
+    padding: var(--dimension-spacing-general-m);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        visibility 0s linear 0.2s;
 }
 
 .culturist-carousel-card-modal.is-open {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.2s ease;
+}
+
+@media (width >= 1200px) {
+    .culturist-carousel-card-modal {
+        padding: var(--dimension-spacing-general-xl);
+    }
 }
 
 .culturist-carousel-card-modal-panel {
     position: relative;
     width: min(100%, 26rem);
-    max-height: min(75vh, 34rem);
+    max-height: min(85vh, 34rem);
     overflow: auto;
     background: var(--color-surface-primary-default);
+    border-radius: var(--corner-radius-xs);
     box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
+    transform: scale(0.96) translateY(8px);
+    transition: transform 0.2s ease;
+}
+
+.culturist-carousel-card-modal.is-open .culturist-carousel-card-modal-panel {
+    transform: scale(1) translateY(0);
+}
+
+@media (width >= 768px) and (width < 1200px) {
+    .culturist-carousel-card-modal-panel {
+        width: min(100%, 32rem);
+        max-height: min(80vh, 40rem);
+    }
+}
+
+@media (width >= 1200px) {
+    .culturist-carousel-card-modal-panel {
+        width: min(100%, 38rem);
+        max-height: min(80vh, 46rem);
+    }
 }
 
 /* No scrollbar-width/scrollbar-color here: they switch Chrome to the native bar and re-add the arrows */
@@ -852,32 +888,54 @@
 
 .culturist-carousel-card-modal-close {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: var(--dimension-spacing-general-xs);
+    right: var(--dimension-spacing-general-xs);
     z-index: 1;
     width: 2rem;
     height: 2rem;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--corner-radius-round);
     background: rgb(255 255 255 / 85%);
-    color: #1b1b1b;
-    font-size: 1.2rem;
-    line-height: 1;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.culturist-carousel-card-modal-close:hover,
+.culturist-carousel-card-modal-close:focus-visible {
+    background: rgb(255 255 255 / 100%);
+}
+
+.culturist-carousel-card-modal-close::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M1 1L13 13M13 1L1 13' stroke='%231B364B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .culturist-carousel-card-modal-image {
     display: block;
     width: 100%;
     height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
 }
 
 .culturist-carousel-card-modal-title {
     margin: 0;
-    padding: 1rem 1.25rem;
+    padding: var(--dimension-spacing-general-m) var(--dimension-spacing-general-l);
     font-family: var(--type-font-family-heading);
-    font-size: 1.5rem;
+    font-size: var(--typography-fontsize-heading-h4);
+    line-height: var(--typography-line-height-heading-h4);
     color: var(--color-text-main-heading);
+    overflow-wrap: break-word;
+}
+
+/* No image means the title is the first thing in the panel; clear the floating close button */
+.culturist-carousel-card-modal-panel--no-image .culturist-carousel-card-modal-title {
+    padding-top: calc(2rem + var(--dimension-spacing-general-l));
 }
 
 body.culturist-carousel-modal-open {

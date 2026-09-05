@@ -162,7 +162,6 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
   closeBtn.type = 'button';
   closeBtn.className = 'culturist-carousel-card-modal-close';
   closeBtn.setAttribute('aria-label', 'Close popup');
-  closeBtn.textContent = 'x';
 
   const image = document.createElement('img');
   image.className = 'culturist-carousel-card-modal-image';
@@ -190,6 +189,9 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
 
   const openModal = (card: Record<string, any>) => {
     const { _path: cardImgPath } = card.image || {};
+    // Nothing to show a popup for; keep the modal closed instead of an empty white box.
+    if (!cardImgPath && !card.title) return;
+
     image.hidden = !cardImgPath;
     if (cardImgPath) {
       image.src = resolveAssetUrl(cardImgPath) ?? '';
@@ -197,6 +199,7 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
     }
     title.hidden = !card.title;
     title.textContent = card.title || '';
+    panel.classList.toggle('culturist-carousel-card-modal-panel--no-image', !cardImgPath);
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('culturist-carousel-modal-open');
