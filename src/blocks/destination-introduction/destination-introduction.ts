@@ -60,7 +60,7 @@ function splitOnLineBreaks(container: Element): void {
     const lines = [document.createDocumentFragment()];
     [...element.childNodes].forEach((node) => {
       if (node.nodeName === 'BR') lines.push(document.createDocumentFragment());
-      else lines[lines.length - 1].append(node);
+      else lines[lines.length - 1]!.append(node);
     });
 
     const paragraphs = lines
