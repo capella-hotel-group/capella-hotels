@@ -416,6 +416,58 @@
     ]
   },
   {
+    "id": "destination-introduction",
+    "fields": [
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "body",
+        "label": "Body",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "footerCta",
+        "label": "Footer CTA",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": "destination-introduction-image",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "filters-grid",
     "fields": [
       {
@@ -478,6 +530,84 @@
         "component": "aem-content",
         "name": "reference",
         "label": "Reference"
+      }
+    ]
+  },
+  {
+    "id": "hero-banner-with-toggle",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "backgroundImage",
+        "label": "Background Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Background Image Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "toggleLabelLeft",
+        "label": "Toggle Label (Left)",
+        "valueType": "string",
+        "value": "Destinations"
+      },
+      {
+        "component": "text",
+        "name": "toggleLabelRight",
+        "label": "Toggle Label (Right)",
+        "valueType": "string",
+        "value": "Experiences"
+      }
+    ]
+  },
+  {
+    "id": "hero-banner-with-toggle-item",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Location Name",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link",
+        "valueType": "string"
+      },
+      {
+        "component": "select",
+        "name": "group",
+        "label": "Group",
+        "valueType": "string",
+        "value": "destinations",
+        "options": [
+          {
+            "name": "Destination",
+            "value": "destinations"
+          },
+          {
+            "name": "Experience",
+            "value": "experiences"
+          }
+        ]
       }
     ]
   },

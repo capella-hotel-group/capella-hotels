@@ -24,11 +24,12 @@
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
+      "destination-introduction",
       "interactive-asset",
       "filters-grid",
       "offers-carousel",
       "text-with-cta",
-      "rte"
+      "hero-banner-with-toggle"
     ]
   },
   {
@@ -151,6 +152,12 @@
     ]
   },
   {
+    "id": "destination-introduction",
+    "components": [
+      "destination-introduction-image"
+    ]
+  },
+  {
     "id": "filters-grid",
     "components": [
       "filters-grid-tab"
@@ -160,6 +167,12 @@
     "id": "filters-grid-tab",
     "components": [
       "filters-grid-filter"
+    ]
+  },
+  {
+    "id": "hero-banner-with-toggle",
+    "components": [
+      "hero-banner-with-toggle-item"
     ]
   },
   {

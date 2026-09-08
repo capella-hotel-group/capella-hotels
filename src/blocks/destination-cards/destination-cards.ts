@@ -138,26 +138,19 @@ function buildCta(label: string, href: string, openInNewTab: boolean): HTMLAncho
   return cta;
 }
 
-function buildControlButton(direction: 'prev' | 'next', label: string): HTMLButtonElement {
-  const control = document.createElement('button');
-  control.type = 'button';
-  control.className = `destination-cards-control destination-cards-control-${direction}`;
-  control.setAttribute('aria-label', label);
-
-  const icon = document.createElement('span');
-  icon.className = 'destination-cards-control-icon';
-  icon.setAttribute('aria-hidden', 'true');
-  control.append(icon);
-
-  return control;
-}
-
 function buildCarouselControls(list: HTMLUListElement): HTMLDivElement {
   const controls = document.createElement('div');
   controls.className = 'destination-cards-controls';
 
-  const previous = buildControlButton('prev', 'Previous destination card');
-  const next = buildControlButton('next', 'Next destination card');
+  const previous = document.createElement('button');
+  previous.type = 'button';
+  previous.className = 'destination-cards-control destination-cards-control-prev';
+  previous.setAttribute('aria-label', 'Previous destination card');
+
+  const next = document.createElement('button');
+  next.type = 'button';
+  next.className = 'destination-cards-control destination-cards-control-next';
+  next.setAttribute('aria-label', 'Next destination card');
 
   const scrollByCard = (direction: number): void => {
     const firstCard = list.querySelector('.destination-cards-item');
@@ -215,7 +208,7 @@ function buildCard(row: Element): HTMLLIElement {
     overlay.append(location);
   }
   if (fields.title) {
-    const title = document.createElement('h1');
+    const title = document.createElement('h3');
     title.className = 'destination-cards-card-title';
     title.textContent = fields.title;
     overlay.append(title);

@@ -1,5 +1,5 @@
 .text-with-image-container {
-    background: #f9f6f6;
+    background: var(--color-surface-general-subtle);
     padding: 40px 0;
 }
 
@@ -18,61 +18,69 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: 64px 52px 64px 80px;
+    padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-xs)
+        var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
 }
 
 .text-with-image .text-col h3 {
-    font-size: 3rem;
-    font-family: var(--heading-font-family);
-    font-weight: 400;
+    font-family: var(--type-font-family-heading);
+    font-weight: var(--type-font-weight-heading);
     text-transform: uppercase;
-    line-height: 1;
     letter-spacing: 0;
-    color: #1b364b;
+    color: var(--color-text-main-heading);
     margin: 0;
     width: 100%;
-    max-width: 345px;
-    padding-inline-start: 32px;
-    text-indent: -32px;
+    max-width: 444px;
+    padding-inline-start: var(--dimension-spacing-general-2xl);
+    text-indent: calc(var(--dimension-spacing-general-2xl) * -1);
+    font-size: var(--typography-fontsize-heading-h1);
+    line-height: var(--typography-line-height-heading-h1); /* 100% */
 }
 
 .text-with-image .text-col .eyebrow {
-    font-family: var(--body-font-family);
-    font-size: 1.125rem;
-    font-weight: 400;
-    line-height: 22px;
-    letter-spacing: 0;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-eyebrow);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
     text-transform: uppercase;
-    color: #1b364b;
-    margin: 0 0 14px;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    color: var(--color-text-main-heading);
+    margin: 0 0 var(--dimension-spacing-eyebrow-to-title);
 }
 
 .text-with-image .description {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding-inline-start: 32px;
-    margin-top: 56px;
+    gap: var(--dimension-spacing-general-m);
+    padding-inline-start: var(--dimension-spacing-general-2xl);
+    /* not tokenized: this card's heading-to-content gap (48px) diverges from tokens.css's desktop value (56px) */
+    margin-top: var(--dimension-spacing-heading-to-content);
 }
 
 .text-with-image .description h4 {
-    font-family: var(--heading-font-family);
-    font-weight: 400;
-    color: #262727;
-    font-size: 1.5rem;
+    font-family: var(--type-font-family-subtitle);
+    font-weight: var(--type-font-weight-subtitle);
+    color: var(--color-text-main-body);
+    font-size: var(--typography-fontsize-heading-subtitle);
     margin: 0;
     letter-spacing: 0;
-    line-height: 24px;
+    line-height: var(--typography-line-height-heading-subtitle);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .text-with-image .description p {
-    font-family: var(--body-font-family);
-    font-weight: 400;
-    color: #262727;
-    line-height: 24px;
-    font-size: 1.25rem;
+    font-family: var(--type-font-family-subtitle);
+    font-weight: var(--type-font-weight-subtitle);
+    color: var(--color-text-main-body);
+    line-height: var(--typography-line-height-heading-subtitle);
+    font-size: var(--typography-fontsize-heading-subtitle);
     margin: 0;
     letter-spacing: 0;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .text-with-image .description p:empty {
@@ -82,17 +90,22 @@
 .text-with-image .cta-link {
     display: inline-block;
     align-self: flex-start;
-    margin-top: 32px;
-    font-size: 1.125rem;
-    font-family: var(--body-font-family);
-    font-weight: 300;
+    margin-top: var(--dimension-spacing-vertical-module-to-text);
+    font-size: var(--typography-fontsize-body-m);
+    /* line-height overridden: tokens.css's body/md scale (22px desktop) diverges from this card's CTA (18px) */
+    line-height: 18px;
+    font-family: var(--type-font-family-cta);
+    font-weight: var(--type-font-weight-text-link);
     text-transform: uppercase;
     letter-spacing: 0;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-    color: #1b364b;
-    padding-inline-start: 32px;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-decoration-thickness: 7%; /* 1.26px */
+    text-underline-offset: 20.5%; /* 3.69px */
+    text-underline-position: from-font;
+    color: var(--color-text-action-default);
+    padding-inline-start: var(--dimension-spacing-general-2xl);
 }
 
 .text-with-image .cta-link:hover {
@@ -112,12 +125,6 @@
     grid-template-columns: 60% 40%;
 }
 
-/* .text-with-image .image-col picture {
-    display: block;
-    width: calc(100% - 40px);
-    height: auto;
-} */
-
 .text-with-image .image-col img {
     display: block;
     width: 100%;
@@ -126,21 +133,13 @@
 
 /* Tablet */
 @media (width <=1024px) {
-    .text-with-image {
+    .text-with-image,
+    .text-with-image.image-left {
         grid-template-columns: 50% 50%;
     }
 
     .text-with-image .text-col {
-        padding: 64px 48px;
-    }
-
-    .text-with-image .text-col h3 {
-        font-size: 2.5rem;
-    }
-
-    .text-with-image .description p {
-        font-size: 1.5rem;
-        line-height: 24px;
+        padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
     }
 
     .text-with-image .image-col.has-mobile-image {
@@ -155,16 +154,8 @@
 
 /* Mobile */
 @media (width <=767px) {
-    .text-with-image .text-col h3 {
-        font-size: 2.25rem;
-        line-height: 36px;
-    }
-
     .text-with-image {
         grid-template-columns: 1fr;
-        gap: 0;
-        padding: 48px 0;
-        margin-bottom: 80px;
     }
 
     .text-with-image.image-left {
@@ -172,33 +163,7 @@
     }
 
     .text-with-image .text-col {
-        padding: 48px 24px;
-    }
-
-    .text-with-image .text-col .eyebrow {
-        font-size: 1rem;
-        line-height: 20px;
-        margin-bottom: 12px;
-    }
-
-    .text-with-image .description {
-        margin-top: 32px;
-        gap: 12px;
-    }
-
-    .text-with-image .description h4 {
-        font-size: 1.25rem;
-        line-height: 22px;
-    }
-
-    .text-with-image .description p {
-        font-size: 1.125rem;
-        line-height: 20px;
-    }
-
-    .text-with-image .cta-link {
-        font-size: 1rem;
-        line-height: 20px;
+        padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
     }
 
     .text-with-image .image-col {

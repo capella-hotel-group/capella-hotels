@@ -48,13 +48,25 @@ curl http://localhost:3000/path/to/page.plain.html  # source markup EDS parses i
 
 See [AGENTS.md § Content](./AGENTS.md#content) and [§ Blocks](./AGENTS.md#blocks) for markup structure and block anatomy.
 
-## Coding conventions (summary)
+## Universal Editor JSON declarations
 
-- **TypeScript**: source lives under `src/` (strict mode), compiled by Vite into the plain-JS runtime — never hand-edit generated files. Use the `@/*` path alias for cross-module imports.
-- **CSS**: mobile-first, `min-width` media queries at the `--breakpoint-*` tokens (`src/styles/tokens.css`); scope every selector to the block (`.{blockname} .item`, not `.item`); avoid `{blockname}-container`/`{blockname}-wrapper` class names.
-- **HTML**: semantic HTML5, proper heading hierarchy, ARIA labels.
+Universal Editor uses three generated root declarations:
 
-Full rules: [AGENTS.md § Code Style Guidelines](./AGENTS.md#code-style-guidelines).
+- `component-definition.json` lists components grouped for the editor's Add panel.
+- `component-models.json` defines the authoring fields and models for pages, default content, sections, and blocks.
+- `component-filters.json` controls which components may be inserted in each editor container.
+
+Do not edit these root files directly. Their source fragments are:
+
+- `src/models/_component-definition.json`, `_component-models.json`, and `_component-filters.json` aggregate the shared declarations.
+- `src/models/_page.json`, `_section.json`, `_text.json`, `_title.json`, `_image.json`, and `_button.json` define shared page and default-content components.
+- `src/blocks/{blockname}/_{blockname}.json` declares a block's definitions, models, and filters.
+
+After changing any source fragment, run `npm run build:json`. This regenerates all three root `component-*.json` files; include the resulting generated files with the source change. For field and filter design guidance, see [AGENTS.md § Content Modeling](./AGENTS.md#content-modeling).
+
+## Coding conventions
+
+All coding conventions (TypeScript, CSS, HTML, `data-testid` test automation) live in [docs/coding-guidelines.md](./docs/coding-guidelines.md) — read it before writing or modifying code.
 
 ## Quality gates before pushing
 
