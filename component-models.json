@@ -468,6 +468,120 @@
     ]
   },
   {
+    "id": "experience-tiles-item",
+    "fields": [
+      {
+        "component": "text",
+        "name": "visualEyebrow",
+        "label": "Location Eyebrow",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "headline",
+        "label": "Experience Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "visualImage",
+        "label": "Tile Image",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "visualImageAlt",
+        "label": "Tile Image Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detailTitle",
+        "label": "Guide / Activity Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Experience Description",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "detailsImage",
+        "label": "Details Tile Image",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "detailsImageAlt",
+        "label": "Details Image Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "enquireLabel",
+        "label": "Enquire CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "ENQUIRE"
+      },
+      {
+        "component": "aem-content",
+        "name": "enquireModalPath",
+        "label": "Enquire Modal Fragment Path",
+        "description": "Path to the fragment holding the enquiry form modal content.",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "enquireOpenInNewTab",
+        "label": "Enquire Opens in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "detailsLabel",
+        "label": "Details CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "DETAILS"
+      },
+      {
+        "component": "aem-content",
+        "name": "detailsUrl",
+        "label": "Details Destination URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "detailsOpenInNewTab",
+        "label": "Details Opens in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "filters-grid",
     "fields": [
       {
