@@ -17,6 +17,11 @@ function isEnabled(value: string): boolean {
   return ['true', 'yes', 'enabled'].includes(value.trim().toLowerCase());
 }
 
+function getLinkTarget(cell: Element, linkIndex: number): boolean {
+  const values = [...cell.children].filter((child) => !child.querySelector('a'));
+  return isEnabled(textFromCell(values[linkIndex]));
+}
+
 function applyTarget(anchor: HTMLAnchorElement, openInNewTab?: boolean): void {
   if (!openInNewTab) return;
   anchor.target = '_blank';
@@ -78,7 +83,8 @@ function parseCard(row: Element): CardData | null {
   const eyebrow = getFieldText(row, 'content_cardEyebrow') || paragraphs[0]?.textContent?.trim() || '';
   const headline = getFieldText(row, 'content_headline') || paragraphs[1]?.textContent?.trim() || '';
   const descriptionField = getField(row, 'content_cardDescription');
-  const description = descriptionField?.innerHTML || contentCell?.querySelector('div')?.innerHTML || '';
+  const description =
+    descriptionField?.innerHTML || paragraphs[2]?.innerHTML || contentCell?.querySelector('div')?.innerHTML || '';
 
   const primary = getCardLink(row, 'ctas_primaryCta', 'ctas_primaryCtaText', 'ctas_primaryCtaOpenInNewTab');
   const secondary = getCardLink(row, 'ctas_secondaryCta', 'ctas_secondaryCtaText', 'ctas_secondaryCtaOpenInNewTab');
@@ -87,7 +93,9 @@ function parseCard(row: Element): CardData | null {
     const links = [...ctaCell.querySelectorAll('a')];
     const labels = links.map((link) => link.textContent?.trim() || '');
     const legacyLinks = links.map((link, index) =>
-      labels[index] ? { href: link.getAttribute('href') || '', label: labels[index], openInNewTab: false } : null,
+      labels[index]
+        ? { href: link.getAttribute('href') || '', label: labels[index], openInNewTab: getLinkTarget(ctaCell, index) }
+        : null,
     );
     return {
       media,
@@ -194,7 +202,7 @@ function applyStackState(cards: HTMLElement[], activeIndex: number): void {
 }
 
 function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
-  let activeIndex = 0;
+  let activeIndex = cards.length - 1;
 
   const prevBtn = root.querySelector('.offers-carousel-nav-prev');
   const nextBtn = root.querySelector('.offers-carousel-nav-next');
@@ -216,12 +224,6 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   nextBtn?.addEventListener('click', goNext);
 
   cards.forEach((card, index) => {
-    card.addEventListener('pointerenter', () => {
-      if (window.matchMedia('(hover: hover)').matches) {
-        activeIndex = index;
-        update();
-      }
-    });
     card.addEventListener('focusin', () => {
       activeIndex = index;
       update();
@@ -251,10 +253,9 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
 
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children];
-  const eyebrow = getFieldText(block, 'eyebrow') || textFromCell(rows[0]?.firstElementChild || rows[0]);
-  const title = getFieldText(block, 'title') || textFromCell(rows[1]?.firstElementChild || rows[1]);
-  const anchorId = getFieldText(block, 'id');
-  if (anchorId) block.id = anchorId.replace(/^#/, '');
+  const anchorId = getFieldText(block, 'id') || textFromCell(rows[0]?.firstElementChild || rows[0]);
+  const eyebrow = getFieldText(block, 'eyebrow') || textFromCell(rows[1]?.firstElementChild || rows[1]);
+  const title = getFieldText(block, 'title') || textFromCell(rows[2]?.firstElementChild || rows[2]);
 
   const cardRows = rows
     .filter((row) => row.matches('[data-aue-model="offers-carousel-item"]') || row.querySelector('picture, img'))
@@ -265,6 +266,7 @@ export default function decorate(block: HTMLElement): void {
 
   const root = document.createElement('div');
   root.className = 'offers-carousel-layout';
+  if (anchorId) root.id = anchorId.replace(/^#/, '');
 
   const copy = document.createElement('div');
   copy.className = 'offers-carousel-copy';
