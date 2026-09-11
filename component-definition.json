@@ -254,21 +254,6 @@
           }
         },
         {
-          "title": "Filters Grid Filter",
-          "id": "filters-grid-filter",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block/item",
-                "template": {
-                  "name": "Filters Grid Filter",
-                  "model": "filters-grid-filter"
-                }
-              }
-            }
-          }
-        },
-        {
           "title": "Fragment",
           "id": "fragment",
           "plugins": {
