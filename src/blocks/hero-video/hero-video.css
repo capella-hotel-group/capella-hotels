@@ -1,0 +1,442 @@
+/* src/blocks/hero-video/hero-video.css */
+
+.hero-video-container .hero-video-wrapper {
+    max-width: unset;
+    padding: 0;
+}
+
+/* ── Root ────────────────────────────────────────────────────────────── */
+.hero-video {
+    position: relative;
+    width: 100%;
+    min-height: 100svh;
+    overflow: hidden;
+    background: #000;
+    contain: layout style;
+    isolation: isolate;
+}
+
+/* Authoring-only fix */
+.adobe-ue-edit .hero-video {
+    max-height: 1080px;
+}
+
+.adobe-ue-edit .hero-video-media,
+.adobe-ue-edit .hero-video-video {
+    max-height: 1080px;
+}
+
+/* ── Media layer ─────────────────────────────────────────────────────── */
+.hero-video-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-video-poster {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.hero-video-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    will-change: opacity;
+}
+
+/* ── Contrast overlay ────────────────────────────────────────────────── */
+.hero-video-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+        radial-gradient(ellipse at center, transparent 20%, rgba(0 0 0 / 0.5) 100%),
+        linear-gradient(to bottom, rgba(0 0 0 / 0.25) 0%, transparent 35%);
+    pointer-events: none;
+}
+
+/* ── Intro phrase ────────────────────────────────────────────────────── */
+.hero-video-intro-phrase {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
+    font-weight: var(--type-font-weight-heading);
+    color: #fff;
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: opacity;
+}
+
+/* ── Selector UI ─────────────────────────────────────────────────────── */
+/* Two auto columns centered as a group: the lead ("See" + list) and the suffix sit side by side,
+   centered together like the phrase "<destination> with new eyes". */
+.hero-video-selector {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    align-items: center;
+    column-gap: var(--dimension-spacing-general-l);
+    pointer-events: none;
+}
+
+.hero-video-lead {
+    position: relative;
+}
+
+.hero-video-prefix {
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    margin-bottom: 0.5rem;
+    transform: translate(-50%, 0);
+}
+
+.hero-video-prefix,
+.hero-video-suffix {
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
+    font-weight: var(--type-font-weight-heading);
+    color: #fff;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Arrow icon trailing the suffix, vertically centered with the text and scaled to it (em). */
+.hero-video-suffix {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+}
+
+.hero-video-suffix::after {
+    content: '';
+    flex: none;
+    height: 0.62em;
+    aspect-ratio: 11 / 20;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='20' viewBox='0 0 11 20' fill='none'%3E%3Cpath d='M0 0C3.73 3.16 7.24 6.56 10.71 10C8.92 11.78 7.12 13.56 5.27 15.27C3.75 16.68 1.58 18.69 0 20C3 16.46 8.5 10 8.5 10C8.5 10 1.49837 1.76279 0 0Z' fill='white'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+}
+
+.hero-video-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    pointer-events: auto;
+    text-align: center;
+}
+
+.hero-video-items--animating {
+    will-change: transform;
+}
+
+.hero-video-item {
+    display: block;
+}
+
+.hero-video-item-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.55rem 0;
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
+    font-weight: var(--type-font-weight-heading);
+    color: #fff;
+    opacity: 0.5;
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    will-change: opacity;
+    transition: none;
+    justify-content: center;
+}
+
+.hero-video-item-btn:focus-visible {
+    outline: 2px solid rgba(255 255 255 / 0.7);
+    outline-offset: 4px;
+    border-radius: 2px;
+}
+
+/* Arrow affordance — only shown next to the active item (link click target) */
+.hero-video-arrow {
+    width: 0.9em;
+    height: 0.9em;
+    border-top: 2px solid currentcolor;
+    border-right: 2px solid currentcolor;
+    transform: rotate(45deg);
+    display: none;
+}
+
+.hero-video-item[aria-selected='true'] .hero-video-arrow {
+    display: inline-block;
+}
+
+/* ── Bottom controls ─────────────────────────────────────────────────── */
+.hero-video-controls {
+    position: absolute;
+    bottom: calc(2.5rem + env(safe-area-inset-bottom));
+    left: 2.5rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Sound button ────────────────────────────────────────────────────── */
+.hero-video-sound {
+    background: none;
+    border: 1px solid rgba(255 255 255 / 0.4);
+    width: 2.5rem;
+    height: 2.5rem;
+    cursor: pointer;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+}
+
+/* The button's `display: flex` overrides the UA `hidden` rule, so restore hiding explicitly. */
+.hero-video-sound[hidden] {
+    display: none;
+}
+
+.hero-video-sound:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+/* Speaker icons via mask — muted state shows slash */
+.hero-video-sound::before {
+    content: '';
+    display: block;
+    width: 1.1rem;
+    height: 1.1rem;
+    background: currentcolor;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+}
+
+.hero-video-sound[aria-pressed='true']::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z'/%3E%3C/svg%3E");
+}
+
+/* ── Custom cursor ───────────────────────────────────────────────────── */
+.hero-video-cursor {
+    position: absolute;
+    top: -14px;
+    left: -14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255 255 255 / 0.8);
+    background: rgba(255 255 255 / 0.12);
+    pointer-events: none;
+    z-index: 4;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    will-change: transform;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .hero-video-prefix,
+    .hero-video-suffix,
+    .hero-video-intro-phrase,
+    .hero-video-item-btn,
+    .hero-video-cursor {
+        will-change: auto;
+        transition: none !important;
+    }
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────── */
+/* Figma's mobile selector frame binds heading/h3 (not h2) — smaller than the fluid h2 scale used
+   at tablet/desktop, so it's overridden explicitly here rather than left to fall through. */
+@media (width < 768px) {
+    .hero-video-intro-phrase {
+        font-size: var(--typography-fontsize-heading-h3);
+        line-height: var(--typography-line-height-heading-h3);
+        white-space: normal;
+        text-align: center;
+        width: 80%;
+    }
+
+    .hero-video-selector {
+        padding: 0 1.5rem;
+    }
+
+    .hero-video-prefix,
+    .hero-video-suffix {
+        font-size: var(--typography-fontsize-heading-h3);
+        line-height: var(--typography-line-height-heading-h3);
+        justify-self: center;
+    }
+
+    .hero-video-item-btn {
+        font-size: var(--typography-fontsize-heading-h3);
+        line-height: var(--typography-line-height-heading-h3);
+        padding: 0.4rem 0;
+    }
+
+    .hero-video-controls {
+        padding: 0 1.5rem;
+        bottom: calc(1.75rem + env(safe-area-inset-bottom));
+        left: 0;
+        justify-content: flex-start;
+    }
+}
+
+/* Touch devices — larger tap targets */
+@media (hover: none) {
+    .hero-video-item-btn {
+        min-height: 48px;
+    }
+}
+
+/* ── Mode toggle (merged from the former mode-toggle block) ───────────── */
+
+/* Overlay pinned to hero-video's bottom-center. .hero-video is `position: relative`.
+   Bottom offset matches Figma's option-toggle block padding (card/padding/bottom token: 20
+   mobile, 28 tablet/desktop) — tokens.css already redefines it per breakpoint, no media query
+   override needed here. */
+.hero-video-toggle {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--dimension-layout-card-padding-bottom) + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 3;
+}
+
+.mode-toggle-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-spacing-general-l);
+    color: #fff;
+}
+
+.mode-toggle-btn {
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration: none;
+    color: inherit;
+    opacity: 0.45;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem 0;
+    display: inline-block;
+}
+
+.mode-toggle-btn--active {
+    opacity: 1;
+}
+
+.mode-toggle-btn:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+.mode-toggle-track {
+    border: 1px solid var(--color-stroke-action-inverse-default);
+    border-radius: var(--component-toogle-corner);
+    width: var(--component-toogle-width);
+    height: var(--component-toogle-height);
+    background: var(--color-surface-component-toggle-inverse-fill-default);
+    position: relative;
+    cursor: pointer;
+}
+
+.mode-toggle-track:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 3px;
+}
+
+.mode-toggle-indicator {
+    background: var(--color-surface-component-toggle-inverse-selector-dot);
+    border-radius: var(--component-toogle-corner);
+    width: var(--component-toogle-selector-dot);
+    height: var(--component-toogle-selector-dot);
+    position: absolute;
+    top: var(--component-toogle-padding);
+    left: var(--component-toogle-padding);
+    will-change: transform;
+    transition: transform 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mode-toggle-indicator {
+        will-change: auto;
+        transition: none;
+    }
+}
+
+/* Soft-navigation fade+zoom: applied to whichever content is swapping. The preserved
+   .hero-video-toggle node never receives this attribute, so it never dips/scales during a swap.
+   Params are CSS custom properties so any block can override them for its own instance (see the
+   hero-video override below, which slows/smooths it into a cinematic scene-change feel). */
+[data-soft-nav] {
+    --soft-nav-duration: 320ms;
+    --soft-nav-easing: ease;
+    --soft-nav-scale-out: 0.98;
+    --soft-nav-scale-in: 1.02;
+    transition:
+        opacity var(--soft-nav-duration) var(--soft-nav-easing),
+        transform var(--soft-nav-duration) var(--soft-nav-easing);
+    transform: scale(1);
+    transform-origin: center;
+}
+
+/* Outgoing content: shrinks slightly while fading out */
+[data-soft-nav].mode-toggle-fade-out {
+    opacity: 0;
+    transform: scale(var(--soft-nav-scale-out));
+}
+
+/* Incoming content: starts slightly enlarged and invisible, then settles to scale(1) */
+[data-soft-nav].mode-toggle-fade-in-start {
+    opacity: 0;
+    transform: scale(var(--soft-nav-scale-in));
+}
+
+/* hero-video's own content (media/overlay/selector/controls, direct children of .hero-video):
+   slower duration matching MediaManager's own video crossfade (620ms), and both outgoing/incoming
+   anchor to the same 1.02 scale (settling to 1.0) for a unified continuous zoom-out feel, like a
+   cinematic scene-change rather than a generic UI transition. */
+.hero-video > [data-soft-nav] {
+    --soft-nav-duration: 620ms;
+    --soft-nav-easing: cubic-bezier(0.22, 1, 0.36, 1);
+    --soft-nav-scale-out: 1.02;
+    --soft-nav-scale-in: 1.02;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-soft-nav] {
+        transition: none;
+    }
+}

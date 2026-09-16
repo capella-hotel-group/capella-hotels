@@ -534,84 +534,6 @@
     ]
   },
   {
-    "id": "hero-banner-with-toggle",
-    "fields": [
-      {
-        "component": "reference",
-        "name": "backgroundImage",
-        "label": "Background Image",
-        "valueType": "string",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "imageAlt",
-        "label": "Background Image Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "toggleLabelLeft",
-        "label": "Toggle Label (Left)",
-        "valueType": "string",
-        "value": "Destinations"
-      },
-      {
-        "component": "text",
-        "name": "toggleLabelRight",
-        "label": "Toggle Label (Right)",
-        "valueType": "string",
-        "value": "Experiences"
-      }
-    ]
-  },
-  {
-    "id": "hero-banner-with-toggle-item",
-    "fields": [
-      {
-        "component": "text",
-        "name": "name",
-        "label": "Location Name",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "description",
-        "label": "Description",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "name": "link",
-        "label": "Link",
-        "valueType": "string"
-      },
-      {
-        "component": "select",
-        "name": "group",
-        "label": "Group",
-        "valueType": "string",
-        "value": "destinations",
-        "options": [
-          {
-            "name": "Destination",
-            "value": "destinations"
-          },
-          {
-            "name": "Experience",
-            "value": "experiences"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "hero-banner",
     "fields": [
       {
@@ -686,6 +608,115 @@
         "name": "content",
         "label": "Content",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "hero-video",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "prefix",
+        "label": "Prefix",
+        "value": "See"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "suffix",
+        "label": "Suffix",
+        "value": "with new eyes"
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "transition",
+        "label": "Transition Style",
+        "value": "crossfade",
+        "options": [
+          {
+            "name": "Crossfade",
+            "value": "crossfade"
+          },
+          {
+            "name": "Slide",
+            "value": "slide"
+          },
+          {
+            "name": "Cut",
+            "value": "cut"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "destinationLabel",
+        "label": "Destination Label",
+        "value": "Destinations"
+      },
+      {
+        "component": "aem-content",
+        "name": "destinationUrl",
+        "label": "Destination Page"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "experienceLabel",
+        "label": "Experience Label",
+        "value": "Experiences"
+      },
+      {
+        "component": "aem-content",
+        "name": "experienceUrl",
+        "label": "Experience Page"
+      }
+    ]
+  },
+  {
+    "id": "hero-video-item",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "label",
+        "label": "Label"
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "video",
+        "label": "Video",
+        "multi": false
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "poster",
+        "label": "Poster Image",
+        "multi": false
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "link",
+        "label": "Link"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "focalDesktop",
+        "label": "Focal Point (Desktop)",
+        "value": "center"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "focalMobile",
+        "label": "Focal Point (Mobile)",
+        "value": "center"
       }
     ]
   },
