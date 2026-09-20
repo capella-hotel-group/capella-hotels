@@ -58,14 +58,6 @@ export class SelectorUI {
       btn.style.opacity = idx === activeIndex ? '1' : '0.5';
       if (item.link) btn.dataset.href = item.link;
 
-      // Arrow affordance — visible only for the active item (see CSS), shown when it has a link.
-      if (item.link) {
-        const arrow = document.createElement('span');
-        arrow.className = 'hero-video-arrow';
-        arrow.setAttribute('aria-hidden', 'true');
-        btn.append(arrow);
-      }
-
       // Keyboard interaction
       btn.addEventListener('keydown', (e) => this.handleKeyDown(e, idx));
       btn.addEventListener('click', () => this.handleClick(idx));

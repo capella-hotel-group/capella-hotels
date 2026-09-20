@@ -152,7 +152,6 @@
 .hero-video-item-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
     width: 100%;
     background: none;
     border: none;
@@ -175,20 +174,6 @@
     outline: 2px solid rgba(255 255 255 / 0.7);
     outline-offset: 4px;
     border-radius: 2px;
-}
-
-/* Arrow affordance — only shown next to the active item (link click target) */
-.hero-video-arrow {
-    width: 0.9em;
-    height: 0.9em;
-    border-top: 2px solid currentcolor;
-    border-right: 2px solid currentcolor;
-    transform: rotate(45deg);
-    display: none;
-}
-
-.hero-video-item[aria-selected='true'] .hero-video-arrow {
-    display: inline-block;
 }
 
 /* ── Bottom controls ─────────────────────────────────────────────────── */
