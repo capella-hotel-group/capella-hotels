@@ -471,6 +471,44 @@
     "id": "filters-grid",
     "fields": [
       {
+        "component": "select",
+        "name": "theme",
+        "label": "Theme",
+        "valueType": "string",
+        "required": true,
+        "options": [
+          {
+            "name": "White",
+            "value": "white"
+          },
+          {
+            "name": "Terracotta",
+            "value": "terracotta"
+          },
+          {
+            "name": "Brown",
+            "value": "brown"
+          },
+          {
+            "name": "Sage Green",
+            "value": "sage-green"
+          },
+          {
+            "name": "Soft Blush",
+            "value": "soft-blush"
+          },
+          {
+            "name": "Dark Navy",
+            "value": "dark-navy"
+          },
+          {
+            "name": "Light Neutral",
+            "value": "light-neutral"
+          }
+        ],
+        "value": "light-neutral"
+      },
+      {
         "component": "aem-content",
         "name": "cfRootPath",
         "label": "Content Fragment Root Path",
@@ -490,36 +528,196 @@
     "fields": [
       {
         "component": "text",
-        "name": "tabKey",
-        "label": "Tab Key",
+        "name": "parentTagPath",
+        "label": "Parent Tag Path",
         "valueType": "string",
-        "value": ""
+        "description": "AEM tag path for the main filter group, for example /content/cq:tags/capella-hotels/experience"
       },
       {
         "component": "text",
-        "name": "tabLabel",
-        "label": "Tab Label",
+        "name": "defaultTab",
+        "label": "Default Tab Key",
         "valueType": "string",
-        "value": ""
+        "description": "Optional tab key used as the default selection, such as all or a parent tag key."
       }
     ]
   },
   {
-    "id": "filters-grid-filter",
+    "id": "footer",
+    "fields": [
+      {
+        "component": "select",
+        "name": "backgroundTheme",
+        "label": "Background Color Theme",
+        "valueType": "string",
+        "required": true,
+        "value": "light-sand",
+        "options": [
+          {
+            "name": "Light Sand / Beige",
+            "value": "light-sand"
+          },
+          {
+            "name": "Clean White",
+            "value": "clean-white"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "footer-contact",
+    "fields": [
+      {
+        "component": "text",
+        "name": "reservationEmail",
+        "label": "Reservation Email",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "textarea",
+        "name": "phoneNumbers",
+        "label": "Phone Numbers",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "textarea",
+        "name": "physicalAddress",
+        "label": "Physical Address",
+        "valueType": "string",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "footer-social-link",
+    "fields": [
+      {
+        "component": "select",
+        "name": "platform",
+        "label": "Social Platform",
+        "valueType": "string",
+        "required": true,
+        "options": [
+          {
+            "name": "Facebook",
+            "value": "facebook"
+          },
+          {
+            "name": "Instagram",
+            "value": "instagram"
+          },
+          {
+            "name": "Line",
+            "value": "line"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "icon",
+        "label": "Social Media Icon",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "iconAlt",
+        "label": "Icon Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Social Media URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "footer-links",
     "fields": [
       {
         "component": "text",
         "name": "title",
-        "label": "Filter Title",
-        "valueType": "string",
-        "value": ""
-      },
+        "label": "Link Group Title",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "footer-link",
+    "fields": [
       {
         "component": "text",
-        "name": "tags",
-        "label": "Tags (comma separated, used to fetch CFs)",
+        "name": "label",
+        "label": "Link Label",
         "valueType": "string",
-        "value": ""
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "footer-bottom",
+    "fields": [
+      {
+        "component": "text",
+        "name": "copyrightText",
+        "label": "Copyright Text",
+        "valueType": "string",
+        "required": true,
+        "value": "© 2026 Capella Hotel Group. All Rights Reserved."
+      }
+    ]
+  },
+  {
+    "id": "footer-utility-link",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Utility Link Label",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Utility Link URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -913,21 +1111,11 @@
         "value": ""
       },
       {
-        "component": "select",
+        "component": "boolean",
         "name": "ctas_primaryCtaOpenInNewTab",
         "label": "Primary CTA Open in new tab",
         "valueType": "string",
-        "value": "false",
-        "options": [
-          {
-            "name": "No",
-            "value": "false"
-          },
-          {
-            "name": "Yes",
-            "value": "true"
-          }
-        ]
+        "value": false
       },
       {
         "component": "aem-content",
@@ -943,21 +1131,11 @@
         "value": ""
       },
       {
-        "component": "select",
+        "component": "boolean",
         "name": "ctas_secondaryCtaOpenInNewTab",
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
-        "value": "false",
-        "options": [
-          {
-            "name": "No",
-            "value": "false"
-          },
-          {
-            "name": "Yes",
-            "value": "true"
-          }
-        ]
+        "value": false
       }
     ]
   },

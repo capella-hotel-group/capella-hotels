@@ -164,9 +164,30 @@
     ]
   },
   {
-    "id": "filters-grid-tab",
+    "id": "footer",
     "components": [
-      "filters-grid-filter"
+      "footer-contact",
+      "newsletter-form",
+      "footer-links",
+      "footer-bottom"
+    ]
+  },
+  {
+    "id": "footer-contact",
+    "components": [
+      "footer-social-link"
+    ]
+  },
+  {
+    "id": "footer-links",
+    "components": [
+      "footer-link"
+    ]
+  },
+  {
+    "id": "footer-bottom",
+    "components": [
+      "footer-utility-link"
     ]
   },
   {
