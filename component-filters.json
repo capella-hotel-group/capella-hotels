@@ -157,6 +157,33 @@
     ]
   },
   {
+    "id": "footer",
+    "components": [
+      "footer-contact",
+      "newsletter-form",
+      "footer-links",
+      "footer-bottom"
+    ]
+  },
+  {
+    "id": "footer-contact",
+    "components": [
+      "footer-social-link"
+    ]
+  },
+  {
+    "id": "footer-links",
+    "components": [
+      "footer-link"
+    ]
+  },
+  {
+    "id": "footer-bottom",
+    "components": [
+      "footer-utility-link"
+    ]
+  },
+  {
     "id": "offers-carousel",
     "components": [
       "offers-carousel-item"
