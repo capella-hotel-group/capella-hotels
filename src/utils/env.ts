@@ -13,7 +13,7 @@ function matchEnvEntry(): EnvConfigEntry {
 
 export function getPublishBaseUrl(): string {
   if (publishBaseUrlCache) return publishBaseUrlCache;
-  publishBaseUrlCache = matchEnvEntry().publishUrl;
+  publishBaseUrlCache = matchEnvEntry().publishUrl.replace(/\/+$/, '');
   return publishBaseUrlCache;
 }
 
