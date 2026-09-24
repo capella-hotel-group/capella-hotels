@@ -4,28 +4,6 @@ function textFromCell(cell?: Element | null): string {
   return cell?.textContent?.trim() || '';
 }
 
-function getCtaFields(cell?: Element | null) {
-  const elements = [...(cell?.children || [])];
-  const link = cell?.querySelector('a');
-  const label = elements.find(
-    (element) => !element.querySelector('a') && textFromCell(element) !== 'true' && textFromCell(element) !== 'false',
-  );
-  const openInNewTab = elements.some((element) => textFromCell(element).toLowerCase() === 'true');
-  return { label: textFromCell(label), href: link?.getAttribute('href') || '', openInNewTab };
-}
-
-function buildCta(cell?: Element | null): HTMLAnchorElement | null {
-  const { label, href, openInNewTab } = getCtaFields(cell);
-  if (!label || !href) return null;
-
-  const cta = document.createElement('a');
-  cta.className = 'awards-list-cta';
-  cta.href = href;
-  cta.textContent = label;
-  if (openInNewTab) cta.target = '_blank';
-  return cta;
-}
-
 function buildAward(row: Element): HTMLLIElement | null {
   const cells = [...row.children];
   if (!cells.length || cells.every((cell) => !textFromCell(cell) && !cell.querySelector('picture, img'))) return null;
@@ -69,7 +47,6 @@ export default function decorate(block: HTMLElement): void {
   if (blockId) block.id = blockId;
   const title = textFromCell(rows[0]);
   const description = rows[1]?.firstElementChild;
-  const cta = buildCta(rows[2]?.firstElementChild);
 
   const header = document.createElement('div');
   header.className = 'awards-list-header';
@@ -88,18 +65,11 @@ export default function decorate(block: HTMLElement): void {
     header.append(descriptionElement);
   }
 
-  if (cta) {
-    const ctaWrapper = document.createElement('div');
-    ctaWrapper.className = 'awards-list-cta-wrapper';
-    ctaWrapper.append(cta);
-    header.append(ctaWrapper);
-  }
-
   const grid = document.createElement('ul');
   grid.className = 'awards-list-grid';
   rows
-    .slice(3)
-    .filter((row) => row.querySelector(':scope > div'))
+    .slice(2)
+    .filter((row) => row.querySelector('picture, img'))
     .forEach((row) => {
       const award = buildAward(row);
       if (award) grid.append(award);

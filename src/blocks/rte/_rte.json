@@ -25,7 +25,8 @@
           "name": "content",
           "label": "Content",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "filter": "richtext"
         }
       ]
     }

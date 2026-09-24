@@ -152,6 +152,25 @@
             "value": "highlight"
           }
         ]
+      },
+      {
+        "component": "select",
+        "name": "mode",
+        "label": "Mode",
+        "options": [
+          {
+            "name": "All (always visible)",
+            "value": ""
+          },
+          {
+            "name": "Experiences",
+            "value": "experiences"
+          },
+          {
+            "name": "Destinations",
+            "value": "destinations"
+          }
+        ]
       }
     ]
   },
@@ -171,25 +190,6 @@
         "valueType": "string",
         "label": "Section Description",
         "required": true
-      },
-      {
-        "component": "text",
-        "name": "cta",
-        "valueType": "string",
-        "label": "CTA Label"
-      },
-      {
-        "component": "aem-content",
-        "name": "cta_link",
-        "valueType": "string",
-        "label": "CTA Link"
-      },
-      {
-        "component": "boolean",
-        "name": "cta_openInNewTab",
-        "valueType": "boolean",
-        "value": false,
-        "label": "Open CTA in new tab"
       },
       {
         "component": "text",
@@ -243,6 +243,181 @@
         "value": "",
         "label": "Text",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "choose-space",
+    "fields": [
+      {
+        "component": "text",
+        "name": "anchorId",
+        "label": "User-defined ID",
+        "description": "Optional anchor target for in-page links",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Section Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "exploreCta",
+        "label": "Explore All Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "exploreCta_link",
+        "label": "Explore All URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "exploreCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "space-option",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Tab Label",
+        "description": "Caption shown on the thumbnail, e.g. Manors",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "thumbnail",
+        "label": "Tab Thumbnail",
+        "description": "Still image. Doubles as the poster when the hero media is a video.",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "thumbnailAlt",
+        "label": "Tab Thumbnail Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "media",
+        "label": "Hero Media Type",
+        "valueType": "string",
+        "multi": false,
+        "required": true,
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "mediaAsset",
+        "label": "Hero Media",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "mediaAssetAlt",
+        "label": "Hero Media Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "mediaAssetMobile",
+        "label": "Hero Media (Mobile)",
+        "description": "Optional. Falls back to the hero media when empty.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "primaryCta",
+        "label": "Primary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "primaryCta_link",
+        "label": "Primary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "primaryCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "secondaryCta",
+        "label": "Secondary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "secondaryCta_link",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "secondaryCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -468,6 +643,120 @@
     ]
   },
   {
+    "id": "experience-tiles-item",
+    "fields": [
+      {
+        "component": "text",
+        "name": "visualEyebrow",
+        "label": "Location Eyebrow",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "headline",
+        "label": "Experience Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "visualImage",
+        "label": "Tile Image",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "visualImageAlt",
+        "label": "Tile Image Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detailTitle",
+        "label": "Guide / Activity Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Experience Description",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "detailsImage",
+        "label": "Details Tile Image",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "detailsImageAlt",
+        "label": "Details Image Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "enquireLabel",
+        "label": "Enquire CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "ENQUIRE"
+      },
+      {
+        "component": "aem-content",
+        "name": "enquireModalPath",
+        "label": "Enquire Modal Fragment Path",
+        "description": "Path to the fragment holding the enquiry form modal content.",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "enquireOpenInNewTab",
+        "label": "Enquire Opens in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "detailsLabel",
+        "label": "Details CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "DETAILS"
+      },
+      {
+        "component": "aem-content",
+        "name": "detailsUrl",
+        "label": "Details Destination URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "detailsOpenInNewTab",
+        "label": "Details Opens in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "filters-grid",
     "fields": [
       {
@@ -520,6 +809,154 @@
         "label": "Tags (comma separated, used to fetch CFs)",
         "valueType": "string",
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "footer",
+    "fields": [
+      {
+        "component": "select",
+        "name": "backgroundTheme",
+        "label": "Background Color Theme",
+        "valueType": "string",
+        "required": true,
+        "value": "light-sand",
+        "options": [
+          {
+            "name": "Light Sand / Beige",
+            "value": "light-sand"
+          },
+          {
+            "name": "Clean White",
+            "value": "clean-white"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "footer-contact",
+    "fields": [
+      {
+        "component": "richtext",
+        "name": "contactContent",
+        "label": "Contact Information",
+        "valueType": "string",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "footer-social-link",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "icon",
+        "label": "Social Media Icon",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Social Media URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "footer-links",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Link Group Title",
+        "valueType": "string"
+      },
+      {
+        "component": "number",
+        "name": "itemsPerColumn",
+        "label": "Items Before Second Column",
+        "description": "Number of brand navigation links to show in the first column before continuing in the second column.",
+        "valueType": "number",
+        "value": 5,
+        "numberMin": 1,
+        "numberMax": 8
+      }
+    ]
+  },
+  {
+    "id": "footer-link",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Link Label",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "footer-bottom",
+    "fields": [
+      {
+        "component": "text",
+        "name": "copyrightText",
+        "label": "Copyright Text",
+        "valueType": "string",
+        "required": true,
+        "value": "© 2026 Capella Hotel Group. All Rights Reserved."
+      }
+    ]
+  },
+  {
+    "id": "footer-utility-link",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Utility Link Label",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Utility Link URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -608,6 +1045,198 @@
         "name": "content",
         "label": "Content",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "hero-destination",
+    "fields": [
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "autoplay",
+        "label": "Autoplay",
+        "value": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "autoplayInterval",
+        "label": "Autoplay Interval (seconds)",
+        "value": "3",
+        "condition": {
+          "===": [
+            {
+              "var": "autoplay"
+            },
+            true
+          ]
+        }
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "loop",
+        "label": "Loop back to first slide",
+        "value": true,
+        "condition": {
+          "===": [
+            {
+              "var": "autoplay"
+            },
+            true
+          ]
+        }
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "transitionEffect",
+        "label": "Transition Effect",
+        "value": "fade",
+        "options": [
+          {
+            "name": "Fade",
+            "value": "fade"
+          },
+          {
+            "name": "Slide",
+            "value": "slide"
+          },
+          {
+            "name": "Cube",
+            "value": "cube"
+          },
+          {
+            "name": "Coverflow",
+            "value": "coverflow"
+          },
+          {
+            "name": "Flip",
+            "value": "flip"
+          },
+          {
+            "name": "Creative",
+            "value": "creative"
+          },
+          {
+            "name": "Cards",
+            "value": "cards"
+          }
+        ]
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "simulateTouch",
+        "label": "Allow drag/swipe with mouse (simulate touch)",
+        "value": true
+      }
+    ]
+  },
+  {
+    "id": "hero-destination-item",
+    "fields": [
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "mediaType",
+        "label": "Media Type",
+        "value": "image",
+        "required": true,
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "image",
+        "label": "Image (Desktop)",
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "image"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "imageMobile",
+        "label": "Image (Mobile)",
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "image"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "value": "",
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "image"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "video",
+        "label": "Video (Desktop)",
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "video"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "videoMobile",
+        "label": "Video (Mobile)",
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "video"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "heading",
+        "label": "Heading",
+        "value": "",
+        "required": true
       }
     ]
   },
@@ -859,6 +1488,23 @@
         "label": "Open Button Label",
         "valueType": "string",
         "value": "Subscribe"
+      },
+      {
+        "component": "select",
+        "name": "layout",
+        "label": "Layout",
+        "valueType": "string",
+        "value": "Modal",
+        "options": [
+          {
+            "name": "Modal",
+            "value": "Modal"
+          },
+          {
+            "name": "Inline",
+            "value": "Inline"
+          }
+        ]
       }
     ]
   },
@@ -881,7 +1527,7 @@
         "value": ""
       },
       {
-        "component": "text",
+        "component": "richtext",
         "name": "title",
         "label": "Primary Main Title",
         "valueType": "string",
@@ -897,6 +1543,7 @@
         "component": "reference",
         "name": "media_cardImage",
         "label": "Card Image",
+        "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
         "valueType": "string",
         "multi": false,
         "required": true
@@ -944,21 +1591,11 @@
         "value": ""
       },
       {
-        "component": "select",
+        "component": "boolean",
         "name": "ctas_primaryCtaOpenInNewTab",
         "label": "Primary CTA Open in new tab",
         "valueType": "string",
-        "value": "false",
-        "options": [
-          {
-            "name": "No",
-            "value": "false"
-          },
-          {
-            "name": "Yes",
-            "value": "true"
-          }
-        ]
+        "value": false
       },
       {
         "component": "aem-content",
@@ -974,21 +1611,11 @@
         "value": ""
       },
       {
-        "component": "select",
+        "component": "boolean",
         "name": "ctas_secondaryCtaOpenInNewTab",
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
-        "value": "false",
-        "options": [
-          {
-            "name": "No",
-            "value": "false"
-          },
-          {
-            "name": "Yes",
-            "value": "true"
-          }
-        ]
+        "value": false
       }
     ]
   },
@@ -1000,7 +1627,8 @@
         "name": "content",
         "label": "Content",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "filter": "richtext"
       }
     ]
   },
@@ -1144,7 +1772,7 @@
       {
         "component": "select",
         "name": "classes",
-        "label": "Variation",
+        "label": "Image Position",
         "valueType": "string",
         "multi": false,
         "options": [
@@ -1156,7 +1784,8 @@
             "name": "Image on Left",
             "value": "image-left"
           }
-        ]
+        ],
+        "value": "image-right"
       },
       {
         "component": "text",
@@ -1179,32 +1808,6 @@
         "required": true
       },
       {
-        "component": "reference",
-        "name": "image",
-        "label": "Desktop Asset",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "imageAlt",
-        "label": "Desktop Asset Alt Text",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "reference",
-        "name": "imageMobile",
-        "label": "Tablet / Mobile Asset",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "imageMobileAlt",
-        "label": "Tablet / Mobile Asset Alt Text",
-        "valueType": "string"
-      },
-      {
         "component": "text",
         "name": "cta",
         "label": "CTA Text",
@@ -1222,6 +1825,168 @@
         "label": "CTA Open in new tab",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "select",
+        "name": "variation",
+        "label": "Variation",
+        "valueType": "string",
+        "multi": false,
+        "options": [
+          {
+            "name": "Little Stars",
+            "value": "little-stars"
+          },
+          {
+            "name": "Gift Card",
+            "value": "gift-card"
+          }
+        ],
+        "value": "little-stars"
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Desktop/Tablet Asset",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "little-stars"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Desktop/Tablet Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "little-stars"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "name": "imageMobile",
+        "label": "Mobile Asset",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "little-stars"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "imageMobileAlt",
+        "label": "Mobile Asset Alt Text",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "little-stars"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "name": "image1",
+        "label": "Gift Card Image 1",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "gift-card"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "image1Alt",
+        "label": "Gift Card Image 1 Alt Text",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "gift-card"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "name": "image2",
+        "label": "Gift Card Image 2",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "gift-card"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "image2Alt",
+        "label": "Gift Card Image 2 Alt Text",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "gift-card"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "name": "image3",
+        "label": "Gift Card Image 3",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "gift-card"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "image3Alt",
+        "label": "Gift Card Image 3 Alt Text",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "variation"
+            },
+            "gift-card"
+          ]
+        }
       },
       {
         "component": "text",

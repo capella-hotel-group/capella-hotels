@@ -13,6 +13,14 @@
     padding: 0;
 }
 
+.text-with-image.little-stars {
+    grid-template-columns: 40% 60%;
+}
+
+.text-with-image.gift-card {
+    grid-template-columns: 48% 52%;
+}
+
 /* Text column */
 .text-with-image .text-col {
     display: flex;
@@ -34,7 +42,7 @@
     padding-inline-start: var(--dimension-spacing-general-2xl);
     text-indent: calc(var(--dimension-spacing-general-2xl) * -1);
     font-size: var(--typography-fontsize-heading-h1);
-    line-height: var(--typography-line-height-heading-h1); /* 100% */
+    line-height: var(--typography-line-height-heading-h1);
 }
 
 .text-with-image .text-col .eyebrow {
@@ -55,7 +63,6 @@
     flex-direction: column;
     gap: var(--dimension-spacing-general-m);
     padding-inline-start: var(--dimension-spacing-general-2xl);
-    /* not tokenized: this card's heading-to-content gap (48px) diverges from tokens.css's desktop value (56px) */
     margin-top: var(--dimension-spacing-heading-to-content);
 }
 
@@ -92,7 +99,6 @@
     align-self: flex-start;
     margin-top: var(--dimension-spacing-vertical-module-to-text);
     font-size: var(--typography-fontsize-body-m);
-    /* line-height overridden: tokens.css's body/md scale (22px desktop) diverges from this card's CTA (18px) */
     line-height: 18px;
     font-family: var(--type-font-family-cta);
     font-weight: var(--type-font-weight-text-link);
@@ -101,8 +107,8 @@
     text-decoration-line: underline;
     text-decoration-style: solid;
     text-decoration-skip-ink: auto;
-    text-decoration-thickness: 7%; /* 1.26px */
-    text-underline-offset: 20.5%; /* 3.69px */
+    text-decoration-thickness: 7%;
+    text-underline-offset: 20.5%;
     text-underline-position: from-font;
     color: var(--color-text-action-default);
     padding-inline-start: var(--dimension-spacing-general-2xl);
@@ -117,48 +123,98 @@
     overflow: hidden;
 }
 
-.text-with-image.image-left .image-col {
+.text-with-image.image-left .image-col,
+.text-with-image.little-stars.image-left .image-col,
+.text-with-image.gift-card.image-left .image-col {
     order: -1;
 }
 
-.text-with-image.image-left {
+.text-with-image.image-left,
+.text-with-image.little-stars.image-left {
     grid-template-columns: 60% 40%;
 }
 
-.text-with-image .image-col img {
+.text-with-image.gift-card .image-col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.text-with-image .image-col img,
+.text-with-image .gift-card-layer img {
     display: block;
     width: 100%;
     height: auto;
 }
 
+.text-with-image .gift-card-stack {
+    position: relative;
+    width: min(100%, 460px);
+    aspect-ratio: 4 / 5;
+    margin: 0 auto;
+}
+
+.text-with-image .gift-card-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: 1.75rem;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 18px 40px rgba(28, 28, 28, 0.12);
+    transform: translate(var(--gift-card-offset, 0px), calc(var(--gift-card-offset, 0px) * 0.3))
+        rotate(var(--gift-card-rotation, 0deg));
+    background: #f5f1ea;
+}
+
+.text-with-image .gift-card-layer:nth-child(1) {
+    --gift-card-offset: 0px;
+    --gift-card-rotation: -11deg;
+    z-index: 1;
+}
+
+.text-with-image .gift-card-layer:nth-child(2) {
+    --gift-card-offset: 36px;
+    --gift-card-rotation: 8deg;
+    z-index: 2;
+}
+
+.text-with-image .gift-card-layer:nth-child(3) {
+    --gift-card-offset: 72px;
+    --gift-card-rotation: -4deg;
+    z-index: 3;
+}
+
+.text-with-image .gift-card-layer picture,
+.text-with-image .gift-card-layer img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 /* Tablet */
 @media (width <=1024px) {
     .text-with-image,
-    .text-with-image.image-left {
+    .text-with-image.little-stars,
+    .text-with-image.image-left,
+    .text-with-image.little-stars.image-left,
+    .text-with-image.gift-card {
         grid-template-columns: 50% 50%;
     }
 
     .text-with-image .text-col {
         padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
     }
-
-    .text-with-image .image-col.has-mobile-image {
-        aspect-ratio: 4 / 5;
-    }
-
-    .text-with-image .image-col.has-mobile-image img {
-        height: 100%;
-        object-fit: cover;
-    }
 }
 
 /* Mobile */
 @media (width <=767px) {
-    .text-with-image {
-        grid-template-columns: 1fr;
-    }
-
-    .text-with-image.image-left {
+    .text-with-image,
+    .text-with-image.little-stars,
+    .text-with-image.image-left,
+    .text-with-image.little-stars.image-left,
+    .text-with-image.gift-card {
         grid-template-columns: 1fr;
     }
 
@@ -176,7 +232,9 @@
         object-fit: cover;
     }
 
-    .text-with-image.image-left .image-col {
+    .text-with-image.image-left .image-col,
+    .text-with-image.little-stars.image-left .image-col,
+    .text-with-image.gift-card.image-left .image-col {
         order: 0;
     }
 }

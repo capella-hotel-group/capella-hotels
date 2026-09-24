@@ -2,7 +2,7 @@
 import type { HeroVideoItem } from './types';
 
 const CROSSFADE_MS = 620;
-const FIRST_FRAME_TIMEOUT_MS = 500;
+const FIRST_FRAME_TIMEOUT_MS = 900;
 const LOAD_TIMEOUT_MS = 8000;
 const ERROR_RETRY_GRACE_MS = 400;
 
@@ -50,7 +50,21 @@ function waitForMediaReady(video: HTMLVideoElement): Promise<void> {
 
 function waitForFirstFrame(video: HTMLVideoElement): Promise<void> {
   if (typeof video.requestVideoFrameCallback !== 'function') {
-    return Promise.resolve();
+    // No frame-accurate signal (e.g. Firefox) — `paused` flips false the instant play() is
+    // called, before anything is decoded, so `playing` is the closest real signal that pixels
+    // are actually being rendered rather than just requested.
+    return new Promise<void>((resolve) => {
+      let settled = false;
+      const timer = window.setTimeout(() => finish(), FIRST_FRAME_TIMEOUT_MS);
+      function finish(): void {
+        if (settled) return;
+        settled = true;
+        video.removeEventListener('playing', finish);
+        clearTimeout(timer);
+        resolve();
+      }
+      video.addEventListener('playing', finish, { once: true });
+    });
   }
 
   return new Promise<void>((resolve) => {
@@ -213,6 +227,9 @@ export class MediaManager {
     this.posterEl.style.backgroundPosition = this.getFocalPosition(item);
 
     // Load video into incoming layer
+    // Native poster keeps the layer opaque with the right image while buffering — without it,
+    // an undecoded <video> renders transparent and leaks the (already-swapped) posterEl behind it.
+    incoming.poster = item.posterUrl;
     incoming.src = item.videoUrl;
     incoming.muted = this.muted;
     incoming.style.objectPosition = this.getFocalPosition(item);

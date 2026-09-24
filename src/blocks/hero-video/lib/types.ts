@@ -4,8 +4,11 @@ export type TransitionStyle = 'crossfade' | 'slide' | 'cut';
 
 // Distance the mode-toggle indicator (a fixed-size dot) slides to reach the "experience" side —
 // track width minus the dot and its two paddings, all read from CSS so it stays in sync per breakpoint.
+// The trailing "- 2px" accounts for the track's two 1px borders: --component-toogle-width is the
+// border-box width (box-sizing: border-box), but the indicator's `left`/translate offsets are
+// relative to the padding-box, so the border must be subtracted to land symmetrically on the right.
 export const TOGGLE_INDICATOR_SHIFT =
-  'translateX(calc(var(--component-toogle-width) - var(--component-toogle-selector-dot) - 2 * var(--component-toogle-padding)))';
+  'translateX(calc(var(--component-toogle-width) - var(--component-toogle-selector-dot) - 2 * var(--component-toogle-padding) - 2px))';
 
 export interface HeroVideoConfig {
   prefix: string;

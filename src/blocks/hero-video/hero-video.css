@@ -100,10 +100,9 @@
 
 .hero-video-prefix {
     position: absolute;
-    left: 50%;
+    right: 0;
     bottom: 100%;
     margin-bottom: 0.5rem;
-    transform: translate(-50%, 0);
 }
 
 .hero-video-prefix,
@@ -147,6 +146,7 @@
 
 .hero-video-item {
     display: block;
+    text-align: right;
 }
 
 .hero-video-item-btn {
@@ -163,11 +163,11 @@
     color: #fff;
     opacity: 0.5;
     cursor: pointer;
-    text-align: center;
+    text-align: right;
     white-space: nowrap;
     will-change: opacity;
     transition: none;
-    justify-content: center;
+    justify-content: flex-end;
 }
 
 .hero-video-item-btn:focus-visible {

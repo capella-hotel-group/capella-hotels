@@ -47,6 +47,13 @@ const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
 // Known site segments — update when a new site is added.
 export const SUPPORTED_SITES = ['global', 'bangkok', 'sanya', 'test-pages'];
 
+// Site segment used by header/footer fragment path resolution when the URL has no
+// recognized site segment (e.g. `/en/page`, or any path while multi-site/multi-language
+// is not yet set up) — see docs/header-footer-fragment-path-resolution.md. Empty string
+// means "no default": resolves to the root fragment (`/nav`, `/footer`). Set back to
+// 'global' to restore the previous default-to-global behavior once multi-language is set up.
+export const DEFAULT_SITE_SEGMENT = '';
+
 // Maps URL path slugs to valid BCP 47 language tags.
 // Only needed for slugs that differ from the BCP 47 primary (e.g. "jp" → "ja").
 export const LANG_MAP: Record<string, string> = {

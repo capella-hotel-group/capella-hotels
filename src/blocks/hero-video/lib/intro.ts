@@ -92,7 +92,7 @@ export async function runIntro(
   // LAST: reveal the reals at their natural split positions and measure. Kept synchronous with the
   // invert below (only getBoundingClientRect between) so this natural state is never painted.
   prefix.style.opacity = '1';
-  prefix.style.transform = 'translate(-50%, 0)';
+  prefix.style.transform = 'translate(0, 0)';
   suffix.style.opacity = '1';
   suffix.style.transform = 'translateY(0)';
   const lastPrefix = prefix.getBoundingClientRect();
@@ -104,7 +104,7 @@ export async function runIntro(
   const dyPrefix = firstPrefix.top + firstPrefix.height / 2 - (lastPrefix.top + lastPrefix.height / 2);
   const dxSuffix = firstSuffix.left - lastSuffix.left;
   const dySuffix = firstSuffix.top + firstSuffix.height / 2 - (lastSuffix.top + lastSuffix.height / 2);
-  const prefixStart = `translate(calc(-50% + ${dxPrefix}px), ${dyPrefix}px)`;
+  const prefixStart = `translate(${dxPrefix}px, ${dyPrefix}px)`;
   const suffixStart = `translate(${dxSuffix}px, ${dySuffix}px)`;
   prefix.style.transform = prefixStart;
   suffix.style.transform = suffixStart;
@@ -119,10 +119,13 @@ export async function runIntro(
     easing: EASE_ENTRANCE,
     fill: 'forwards',
   });
+  // X is frozen at dxPrefix for the whole rise (never animated back toward the right-anchored
+  // rest position) so "See" glides straight up instead of sliding sideways — it's fully faded
+  // out by the time it would reach that rest spot anyway, so nothing needs to land there.
   const prefixLeave = prefix.animate(
     [
       { transform: prefixStart, opacity: 1 },
-      { transform: `translate(-50%, -${PREFIX_EXIT_PX}px)`, opacity: 0 },
+      { transform: `translate(${dxPrefix}px, ${dyPrefix - PREFIX_EXIT_PX}px)`, opacity: 0 },
     ],
     { duration: T_SPLIT_MOTION, easing: EASE_THROUGH, fill: 'forwards' },
   );
