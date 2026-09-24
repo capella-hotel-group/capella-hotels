@@ -8,6 +8,7 @@ Mandatory coding style rules for this repository. Read this file before writing 
 - Use ES6+ features (arrow functions, destructuring, etc.)
 - ESLint flat config (`eslint.config.js`) + Prettier (`prettier.config.js`) — no Airbnb config
 - Use the `@/*` path alias (maps to `src/*`) for cross-module imports; omit `.ts` extensions
+- Resolve every DAM asset URL you put into a `src`/`href` through `resolveDAMUrl()` (`src/utils/env.ts`) — authored references arrive as AEM paths and only the publish origin in `src/configs/env.ts` serves them; the EDS origin returns 404. Applies to video `<source>`s in particular, since images come through the pipeline already optimized
 - Use Unix line endings (LF)
 
 ## CSS
@@ -27,6 +28,23 @@ Mandatory coding style rules for this repository. Read this file before writing 
 - Use semantic HTML5 elements
 - Ensure accessibility standards (ARIA labels, proper heading hierarchy)
 - Follow AEM markup conventions for blocks and sections
+
+## Universal Editor
+
+Two rules govern every `decorate()`:
+
+1. **Decoration must not change the content tree.** What the author sees in the UE content tree and in `component-definition.json` is the contract; the DOM work is presentation only.
+2. **The editor must render the real UI.** The same scripts and styles apply in UE as on the live site — no stripped-down "editor mode" markup.
+
+Concretely:
+
+- Never drop an authored row. A row carrying `data-aue-model="<item-model>"` is a real item even when every field is still empty — render it (with a placeholder label if needed) so a freshly added item is visible and selectable. Silently returning `null` makes "Add item" look broken.
+- Identify item rows by `data-aue-model` first, falling back to cell shape or index for published content. Never rely on row position alone.
+- Preserve instrumentation. Move authored elements into new wrappers instead of copying their text out — an element carrying `data-aue-prop` must survive, or the field loses inline editing. Use `moveInstrumentation()` when transferring `data-aue-*` to an element you build, and strip it from clones so UE does not count an item twice.
+- Decorate in place. `block.replaceChildren()` / rebuilding the DOM from parsed strings breaks inline editing; add classes to the authored elements and only re-parent them.
+- Keep every item reachable. If the design hides inactive items (carousel, tabs, accordion), they are unreachable on the UE canvas — reveal them under `.adobe-ue-edit` in CSS rather than shipping different markup, and handle `aue:ui-select` so selecting an item in the rail shows it.
+- Enforce item limits in `decorate()`, not in the model — xwalk has no min/max item count.
+- UE loads code from the `*.aem.page` origin, not localhost: push the branch before testing a fix in the editor.
 
 ## Test Automation
 

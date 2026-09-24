@@ -1,201 +1,59 @@
 # Header Nav — Authoring Guide
 
-> **Audience:** Content authors  
-> **Block:** `header`  
-> **Source document:** `/nav`
+> **Audience:** Content authors
+> **Source document:** `/nav` (per site/language, e.g. `/global/en/nav`)
 
----
+## 1. Overview
 
-## 1. Document Structure
+Site header content (logo, language switcher, Book CTA, and the mega-menu) is authored
+on the shared `/nav` page for each site/language, using standard page components —
+there is no dedicated "Nav" component. The page must have exactly two sections, in order.
 
-The `/nav` document must have exactly **3 sections** in order:
+## 2. Section 1 — Header bar
 
-| Section | Content |
-|---|---|
-| 1 | Navigation list |
-| 2 | CTA link |
-| 3 | Logo image |
+Add, in any order:
 
----
+- **Image** — the logo. Set the alt text on the image itself. Optionally add a
+  **second Image** immediately after it — the dark/active variant shown while the
+  menu panel is open. If omitted, the default logo is reused in both states.
+- **Text** — the language switcher. Add one bullet list with a single top-level item
+  (its text is not shown), and a nested bullet list underneath it with one linked item
+  per language, e.g.:
+  - English
+    - [English](/global/en)
+    - [简体中文](/global/zh-cn)
+    - [日本語](/global/jp)
+- **Button** — the "Book Your Stay" CTA (label + link).
 
-## 2. Correct Navigation Structure
+## 3. Section 2 — Menu
 
-```html
-<div>
-  <ul>
+Add one **Text** component per top-level menu category, each followed immediately by one
+**Hero** block for that category's promo image (skip the Hero if a category has no promo).
 
-    <!-- SECTION 1: Languages — always first -->
-    <li>
-      <p>Languages</p>
-      <ul>
-        <li><a href="/global/en">English</a></li>
-        <li><a href="/global/zh-cn">简体中文</a></li>
-        <li><a href="/global/jp">日本語</a></li>
-      </ul>
-    </li>
+Each category's Text component is a single bullet list with one top-level item (the
+category label) containing a nested list:
 
-    <!-- Nav item with sub-categories -->
-    <li>
-      <p>Destinations</p>
-      <ul>
-        <li>
-          <p>Capella Hotels and Resorts</p>
-          <ul>
-            <li><a href="/global/en">Bangkok</a></li>
-            <li>Kyoto</li>
-          </ul>
-        </li>
-        <li>
-          <p>Capella Residencies</p>
-          <ul>
-            <li>Singapore</li>
-          </ul>
-        </li>
-        <li>
-          <p>Patina Hotels and Resorts</p>
-          <ul>
-            <li>Maldives</li>
-          </ul>
-        </li>
-      </ul>
-    </li>
+- Give a nested item its own nested sub-list to make it a **labeled group** (e.g. "Asia
+  Pacific" with destinations underneath).
+- Give a nested item **no** sub-list to make it a **plain link** directly under the
+  category (no group heading) — link it or leave it as plain text.
+- A category with **no nested list at all** — just a linked category label — becomes a
+  plain top-level link with no expandable menu.
+- An item can be plain text with no link — it renders as a non-clickable, dimmed entry
+  (useful for "coming soon" destinations).
 
-    <!-- Plain nav item (no sub-categories) -->
-    <li>
-      <p><a href="/global/en/experiences">Experiences</a></p>
-    </li>
+## 4. Rules
 
-  </ul>
-</div>
-```
-
-```html
-<!-- SECTION 2: CTA -->
-<div>
-  <p><a href="/book">Book Your Stay</a></p>
-</div>
-```
-
-```html
-<!-- SECTION 3: Logo -->
-<div>
-  <p>
-    <picture>
-      <img src="./logo.svg" alt="" width="48" height="79">
-    </picture>
-  </p>
-</div>
-```
-
----
-
-## 3. Rules
-
-### Rule 1 — Languages is always first, must have a nested list
-
-✅ Correct
-```html
-<li>
-  <p>Languages</p>
-  <ul>
-    <li><a href="/global/en">English</a></li>
-  </ul>
-</li>
-```
-
-❌ Wrong — Languages missing or has no nested list → **header is hidden**
-```html
-<li>
-  <p>Languages</p>
-  <!-- no nested list -->
-</li>
-```
-
----
-
-### Rule 2 — Destinations: one nested list, sub-categories as list items
-
-✅ Correct — one `<ul>`, sub-categories inside as `<li>`
-```html
-<li>
-  <p>Destinations</p>
-  <ul>
-    <li><p>Capella Hotels</p>...</li>
-    <li><p>Capella Residencies</p>...</li>
-    <li><p>Patina Hotels</p>...</li>
-  </ul>
-</li>
-```
-
-⚠️ Wrong — multiple separate `<ul>` siblings → parser merges them and logs a warning
-```html
-<li>
-  <p>Destinations</p>
-  <ul><li><p>Capella Hotels</p>...</li></ul>
-  <ul><li><p>Capella Residencies</p>...</li></ul>
-  <ul><li><p>Patina Hotels</p>...</li></ul>
-</li>
-```
-
----
-
-### Rule 3 — Plain nav items stay inside the main list, use `<p>` wrapper
-
-✅ Correct
-```html
-<ul>
-  <li><p>Languages</p>...</li>
-  <li><p><a href="/experiences">Experiences</a></p></li>
-</ul>
-```
-
-⚠️ Wrong — item in a separate `<ul>` outside main list → parser recovers but fix authoring
-```html
-<ul><li>Languages...</li></ul>
-<ul><li><a href="/experiences">Experiences</a></li></ul>
-```
-
-❌ Wrong — no `<p>` wrapper and no `<a>` → label is lost
-```html
-<li>Experiences</li>
-```
-
----
-
-### Rule 4 — Keep link text clean
-
-✅ Correct
-```html
-<li><p><a href="/experiences">Experiences</a></p></li>
-```
-
-❌ Wrong — extra text becomes part of the nav label
-```html
-<li><p><a href="/experiences">Experiences</a>(Experience)</p></li>
-```
-
----
-
-## 4. Common Mistakes
-
-| Mistake | Effect | Fix |
-|---|---|---|
-| Languages not first | Header hidden | Move Languages to top |
-| Languages has no nested `<ul>` | Header hidden + console warning | Add nested `<ul>` with language links |
-| Multiple `<ul>` under Destinations | Warning logged, merge applied | Merge into one `<ul>` |
-| Plain nav item in separate `<ul>` | Warning logged, partial recovery | Move into main `<ul>` |
-| Nav item has no `<p>` and no `<a>` | Label lost | Wrap with `<p>` |
-| Extra text next to link | Extra text in nav label | Keep link text clean |
-| No nav items after Languages | Header hidden + console warning | Add at least one nav item |
-
----
+- **Order matters within each section.** A Hero block is matched to the Text component
+  immediately before it — don't separate them with anything else.
+- **Exactly two sections, in that order.** The first section is always the header bar,
+  the second is always the menu.
+- **Every category needs at least one link** (either the category itself linked, or at
+  least one linked item underneath it) or it won't render.
 
 ## 5. Pre-publish Checklist
 
-- [ ] Only ONE root `<ul>` in Section 1
-- [ ] Languages is first item with a nested `<ul>`
-- [ ] Destinations has only ONE nested `<ul>` (sub-categories as `<li>` inside it)
-- [ ] Every nav item label is wrapped in `<p>`
-- [ ] No extra text outside `<a>` tags
-- [ ] Section 2 has a single `<p><a>` CTA link
-- [ ] Section 3 has a single `<picture>` logo
+- [ ] Section 1 has one (or two, if using a dark/active logo variant) Image, one
+      language Text list, and one Button
+- [ ] Section 2 has at least one category Text component with at least one working link
+- [ ] Each Hero block for a promo image comes directly after its category's Text component
