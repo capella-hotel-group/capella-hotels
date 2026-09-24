@@ -1,3 +1,5 @@
+import { moveInstrumentation } from '@/app/scripts.js';
+
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children];
   const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
@@ -7,14 +9,16 @@ export default function decorate(block: HTMLElement): void {
 
   const getRowText = (row?: Element | null) =>
     row?.firstElementChild?.textContent?.trim() || row?.textContent?.trim() || '';
+  const getField = (name: string): Element | null => block.querySelector(`[data-aue-prop="${name}"]`);
+  const getFieldText = (name: string): string => getField(name)?.textContent?.trim() || '';
   const variationText =
+    getFieldText('variation') ||
     rows
       .find((row) => {
         const value = getRowText(row);
         return value === 'little-stars' || value === 'gift-card';
       })
       ?.firstElementChild?.textContent?.trim() ||
-    block.querySelector('[data-aue-prop="variation"]')?.textContent?.trim() ||
     '';
 
   const resolvedLayout =
@@ -27,46 +31,22 @@ export default function decorate(block: HTMLElement): void {
   block.classList.remove('image-left', 'image-right', 'little-stars', 'gift-card');
   block.classList.add(resolvedLayout, resolvedVariant);
 
-  const titleText =
-    rows
-      .find((row) => {
-        const text = getRowText(row);
-        return (
-          Boolean(text) &&
-          text !== 'little-stars' &&
-          text !== 'gift-card' &&
-          !row.querySelector('picture') &&
-          !row.querySelector('a') &&
-          !['details', 'true', 'false'].includes(text.toLowerCase())
-        );
-      })
-      ?.firstElementChild?.textContent?.trim() ||
-    block.querySelector('[data-aue-prop="title"]')?.textContent?.trim() ||
-    '';
-
-  const descriptionText = rows.find((row) => {
-    const text = getRowText(row);
-    return (
-      Boolean(text) &&
-      !row.querySelector('picture') &&
-      !row.querySelector('a') &&
-      text !== titleText &&
-      text !== 'details' &&
-      text !== 'true' &&
-      text !== 'false' &&
-      text !== 'little-stars' &&
-      text !== 'gift-card'
-    );
-  });
-
-  const descriptionEl = descriptionText?.firstElementChild || block.querySelector('[data-aue-prop="description"]');
+  const eyebrowField = getField('eyebrow');
+  const titleField = getField('title');
+  const descriptionField = getField('description');
+  const eyebrowSource = eyebrowField || rows[0]?.firstElementChild || null;
+  const titleSource = titleField || rows[1]?.firstElementChild || null;
+  const titleText = titleSource?.textContent?.trim() || '';
+  const eyebrowText = eyebrowSource?.textContent?.trim() || '';
+  const descriptionEl = descriptionField || rows[2]?.firstElementChild || null;
 
   const pictureRows = rows.filter((row) => row.querySelector('picture'));
-  const pictureEl = pictureRows[0]?.querySelector('picture');
+  const pictureEl = getField('image')?.querySelector('picture') || pictureRows[0]?.querySelector('picture');
   const desktopImg = pictureEl?.querySelector('img');
   const altText = desktopImg?.getAttribute('alt') || '';
-  const mobileAssetRow = pictureRows[1];
-  const mobilePictureEl = mobileAssetRow?.querySelector('picture');
+  const mobileField = getField('imageMobile');
+  const mobileAssetRow = mobileField?.closest('div') || pictureRows[1];
+  const mobilePictureEl = mobileField?.querySelector('picture') || mobileAssetRow?.querySelector('picture');
   const mobileImg = mobilePictureEl?.querySelector('img');
   const mobileSource = mobilePictureEl?.querySelector('source');
   const mobileAsset = mobileAssetRow?.querySelector('img, a[href]');
@@ -79,15 +59,15 @@ export default function decorate(block: HTMLElement): void {
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
   const responsiveAltText = mobileAltText || altText;
 
-  const ctaGroup = rows.find((row) => row.querySelector('a'))?.firstElementChild;
+  const ctaGroup = getField('cta_link')?.closest('div') || rows.find((row) => row.querySelector('a'))?.firstElementChild;
   const ctaLinkEl = ctaGroup?.querySelector('a');
-  const ctaHref = ctaLinkEl?.getAttribute('href') || '';
+  const ctaHref = ctaLinkEl?.getAttribute('href') || getFieldText('cta_link');
   const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
   const ctaText =
-    ctaTextEl?.textContent?.trim() || block.querySelector('[data-aue-prop="cta"]')?.textContent?.trim() || '';
+    ctaTextEl?.textContent?.trim() || getFieldText('cta') || '';
   const openInNewTab = [...(ctaGroup?.children || [])].some(
     (element) => element.textContent?.trim().toLowerCase() === 'true',
-  );
+  ) || getFieldText('cta_openInNewTab').toLowerCase() === 'true';
 
   if (pictureEl) {
     const responsiveImageQuery = window.matchMedia('(max-width: 767px)');
@@ -112,9 +92,18 @@ export default function decorate(block: HTMLElement): void {
   const textCol = document.createElement('div');
   textCol.className = 'text-col';
 
+  if (eyebrowText) {
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'eyebrow';
+    eyebrow.textContent = eyebrowText;
+    if (eyebrowSource) moveInstrumentation(eyebrowSource, eyebrow);
+    textCol.append(eyebrow);
+  }
+
   if (titleText) {
     const h3 = document.createElement('h3');
     h3.textContent = titleText;
+    if (titleSource) moveInstrumentation(titleSource, h3);
     textCol.append(h3);
   }
 
@@ -122,6 +111,7 @@ export default function decorate(block: HTMLElement): void {
   desc.className = 'description';
 
   if (descriptionEl) {
+    moveInstrumentation(descriptionEl, desc);
     desc.append(...descriptionEl.childNodes);
   }
 
@@ -144,7 +134,12 @@ export default function decorate(block: HTMLElement): void {
     const stack = document.createElement('div');
     stack.className = 'gift-card-stack';
 
-    const layerRows = pictureRows.slice(0, 3);
+    const giftCardRows: Element[] = [];
+    ['image1', 'image2', 'image3'].forEach((field) => {
+      const row = getField(field)?.closest('div');
+      if (row?.querySelector('picture')) giftCardRows.push(row);
+    });
+    const layerRows = giftCardRows.length ? giftCardRows : pictureRows.slice(0, 3);
     if (layerRows.length > 0) {
       layerRows.forEach((row, index) => {
         const layer = document.createElement('div');
@@ -160,6 +155,7 @@ export default function decorate(block: HTMLElement): void {
           const cardImg = cardPicture.querySelector('img');
           if (cardImg) cardImg.alt = rowImg?.getAttribute('alt') || altText || '';
           layer.append(cardPicture);
+          moveInstrumentation(rowPicture, cardPicture);
         }
 
         stack.append(layer);
@@ -171,6 +167,8 @@ export default function decorate(block: HTMLElement): void {
     imageCol.append(pictureEl);
   }
 
-  block.innerHTML = '';
-  block.append(textCol, imageCol);
+  const hasImage = imageCol.hasChildNodes();
+  if (!hasImage) block.classList.add('no-image');
+  block.replaceChildren(textCol);
+  if (hasImage) block.append(imageCol);
 }
