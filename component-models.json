@@ -134,6 +134,32 @@
     ]
   },
   {
+    "id": "link-item",
+    "fields": [
+      {
+        "component": "text",
+        "name": "linkText",
+        "label": "Link Label",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Link URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "section",
     "fields": [
       {
@@ -813,6 +839,116 @@
     ]
   },
   {
+    "id": "footer-contact",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Contact Section Title",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "contactContent",
+        "label": "Contact Information",
+        "valueType": "string",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "footer-legal",
+    "fields": [
+      {
+        "component": "text",
+        "name": "copyrightText",
+        "label": "Copyright Text",
+        "valueType": "string",
+        "required": true,
+        "value": "© 2026 Capella Hotel Group. All Rights Reserved."
+      }
+    ]
+  },
+  {
+    "id": "footer-links",
+    "fields": [
+      {
+        "component": "number",
+        "name": "itemsPerColumn",
+        "label": "Items Before Second Column",
+        "description": "Number of brand navigation links to show in the first column before continuing in the second column.",
+        "valueType": "number",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "footer-social-link",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Social Links Title",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "footer-social-item",
+    "fields": [
+      {
+        "component": "select",
+        "name": "platform",
+        "label": "Social Platform",
+        "valueType": "string",
+        "required": true,
+        "options": [
+          {
+            "name": "Facebook",
+            "value": "facebook"
+          },
+          {
+            "name": "Instagram",
+            "value": "instagram"
+          },
+          {
+            "name": "Line",
+            "value": "line"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "icon",
+        "label": "Social Media Icon",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "iconAlt",
+        "label": "Icon Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Social Media URL",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "footer",
     "fields": [
       {
@@ -832,131 +968,6 @@
             "value": "clean-white"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "footer-contact",
-    "fields": [
-      {
-        "component": "richtext",
-        "name": "contactContent",
-        "label": "Contact Information",
-        "valueType": "string",
-        "required": true
-      }
-    ]
-  },
-  {
-    "id": "footer-social-link",
-    "fields": [
-      {
-        "component": "reference",
-        "name": "icon",
-        "label": "Social Media Icon",
-        "valueType": "string",
-        "required": true,
-        "multi": false
-      },
-      {
-        "component": "aem-content",
-        "name": "link",
-        "label": "Social Media URL",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "boolean",
-        "name": "openInNewTab",
-        "label": "Open in new tab",
-        "valueType": "boolean",
-        "value": false
-      }
-    ]
-  },
-  {
-    "id": "footer-links",
-    "fields": [
-      {
-        "component": "text",
-        "name": "title",
-        "label": "Link Group Title",
-        "valueType": "string"
-      },
-      {
-        "component": "number",
-        "name": "itemsPerColumn",
-        "label": "Items Before Second Column",
-        "description": "Number of brand navigation links to show in the first column before continuing in the second column.",
-        "valueType": "number",
-        "value": 5,
-        "numberMin": 1,
-        "numberMax": 8
-      }
-    ]
-  },
-  {
-    "id": "footer-link",
-    "fields": [
-      {
-        "component": "text",
-        "name": "label",
-        "label": "Link Label",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "aem-content",
-        "name": "link",
-        "label": "Link URL",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "boolean",
-        "name": "openInNewTab",
-        "label": "Open in new tab",
-        "valueType": "boolean",
-        "value": false
-      }
-    ]
-  },
-  {
-    "id": "footer-bottom",
-    "fields": [
-      {
-        "component": "text",
-        "name": "copyrightText",
-        "label": "Copyright Text",
-        "valueType": "string",
-        "required": true,
-        "value": "© 2026 Capella Hotel Group. All Rights Reserved."
-      }
-    ]
-  },
-  {
-    "id": "footer-utility-link",
-    "fields": [
-      {
-        "component": "text",
-        "name": "label",
-        "label": "Utility Link Label",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "aem-content",
-        "name": "link",
-        "label": "Utility Link URL",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "boolean",
-        "name": "openInNewTab",
-        "label": "Open in new tab",
-        "valueType": "boolean",
-        "value": false
       }
     ]
   },

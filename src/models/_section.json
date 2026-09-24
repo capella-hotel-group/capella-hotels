@@ -88,7 +88,11 @@
         "hero-destination",
         "rte",
         "choose-space",
-        "footer"
+        "footer",
+        "footer-contact",
+        "footer-social-link",
+        "footer-links",
+        "footer-legal"
       ]
     },
     {
