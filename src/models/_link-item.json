@@ -1,0 +1,30 @@
+{
+  "models": [
+    {
+      "id": "link-item",
+      "fields": [
+        {
+          "component": "text",
+          "name": "linkText",
+          "label": "Link Label",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
+          "label": "Link URL",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
+        }
+      ]
+    }
+  ]
+}

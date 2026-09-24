@@ -619,16 +619,7 @@ function decorateBlock(block: HTMLElement): void {
  * @param {Element} main The container element
  */
 function decorateBlocks(main: Element): void {
-  const blocks = new Set<HTMLElement>(main.querySelectorAll<HTMLElement>('div.section > div > div'));
-  let pending = [...blocks];
-  while (pending.length) {
-    pending.forEach(decorateBlock);
-    const nested = [...main.querySelectorAll<HTMLElement>('div.block > div > div > div[class]')].filter(
-      (block) => !blocks.has(block),
-    );
-    nested.forEach((block) => blocks.add(block));
-    pending = nested;
-  }
+  main.querySelectorAll<HTMLElement>('div.section > div > div').forEach(decorateBlock);
 }
 
 /**

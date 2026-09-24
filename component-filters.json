@@ -34,7 +34,11 @@
       "hero-destination",
       "rte",
       "choose-space",
-      "footer"
+      "footer",
+      "footer-contact",
+      "footer-social-link",
+      "footer-links",
+      "footer-legal"
     ]
   },
   {
@@ -166,13 +170,9 @@
     ]
   },
   {
-    "id": "footer",
+    "id": "footer-legal",
     "components": [
-      "footer-contact",
-      "footer-social-link",
-      "newsletter-form",
-      "footer-links",
-      "footer-bottom"
+      "footer-legal-link"
     ]
   },
   {
@@ -182,9 +182,9 @@
     ]
   },
   {
-    "id": "footer-bottom",
+    "id": "footer-social-link",
     "components": [
-      "footer-utility-link"
+      "footer-social-item"
     ]
   },
   {
