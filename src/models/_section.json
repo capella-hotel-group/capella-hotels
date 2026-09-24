@@ -35,6 +35,25 @@
               "value": "highlight"
             }
           ]
+        },
+        {
+          "component": "select",
+          "name": "mode",
+          "label": "Mode",
+          "options": [
+            {
+              "name": "All (always visible)",
+              "value": ""
+            },
+            {
+              "name": "Experiences",
+              "value": "experiences"
+            },
+            {
+              "name": "Destinations",
+              "value": "destinations"
+            }
+          ]
         }
       ]
     }
@@ -59,43 +78,39 @@
         "newsletter-form",
         "culturist-carousel",
         "destination-cards",
+        "experience-tiles",
         "destination-introduction",
         "interactive-asset",
         "filters-grid",
         "offers-carousel",
         "text-with-cta",
-        "rte"
+        "hero-video",
+        "hero-destination",
+        "rte",
+        "choose-space",
+        "footer"
       ]
     },
     {
-      "id": "richtext",
+      "id": "text",
       "rte": {
         "toolbar": {
-          "format": ["bold", "italic", "underline", "strike", "code_inline", "text_color"],
-          "alignment": ["left", "center", "right", "justify"],
-          "direction": ["rtl", "ltr"],
-          "indentation": ["indent", "outdent"],
-          "blocks": ["paragraph", "h1", "h2", "h3", "h4", "h5", "h6", "code_block", "blockquote"],
+          "format": ["bold", "italic", "underline", "strike"],
+          "blocks": ["paragraph", "h1", "h2", "h3", "h4", "h5", "h6", "code_block"],
           "list": ["bullet_list", "ordered_list"],
-          "insert": ["link", "unlink", "image", "table", "special_characters"],
+          "insert": ["link", "unlink"],
           "sr_script": ["superscript", "subscript"],
-          "editor": ["removeformat", "clean_unsupported_tags", "paste_text", "fullscreen", "find_and_replace"],
+          "editor": ["removeformat", "paste_text"],
           "advanced": ["classes"],
-          "sections": [
-            "format",
-            "alignment",
-            "direction",
-            "indentation",
-            "blocks",
-            "list",
-            "insert",
-            "sr_script",
-            "editor",
-            "advanced"
-          ]
+          "sections": ["format", "blocks", "list", "insert", "sr_script", "editor", "advanced"]
+        },
+        "actions": {
+          "link": {
+            "hideTarget": false
+          }
         }
       },
-      "components": ["richtext"]
+      "components": ["text"]
     }
   ]
 }

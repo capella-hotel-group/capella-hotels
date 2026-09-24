@@ -15,6 +15,9 @@ const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
 // dynamically decorated block.
 const HCAPTCHA_API_SRC = 'https://js.hcaptcha.com/1/api.js?render=explicit';
 
+// Temporarily disabled while performance scoring is evaluated.
+const HCAPTCHA_ENABLED = false;
+
 // Visitor-entered fields that are all mandatory. Submission is rejected (and
 // never sent) if any of these is missing or blank.
 const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'country'];
@@ -35,7 +38,9 @@ const NON_HOTEL_PROPERTY_CODE = 'CHR';
 // Authored row order — must match the field order in `_newsletter-form.json`.
 // SALUTATION_OPTIONS, COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment
 // paths: the first two populate the dropdowns, the last provides the
-// location → Property/Source mapping used on submit.
+// location → Property/Source mapping used on submit. LAYOUT was appended
+// after every pre-existing field (rather than inserted) so earlier indices
+// never shift for already-authored content.
 const ROW = {
   TITLE: 0,
   SALUTATION_LABEL: 1,
@@ -49,6 +54,7 @@ const ROW = {
   SUBMIT: 9,
   PROPERTY_OPTIONS: 10,
   TRIGGER_LABEL: 11,
+  LAYOUT: 12,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -271,6 +277,7 @@ function resolveFallbackCode(): string {
  * `hcaptcha-site-key` <meta> tag when no environment key is configured.
  */
 function getHCaptchaSiteKey(): string {
+  if (!HCAPTCHA_ENABLED) return '';
   return (
     getEnvHCaptchaSiteKey() ||
     document.head.querySelector<HTMLMetaElement>('meta[name="hcaptcha-site-key"]')?.content?.trim() ||
@@ -308,15 +315,17 @@ interface CaptchaController {
 }
 
 /**
- * Renders an hCaptcha widget into `container` and wires it to enable/disable the
- * submit button. Returns a getter for the current token (empty when unsolved).
- * On any failure the submit button is left enabled so the form still works —
- * server-side verification remains the source of truth.
+ * Renders an hCaptcha widget into `container` and reports solved/unsolved state
+ * through `onChange` (rather than touching the submit button directly), so a
+ * caller can combine it with other gating conditions (e.g. a consent
+ * checkbox). Returns a getter for the current token (empty when unsolved). On
+ * any failure `onChange(true)` is reported so the form still works — server-side
+ * verification remains the source of truth.
  */
 async function setupCaptcha(
   container: HTMLElement,
   siteKey: string,
-  submitBtn: HTMLButtonElement,
+  onChange: (hasToken: boolean) => void,
 ): Promise<CaptchaController> {
   let token = '';
   let widgetId: string | undefined;
@@ -326,20 +335,20 @@ async function setupCaptcha(
       sitekey: siteKey,
       callback: (response) => {
         token = response;
-        submitBtn.disabled = false;
+        onChange(true);
       },
       'expired-callback': () => {
         token = '';
-        submitBtn.disabled = true;
+        onChange(false);
       },
       'error-callback': () => {
         token = '';
-        submitBtn.disabled = true;
+        onChange(false);
       },
     });
   } catch (error) {
     console.error('Newsletter captcha error:', error);
-    submitBtn.disabled = false;
+    onChange(true);
     return { getToken: () => '', reset: () => {} };
   }
 
@@ -347,8 +356,34 @@ async function setupCaptcha(
     getToken: () => token,
     reset: () => {
       token = '';
-      submitBtn.disabled = true;
+      onChange(false);
       if (window.hcaptcha && widgetId !== undefined) window.hcaptcha.reset(widgetId);
+    },
+  };
+}
+
+/**
+ * Combines consent-checkbox and hCaptcha gating into the submit button's
+ * disabled state — both conditions (when applicable) must be satisfied.
+ */
+function createSubmitGate(
+  submitBtn: HTMLButtonElement,
+  { requireConsent, requireCaptcha }: { requireConsent: boolean; requireCaptcha: boolean },
+): { setConsent: (ok: boolean) => void; setCaptcha: (ok: boolean) => void } {
+  let consentOk = !requireConsent;
+  let captchaOk = !requireCaptcha;
+  const recompute = () => {
+    submitBtn.disabled = !(consentOk && captchaOk);
+  };
+  recompute();
+  return {
+    setConsent: (ok: boolean) => {
+      consentOk = ok;
+      recompute();
+    },
+    setCaptcha: (ok: boolean) => {
+      captchaOk = ok;
+      recompute();
     },
   };
 }
@@ -405,6 +440,63 @@ function buildInput(name: string, type: string, placeholder?: string): HTMLInput
   input.name = name;
   if (placeholder) input.placeholder = placeholder;
   return input;
+}
+
+/**
+ * Wraps a control for the `Inline` layout: no separate <label> (the control's
+ * own placeholder text stands in for one, matching the underline-field design),
+ * marked required, with an `aria-label` for assistive tech since the placeholder
+ * disappears once a value is entered. Adds a chevron icon for `<select>`s,
+ * whose native arrow is hidden in CSS.
+ */
+function buildInlineField(control: HTMLInputElement | HTMLSelectElement, label: string): HTMLDivElement {
+  control.required = true;
+  control.setAttribute('aria-label', label);
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'newsletter-inline-field';
+  wrapper.append(control);
+
+  if (control instanceof HTMLSelectElement) {
+    wrapper.classList.add('newsletter-inline-field-select');
+    const chevron = document.createElement('img');
+    chevron.src = `${window.hlx.codeBasePath}/icons/arrow-down.svg`;
+    chevron.alt = '';
+    chevron.loading = 'lazy';
+    chevron.className = 'newsletter-inline-chevron';
+    wrapper.append(chevron);
+  }
+
+  return wrapper;
+}
+
+/** Groups a set of `Inline` fields into one responsive row. */
+function buildInlineRow(fields: HTMLDivElement[]): HTMLDivElement {
+  const row = document.createElement('div');
+  row.className = 'newsletter-inline-row';
+  row.append(...fields);
+  return row;
+}
+
+/** Builds the `Inline` layout's required consent checkbox + notice. */
+function buildInlineConsent(consentHTML: string): HTMLDivElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'newsletter-inline-consent';
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.id = 'newsletter-inline-consent';
+  checkbox.name = 'consent';
+  checkbox.required = true;
+
+  const label = document.createElement('label');
+  label.setAttribute('for', checkbox.id);
+  label.innerHTML =
+    consentHTML ||
+    'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
+
+  wrapper.append(checkbox, label);
+  return wrapper;
 }
 
 /**
@@ -591,6 +683,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
     propertyPath: rowLink(rows, ROW.PROPERTY_OPTIONS),
     triggerLabel: rowText(rows, ROW.TRIGGER_LABEL) || 'Subscribe',
+    layout: rowText(rows, ROW.LAYOUT) === 'Inline' ? 'Inline' : 'Modal',
   };
 
   // Load dropdown options and the property mapping from the authored Content
@@ -613,60 +706,98 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   title.className = 'newsletter-title';
   title.textContent = cfg.title;
 
-  const salutation = buildField(
-    'newsletter-salutation',
-    cfg.salutationLabel,
-    buildSelect('salutation', 'Select', salutationOptions),
-  );
-
-  const firstName = buildField(
-    'newsletter-first-name',
-    cfg.firstNameLabel,
-    buildInput('firstName', 'text', cfg.firstNameLabel),
-  );
-
-  const lastName = buildField(
-    'newsletter-last-name',
-    cfg.lastNameLabel,
-    buildInput('lastName', 'text', cfg.lastNameLabel),
-  );
-
-  const nameRow = document.createElement('div');
-  nameRow.className = 'newsletter-name-row';
-  nameRow.append(firstName, lastName);
-
-  const email = buildField('newsletter-email', cfg.emailLabel, buildInput('email', 'email', cfg.emailLabel));
-
-  const country = buildField('newsletter-country', cfg.countryLabel, buildSelect('country', 'Select', countryOptions));
-
-  // Consent notice — an informational line (no checkbox). By submitting the
-  // form the visitor agrees to this statement.
-  const consentWrapper = document.createElement('div');
-  consentWrapper.className = 'newsletter-consent';
-  consentWrapper.innerHTML =
-    cfg.consentHTML ||
-    'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
-
-  // hCaptcha widget mount point. When a site key is configured the submit button
-  // starts disabled and is enabled by the captcha callback (see setupCaptcha).
+  // hCaptcha widget mount point. The submit button starts disabled whenever a
+  // captcha is configured and/or (in `Inline`) consent is required, until the
+  // combined gate below reports both conditions satisfied.
   const siteKey = getHCaptchaSiteKey();
   const captchaWrapper = document.createElement('div');
   captchaWrapper.className = 'newsletter-captcha';
 
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
-  submitBtn.className = 'newsletter-submit';
   submitBtn.textContent = cfg.submitLabel;
-  if (siteKey) submitBtn.disabled = true;
 
   const message = document.createElement('div');
   message.className = 'newsletter-message';
   message.setAttribute('aria-live', 'polite');
 
-  form.append(title, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
+  const gate = createSubmitGate(submitBtn, {
+    requireConsent: cfg.layout === 'Inline',
+    requireCaptcha: !!siteKey,
+  });
 
-  // Render the captcha (if configured) and gate the submit button on it.
-  const captcha = siteKey ? await setupCaptcha(captchaWrapper, siteKey, submitBtn) : null;
+  if (cfg.layout === 'Inline') {
+    submitBtn.className = 'newsletter-inline-submit';
+
+    const salutation = buildInlineField(
+      buildSelect('salutation', cfg.salutationLabel, salutationOptions),
+      cfg.salutationLabel,
+    );
+    const firstName = buildInlineField(buildInput('firstName', 'text', cfg.firstNameLabel), cfg.firstNameLabel);
+    const lastName = buildInlineField(buildInput('lastName', 'text', cfg.lastNameLabel), cfg.lastNameLabel);
+    // Unlike Modal, Inline shows Country as a plain text field, not a dropdown.
+    const country = buildInlineField(buildInput('country', 'text', cfg.countryLabel), cfg.countryLabel);
+    const email = buildInlineField(buildInput('email', 'email', cfg.emailLabel), cfg.emailLabel);
+
+    const consent = buildInlineConsent(cfg.consentHTML);
+    const consentCheckbox = consent.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    consentCheckbox.addEventListener('change', () => gate.setConsent(consentCheckbox.checked));
+
+    form.append(
+      title,
+      buildInlineRow([salutation, firstName, lastName]),
+      buildInlineRow([country, email]),
+      consent,
+      captchaWrapper,
+      submitBtn,
+      message,
+    );
+  } else {
+    const salutation = buildField(
+      'newsletter-salutation',
+      cfg.salutationLabel,
+      buildSelect('salutation', 'Select', salutationOptions),
+    );
+
+    const firstName = buildField(
+      'newsletter-first-name',
+      cfg.firstNameLabel,
+      buildInput('firstName', 'text', cfg.firstNameLabel),
+    );
+
+    const lastName = buildField(
+      'newsletter-last-name',
+      cfg.lastNameLabel,
+      buildInput('lastName', 'text', cfg.lastNameLabel),
+    );
+
+    const nameRow = document.createElement('div');
+    nameRow.className = 'newsletter-name-row';
+    nameRow.append(firstName, lastName);
+
+    const email = buildField('newsletter-email', cfg.emailLabel, buildInput('email', 'email', cfg.emailLabel));
+
+    const country = buildField(
+      'newsletter-country',
+      cfg.countryLabel,
+      buildSelect('country', 'Select', countryOptions),
+    );
+
+    // Consent notice — an informational line (no checkbox). By submitting the
+    // form the visitor agrees to this statement.
+    const consentWrapper = document.createElement('div');
+    consentWrapper.className = 'newsletter-consent';
+    consentWrapper.innerHTML =
+      cfg.consentHTML ||
+      'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
+
+    submitBtn.className = 'newsletter-submit';
+
+    form.append(title, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
+  }
+
+  // Render the captcha (if configured) and combine it with any consent gating.
+  const captcha = siteKey ? await setupCaptcha(captchaWrapper, siteKey, (ok) => gate.setCaptcha(ok)) : null;
 
   // ── Wire up submission ───────────────────────────────────────────────────
   form.addEventListener('submit', (event) => {
@@ -677,6 +808,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     }
     submitForm(form, { endpoint: API_ENDPOINT, property, captcha }, message, submitBtn);
   });
+
+  if (cfg.layout === 'Inline') {
+    // ── Replace authored rows with the form rendered directly in place ─────
+    block.textContent = '';
+    block.classList.add('newsletter-inline');
+    block.append(form);
+    return;
+  }
 
   // ── Wrap the form in a modal, triggered by an on-page button ─────────────
   const { overlay, trigger } = buildModal(form, cfg.triggerLabel, cfg.title);

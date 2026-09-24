@@ -1,0 +1,436 @@
+/* choose-space
+   Figma: desktop 6047:27021 (1440), tablet 6048:28586 (834), mobile 6048:30207 (393).
+   The hero is full-bleed, so its desktop spacing is written as calc(N * var(--fluid-unit))
+   where N is the raw Figma pixel value and the copy stays proportional to the viewport.
+   The selector below it is the opposite: a fixed 848 band centred in the viewport, so its
+   columns keep their drawn size. Everything nests under the block class, so no
+   rule can leak to another block. */
+.choose-space {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface-page);
+    color: var(--color-text-main-body);
+
+    /* ---------- hero ---------- */
+
+    .choose-space-stage {
+        position: relative;
+        /* one grid area for every panel so the outgoing and incoming space overlap
+           during the crossfade instead of briefly sitting side by side */
+        display: grid;
+        grid-template-areas: 'stage';
+        min-width: 0;
+    }
+
+    .choose-space-panel {
+        grid-area: stage;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-width: 0;
+        width: 100%;
+        /* Figma mobile 393x660 */
+        aspect-ratio: 393 / 660;
+        overflow: hidden;
+        background-color: var(--color-text-main-heading);
+        opacity: 0;
+        visibility: hidden;
+
+        &.is-active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        &[hidden] {
+            display: none;
+        }
+
+        @media (width >= 768px) {
+            /* Figma tablet 834x425 */
+            aspect-ratio: 834 / 425;
+        }
+
+        @media (width >= 1200px) {
+            /* Figma desktop 1440x680 */
+            aspect-ratio: 1440 / 680;
+        }
+    }
+
+    /* the crossfade is armed only once the first space has been painted, so the
+       hero LCP is never held back by a fade on load */
+    @media (prefers-reduced-motion: no-preference) {
+        .choose-space-stage.is-ready .choose-space-panel {
+            /* the delay keeps the outgoing panel painted until its fade has finished */
+            transition:
+                opacity 320ms ease,
+                visibility 0s linear 320ms;
+
+            &.is-active {
+                transition:
+                    opacity 320ms ease,
+                    visibility 0s;
+            }
+        }
+    }
+
+    .choose-space-panel-media {
+        position: absolute;
+        inset: 0;
+
+        /* the copy sits on the lower half of the media, so it needs a scrim to stay
+           legible over both a pale image and a moving video */
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 40%, rgb(0 0 0 / 55%) 100%);
+        }
+    }
+
+    .choose-space-media {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    picture.choose-space-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .choose-space-panel-body {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        padding-block-end: var(--dimension-layout-module-padding-block-s);
+        color: var(--color-text-main-inverse-heading);
+
+        @media (width >= 768px) {
+            padding-inline: var(--dimension-layout-module-padding-inline-s);
+        }
+
+        @media (width >= 1200px) {
+            /* Figma indents the hero copy at 112, less than the 296 the selector
+               title below it uses */
+            padding-inline: calc(112 * var(--fluid-unit));
+            padding-block-end: calc(64 * var(--fluid-unit));
+        }
+    }
+
+    .choose-space-eyebrow {
+        margin: 0 0 var(--dimension-spacing-eyebrow-to-title);
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-md);
+        text-transform: uppercase;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+
+    .choose-space-panel-title {
+        margin: 0;
+        max-width: 18ch;
+        font-family: var(--type-font-family-heading);
+        font-size: var(--typography-fontsize-heading-h1);
+        font-weight: var(--type-font-weight-heading);
+        line-height: var(--typography-line-height-heading-h1);
+        text-transform: uppercase;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+
+        > * {
+            margin: 0;
+            font: inherit;
+            color: inherit;
+        }
+    }
+
+    .choose-space-panel-description {
+        margin-block-start: var(--dimension-spacing-eyebrow-to-text);
+        max-width: 46ch;
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-md);
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+
+        > * {
+            margin: 0;
+        }
+
+        > * + * {
+            margin-block-start: var(--typography-paragraph-spacing-body-m);
+        }
+    }
+
+    .choose-space-panel-links {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dimension-spacing-general-2xl);
+        margin-block-start: var(--dimension-spacing-general-m);
+    }
+
+    /* ---------- links ---------- */
+
+    /* Figma Button/text-standard sets padding, gap and radius but no height of its
+       own, so the link hugs its cap-trimmed text. It is a block box rather than an
+       inline-flex one because text-box-trim only applies to a box whose text is
+       direct content - as a flex container the label lands in an anonymous item
+       and the trim is silently ignored. */
+    .choose-space-link,
+    .choose-space-explore {
+        display: block;
+        width: fit-content;
+        padding-block: var(--component-button-padding-block);
+        border-radius: var(--component-button-corner-standard);
+        font-family: var(--type-font-family-cta);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-text-link);
+        line-height: var(--typography-line-height-body-md);
+        text-transform: uppercase;
+        text-decoration-line: underline;
+        text-decoration-style: solid;
+        text-decoration-skip-ink: auto;
+        text-decoration-thickness: 7%;
+        text-underline-offset: 20.5%;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+
+    .choose-space-link {
+        color: var(--color-text-action-inverse-default);
+    }
+
+    .choose-space-explore {
+        color: var(--color-text-action-default);
+    }
+
+    /* ---------- selector ---------- */
+
+    .choose-space-selector {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding-block: var(--dimension-layout-module-padding-block-s);
+        background-color: var(--color-surface-page);
+
+        @media (width >= 1200px) {
+            flex-direction: row;
+            align-items: flex-start;
+            /* Figma 1440 runs the content from x=296 to x=1144. Centring that 848
+               band beats fluid gutters: the columns keep their drawn size at any
+               viewport instead of scaling with it */
+            width: 100%;
+            max-width: 848px;
+            margin-inline: auto;
+        }
+    }
+
+    .choose-space-head {
+        /* below desktop the wrapper only exists to group the title and the link, so
+           it steps out of the way and lets them order around the tab list */
+        display: contents;
+
+        @media (width >= 1200px) {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            /* Figma title block is 288 wide, so the column ends exactly where the
+               tab list starts and the remaining 560 holds three thumbnails */
+            flex: 0 0 288px;
+        }
+    }
+
+    .choose-space-title {
+        order: 1;
+        margin: 0;
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        font-family: var(--type-font-family-heading);
+        font-size: var(--typography-fontsize-heading-h4);
+        font-weight: var(--type-font-weight-heading);
+        line-height: var(--typography-line-height-heading-h4);
+        color: var(--color-text-main-heading);
+        text-transform: uppercase;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+
+        > * {
+            margin: 0;
+            font: inherit;
+            color: inherit;
+        }
+
+        @media (width >= 1200px) {
+            order: 0;
+            padding-inline: 0;
+        }
+    }
+
+    .choose-space-explore {
+        order: 3;
+        align-self: flex-start;
+        margin-block-start: var(--dimension-spacing-general-m);
+        margin-inline: var(--dimension-layout-module-padding-inline-s);
+
+        @media (width >= 1200px) {
+            order: 0;
+            margin-inline: 0;
+        }
+    }
+
+    .choose-space-track {
+        order: 2;
+        position: relative;
+        min-width: 0;
+        margin-block-start: var(--dimension-spacing-title-to-content);
+
+        @media (width >= 1200px) {
+            order: 0;
+            flex: 1;
+            margin-block-start: 0;
+        }
+    }
+
+    .choose-space-tablist {
+        display: flex;
+        min-width: 0;
+        column-gap: var(--dimension-layout-carousel-item-gap-xl);
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        /* the snapport ignores the container's own padding, so a tab snapped to the
+           start would sit flush against the viewport edge without this mirror */
+        scroll-padding-inline: var(--dimension-layout-module-padding-inline-s);
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: inline mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        @media (width >= 1200px) {
+            padding-inline: 0;
+            scroll-padding-inline: 0;
+        }
+    }
+
+    .choose-space-tab {
+        flex: 0 0 auto;
+        /* Figma "space thumbnail": label, 16px gap, then the image - the label sits
+           above the picture, not over it */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        row-gap: var(--dimension-spacing-general-m);
+        /* Figma mobile 140 wide, tablet and desktop 160 */
+        width: 140px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--color-text-main-body);
+        text-align: start;
+        cursor: pointer;
+        scroll-snap-align: start;
+
+        @media (width >= 768px) {
+            width: 160px;
+        }
+    }
+
+    .choose-space-tab-media {
+        display: block;
+        width: 100%;
+        /* Figma image-ratio: 140x105 mobile, 160x120 tablet and desktop */
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background-color: var(--color-text-main-heading);
+        /* unselected tabs read as a muted set behind the active one */
+        opacity: 0.55;
+        transition: opacity 200ms ease;
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .choose-space-tab.is-active .choose-space-tab-media,
+    .choose-space-tab:hover .choose-space-tab-media,
+    .choose-space-tab:focus-visible .choose-space-tab-media {
+        opacity: 1;
+    }
+
+    .choose-space-tab:focus-visible {
+        outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
+        outline-offset: var(--dimension-spacing-general-2xs);
+    }
+
+    .choose-space-tab-label {
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-md);
+    }
+
+    /* ---------- carousel controls ---------- */
+
+    /* the controls overlay the track instead of sharing a row with the tab list,
+       so revealing them cannot resize the element whose size revealed them */
+    .choose-space-nav-group {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .choose-space-nav {
+        position: absolute;
+        inset-block-start: 50%;
+        translate: 0 -50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--color-text-action-inverse-default);
+        cursor: pointer;
+        pointer-events: auto;
+        /* the glyph sits over the thumbnails, so the shadow keeps it legible
+           against a pale image */
+        filter: drop-shadow(0 1px 3px rgb(0 0 0 / 45%));
+
+        &:focus-visible {
+            outline: var(--stroke-weight-m) solid var(--color-stroke-action-inverse-default);
+            outline-offset: var(--dimension-spacing-general-2xs);
+        }
+    }
+
+    .choose-space-nav-prev {
+        inset-inline-start: var(--dimension-spacing-general-2xs);
+    }
+
+    .choose-space-nav-next {
+        inset-inline-end: var(--dimension-spacing-general-2xs);
+    }
+
+    /* the arrow glyphs are drawn pointing left and right; under RTL the reading
+       direction flips, so the pair swaps to keep prev pointing at earlier tabs */
+    &:dir(rtl) .choose-space-nav svg {
+        scale: -1 1;
+    }
+}
