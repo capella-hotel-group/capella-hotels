@@ -188,12 +188,6 @@
     ]
   },
   {
-    "id": "hero-banner-with-toggle",
-    "components": [
-      "hero-banner-with-toggle-item"
-    ]
-  },
-  {
     "id": "hero-destination",
     "components": [
       "hero-destination-item"
