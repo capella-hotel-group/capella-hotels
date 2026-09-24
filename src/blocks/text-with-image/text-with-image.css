@@ -225,6 +225,7 @@
     .text-with-image.little-stars,
     .text-with-image.image-left,
     .text-with-image.little-stars.image-left,
+    .text-with-image.gift-card.image-left,
     .text-with-image.gift-card {
         grid-template-columns: 1fr;
     }
