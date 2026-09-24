@@ -1,9 +1,23 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createCarouselControls } from './carousel.js';
 
+function stripHtml(html: string): string {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  return wrapper.textContent?.trim() ?? '';
+}
+
+// richtext fields (title/headline) author line breaks as <p> paragraphs or <br> inside a
+// single paragraph; flatten both into '\n'-joined plain text (CSS applies white-space: pre-line).
 function textFromCell(cell?: Element | null): string {
   if (!cell) return '';
-  const textNodes = [...cell.children].map((child) => child.textContent?.trim() ?? '').filter(Boolean);
-  return textNodes.length > 1 ? textNodes.join('\n') : (cell.textContent?.trim() ?? '');
+  const paragraphs = [...cell.querySelectorAll('p')];
+  const sources = paragraphs.length ? paragraphs.map((p) => p.innerHTML) : [cell.innerHTML];
+  const lines = sources
+    .flatMap((html) => html.split(/<br\s*\/?>/i))
+    .map(stripHtml)
+    .filter(Boolean);
+  return lines.length ? lines.join('\n') : (cell.textContent?.trim() ?? '');
 }
 
 function textFromPart(cell: Element | null | undefined, index: number): string {
@@ -82,7 +96,8 @@ function getCardFields(row: Element): CardFields {
   const imageAltCell = getCellByProp(cells, 'imageAlt');
   const isNewModelOrder = !!ctaLinkCell;
   const fallbackCtaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
-  const fallbackCtaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex + 1];
+  // ctaName is authored right before ctaLink, not after it
+  const fallbackCtaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex - 1];
   const hasLegacyAltField = !isNewModelOrder && linkIndex >= 5;
   const cta = getLinkFromCell(ctaLinkCell || fallbackCtaLinkCell);
 
@@ -97,7 +112,8 @@ function getCardFields(row: Element): CardFields {
         : null,
     href: cta.href,
     ctaLabel: textFromCell(ctaLabelCell || fallbackCtaLabelCell) || cta.label,
-    openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : linkIndex + 3], false),
+    // cell order after the CTA link is: openInNewTab, darkOverlay
+    openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : linkIndex + 1], false),
     darkOverlay: isEnabled(darkOverlayCell || cells[isNewModelOrder ? 7 : linkIndex + 2], true),
   };
 }
@@ -129,64 +145,54 @@ function buildIntro(rows: (Element | null)[]): HTMLDivElement {
   return intro;
 }
 
-function buildCta(label: string, href: string, openInNewTab: boolean): HTMLAnchorElement | null {
-  if (!label || !href) return null;
-  const cta = document.createElement('a');
+function buildCta(label: string): HTMLSpanElement | null {
+  if (!label) return null;
+  const cta = document.createElement('span');
   cta.className = 'destination-cards-cta';
   cta.textContent = label;
-  setLinkAttributes(cta, href, openInNewTab);
   return cta;
 }
 
-function buildCarouselControls(list: HTMLUListElement): HTMLDivElement {
-  const controls = document.createElement('div');
-  controls.className = 'destination-cards-controls';
-
-  const previous = document.createElement('button');
-  previous.type = 'button';
-  previous.className = 'destination-cards-control destination-cards-control-prev';
-  previous.setAttribute('aria-label', 'Previous destination card');
-
-  const next = document.createElement('button');
-  next.type = 'button';
-  next.className = 'destination-cards-control destination-cards-control-next';
-  next.setAttribute('aria-label', 'Next destination card');
-
-  const scrollByCard = (direction: number): void => {
-    const firstCard = list.querySelector('.destination-cards-item');
-    const cardWidth = firstCard?.getBoundingClientRect().width || list.clientWidth;
-    const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
-    list.scrollBy({ left: direction * (cardWidth + gap), behavior: 'smooth' });
-  };
-
-  previous.addEventListener('click', () => scrollByCard(-1));
-  next.addEventListener('click', () => scrollByCard(1));
-  controls.append(previous, next);
-  return controls;
+function setupCarousel(carousel: HTMLDivElement, list: HTMLUListElement, label: string): void {
+  carousel.classList.add('destination-cards-carousel-with-controls');
+  const controls = createCarouselControls({
+    track: list,
+    itemSelector: '.destination-cards-item',
+    classNames: {
+      controls: 'destination-cards-controls',
+      control: 'destination-cards-control',
+      controlPrev: 'destination-cards-control-prev',
+      controlNext: 'destination-cards-control-next',
+    },
+    labels: {
+      track: label || 'Destinations',
+      previous: 'Previous destination card',
+      next: 'Next destination card',
+    },
+  });
+  carousel.append(controls);
 }
 
 function buildCard(row: Element): HTMLLIElement {
   const fields = getCardFields(row);
-  const cta = buildCta(fields.ctaLabel, fields.href, fields.openInNewTab);
+  const cta = buildCta(fields.ctaLabel);
   const item = document.createElement('li');
   item.className = 'destination-cards-item';
   moveInstrumentation(row, item);
 
   const article = document.createElement('article');
   article.className = 'destination-cards-card';
+
+  // Single link per card (media + CTA share one destination) to avoid duplicate tab stops.
+  const cardLink = fields.href ? document.createElement('a') : document.createElement('div');
+  cardLink.className = 'destination-cards-card-link';
+  if (fields.href && cardLink instanceof HTMLAnchorElement) {
+    setLinkAttributes(cardLink, fields.href, fields.openInNewTab);
+  }
+
   const media = document.createElement('figure');
   media.className = 'destination-cards-media';
   if (!fields.darkOverlay) media.classList.add('destination-cards-media-no-overlay');
-
-  const mediaContent = fields.href ? document.createElement('a') : document.createElement('div');
-  mediaContent.className = 'destination-cards-media-link';
-  if (fields.href && mediaContent instanceof HTMLAnchorElement) {
-    setLinkAttributes(mediaContent, fields.href, fields.openInNewTab);
-    mediaContent.setAttribute(
-      'aria-label',
-      `${fields.title || fields.location || 'Destination'}: ${fields.ctaLabel || 'Explore'}`,
-    );
-  }
 
   if (fields.image) {
     const mediaNode =
@@ -194,7 +200,7 @@ function buildCard(row: Element): HTMLLIElement {
     const imageElement =
       mediaNode.querySelector('img') || (mediaNode.tagName === 'IMG' ? (mediaNode as HTMLImageElement) : null);
     if (imageElement && fields.imageAlt !== null) imageElement.alt = fields.imageAlt;
-    mediaContent.append(mediaNode);
+    media.append(mediaNode);
   } else {
     media.classList.add('destination-cards-media-no-image');
   }
@@ -213,16 +219,16 @@ function buildCard(row: Element): HTMLLIElement {
     title.textContent = fields.title;
     overlay.append(title);
   }
+  media.append(overlay);
 
-  mediaContent.append(overlay);
-  media.append(mediaContent);
-  article.append(media);
+  cardLink.append(media);
   if (cta) {
     const footer = document.createElement('div');
     footer.className = 'destination-cards-footer';
     footer.append(cta);
-    article.append(footer);
+    cardLink.append(footer);
   }
+  article.append(cardLink);
   item.append(article);
   return item;
 }
@@ -247,10 +253,12 @@ export default function decorate(block: HTMLElement): HTMLElement {
   const carousel = document.createElement('div');
   carousel.className = 'destination-cards-carousel';
   carousel.append(list);
-  if (cardRows.length > 3) {
-    carousel.classList.add('destination-cards-carousel-with-controls');
-    carousel.append(buildCarouselControls(list));
-  }
   block.replaceChildren(intro, carousel);
+  // matches the Figma component variants: 3 cards or fewer stay a static row, more than 3
+  // becomes a carousel with prev/next controls
+  if (cardRows.length > 3) {
+    const title = intro.querySelector('.destination-cards-title')?.textContent?.trim() || '';
+    setupCarousel(carousel, list, title);
+  }
   return block;
 }

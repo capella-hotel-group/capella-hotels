@@ -1,0 +1,271 @@
+{
+  "definitions": [
+    {
+      "title": "Footer",
+      "id": "footer",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Footer",
+              "model": "footer",
+              "filter": "footer",
+              "title": ""
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Footer Contact",
+      "id": "footer-contact",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Footer Contact",
+              "model": "footer-contact"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Footer Social Link",
+      "id": "footer-social-link",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Footer Social Link",
+              "model": "footer-social-link"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Footer Links",
+      "id": "footer-links",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Footer Links",
+              "model": "footer-links",
+              "filter": "footer-links"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Footer Link",
+      "id": "footer-link",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Footer Link",
+              "model": "footer-link"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Footer Bottom",
+      "id": "footer-bottom",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Footer Bottom",
+              "model": "footer-bottom",
+              "filter": "footer-bottom"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Footer Utility Link",
+      "id": "footer-utility-link",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Footer Utility Link",
+              "model": "footer-utility-link"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "footer",
+      "fields": [
+        {
+          "component": "select",
+          "name": "backgroundTheme",
+          "label": "Background Color Theme",
+          "valueType": "string",
+          "required": true,
+          "value": "light-sand",
+          "options": [
+            { "name": "Light Sand / Beige", "value": "light-sand" },
+            { "name": "Clean White", "value": "clean-white" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "footer-contact",
+      "fields": [
+        {
+          "component": "richtext",
+          "name": "contactContent",
+          "label": "Contact Information",
+          "valueType": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "footer-social-link",
+      "fields": [
+        {
+          "component": "reference",
+          "name": "icon",
+          "label": "Social Media Icon",
+          "valueType": "string",
+          "required": true,
+          "multi": false
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
+          "label": "Social Media URL",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "footer-links",
+      "fields": [
+        {
+          "component": "text",
+          "name": "title",
+          "label": "Link Group Title",
+          "valueType": "string"
+        },
+        {
+          "component": "number",
+          "name": "itemsPerColumn",
+          "label": "Items Before Second Column",
+          "description": "Number of brand navigation links to show in the first column before continuing in the second column.",
+          "valueType": "number",
+          "value": 5,
+          "numberMin": 1,
+          "numberMax": 8
+        }
+      ]
+    },
+    {
+      "id": "footer-link",
+      "fields": [
+        {
+          "component": "text",
+          "name": "label",
+          "label": "Link Label",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
+          "label": "Link URL",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "footer-bottom",
+      "fields": [
+        {
+          "component": "text",
+          "name": "copyrightText",
+          "label": "Copyright Text",
+          "valueType": "string",
+          "required": true,
+          "value": "© 2026 Capella Hotel Group. All Rights Reserved."
+        }
+      ]
+    },
+    {
+      "id": "footer-utility-link",
+      "fields": [
+        {
+          "component": "text",
+          "name": "label",
+          "label": "Utility Link Label",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "aem-content",
+          "name": "link",
+          "label": "Utility Link URL",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "footer",
+      "components": ["footer-contact", "footer-social-link", "newsletter-form", "footer-links", "footer-bottom"]
+    },
+    {
+      "id": "footer-links",
+      "components": ["footer-link"]
+    },
+    {
+      "id": "footer-bottom",
+      "components": ["footer-utility-link"]
+    }
+  ]
+}

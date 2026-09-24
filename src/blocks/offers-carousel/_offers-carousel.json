@@ -52,7 +52,7 @@
           "value": ""
         },
         {
-          "component": "text",
+          "component": "richtext",
           "name": "title",
           "label": "Primary Main Title",
           "valueType": "string",
@@ -68,6 +68,7 @@
           "component": "reference",
           "name": "media_cardImage",
           "label": "Card Image",
+          "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
           "valueType": "string",
           "multi": false,
           "required": true
@@ -115,15 +116,11 @@
           "value": ""
         },
         {
-          "component": "select",
+          "component": "boolean",
           "name": "ctas_primaryCtaOpenInNewTab",
           "label": "Primary CTA Open in new tab",
           "valueType": "string",
-          "value": "false",
-          "options": [
-            { "name": "No", "value": "false" },
-            { "name": "Yes", "value": "true" }
-          ]
+          "value": false
         },
         {
           "component": "aem-content",
@@ -139,15 +136,11 @@
           "value": ""
         },
         {
-          "component": "select",
+          "component": "boolean",
           "name": "ctas_secondaryCtaOpenInNewTab",
           "label": "Secondary CTA Open in new tab",
           "valueType": "string",
-          "value": "false",
-          "options": [
-            { "name": "No", "value": "false" },
-            { "name": "Yes", "value": "true" }
-          ]
+          "value": false
         }
       ]
     }

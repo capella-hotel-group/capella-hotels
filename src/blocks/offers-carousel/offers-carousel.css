@@ -1,83 +1,116 @@
+/* Geometry mirrors the Figma "Content-card/offer" frames 5976:106003 (393),
+   5976:105398 (834) and 5976:104314 (1440). */
+
 .offers-carousel {
     width: 100%;
     margin: 0;
     padding: 0;
+    background: var(--color-surface-page);
+}
+
+/* authored-only fields (anchor id) and cards past the third stay in the DOM for the
+   editor's content tree but are never rendered */
+.offers-carousel .offers-carousel-hidden {
+    display: none;
 }
 
 .offers-carousel .offers-carousel-layout {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: var(--dimension-spacing-general-2xl);
     align-items: start;
-    padding: 96px 24px;
+    padding: var(--dimension-layout-module-padding-top) var(--dimension-layout-module-padding-inline-s);
 }
 
 .offers-carousel .offers-carousel-copy {
     display: grid;
-    gap: 12px;
-    justify-items: start;
+    gap: var(--dimension-spacing-eyebrow-to-title);
+    width: 100%;
     text-align: left;
 }
 
 .offers-carousel .offers-carousel-eyebrow {
     margin: 0;
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    line-height: 20px;
-    color: #1b364b;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-main-heading);
+    text-transform: uppercase;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .offers-carousel .offers-carousel-title {
     margin: 0;
-    max-width: 345px;
-    font-family: var(--heading-font-family);
-    font-size: 36px;
-    font-weight: 400;
-    line-height: 36px;
-    color: #1b364b;
-    white-space: pre-line;
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h1);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h1);
+    color: var(--color-text-main-heading);
+    text-transform: uppercase;
 }
 
-.offers-carousel .offers-carousel-title-line {
-    display: inline-block;
+.offers-carousel .offers-carousel-eyebrow > *,
+.offers-carousel .offers-carousel-title > * {
+    margin: 0;
+    font: inherit;
+    color: inherit;
 }
 
-.offers-carousel .offers-carousel-title-line:nth-of-type(2) {
-    margin-left: 32px;
+/* the design indents only the middle line; the block splits soft breaks into
+   paragraphs first, so a single-line title is never indented */
+.offers-carousel .offers-carousel-title > :nth-child(2) {
+    padding-inline-start: var(--dimension-spacing-general-2xl);
 }
 
 .offers-carousel .offers-carousel-stage {
     position: relative;
     width: 100%;
-    max-width: 100%;
-    min-height: 429px;
-    margin: 0 auto;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
     touch-action: pan-y;
 }
 
+/* the stack grows one step per card, so the container must follow the authored count or the
+   leftover space would push it out of line with the vertically centred copy column.
+   --card-count is set by the block; the fallback keeps the design's three-card sizing */
 .offers-carousel .offers-carousel-cards {
-    display: flex;
-    gap: 16px;
+    --card-count: 3;
+    --card-step: 50px;
+    --card-height: 328px;
+
+    position: relative;
     width: 100%;
-    height: 429px;
+    height: calc(var(--card-height) + (var(--card-count) - 1) * var(--card-step));
     margin: 0;
     padding: 0;
-    list-style: none;
+    overflow: hidden;
+    /* the stack consumes the gesture itself, in both axes */
+    touch-action: none;
 }
 
+/* every stack offset is expressed through --card-x/--card-y so the swipe can add its own
+   --card-shift on top without having to know the current breakpoint's geometry */
 .offers-carousel .offers-carousel-card {
-    position: relative;
-    flex: 0 0 260px;
+    --card-x: -50%;
+    --card-y: 0px;
+    --card-shift: 0px;
+    --card-move-duration: 0.32s;
+    --card-move-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+    position: absolute;
+    top: 0;
+    left: 50%;
     width: 260px;
     height: 300px;
     cursor: pointer;
-    scroll-snap-align: center;
+    transform: translate(var(--card-x), calc(var(--card-y) + var(--card-shift)));
     transition:
-        transform 0.35s ease,
-        opacity 0.35s ease;
+        top var(--card-move-duration) var(--card-move-easing),
+        right var(--card-move-duration) var(--card-move-easing),
+        width var(--card-move-duration) var(--card-move-easing),
+        height var(--card-move-duration) var(--card-move-easing),
+        opacity var(--card-move-duration) var(--card-move-easing),
+        transform var(--card-move-duration) var(--card-move-easing);
 }
 
 .offers-carousel .offers-carousel-card-media {
@@ -91,7 +124,12 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgb(0 0 0 / 32%) 0%, rgb(0 0 0 / 15%) 38%, rgb(0 0 0 / 44%) 100%);
+    background: rgb(0 0 0 / 40%);
+}
+
+.offers-carousel .offers-carousel-card-media > p {
+    margin: 0;
+    height: 100%;
 }
 
 .offers-carousel .offers-carousel-card picture,
@@ -105,20 +143,28 @@
     object-fit: cover;
 }
 
+/* the eyebrow/title/description frame is laid out with general/m; the card's own general/s
+   gap is not modelled because .offers-carousel-card-body absorbs the free space, which keeps
+   the CTA row pinned to the bottom regardless of the gap value */
 .offers-carousel .offers-carousel-card-overlay {
     position: absolute;
-    inset: 32px;
+    inset: var(--dimension-spacing-general-2xl);
     z-index: 1;
     display: flex;
     flex-direction: column;
-    color: #fff;
+    gap: var(--dimension-spacing-general-m);
+    color: var(--color-text-main-inverse-heading);
 }
 
 .offers-carousel .offers-carousel-card-eyebrow {
     margin: 0;
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    line-height: 20px;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .offers-carousel .offers-carousel-card-body {
@@ -126,243 +172,247 @@
     flex: 1;
     flex-direction: column;
     justify-content: center;
-    gap: 16px;
+    gap: var(--dimension-spacing-general-m);
+    min-height: 0;
+    text-align: center;
 }
 
 .offers-carousel .offers-carousel-card-title {
     margin: 0;
-    font-family: var(--heading-font-family);
-    font-size: 28px;
-    line-height: 32px;
-    font-weight: 400;
-    text-align: center;
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h2);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
 }
 
 .offers-carousel .offers-carousel-card-description {
-    max-width: none;
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    line-height: 20px;
-    text-align: center;
+    /* shrinks and clips when the copy is long, but keeps its natural height so the
+       mobile/tablet card can centre the title and description as one block */
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-main-inverse-body);
 }
 
-.offers-carousel .offers-carousel-card-description p {
+.offers-carousel .offers-carousel-card-eyebrow > *,
+.offers-carousel .offers-carousel-card-title > *,
+.offers-carousel .offers-carousel-card-description > * {
     margin: 0;
+    font: inherit;
+    color: inherit;
 }
 
 .offers-carousel .offers-carousel-card-ctas {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    gap: var(--dimension-spacing-general-m);
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
+    min-height: var(--component-button-height);
     margin-top: auto;
 }
 
+/* boolean flag cells and the paragraphs the anchors were lifted out of */
+.offers-carousel .offers-carousel-card-cta-flag {
+    display: none;
+}
+
 .offers-carousel .offers-carousel-card-cta {
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    line-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--component-button-height);
+    padding-block: var(--component-button-padding-block);
+    border-radius: var(--component-button-corner-standard);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-text-link);
+    line-height: var(--typography-line-height-body-md);
     text-transform: uppercase;
-    color: #fff;
+    color: var(--color-text-action-inverse-default);
     text-decoration: underline;
-    text-decoration-thickness: 1px;
+    text-decoration-thickness: var(--stroke-weight-s);
     text-underline-offset: 3px;
 }
 
-.offers-carousel .offers-carousel-card-cta + .offers-carousel-card-cta {
-    position: relative;
-    padding-left: 12px;
+.offers-carousel .offers-carousel-card-cta-divider {
+    flex: none;
+    width: var(--stroke-weight-s);
+    height: 24px;
+    background: var(--color-stroke-action-inverse-default);
 }
 
-.offers-carousel .offers-carousel-card-cta + .offers-carousel-card-cta::before {
-    content: '|';
-    position: absolute;
-    left: 0;
+/* mobile stack: cards are centred and step 30px narrower behind the active one */
+.offers-carousel .offers-carousel-card.is-active {
+    z-index: 4;
+    top: calc((var(--card-count) - 1) * var(--card-step));
+    width: min(320px, 100%);
+    height: 328px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.offers-carousel .offers-carousel-card.is-next-1 {
+    z-index: 3;
+    top: calc((var(--card-count) - 2) * var(--card-step));
+    width: min(290px, calc(100% - 30px));
+    height: 335px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.offers-carousel .offers-carousel-card.is-next-2 {
+    z-index: 2;
     top: 0;
-    color: rgb(255 255 255 / 70%);
+    width: min(260px, calc(100% - 60px));
+    height: 300px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.offers-carousel .offers-carousel-card.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Reel swipe, part one: the front card drops out of the stack and fades away fast while the
+   cards behind it are already stepping forward. Duration is mirrored by LEAVE_MS in the block. */
+.offers-carousel .offers-carousel-card.is-leaving {
+    --card-shift: 120px;
+
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.22s ease-in,
+        transform 0.22s cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+/* Part two: the card takes the rear slot with transitions off, then the block drops this class
+   so it rises into place and fades back in. */
+.offers-carousel .offers-carousel-card.is-entering {
+    --card-shift: 56px;
+
+    opacity: 0;
+    transition: none;
 }
 
 @media (width >= 768px) {
+    /* the 360px stack is fixed, the copy column takes whatever is left */
     .offers-carousel .offers-carousel-layout {
         grid-template-columns: minmax(0, 1fr) 360px;
-        gap: 48px;
-        align-items: center;
-        padding: 64px 48px;
-    }
-
-    .offers-carousel .offers-carousel-copy {
-        justify-items: start;
-        text-align: left;
-    }
-
-    .offers-carousel .offers-carousel-title {
-        max-width: 378px;
-        font-size: 40px;
-        line-height: 48px;
-    }
-
-    .offers-carousel .offers-carousel-stage {
-        width: 360px;
-        min-height: 532px;
-        margin: 0;
-    }
-
-    .offers-carousel .offers-carousel-cards {
-        position: relative;
-        display: block;
-        height: 532px;
-    }
-    .offers-carousel .offers-carousel-card {
-        position: absolute;
-        width: 280px;
-        height: 336px;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .offers-carousel .offers-carousel-card.is-active {
-        z-index: 4;
-        right: 40px;
-        top: 0;
-        opacity: 1;
-        pointer-events: auto;
-        transform: translate(0, 0);
-    }
-
-    .offers-carousel .offers-carousel-card.is-next-1 {
-        z-index: 3;
-        right: 20px;
-        top: 50px;
-        width: 320px;
-        height: 384px;
-        opacity: 0.9;
-        pointer-events: auto;
-        transform: translate(0, 0);
-    }
-
-    .offers-carousel .offers-carousel-card.is-next-2 {
-        z-index: 2;
-        right: 0;
-        bottom: 0;
-        width: 360px;
-        height: 432px;
-        opacity: 0.8;
-        pointer-events: auto;
-        transform: translate(0, 0);
-    }
-
-    .offers-carousel .offers-carousel-card.is-hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-}
-
-@media (width >= 1200px) {
-    .offers-carousel .offers-carousel-layout {
-        grid-template-columns: 576px minmax(0, 1fr);
         gap: 0;
-        max-width: 1440px;
-        min-height: 688px;
-        margin: 0 auto;
-        padding: 0;
-    }
-
-    .offers-carousel .offers-carousel-title {
-        max-width: 416px;
-        padding: 0 80px;
-        font-size: 48px;
-        line-height: 48px;
-    }
-
-    .offers-carousel .offers-carousel-title-line:nth-of-type(2) {
-        margin-left: 32px;
-    }
-
-    .offers-carousel .offers-carousel-stage {
-        width: auto;
-        min-height: 688px;
-        padding: 120px 80px 120px 0;
+        align-items: center;
+        padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
     }
 
     .offers-carousel .offers-carousel-cards {
-        width: 100%;
-        height: 448px;
+        --card-height: 432px;
+    }
+
+    .offers-carousel .offers-carousel-card {
+        --card-x: 0px;
+
+        left: auto;
+        right: 0;
+    }
+
+    /* the stack is right-anchored and steps 20px narrower behind the active card */
+    .offers-carousel .offers-carousel-card.is-active {
+        top: calc((var(--card-count) - 1) * var(--card-step));
+        right: 0;
+        width: min(360px, 100%);
+        height: 432px;
     }
 
     .offers-carousel .offers-carousel-card.is-next-1 {
-        top: 60px;
-        right: auto;
-        left: 52px;
-        width: 680px;
-        height: 328px;
-        opacity: 0.9;
+        top: calc((var(--card-count) - 2) * var(--card-step));
+        right: 20px;
+        width: min(320px, calc(100% - 20px));
+        height: 384px;
     }
 
     .offers-carousel .offers-carousel-card.is-next-2 {
-        top: 120px;
-        right: auto;
-        bottom: auto;
-        left: 0;
-        width: 680px;
-        height: 328px;
-        opacity: 0.8;
-    }
-
-    .offers-carousel .offers-carousel-card.is-active {
-        right: 0;
-        width: 680px;
-        height: 328px;
-    }
-
-    .offers-carousel .offers-carousel-card-overlay {
-        inset: 32px;
-    }
-
-    .offers-carousel .offers-carousel-card-title {
-        font-size: 40px;
-        line-height: 40px;
-        text-align: left;
-    }
-
-    .offers-carousel .offers-carousel-card-description {
-        max-width: 400px;
-        font-size: 18px;
-        line-height: 22px;
-        text-align: left;
+        top: 0;
+        right: 40px;
+        width: min(280px, calc(100% - 40px));
+        height: 336px;
     }
 
     .offers-carousel .offers-carousel-card-ctas {
         justify-content: flex-end;
     }
-
-    .offers-carousel .offers-carousel-card-eyebrow,
-    .offers-carousel .offers-carousel-eyebrow,
-    .offers-carousel .offers-carousel-card-cta {
-        font-size: 18px;
-        line-height: 22px;
-    }
 }
 
-@media (width < 768px) {
-    .offers-carousel .offers-carousel-card-overlay {
-        inset: 12px;
+@media (width >= 1200px) {
+    .offers-carousel .offers-carousel-layout {
+        grid-template-columns: var(--dimension-layout-40vw) minmax(0, var(--dimension-layout-60vw));
+        max-width: calc(var(--dimension-layout-40vw) + var(--dimension-layout-60vw));
+        min-height: 688px;
+        margin-inline: auto;
+        padding: 0;
     }
 
-    .offers-carousel .offers-carousel-card-title {
-        font-size: var(--heading-font-size-l);
+    /* border-box: the 80px inline padding sits inside the 576px column, leaving 416px of text */
+    .offers-carousel .offers-carousel-copy {
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
     }
 
-    .offers-carousel .offers-carousel-card-description {
-        max-width: 280px;
-        font-size: 13px;
+    /* the stack is flush against the copy column and 80px off the page edge */
+    .offers-carousel .offers-carousel-stage {
+        padding: var(--dimension-layout-module-padding-top) var(--dimension-layout-module-padding-inline-s)
+            var(--dimension-layout-module-padding-top) 0;
+    }
+
+    .offers-carousel .offers-carousel-cards {
+        --card-step: 60px;
+        --card-height: 328px;
+    }
+
+    /* all three cards are the same size here; only the offset changes */
+    .offers-carousel .offers-carousel-card.is-active,
+    .offers-carousel .offers-carousel-card.is-next-1,
+    .offers-carousel .offers-carousel-card.is-next-2 {
+        top: 0;
+        right: auto;
+        left: 0;
+        width: min(680px, calc(100% - 104px));
+        height: 328px;
+    }
+
+    /* offsets live on transform so switching state animates instead of jumping */
+    .offers-carousel .offers-carousel-card.is-active {
+        --card-y: calc((var(--card-count) - 1) * var(--card-step));
     }
 
     .offers-carousel .offers-carousel-card.is-next-1 {
-        transform: translate(30px, -14px) scale(0.9);
+        --card-x: 52px;
+        --card-y: calc((var(--card-count) - 2) * var(--card-step));
     }
 
     .offers-carousel .offers-carousel-card.is-next-2 {
-        transform: translate(58px, -26px) scale(0.82);
+        --card-x: 104px;
+    }
+
+    .offers-carousel .offers-carousel-card-body {
+        justify-content: flex-start;
+        max-width: 400px;
+        text-align: left;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .offers-carousel .offers-carousel-card,
+    .offers-carousel .offers-carousel-card.is-leaving,
+    .offers-carousel .offers-carousel-card.is-entering {
+        --card-shift: 0px;
+
+        transition-duration: 0.01ms;
     }
 }

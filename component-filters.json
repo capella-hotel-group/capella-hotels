@@ -24,39 +24,28 @@
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
+      "experience-tiles",
       "destination-introduction",
       "interactive-asset",
       "filters-grid",
       "offers-carousel",
       "text-with-cta",
-      "hero-banner-with-toggle"
+      "hero-video",
+      "hero-destination",
+      "rte",
+      "choose-space",
+      "footer"
     ]
   },
   {
-    "id": "richtext",
+    "id": "text",
     "rte": {
       "toolbar": {
         "format": [
           "bold",
           "italic",
           "underline",
-          "strike",
-          "code_inline",
-          "text_color"
-        ],
-        "alignment": [
-          "left",
-          "center",
-          "right",
-          "justify"
-        ],
-        "direction": [
-          "rtl",
-          "ltr"
-        ],
-        "indentation": [
-          "indent",
-          "outdent"
+          "strike"
         ],
         "blocks": [
           "paragraph",
@@ -66,8 +55,7 @@
           "h4",
           "h5",
           "h6",
-          "code_block",
-          "blockquote"
+          "code_block"
         ],
         "list": [
           "bullet_list",
@@ -75,10 +63,7 @@
         ],
         "insert": [
           "link",
-          "unlink",
-          "image",
-          "table",
-          "special_characters"
+          "unlink"
         ],
         "sr_script": [
           "superscript",
@@ -86,19 +71,13 @@
         ],
         "editor": [
           "removeformat",
-          "clean_unsupported_tags",
-          "paste_text",
-          "fullscreen",
-          "find_and_replace"
+          "paste_text"
         ],
         "advanced": [
           "classes"
         ],
         "sections": [
           "format",
-          "alignment",
-          "direction",
-          "indentation",
           "blocks",
           "list",
           "insert",
@@ -106,10 +85,15 @@
           "editor",
           "advanced"
         ]
+      },
+      "actions": {
+        "link": {
+          "hideTarget": false
+        }
       }
     },
     "components": [
-      "richtext"
+      "text"
     ]
   },
   {
@@ -122,6 +106,12 @@
     "id": "cards",
     "components": [
       "card"
+    ]
+  },
+  {
+    "id": "choose-space",
+    "components": [
+      "space-option"
     ]
   },
   {
@@ -158,6 +148,12 @@
     ]
   },
   {
+    "id": "experience-tiles",
+    "components": [
+      "experience-tiles-item"
+    ]
+  },
+  {
     "id": "filters-grid",
     "components": [
       "filters-grid-tab"
@@ -170,9 +166,43 @@
     ]
   },
   {
+    "id": "footer",
+    "components": [
+      "footer-contact",
+      "footer-social-link",
+      "newsletter-form",
+      "footer-links",
+      "footer-bottom"
+    ]
+  },
+  {
+    "id": "footer-links",
+    "components": [
+      "footer-link"
+    ]
+  },
+  {
+    "id": "footer-bottom",
+    "components": [
+      "footer-utility-link"
+    ]
+  },
+  {
     "id": "hero-banner-with-toggle",
     "components": [
       "hero-banner-with-toggle-item"
+    ]
+  },
+  {
+    "id": "hero-destination",
+    "components": [
+      "hero-destination-item"
+    ]
+  },
+  {
+    "id": "hero-video",
+    "components": [
+      "hero-video-item"
     ]
   },
   {
