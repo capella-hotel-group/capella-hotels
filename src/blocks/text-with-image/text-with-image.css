@@ -21,6 +21,10 @@
     grid-template-columns: 48% 52%;
 }
 
+.text-with-image.no-image {
+    display: block;
+}
+
 /* Text column */
 .text-with-image .text-col {
     display: flex;
@@ -130,7 +134,8 @@
 }
 
 .text-with-image.image-left,
-.text-with-image.little-stars.image-left {
+.text-with-image.little-stars.image-left,
+.text-with-image.gift-card.image-left {
     grid-template-columns: 60% 40%;
 }
 
@@ -158,6 +163,8 @@
 .text-with-image .gift-card-layer {
     position: absolute;
     inset: 0;
+    width: 402.909px;
+    height: 251.818px;
     border-radius: 1.75rem;
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.06);
@@ -201,6 +208,10 @@
     .text-with-image.little-stars.image-left,
     .text-with-image.gift-card {
         grid-template-columns: 50% 50%;
+    }
+
+    .text-with-image.no-image {
+        display: block;
     }
 
     .text-with-image .text-col {
