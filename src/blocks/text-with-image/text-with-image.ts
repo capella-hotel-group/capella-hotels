@@ -169,6 +169,17 @@ export default function decorate(block: HTMLElement): void {
 
   const hasImage = imageCol.hasChildNodes();
   if (!hasImage) block.classList.add('no-image');
+
+  if (hasImage && ctaHref) {
+    const imageLink = document.createElement('a');
+    imageLink.className = 'image-link';
+    imageLink.href = ctaHref;
+    imageLink.setAttribute('data-testid', 'text-with-image-image-link');
+    if (openInNewTab) imageLink.target = '_blank';
+    imageLink.append(...imageCol.childNodes);
+    imageCol.append(imageLink);
+  }
+
   block.replaceChildren(textCol);
   if (hasImage) block.append(imageCol);
 }
