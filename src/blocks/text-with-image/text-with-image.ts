@@ -59,15 +59,15 @@ export default function decorate(block: HTMLElement): void {
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
   const responsiveAltText = mobileAltText || altText;
 
-  const ctaGroup = getField('cta_link')?.closest('div') || rows.find((row) => row.querySelector('a'))?.firstElementChild;
+  const ctaGroup =
+    getField('cta_link')?.closest('div') || rows.find((row) => row.querySelector('a'))?.firstElementChild;
   const ctaLinkEl = ctaGroup?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || getFieldText('cta_link');
   const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
-  const ctaText =
-    ctaTextEl?.textContent?.trim() || getFieldText('cta') || '';
-  const openInNewTab = [...(ctaGroup?.children || [])].some(
-    (element) => element.textContent?.trim().toLowerCase() === 'true',
-  ) || getFieldText('cta_openInNewTab').toLowerCase() === 'true';
+  const ctaText = ctaTextEl?.textContent?.trim() || getFieldText('cta') || '';
+  const openInNewTab =
+    [...(ctaGroup?.children || [])].some((element) => element.textContent?.trim().toLowerCase() === 'true') ||
+    getFieldText('cta_openInNewTab').toLowerCase() === 'true';
 
   if (pictureEl) {
     const responsiveImageQuery = window.matchMedia('(max-width: 767px)');
@@ -141,11 +141,11 @@ export default function decorate(block: HTMLElement): void {
     });
     const layerRows = giftCardRows.length ? giftCardRows : pictureRows.slice(0, 3);
     if (layerRows.length > 0) {
-      layerRows.forEach((row, index) => {
+      stack.classList.add(`gift-card-count-${layerRows.length}`);
+
+      layerRows.forEach((row) => {
         const layer = document.createElement('div');
         layer.className = 'gift-card-layer';
-        layer.style.setProperty('--gift-card-offset', `${index * 18}px`);
-        layer.style.setProperty('--gift-card-rotation', `${(index - 1) * 4}deg`);
 
         const rowPicture = row.querySelector('picture');
         const rowImg = rowPicture?.querySelector('img') || row.querySelector('img');
