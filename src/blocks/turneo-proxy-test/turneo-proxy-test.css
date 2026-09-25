@@ -4,6 +4,19 @@
     margin: 0 auto;
 }
 
+/* Header is transparent and position: absolute, meant to float over a .hero-banner
+   block (see main:has(.hero-banner) in styles.css). Without a hero above it, the
+   fixed header overlaps this block's content when it's the page's first section. */
+main > .section:first-of-type:has(.turneo-proxy-test) {
+    padding-top: 88px;
+}
+
+@media (min-width: 768px) {
+    main > .section:first-of-type:has(.turneo-proxy-test) {
+        padding-top: 137px;
+    }
+}
+
 /* Filter bar */
 
 .turneo-proxy-test-filter {
