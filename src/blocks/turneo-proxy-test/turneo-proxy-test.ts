@@ -256,8 +256,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     return;
   }
 
-  // Render the shell (filter bar + skeleton) synchronously so there's something to paint
-  // before the App Builder round-trip resolves, instead of a blank block hurting LCP/SI.
+  // Render the shell (filter bar + a "Load Experiences" CTA) synchronously with zero network
+  // dependency. The App Builder fetch only fires once the user explicitly asks for it — nothing
+  // loads automatically, so initial paint never waits on the third-party API.
   let purify: { sanitize: (html: string) => string } | null = null;
 
   const wrapper = document.createElement('div');
@@ -265,33 +266,45 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const gridEl = document.createElement('div');
   gridEl.className = 'turneo-proxy-test-grid';
-  setGridLoading(gridEl);
 
-  const filterBar = buildFilter(async (from, to) => {
+  const loadSection = document.createElement('div');
+  loadSection.className = 'turneo-proxy-test-load';
+  const loadBtn = document.createElement('button');
+  loadBtn.type = 'button';
+  loadBtn.className = 'turneo-proxy-test-load-btn';
+  loadBtn.textContent = 'Load Experiences';
+  loadSection.append(loadBtn);
+
+  let loaded = false;
+
+  async function loadExperiences(params?: { from?: string; until?: string }): Promise<void> {
+    if (!loaded) {
+      loaded = true;
+      loadSection.replaceWith(gridEl);
+    }
     setGridLoading(gridEl);
     try {
-      const params = { storeId: storeId || undefined, from: from || undefined, until: to || undefined };
-      const experiences = await fetchExperiencesViaAppBuilder(params);
-      gridEl.replaceChildren(...buildGridChildren(block, experiences, purify, detailPagePath));
+      const [purifyResult, experiencesResult] = await Promise.allSettled([
+        purify ? Promise.resolve(purify) : loadDOMPurify(),
+        fetchExperiencesViaAppBuilder({ storeId: storeId || undefined, ...params }),
+      ]);
+      purify = purifyResult.status === 'fulfilled' ? purifyResult.value : purify;
+      if (experiencesResult.status === 'fulfilled') {
+        gridEl.replaceChildren(...buildGridChildren(block, experiencesResult.value, purify, detailPagePath));
+      } else {
+        gridEl.replaceChildren(buildError(experiencesResult.reason));
+      }
     } catch (err) {
       gridEl.replaceChildren(buildError(err));
     }
+  }
+
+  loadBtn.addEventListener('click', () => loadExperiences(), { once: true });
+
+  const filterBar = buildFilter(async (from, to) => {
+    await loadExperiences({ from: from || undefined, until: to || undefined });
   });
 
-  wrapper.append(filterBar, gridEl);
+  wrapper.append(filterBar, loadSection);
   block.replaceChildren(wrapper);
-
-  // Load DOMPurify and initial data in parallel, then swap the skeleton for real content.
-  const [purifyResult, experiencesResult] = await Promise.allSettled([
-    loadDOMPurify(),
-    fetchExperiencesViaAppBuilder(storeId ? { storeId } : undefined),
-  ]);
-
-  purify = purifyResult.status === 'fulfilled' ? purifyResult.value : null;
-
-  if (experiencesResult.status === 'fulfilled') {
-    gridEl.replaceChildren(...buildGridChildren(block, experiencesResult.value, purify, detailPagePath));
-  } else {
-    gridEl.replaceChildren(buildError(experiencesResult.reason));
-  }
 }
