@@ -1,6 +1,6 @@
 // src/blocks/hero-destination/hero-destination.ts
 // Rows (authored): 0=autoplay, 1=autoplayInterval, 2=loop, 3=transitionEffect, 4=simulateTouch
-// (config), 5..n=items (mediaType, image, imageMobile, imageAlt, video, videoMobile, heading)
+// (config), 5..n=items (see lib/parse.ts for the item field layout)
 import { CarouselController } from './lib/carousel-controller';
 import { buildDotNav, buildSlide } from './lib/dom-builder';
 import { resolveEffect } from './lib/effects';

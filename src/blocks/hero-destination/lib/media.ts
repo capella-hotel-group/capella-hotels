@@ -52,6 +52,14 @@ function buildVideoMedia(item: HeroDestinationVideoItem): HTMLElement {
   return wrapper;
 }
 
+function buildEmptyMedia(): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'hero-destination-media';
+  return wrapper;
+}
+
 export function buildMedia(item: HeroDestinationItem): HTMLElement {
-  return item.mediaType === 'video' ? buildVideoMedia(item) : buildImageMedia(item);
+  if (item.mediaType === 'video') return buildVideoMedia(item);
+  if (item.mediaType === 'image') return buildImageMedia(item);
+  return buildEmptyMedia();
 }
