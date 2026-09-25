@@ -201,6 +201,54 @@
     ]
   },
   {
+    "id": "header-section",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Section Name",
+        "description": "The label shown for this section in the Content Tree"
+      },
+      {
+        "component": "text",
+        "name": "level1NavTitle",
+        "label": "Level 1 Nav Title",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "awards-list",
     "fields": [
       {
@@ -1429,6 +1477,45 @@
         "name": "description",
         "label": "Description",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "navigation-lists",
+    "fields": [
+      {
+        "component": "text",
+        "name": "navTitle",
+        "label": "Nav Title",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "boolean",
+        "name": "hasLevel3",
+        "label": "Has Level 3",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "number",
+        "name": "mergeCount",
+        "label": "Merge Count",
+        "valueType": "number",
+        "min": 1,
+        "max": 4
       }
     ]
   },
