@@ -2,4 +2,3 @@
    (.footer-nav-columns, .footer-contact, .footer-legal, etc.) which footer.ts no
    longer produces. Renders unstyled so FE can style the new block model from
    scratch. Previous rules are recoverable from git history. */
-
