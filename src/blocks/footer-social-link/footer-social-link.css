@@ -1,0 +1,31 @@
+/* footer-social-link — heading uses the shared `.footer-heading` class (styled in footer.css). */
+.footer-social-list {
+    display: flex;
+    gap: var(--dimension-spacing-general-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.footer-social-list a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* size the icon span itself, not the <img> — the global `img { max-width: 100% }`
+   reset (styles.css) clamps an image's width to its container but not its height,
+   which would otherwise distort a fixed-height <img> into a non-square icon */
+.footer-social-list .icon {
+    width: 32px;
+    height: 32px;
+}
+
+@media (width >= 768px) {
+    .footer-social {
+        min-width: 0;
+    }
+}
