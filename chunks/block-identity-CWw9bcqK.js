@@ -1,0 +1,2 @@
+/*! v0.1.0 | hb6d81d5e */
+function e(e,t,{contentRows:n,hiddenClass:r}){let i=Math.min(Math.max(t.length-n,0),2),a=t.slice(0,i),[o,s]=a,c=o?.textContent?.trim().replace(/^#/,``);c&&(e.id=c);let l=s?.textContent?.trim();return l&&(e.dataset.testId=l),r&&a.forEach(e=>e.classList.add(r)),t.slice(i)}export{e as t};

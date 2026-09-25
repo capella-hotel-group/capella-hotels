@@ -201,6 +201,54 @@
     ]
   },
   {
+    "id": "header-section",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Section Name",
+        "description": "The label shown for this section in the Content Tree"
+      },
+      {
+        "component": "text",
+        "name": "level1NavTitle",
+        "label": "Level 1 Nav Title",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "awards-list",
     "fields": [
       {
@@ -277,9 +325,17 @@
     "fields": [
       {
         "component": "text",
-        "name": "anchorId",
-        "label": "User-defined ID",
-        "description": "Optional anchor target for in-page links",
+        "name": "id",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
         "valueType": "string",
         "value": ""
       },
@@ -619,6 +675,22 @@
   {
     "id": "destination-introduction",
     "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "valueType": "string",
+        "value": ""
+      },
       {
         "component": "text",
         "name": "eyebrow",
@@ -1417,6 +1489,45 @@
     ]
   },
   {
+    "id": "navigation-lists",
+    "fields": [
+      {
+        "component": "text",
+        "name": "navTitle",
+        "label": "Nav Title",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "boolean",
+        "name": "hasLevel3",
+        "label": "Has Level 3",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "number",
+        "name": "mergeCount",
+        "label": "Merge Count",
+        "valueType": "number",
+        "min": 1,
+        "max": 4
+      }
+    ]
+  },
+  {
     "id": "newsletter-form",
     "fields": [
       {
@@ -1526,9 +1637,19 @@
         "component": "text",
         "name": "id",
         "valueType": "string",
-        "label": "Component Anchor ID",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
         "value": "",
         "placeholder": "e.g., offer-cards"
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "value": "",
+        "placeholder": "offers-carousel"
       },
       {
         "component": "text",
@@ -2010,7 +2131,26 @@
     ]
   },
   {
-    "id": "turneo-proxy-test",
+    "id": "turneo-experience-detail",
     "fields": []
+  },
+  {
+    "id": "turneo-proxy-test",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "storeId",
+        "label": "Turneo Store ID",
+        "description": "Real Turneo storeId to filter experiences by (from the Turneo dashboard). Leave empty to show all."
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "detailPagePath",
+        "label": "Detail Page Path",
+        "description": "Path to a page containing a Turneo Experience Detail block, used by the \"View Detail (New Page)\" button, e.g. /experiences/detail"
+      }
+    ]
   }
 ]

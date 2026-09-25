@@ -1,0 +1,82 @@
+{
+  "definitions": [
+    {
+      "title": "Navigation Lists",
+      "id": "navigation-lists",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Navigation Lists",
+              "model": "navigation-lists",
+              "filter": "navigation-lists"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Navigation List Item",
+      "id": "navigation-list-item",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Navigation List Item",
+              "model": "link-item"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "navigation-lists",
+      "fields": [
+        {
+          "component": "text",
+          "name": "navTitle",
+          "label": "Nav Title",
+          "valueType": "string"
+        },
+        {
+          "component": "aem-content",
+          "name": "ctaLink",
+          "label": "CTA Link",
+          "valueType": "string"
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in New Tab",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
+          "component": "boolean",
+          "name": "hasLevel3",
+          "label": "Has Level 3",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
+          "component": "number",
+          "name": "mergeCount",
+          "label": "Merge Count",
+          "valueType": "number",
+          "min": 1,
+          "max": 4
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "navigation-lists",
+      "components": ["navigation-list-item"]
+    }
+  ]
+}

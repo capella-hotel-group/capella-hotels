@@ -38,9 +38,17 @@
       "fields": [
         {
           "component": "text",
-          "name": "anchorId",
-          "label": "User-defined ID",
-          "description": "Optional anchor target for in-page links",
+          "name": "id",
+          "label": "Block ID",
+          "description": "Sets the id attribute on the block, usable as an anchor target.",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "dataTestId",
+          "label": "Data Test ID",
+          "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
           "valueType": "string",
           "value": ""
         },

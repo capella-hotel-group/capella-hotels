@@ -58,9 +58,9 @@
     color: inherit;
 }
 
-/* the design indents only the middle line; the block splits soft breaks into
-   paragraphs first, so a single-line title is never indented */
-.offers-carousel .offers-carousel-title > :nth-child(2) {
+/* the design staggers the heading, so every even line is indented; the block splits
+   soft breaks into paragraphs first, so a single-line title is never indented */
+.offers-carousel .offers-carousel-title > :nth-child(even) {
     padding-inline-start: var(--dimension-spacing-general-2xl);
 }
 
