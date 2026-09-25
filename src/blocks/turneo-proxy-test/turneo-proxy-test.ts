@@ -243,19 +243,16 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     return;
   }
 
-  // Pre-load DOMPurify and initial data in parallel
-  const [purifyResult, experiencesResult] = await Promise.allSettled([
-    loadDOMPurify(),
-    fetchExperiencesViaAppBuilder(storeId ? { storeId } : undefined),
-  ]);
-
-  const purify = purifyResult.status === 'fulfilled' ? purifyResult.value : null;
+  // Render the shell (filter bar + skeleton) synchronously so there's something to paint
+  // before the App Builder round-trip resolves, instead of a blank block hurting LCP/SI.
+  let purify: { sanitize: (html: string) => string } | null = null;
 
   const wrapper = document.createElement('div');
   wrapper.className = 'turneo-proxy-test-wrapper';
 
   const gridEl = document.createElement('div');
   gridEl.className = 'turneo-proxy-test-grid';
+  setGridLoading(gridEl);
 
   const filterBar = buildFilter(async (from, to) => {
     setGridLoading(gridEl);
@@ -268,13 +265,20 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     }
   });
 
-  // Render initial results
+  wrapper.append(filterBar, gridEl);
+  block.replaceChildren(wrapper);
+
+  // Load DOMPurify and initial data in parallel, then swap the skeleton for real content.
+  const [purifyResult, experiencesResult] = await Promise.allSettled([
+    loadDOMPurify(),
+    fetchExperiencesViaAppBuilder(storeId ? { storeId } : undefined),
+  ]);
+
+  purify = purifyResult.status === 'fulfilled' ? purifyResult.value : null;
+
   if (experiencesResult.status === 'fulfilled') {
     gridEl.replaceChildren(...buildGridChildren(block, experiencesResult.value, purify, detailPagePath));
   } else {
     gridEl.replaceChildren(buildError(experiencesResult.reason));
   }
-
-  wrapper.append(filterBar, gridEl);
-  block.replaceChildren(wrapper);
 }
