@@ -1,5 +1,16 @@
-import { fetchExperiencesViaAppBuilder, type TurneoExperience } from './turneo-appbuilder-api.js';
+import { fetchExperiencesViaAppBuilder, APP_BUILDER_ORIGIN, type TurneoExperience } from './turneo-appbuilder-api.js';
 import { buildWidgetExperienceParam, mountWidgetDetail } from '@/utils/turneo-widget-api';
+
+/** Opens the connection to the App Builder host early, in parallel with page/JS parsing. */
+function preconnectAppBuilder(): void {
+  if (document.head.querySelector(`link[href="${APP_BUILDER_ORIGIN}"]`)) return;
+
+  const preconnect = document.createElement('link');
+  preconnect.rel = 'preconnect';
+  preconnect.href = APP_BUILDER_ORIGIN;
+  preconnect.crossOrigin = 'anonymous';
+  document.head.append(preconnect);
+}
 
 // ─── DOMPurify ────────────────────────────────────────────────────────────────
 
@@ -228,6 +239,8 @@ function buildFilter(onSearch: (from: string, to: string) => Promise<void>): HTM
 // ─── Block entry point ────────────────────────────────────────────────────────
 
 export default async function decorate(block: HTMLElement): Promise<void> {
+  preconnectAppBuilder();
+
   // Model fields → cell indices:
   //   cells[0] = storeId (text)
   //   cells[1] = detailPagePath (text)
