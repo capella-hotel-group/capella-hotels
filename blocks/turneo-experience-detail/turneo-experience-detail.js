@@ -1,2 +1,0 @@
-/*! v0.1.0 | h01f921fa */
-import{n as e}from"../../chunks/turneo-widget-api-DNfozdTX.js";async function t(t){let n=new URLSearchParams(window.location.search).get(`turneoExperience`);if(t.replaceChildren(),!n){let e=document.createElement(`p`);e.className=`turneo-experience-detail-empty`,e.textContent=`No experience selected — missing "turneoExperience" URL parameter.`,t.append(e);return}e(t)}export{t as default};

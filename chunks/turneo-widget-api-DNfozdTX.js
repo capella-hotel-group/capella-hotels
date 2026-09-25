@@ -1,2 +1,0 @@
-/*! v0.1.0 | h31cb2d98 */
-function e(e,t){return`${e}_${t.replace(/ /g,`-`)}`}function t(e){if(!document.querySelector(`script[src="https://widget-turneo.vercel.app/turneo-widget.iife.js"]`)){let e=document.createElement(`script`);e.src=`https://widget-turneo.vercel.app/turneo-widget.iife.js`,document.body.append(e)}let t=document.createElement(`turneo-widget`);t.setAttribute(`store`,`capella-poc`),e.append(t)}export{t as n,e as t};
