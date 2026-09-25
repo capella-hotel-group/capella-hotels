@@ -1,4 +1,16 @@
-import { fetchExperiencesViaAppBuilder, type TurneoExperience } from './turneo-appbuilder-api.js';
+import { fetchExperiencesViaAppBuilder, APP_BUILDER_ORIGIN, type TurneoExperience } from './turneo-appbuilder-api.js';
+import { buildWidgetExperienceParam, mountWidgetDetail } from '@/utils/turneo-widget-api';
+
+/** Opens the connection to the App Builder host early, in parallel with page/JS parsing. */
+function preconnectAppBuilder(): void {
+  if (document.head.querySelector(`link[href="${APP_BUILDER_ORIGIN}"]`)) return;
+
+  const preconnect = document.createElement('link');
+  preconnect.rel = 'preconnect';
+  preconnect.href = APP_BUILDER_ORIGIN;
+  preconnect.crossOrigin = 'anonymous';
+  document.head.append(preconnect);
+}
 
 // ─── DOMPurify ────────────────────────────────────────────────────────────────
 
@@ -25,9 +37,61 @@ function buildError(error: unknown): HTMLElement {
   return box;
 }
 
+// ─── Detail actions (redirect vs. in-place) ──────────────────────────────────
+
+/** Swaps this block's own content for the real turneo-widget, without a page reload. */
+function showDetailInPlace(block: HTMLElement, exp: TurneoExperience): void {
+  const param = buildWidgetExperienceParam(exp.id, exp.title);
+  const url = new URL(window.location.href);
+  url.searchParams.set('turneoExperience', param);
+  window.history.pushState({ turneoExperience: param }, '', url);
+
+  block.replaceChildren();
+  mountWidgetDetail(block);
+
+  window.addEventListener(
+    'popstate',
+    () => {
+      window.location.reload();
+    },
+    { once: true },
+  );
+}
+
+function buildDetailActions(block: HTMLElement, exp: TurneoExperience, detailPagePath: string): HTMLElement {
+  const actions = document.createElement('div');
+  actions.className = 'turneo-proxy-test-card-actions';
+
+  const param = buildWidgetExperienceParam(exp.id, exp.title);
+
+  if (detailPagePath) {
+    const redirectLink = document.createElement('a');
+    redirectLink.className = 'turneo-proxy-test-card-action turneo-proxy-test-card-action--redirect';
+    redirectLink.textContent = 'View Detail (New Page)';
+    const detailUrl = new URL(detailPagePath, window.location.origin);
+    detailUrl.searchParams.set('turneoExperience', param);
+    redirectLink.href = detailUrl.toString();
+    actions.append(redirectLink);
+  }
+
+  const inPlaceBtn = document.createElement('button');
+  inPlaceBtn.type = 'button';
+  inPlaceBtn.className = 'turneo-proxy-test-card-action turneo-proxy-test-card-action--inplace';
+  inPlaceBtn.textContent = 'View Detail (This Page)';
+  inPlaceBtn.addEventListener('click', () => showDetailInPlace(block, exp));
+  actions.append(inPlaceBtn);
+
+  return actions;
+}
+
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
-function buildCard(exp: TurneoExperience, purify: { sanitize: (html: string) => string } | null): HTMLElement {
+function buildCard(
+  block: HTMLElement,
+  exp: TurneoExperience,
+  purify: { sanitize: (html: string) => string } | null,
+  detailPagePath: string,
+): HTMLElement {
   const card = document.createElement('article');
   card.className = 'turneo-proxy-test-card';
 
@@ -69,6 +133,8 @@ function buildCard(exp: TurneoExperience, purify: { sanitize: (html: string) => 
     footer.append(price);
   }
 
+  footer.append(buildDetailActions(block, exp, detailPagePath));
+
   body.append(titleEl, desc, footer);
   card.append(thumbnail, body);
   return card;
@@ -77,8 +143,10 @@ function buildCard(exp: TurneoExperience, purify: { sanitize: (html: string) => 
 // ─── Grid helpers ─────────────────────────────────────────────────────────────
 
 function buildGridChildren(
+  block: HTMLElement,
   experiences: TurneoExperience[],
   purify: { sanitize: (html: string) => string } | null,
+  detailPagePath: string,
 ): HTMLElement[] {
   if (!experiences.length) {
     const empty = document.createElement('p');
@@ -86,7 +154,7 @@ function buildGridChildren(
     empty.textContent = 'No experiences returned.';
     return [empty];
   }
-  return experiences.map((exp) => buildCard(exp, purify));
+  return experiences.map((exp) => buildCard(block, exp, purify, detailPagePath));
 }
 
 function setGridLoading(gridEl: HTMLElement): void {
@@ -171,13 +239,27 @@ function buildFilter(onSearch: (from: string, to: string) => Promise<void>): HTM
 // ─── Block entry point ────────────────────────────────────────────────────────
 
 export default async function decorate(block: HTMLElement): Promise<void> {
-  // Pre-load DOMPurify and initial data in parallel
-  const [purifyResult, experiencesResult] = await Promise.allSettled([
-    loadDOMPurify(),
-    fetchExperiencesViaAppBuilder(),
-  ]);
+  preconnectAppBuilder();
 
-  const purify = purifyResult.status === 'fulfilled' ? purifyResult.value : null;
+  // Model fields → cell indices:
+  //   cells[0] = storeId (text)
+  //   cells[1] = detailPagePath (text)
+  const row = block.children[0] as HTMLElement | undefined;
+  const cells = row ? ([...row.children] as HTMLElement[]) : [];
+  const storeId = cells[0]?.querySelector('p')?.textContent?.trim() || '';
+  const detailPagePath = cells[1]?.querySelector('p')?.textContent?.trim() || '';
+
+  // Detail route (`?turneoExperience=<id>_<slug>`) — hand off to the real turneo-widget to render it.
+  if (new URLSearchParams(window.location.search).get('turneoExperience')) {
+    block.replaceChildren();
+    mountWidgetDetail(block);
+    return;
+  }
+
+  // Render the shell (filter bar + a "Load Experiences" CTA) synchronously with zero network
+  // dependency. The App Builder fetch only fires once the user explicitly asks for it — nothing
+  // loads automatically, so initial paint never waits on the third-party API.
+  let purify: { sanitize: (html: string) => string } | null = null;
 
   const wrapper = document.createElement('div');
   wrapper.className = 'turneo-proxy-test-wrapper';
@@ -185,24 +267,44 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const gridEl = document.createElement('div');
   gridEl.className = 'turneo-proxy-test-grid';
 
-  const filterBar = buildFilter(async (from, to) => {
+  const loadSection = document.createElement('div');
+  loadSection.className = 'turneo-proxy-test-load';
+  const loadBtn = document.createElement('button');
+  loadBtn.type = 'button';
+  loadBtn.className = 'turneo-proxy-test-load-btn';
+  loadBtn.textContent = 'Load Experiences';
+  loadSection.append(loadBtn);
+
+  let loaded = false;
+
+  async function loadExperiences(params?: { from?: string; until?: string }): Promise<void> {
+    if (!loaded) {
+      loaded = true;
+      loadSection.replaceWith(gridEl);
+    }
     setGridLoading(gridEl);
     try {
-      const params = from || to ? { from: from || undefined, until: to || undefined } : undefined;
-      const experiences = await fetchExperiencesViaAppBuilder(params);
-      gridEl.replaceChildren(...buildGridChildren(experiences, purify));
+      const [purifyResult, experiencesResult] = await Promise.allSettled([
+        purify ? Promise.resolve(purify) : loadDOMPurify(),
+        fetchExperiencesViaAppBuilder({ storeId: storeId || undefined, ...params }),
+      ]);
+      purify = purifyResult.status === 'fulfilled' ? purifyResult.value : purify;
+      if (experiencesResult.status === 'fulfilled') {
+        gridEl.replaceChildren(...buildGridChildren(block, experiencesResult.value, purify, detailPagePath));
+      } else {
+        gridEl.replaceChildren(buildError(experiencesResult.reason));
+      }
     } catch (err) {
       gridEl.replaceChildren(buildError(err));
     }
-  });
-
-  // Render initial results
-  if (experiencesResult.status === 'fulfilled') {
-    gridEl.replaceChildren(...buildGridChildren(experiencesResult.value, purify));
-  } else {
-    gridEl.replaceChildren(buildError(experiencesResult.reason));
   }
 
-  wrapper.append(filterBar, gridEl);
+  loadBtn.addEventListener('click', () => loadExperiences(), { once: true });
+
+  const filterBar = buildFilter(async (from, to) => {
+    await loadExperiences({ from: from || undefined, until: to || undefined });
+  });
+
+  wrapper.append(filterBar, loadSection);
   block.replaceChildren(wrapper);
 }

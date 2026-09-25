@@ -151,6 +151,36 @@
     font-style: italic;
 }
 
+/* Load CTA (deferred fetch — no network work until the user asks for it) */
+
+.turneo-proxy-test-load {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem;
+}
+
+.turneo-proxy-test-load-btn {
+    padding: 0.75rem 2rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-family: var(--body-font-family, inherit);
+    color: #fff;
+    background: var(--link-color, #0369a1);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.turneo-proxy-test-load-btn:hover {
+    background: #025d8e;
+}
+
+.turneo-proxy-test-load-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Card */
 
 .turneo-proxy-test-card {
@@ -231,6 +261,47 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-color, #131313);
+}
+
+.turneo-proxy-test-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.turneo-proxy-test-card-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-family: var(--body-font-family, inherit);
+    text-decoration: none;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--link-color, #0369a1);
+    transition: background-color 0.15s ease;
+}
+
+.turneo-proxy-test-card-action--redirect {
+    color: var(--link-color, #0369a1);
+    background: transparent;
+}
+
+.turneo-proxy-test-card-action--redirect:hover {
+    background: rgb(3 105 161 / 8%);
+}
+
+.turneo-proxy-test-card-action--inplace {
+    color: #fff;
+    background: var(--link-color, #0369a1);
+}
+
+.turneo-proxy-test-card-action--inplace:hover {
+    background: #025d8e;
 }
 
 /* Skeleton loading */
