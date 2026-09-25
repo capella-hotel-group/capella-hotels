@@ -1,3 +1,5 @@
+import { applyBlockIdentity } from '@/utils/block-identity.js';
+
 const CARD_MODEL = 'offers-carousel-item';
 
 // the stack in the design only has room for three cards, so any extra item is dropped
@@ -77,7 +79,6 @@ function decorateCtas(cell: HTMLElement): void {
 
   [...cell.querySelectorAll<HTMLAnchorElement>('a')].forEach((anchor, index) => {
     anchor.classList.add('offers-carousel-card-cta');
-    anchor.dataset.testid = 'offers-carousel-cta';
     // pair by position, since a CTA whose url is empty renders as plain text with no anchor
     const wrapper = authored.findIndex((element) => element === anchor || element.contains(anchor));
     const flag = wrapper < 0 ? undefined : authored.slice(wrapper + 1).find(isBooleanFlag);
@@ -321,15 +322,13 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
 export default function decorate(block: HTMLElement): void {
   if (block.querySelector(':scope > .offers-carousel-layout')) return;
 
-  block.dataset.testid = 'offers-carousel';
-
   const rows = [...block.children] as HTMLElement[];
   const cardRows = rows.filter(isCardRow);
-  const [idRow, eyebrowRow, titleRow] = rows.filter((row) => !cardRows.includes(row));
-
-  const anchorId = idRow?.textContent?.trim();
-  if (anchorId) block.id = anchorId.replace(/^#/, '');
-  idRow?.classList.add('offers-carousel-hidden');
+  const [eyebrowRow, titleRow] = applyBlockIdentity(
+    block,
+    rows.filter((row) => !cardRows.includes(row)),
+    { hiddenClass: 'offers-carousel-hidden', contentRows: 2 },
+  );
 
   const copy = document.createElement('div');
   copy.className = 'offers-carousel-copy';
