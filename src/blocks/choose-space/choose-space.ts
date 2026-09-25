@@ -1,5 +1,6 @@
 import { moveInstrumentation } from '@/app/scripts.js';
 import { resolveDAMUrl } from '@/utils/env.js';
+import { applyBlockIdentity } from '@/utils/block-identity.js';
 
 /*
  * choose-space
@@ -11,8 +12,7 @@ import { resolveDAMUrl } from '@/utils/env.js';
  * because conditionally hidden and empty fields still occupy their cell, which
  * makes the index stable but makes content sniffing unreliable.
  */
-const BLOCK_ROWS = { anchorId: 0, title: 1, exploreCta: 2 } as const;
-const ITEM_START = 3;
+const BLOCK_ROWS = { title: 0, exploreCta: 1 } as const;
 // the `space-option` model id; the editor stamps it on every item row
 const ITEM_MODEL = 'space-option';
 const ITEM = {
@@ -46,6 +46,13 @@ function textOf(cell?: Element | null): string {
 
 function hasContent(cell?: Element | null): cell is Element {
   return !!cell && (!!textOf(cell) || !!cell.querySelector('picture, img, a'));
+}
+
+// in the editor the item rows are the ones carrying the item model; outside it they
+// are the multi-cell rows, since every block-level field emits a single cell
+function isItemRow(row: HTMLElement): boolean {
+  if (row.dataset.aueModel) return row.dataset.aueModel === ITEM_MODEL;
+  return row.children.length > 1;
 }
 
 /**
@@ -87,6 +94,34 @@ function buildCopy(cell: Element | null | undefined, tag: string, className: str
   element.className = className;
   while (cell.firstChild) element.append(cell.firstChild);
   return element;
+}
+
+/**
+ * Rewrites `<p>one<br>two</p>` as `<p>one</p><p>two</p>` so a heading written with
+ * soft breaks lines up with one written as separate paragraphs. The stylesheet
+ * indents the second child, which only works when each line is its own element.
+ */
+function splitOnLineBreaks(container: Element): void {
+  [...container.children].forEach((element) => {
+    if (!element.querySelector('br')) return;
+
+    const lines = [document.createDocumentFragment()];
+    [...element.childNodes].forEach((node) => {
+      if (node.nodeName === 'BR') lines.push(document.createDocumentFragment());
+      else lines[lines.length - 1]!.append(node);
+    });
+
+    const paragraphs = lines
+      .filter((line) => line.textContent?.trim())
+      .map((line) => {
+        // a fresh element rather than a clone, so no data-aue-* attribute is duplicated
+        const paragraph = document.createElement(element.tagName);
+        paragraph.append(line);
+        return paragraph;
+      });
+
+    if (paragraphs.length) element.replaceWith(...paragraphs);
+  });
 }
 
 /** Plain-text fields arrive wrapped in a paragraph, which would nest inside the element we build. */
@@ -238,6 +273,7 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
   body.className = 'choose-space-panel-body';
   const eyebrow = buildText(cells[ITEM.eyebrow], 'p', 'choose-space-eyebrow');
   const title = buildCopy(cells[ITEM.title], 'h3', 'choose-space-panel-title');
+  if (title) splitOnLineBreaks(title);
   const description = buildCopy(cells[ITEM.description], 'div', 'choose-space-panel-description');
   if (eyebrow) body.append(eyebrow);
   if (title) body.append(title);
@@ -379,15 +415,14 @@ function createCarousel(tablist: HTMLElement, nav: HTMLElement) {
 export default function decorate(block: HTMLElement): void {
   blockCount += 1;
   const blockId = `choose-space-${blockCount}`;
-  const rows = [...block.children];
+  const rows = [...block.children] as HTMLElement[];
 
-  const anchorId = textOf(rows[BLOCK_ROWS.anchorId]?.firstElementChild).replace(/^#/, '');
-  if (anchorId) block.id = anchorId;
-
-  // in the editor the item rows are the ones carrying the item model; outside it
-  // they are everything after the block-level fields
-  const instrumented = rows.filter((row) => (row as HTMLElement).dataset.aueModel === ITEM_MODEL);
-  const itemRows = instrumented.length ? instrumented : rows.slice(ITEM_START);
+  const itemRows = rows.filter(isItemRow);
+  const blockRows = applyBlockIdentity(
+    block,
+    rows.filter((row) => !itemRows.includes(row)),
+    { contentRows: Object.keys(BLOCK_ROWS).length },
+  );
 
   const spaces = itemRows
     .map((row, index) => buildSpace(row, blockId, index))
@@ -399,9 +434,10 @@ export default function decorate(block: HTMLElement): void {
 
   const head = document.createElement('div');
   head.className = 'choose-space-head';
-  const title = buildCopy(rows[BLOCK_ROWS.title]?.firstElementChild, 'h2', 'choose-space-title');
+  const title = buildCopy(blockRows[BLOCK_ROWS.title]?.firstElementChild, 'h2', 'choose-space-title');
+  if (title) splitOnLineBreaks(title);
   if (title) head.append(title);
-  const explore = buildCta(rows[BLOCK_ROWS.exploreCta]?.firstElementChild, 'primary');
+  const explore = buildCta(blockRows[BLOCK_ROWS.exploreCta]?.firstElementChild, 'primary');
   if (explore) {
     explore.className = 'choose-space-explore';
     head.append(explore);
