@@ -241,15 +241,13 @@ function buildFilter(onSearch: (from: string, to: string) => Promise<void>): HTM
 export default async function decorate(block: HTMLElement): Promise<void> {
   preconnectAppBuilder();
 
-  // Model fields → cell indices:
-  //   cells[0] = storeId (text)
-  //   cells[1] = detailPagePath (text)
-  // Text fields that look like a path/URL get auto-linkified by AEM (rendered as <a>, not <p>),
-  // so read textContent directly instead of assuming a specific wrapper element.
-  const row = block.children[0] as HTMLElement | undefined;
-  const cells = row ? ([...row.children] as HTMLElement[]) : [];
-  const storeId = cells[0]?.textContent?.trim() || '';
-  const detailPagePath = cells[1]?.textContent?.trim() || '';
+  // This flat (non-columns) model renders one row per field, not one row with multiple
+  // cells, so each top-level field is `block.children[N]`, not `block.children[0].children[N]`.
+  // Text fields that look like a path/URL also get auto-linkified by AEM (rendered as <a>, not
+  // <p>), so read textContent directly instead of assuming a specific wrapper element.
+  const rows = [...block.children] as HTMLElement[];
+  const storeId = rows[0]?.textContent?.trim() || '';
+  const detailPagePath = rows[1]?.textContent?.trim() || '';
 
   // Detail route (`?turneoExperience=<id>_<slug>`) — hand off to the real turneo-widget to render it.
   if (new URLSearchParams(window.location.search).get('turneoExperience')) {
