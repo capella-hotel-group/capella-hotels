@@ -1,7 +1,8 @@
 // src/blocks/hero-destination/lib/parse.ts
 // Rows (authored): config rows have a single cell (0=autoplay, 1=autoplayInterval, 2=loop,
-// 3=transitionEffect, 4=simulateTouch); item rows have one cell per item field:
-//   0=mediaType, 1=image, 2=imageMobile, 3=imageAlt, 4=video, 5=videoMobile, 6=heading
+// 3=transitionEffect, 4=simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
+// video, videoMobile, heading fields, but conditionally-hidden fields can drop their cell from
+// the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
 import type { EffectName } from './effects/types';
 import type { HeroDestinationItem } from './types';
@@ -19,19 +20,6 @@ export interface CarouselConfig {
 
 function cellText(cell?: Element | null): string {
   return cell?.textContent?.trim() ?? '';
-}
-
-// Looks a cell up by its authored field name (data-aue-prop) rather than position, so parsing
-// keeps working if a conditional field renders an empty/absent cell (e.g. imageMobile/videoMobile
-// left blank) and shifts positional indices. Falls back to `fallbackIndex` when the attribute is
-// missing (e.g. content authored/copied before instrumentation was present).
-function cellByProp(cells: HTMLElement[], property: string, fallbackIndex: number): HTMLElement | undefined {
-  return (
-    cells.find(
-      (cell) =>
-        cell.getAttribute('data-aue-prop') === property || !!cell.querySelector(`[data-aue-prop="${property}"]`),
-    ) ?? cells[fallbackIndex]
-  );
 }
 
 function cellVideoUrl(cell?: Element | null): string {
@@ -57,51 +45,53 @@ export function parseCarouselConfig(configRows: HTMLElement[]): CarouselConfig {
 }
 
 export function parseItems(itemRows: HTMLElement[]): HeroDestinationItem[] {
-  return itemRows
-    .map((row): HeroDestinationItem | null => parseItem([...row.children] as HTMLElement[], row))
-    .filter((item): item is HeroDestinationItem => item !== null);
+  return itemRows.map((row) => parseItem([...row.children] as HTMLElement[], row));
 }
 
-// Current model: mediaType, image, imageMobile, imageAlt, video, videoMobile, heading (7 cells).
-// Cells are looked up by data-aue-prop (see cellByProp) since an empty conditional field can
-// render an absent/empty cell and shift positional indices — e.g. after switching mediaType or
-// leaving the optional mobile fields blank.
-// Content authored before the mediaType/mobile fields were added (image [+ imageAlt] + heading,
-// 2-3 cells) is parsed as an image item: the last cell is the heading, the first cell containing
-// a <picture> is the image, and any other plain-text cell is the alt text.
-function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem | null {
-  if (cells.length >= 7) {
-    const mediaTypeCell = cellByProp(cells, 'mediaType', 0);
-    const headingCell = cellByProp(cells, 'heading', 6);
-    const heading = cellText(headingCell);
-    if (!heading) return null;
-
-    if (cellText(mediaTypeCell).toLowerCase() === 'video') {
-      const desktopVideoUrl = cellVideoUrl(cellByProp(cells, 'video', 4));
-      if (!desktopVideoUrl) return null;
-      const mobileVideoUrl = cellVideoUrl(cellByProp(cells, 'videoMobile', 5)) || desktopVideoUrl;
-      return { mediaType: 'video', desktopVideoUrl, mobileVideoUrl, heading, sourceRow: row };
-    }
-
-    const desktopPicture = cellByProp(cells, 'image', 1)?.querySelector('picture');
-    if (!desktopPicture) return null;
-    const mobilePicture = cellByProp(cells, 'imageMobile', 2)?.querySelector('picture') ?? null;
-    const imageAlt = cellText(cellByProp(cells, 'imageAlt', 3));
-    return { mediaType: 'image', desktopPicture, mobilePicture, imageAlt, heading, sourceRow: row };
-  }
-
+// Model: mediaType, image, imageMobile, imageAlt, video, videoMobile, heading. mediaType and
+// heading are never conditionally hidden, so they're always the first/last cell — but a hidden
+// field's cell can be dropped from the authored row entirely (observed in real delivery HTML,
+// not just the editor), shifting every position after it. So instead of trusting fixed offsets,
+// cells are identified by what they actually contain: a <picture> means an image cell, an <a
+// href> means a video-link cell, anything else is the alt text. mediaType wins when both image
+// and video data are present (e.g. an author switched mediaType but left stale image refs behind).
+// Content authored before mediaType existed (image [+ imageAlt] + heading, 2-3 cells) has no
+// mediaType cell and is parsed the same way as a plain image item.
+// Never returns null: a row with no resolvable media (e.g. a just-added, still-empty item) still
+// needs to render so it stays visible and selectable in Universal Editor.
+function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem {
   const headingCell = cells[cells.length - 1];
   const heading = cellText(headingCell);
-  const desktopPicture = cells.find((cell) => cell.querySelector('picture'))?.querySelector('picture');
-  if (!heading || !desktopPicture) return null;
 
-  const altCell = cells.find((cell) => cell !== headingCell && !cell.querySelector('picture'));
-  return {
-    mediaType: 'image',
-    desktopPicture,
-    mobilePicture: null,
-    imageAlt: cellText(altCell),
-    heading,
-    sourceRow: row,
-  };
+  const mediaType = cellText(cells[0]).toLowerCase();
+  const otherCells = cells.slice(0, -1);
+  const pictureCells = otherCells.filter((cell) => cell.querySelector('picture'));
+  const videoCells = otherCells.filter((cell) => cellVideoUrl(cell));
+
+  const isVideo =
+    mediaType === 'video' || (mediaType !== 'image' && videoCells.length > 0 && pictureCells.length === 0);
+
+  if (isVideo) {
+    const desktopVideoUrl = cellVideoUrl(videoCells[0]);
+    if (desktopVideoUrl) {
+      const mobileVideoUrl = cellVideoUrl(videoCells[1]) || desktopVideoUrl;
+      return { mediaType: 'video', desktopVideoUrl, mobileVideoUrl, heading, sourceRow: row };
+    }
+  } else {
+    const desktopPicture = pictureCells[0]?.querySelector('picture');
+    if (desktopPicture) {
+      const mobilePicture = pictureCells[1]?.querySelector('picture') ?? null;
+      const altCell = otherCells.find((cell) => cell !== cells[0] && !pictureCells.includes(cell));
+      return {
+        mediaType: 'image',
+        desktopPicture,
+        mobilePicture,
+        imageAlt: cellText(altCell),
+        heading,
+        sourceRow: row,
+      };
+    }
+  }
+
+  return { mediaType: 'empty', heading, sourceRow: row };
 }

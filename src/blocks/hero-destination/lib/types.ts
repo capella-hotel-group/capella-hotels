@@ -19,4 +19,9 @@ export interface HeroDestinationVideoItem extends HeroDestinationItemBase {
   mobileVideoUrl: string;
 }
 
-export type HeroDestinationItem = HeroDestinationImageItem | HeroDestinationVideoItem;
+/** A freshly added (or still-being-filled) item with no resolvable media yet. */
+export interface HeroDestinationEmptyItem extends HeroDestinationItemBase {
+  mediaType: 'empty';
+}
+
+export type HeroDestinationItem = HeroDestinationImageItem | HeroDestinationVideoItem | HeroDestinationEmptyItem;
