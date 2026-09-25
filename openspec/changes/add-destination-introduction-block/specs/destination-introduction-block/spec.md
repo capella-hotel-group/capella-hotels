@@ -82,17 +82,17 @@ Because `imageAlt` ends in the reserved `Alt` suffix, field collapse SHALL merge
 
 A row SHALL be emitted for every block-level field regardless of whether the author populated it, so the index of each copy field SHALL be constant.
 
-Decoration logic SHALL address copy fields by their fixed index counted from the start of the block, and SHALL treat all rows from index 4 onward as gallery items. Decoration logic SHALL NOT identify rows by the presence of a `picture` element, SHALL NOT identify rows by cell count, and SHALL NOT rely on `data-aue-*` attributes, which are absent from delivered production markup.
+Decoration logic SHALL address copy fields by their fixed index counted from the first copy row, and SHALL treat every row carrying the gallery item model — or, in delivered markup where `data-aue-*` is absent, every row holding a `picture` — as a gallery item.
 
 #### Scenario: Copy field indices are stable when fields are empty
 
 - **WHEN** an author leaves Eyebrow and Body empty but populates Title and Footer CTA
-- **THEN** the block SHALL still emit four copy rows, and Title SHALL remain at index 1 and Footer CTA at index 3
+- **THEN** the block SHALL still emit four copy rows, and Title SHALL remain at copy index 1 and Footer CTA at copy index 3
 
 #### Scenario: Gallery items follow the copy fields
 
 - **WHEN** decoration logic inspects the rows of a `destination-introduction` block
-- **THEN** rows 0 through 3 SHALL be treated as block-level copy fields and every row from index 4 onward SHALL be treated as a gallery image item
+- **THEN** the leading identity and copy rows SHALL be treated as block-level fields and every gallery item row SHALL be treated as a gallery image item
 
 #### Scenario: Gallery item row carries image and alt in one cell
 
@@ -103,13 +103,13 @@ Decoration logic SHALL address copy fields by their fixed index counted from the
 
 Adding, removing, or reordering block-level fields SHALL be treated as a change to the row order contract, and the decoration logic's field indices SHALL be updated in the same change.
 
-Fields named `id` or `classes` SHALL NOT be added to this model, because those names are reserved and do not emit a row, which would silently desynchronise the indices. A user-defined anchor, if ever required, SHALL use a non-reserved name such as `anchorId`.
+Fields named `classes` SHALL NOT be added to this model, because that name is reserved and does not emit a row, which would silently desynchronise the indices. The block-level identity fields `id` and `dataTestId` required by the project-wide block identity rule SHALL be the first two fields, and decoration SHALL consume them through `applyBlockIdentity()`, which measures the split from the tail so content authored before those fields existed keeps its indices.
 
 Field names ending in `Title`, `Type`, `MimeType`, `Alt`, or `Text`, and field names sharing an underscore-separated group prefix, SHALL be counted as part of the field they collapse into rather than as separate rows.
 
 #### Scenario: A reserved field name is rejected
 
-- **WHEN** a field named `id` or `classes` is proposed for the block model
+- **WHEN** a field named `classes` is proposed for the block model
 - **THEN** it SHALL be renamed to a non-reserved name before the model is accepted
 
 ### Requirement: Stub decoration without visual design
