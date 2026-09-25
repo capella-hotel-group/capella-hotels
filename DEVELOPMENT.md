@@ -66,7 +66,7 @@ After changing any source fragment, run `npm run build:json`. This regenerates a
 
 ## Coding conventions
 
-All coding conventions (TypeScript, CSS, HTML, `data-testid` test automation) live in [docs/coding-guidelines.md](./docs/coding-guidelines.md) — read it before writing or modifying code.
+All coding conventions (TypeScript, CSS, HTML, `data-test-id` test automation) live in [docs/coding-guidelines.md](./docs/coding-guidelines.md) — read it before writing or modifying code.
 
 ## Quality gates before pushing
 

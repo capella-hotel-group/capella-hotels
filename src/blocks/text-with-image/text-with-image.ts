@@ -5,8 +5,6 @@ export default function decorate(block: HTMLElement): void {
   const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
   if (blockId) block.id = blockId;
 
-  block.setAttribute('data-testid', 'text-with-image');
-
   const getRowText = (row?: Element | null) =>
     row?.firstElementChild?.textContent?.trim() || row?.textContent?.trim() || '';
   const getField = (name: string): Element | null => block.querySelector(`[data-aue-prop="${name}"]`);
@@ -59,15 +57,15 @@ export default function decorate(block: HTMLElement): void {
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
   const responsiveAltText = mobileAltText || altText;
 
-  const ctaGroup = getField('cta_link')?.closest('div') || rows.find((row) => row.querySelector('a'))?.firstElementChild;
+  const ctaGroup =
+    getField('cta_link')?.closest('div') || rows.find((row) => row.querySelector('a'))?.firstElementChild;
   const ctaLinkEl = ctaGroup?.querySelector('a');
   const ctaHref = ctaLinkEl?.getAttribute('href') || getFieldText('cta_link');
   const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
-  const ctaText =
-    ctaTextEl?.textContent?.trim() || getFieldText('cta') || '';
-  const openInNewTab = [...(ctaGroup?.children || [])].some(
-    (element) => element.textContent?.trim().toLowerCase() === 'true',
-  ) || getFieldText('cta_openInNewTab').toLowerCase() === 'true';
+  const ctaText = ctaTextEl?.textContent?.trim() || getFieldText('cta') || '';
+  const openInNewTab =
+    [...(ctaGroup?.children || [])].some((element) => element.textContent?.trim().toLowerCase() === 'true') ||
+    getFieldText('cta_openInNewTab').toLowerCase() === 'true';
 
   if (pictureEl) {
     const responsiveImageQuery = window.matchMedia('(max-width: 767px)');
@@ -122,7 +120,6 @@ export default function decorate(block: HTMLElement): void {
     cta.className = 'cta-link';
     cta.href = ctaHref;
     cta.textContent = ctaText;
-    cta.setAttribute('data-testid', 'text-with-image-cta');
     if (openInNewTab) cta.target = '_blank';
     textCol.append(cta);
   }
@@ -174,7 +171,6 @@ export default function decorate(block: HTMLElement): void {
     const imageLink = document.createElement('a');
     imageLink.className = 'image-link';
     imageLink.href = ctaHref;
-    imageLink.setAttribute('data-testid', 'text-with-image-image-link');
     if (openInNewTab) imageLink.target = '_blank';
     imageLink.append(...imageCol.childNodes);
     imageCol.append(imageLink);

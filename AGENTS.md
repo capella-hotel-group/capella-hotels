@@ -66,7 +66,7 @@ The repository provides the basic structure, blocks, and configuration needed to
 
 ## Code Style Guidelines
 
-**Mandatory:** read [docs/coding-guidelines.md](./docs/coding-guidelines.md) before writing or modifying any TypeScript, CSS, or HTML in this repository, and follow it for every code change. It covers TypeScript/JavaScript conventions, CSS conventions (scoping, breakpoints), HTML/accessibility conventions, and the `data-testid` test automation convention.
+**Mandatory:** read [docs/coding-guidelines.md](./docs/coding-guidelines.md) before writing or modifying any TypeScript, CSS, or HTML in this repository, and follow it for every code change. It covers TypeScript/JavaScript conventions, CSS conventions (scoping, breakpoints), HTML/accessibility conventions, and the `data-test-id` test automation convention.
 
 ## Key Concepts
 
