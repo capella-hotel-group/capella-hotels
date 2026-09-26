@@ -10,10 +10,19 @@ export default function decorate(block: HTMLElement): void {
   const anchorId = fieldOf('id')?.textContent?.trim() || anchorRow?.textContent?.trim();
   if (anchorId) block.id = anchorId.replace(/^#/, '');
 
-  const headingText = titleField?.textContent?.trim() || titleRow?.querySelector('div')?.textContent?.trim() || '';
+  const headingSource = titleField || titleRow?.querySelector<HTMLElement>('div');
+  const headingParagraphs = headingSource ? [...headingSource.querySelectorAll('p')] : [];
+  const headingLines = (headingParagraphs.length ? headingParagraphs : [headingSource])
+    .map((el) => el?.textContent?.trim() || '')
+    .filter(Boolean);
+
   const h2 = document.createElement('h2');
   h2.className = 'section-intro-title';
-  h2.textContent = headingText;
+  // authors author each title line as its own <p>; keep the hard break instead of flattening to one line
+  headingLines.forEach((line, i) => {
+    if (i > 0) h2.append(document.createElement('br'));
+    h2.append(document.createTextNode(line));
+  });
 
   const narrative = bodyField || bodyRow?.querySelector<HTMLElement>('div');
   const textWrapper = document.createElement('div');
