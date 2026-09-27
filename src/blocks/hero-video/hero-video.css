@@ -80,29 +80,22 @@
 }
 
 /* ── Selector UI ─────────────────────────────────────────────────────── */
-/* Two auto columns centered as a group: the lead ("See" + list) and the suffix sit side by side,
+/* Three auto columns centered as a group: "See", the list, and the suffix sit side by side,
    centered together like the phrase "<destination> with new eyes". */
 .hero-video-selector {
     position: absolute;
     inset: 0;
     z-index: 2;
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: auto auto auto;
     justify-content: center;
     align-items: center;
     column-gap: var(--dimension-spacing-general-l);
     pointer-events: none;
 }
 
-.hero-video-lead {
-    position: relative;
-}
-
 .hero-video-prefix {
-    position: absolute;
-    right: 0;
-    bottom: 100%;
-    margin-bottom: 0.5rem;
+    justify-self: end;
 }
 
 .hero-video-prefix,
