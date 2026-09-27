@@ -5,7 +5,7 @@ import type { IntroElements } from './types';
 const T_PHRASE_START = 800; // unified phrase fades in
 const T_PHRASE_FADE = 400; // phrase fade-in duration
 const T_SPLIT_START = 2800; // phrase out → split layout in
-const T_PHRASE_SLIDE = 720; // whole "See with new eyes" phrase glides intact onto its resting spot
+const T_PHRASE_SLIDE = 480; // whole "See with new eyes" phrase glides intact onto its resting spot
 const T_SPLIT_MOTION = 720; // "See" peels off, rising/fading, while the list rises in
 const T_CONTROLS_GAP = 180; // pause after the split settles before controls fade in
 const T_CONTROLS_FADE = 320; // controls fade-in duration
