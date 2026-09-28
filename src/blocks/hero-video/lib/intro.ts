@@ -143,6 +143,7 @@ export async function runIntro(
   itemList.style.opacity = '1';
   itemList.style.transform = `translateY(${restY}px)`;
   prefix.style.opacity = '0';
+  prefix.style.transform = 'translate(0, 0)'; // rest at its true (flush-with-list) position, not wherever the exit animation left it
   prefixLeave.cancel();
   itemsIn.cancel();
 
@@ -181,6 +182,7 @@ export function skipIntro(elements: IntroElements): void {
   introPhrase.style.display = 'none';
   prefix.style.opacity = '0';
   prefix.style.display = '';
+  prefix.style.transform = 'translate(0, 0)';
   suffix.style.opacity = '1';
   suffix.style.transform = '';
   itemList.style.opacity = '1';
