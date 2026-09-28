@@ -1,227 +1,342 @@
-.text-with-cta-wrapper {
-    /* margin-block: 24px; */
-}
+/* Action card: copy on the start side, a collapsible sign-up form on the end side. */
 
-/* action-card */
 .text-with-cta {
     display: flex;
-    padding: var(--dimension-layout-module-padding-block, 64px) var(--dimension-layout-module-padding-inline-L, 296px);
-    align-items: flex-start;
-    gap: var(--dimension-spacing-general-l, 20px);
-    background: var(--color-surface-general-subtle, #f9f6f6);
+    flex-direction: column;
+    align-items: center;
+    gap: var(--dimension-spacing-general-2xl);
+    padding-block: var(--dimension-layout-module-padding-block);
+    padding-inline: var(--dimension-layout-module-padding-inline-l);
+    background-color: var(--color-surface-general-subtle);
+}
 
-    &.text-with-cta-theme-soft-sand {
-        --text-with-cta-bg: #ece5e3;
-    }
-
-    &.text-with-cta-style-solid-button {
-        padding-inline: 56px;
-
-        @media (width >= 768px) {
-            align-items: center;
-
-            /* 142/834 */
-            padding-inline: 17.0264%;
-        }
-
-        @media (width >= 1200px) {
-            /* 296/1440 */
-            padding-inline: 20.5556%;
-        }
+@media (width >= 768px) {
+    .text-with-cta {
+        flex-direction: row;
+        align-items: stretch;
+        gap: var(--dimension-spacing-general-l);
     }
 }
 
 /* text-container */
-.text-with-cta .text-with-cta-content {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    align-items: center;
-    align-self: stretch;
-    gap: 24px;
-    min-width: 0;
-    max-width: none;
 
-    @media (width >= 768px) {
-        align-items: flex-start;
-        align-self: auto;
-        max-width: 413px;
+.text-with-cta .text-with-cta-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-xl);
+    width: 100%;
+    text-align: center;
+}
+
+@media (width >= 768px) {
+    .text-with-cta .text-with-cta-text {
+        flex: 0 0 230px;
+        width: 230px;
+        text-align: start;
     }
 }
 
-/* Title-block — stacked title lines sit flush; line-height carries the rhythm. */
+@media (width >= 1200px) {
+    .text-with-cta .text-with-cta-text {
+        flex-basis: 413px;
+        width: 413px;
+    }
+}
+
 .text-with-cta .text-with-cta-title,
 .text-with-cta .text-with-cta-title p {
-    color: var(--color-text-main-heading, #1b364b);
-
-    /* heading/h4 */
-    font-family: var(--type-font-family-heading, GoudyWtcT);
-    font-size: 22px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 24px;
-
-    @media (width >= 768px) {
-        font-size: var(--typography-fontsize-heading-h4, 28px);
-        line-height: var(--typography-line-height-heading-h4, 28px); /* 100% */
-    }
+    margin: 0;
+    color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h4);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h4);
 }
 
-/* paragraph-stack */
-.text-with-cta .text-with-cta-subtitle,
-.text-with-cta .text-with-cta-subtitle p {
-    color: var(--color-text-main-body, #262727);
-    leading-trim: both;
-    text-edge: cap;
-
-    /* body/md-reg */
-    font-family: var(--type-font-family-body, calibre);
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 20px;
-
-    @media (width >= 768px) {
-        font-size: var(--typography-fontsize-body-M, 18px);
-    }
-
-    @media (width >= 1200px) {
-        line-height: var(--typography-line-height-body-md, 22px); /* 122.222% */
-    }
+.text-with-cta .text-with-cta-description,
+.text-with-cta .text-with-cta-description p {
+    margin: 0;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
-.text-with-cta .text-with-cta-subtitle p + p {
-    margin-top: 12px;
-
-    @media (width >= 768px) {
-        margin-top: 16px;
-    }
-
-    @media (width >= 1200px) {
-        margin-top: 20px;
-    }
+.text-with-cta .text-with-cta-description p + p {
+    margin-block-start: var(--dimension-spacing-general-m);
 }
 
-/* action */
-.text-with-cta .text-with-cta-actions {
+/* action column */
+
+.text-with-cta .text-with-cta-aside {
     display: flex;
-    flex: 0 0 auto;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    align-self: stretch;
-    gap: 10px;
+    width: 100%;
+}
 
-    @media (width >= 768px) {
-        flex: 1 1 auto;
+@media (width >= 768px) {
+    .text-with-cta .text-with-cta-aside {
+        flex: 1 1 0;
+        align-items: stretch;
+        justify-content: flex-end;
+        min-width: 0;
+        width: auto;
+    }
+}
+
+.text-with-cta .text-with-cta-signup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+@media (width >= 768px) {
+    .text-with-cta .text-with-cta-signup {
         align-items: flex-end;
     }
+
+    .text-with-cta .text-with-cta-signup.is-expanded {
+        align-items: stretch;
+    }
 }
 
-/* Button/text-standard */
-.text-with-cta .text-with-cta-cta {
+/* Button/text-standard — the collapsed disclosure trigger */
+
+.text-with-cta .text-with-cta-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    box-sizing: border-box;
-    min-height: 40px;
-    border-radius: 2px;
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    line-height: 20px;
+    gap: var(--component-button-gap);
+
+    /* Figma pins the button frame to 40px, so padding must not add to it. */
+    height: var(--component-button-height);
+    padding: 0;
+    border: 0;
+    border-radius: var(--component-button-corner-standard);
+    background: none;
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-text-link);
+    line-height: var(--typography-line-height-body-md);
     text-transform: uppercase;
-    cursor: pointer;
-
-    &:focus-visible {
-        outline: 2px solid var(--text-with-cta-accent);
-        outline-offset: 3px;
-    }
-
-    @media (width >= 768px) {
-        gap: 8px;
-        font-size: 18px;
-    }
-
-    @media (width >= 1200px) {
-        line-height: 22px;
-    }
-}
-
-.text-with-cta .text-with-cta-cta-underlined-text-link {
-    color: var(--color-text-action-default, #1b364b);
-
-    /* body/link */
-    font-family: var(--type-font-family-CTA, calibre);
-    font-size: var(--typography-fontsize-body-M, 18px);
-    font-style: normal;
-    font-weight: 300;
-    line-height: var(--typography-line-height-body-md, 22px); /* 122.222% */
     text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-skip-ink: auto;
-    text-decoration-thickness: 7%; /* 1.26px */
-    text-underline-offset: 20.5%; /* 3.69px */
+    text-decoration-thickness: 7%;
     text-underline-position: from-font;
-    text-transform: uppercase;
+    cursor: pointer;
 }
 
-.text-with-cta .text-with-cta-cta-solid-button {
-    padding: 4px 24px;
-    background: var(--text-with-cta-accent);
-    color: var(--text-with-cta-on-accent);
-    text-decoration: none;
-
-    &:hover {
-        background: #142a3b;
-    }
-
-    @media (width >= 768px) {
-        padding: 8px 24px;
-    }
-
-    @media (width >= 1200px) {
-        padding: 16px 32px;
-    }
+.text-with-cta .text-with-cta-signup.is-expanded .text-with-cta-trigger {
+    display: none;
 }
 
-/* Modal used by the Pop-up Form action; content comes from the authored fragment. */
-.text-with-cta-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
+/* action / form */
+
+.text-with-cta .text-with-cta-form {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--dimension-spacing-general-3xl);
+    width: 100%;
+    margin: 0;
+}
+
+.text-with-cta .text-with-cta-form[hidden] {
+    display: none;
+}
+
+@media (width >= 768px) {
+    .text-with-cta .text-with-cta-form {
+        align-items: flex-start;
+    }
+}
+
+.text-with-cta .text-with-cta-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-l);
+    width: 100%;
+}
+
+.text-with-cta .text-with-cta-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-l);
+}
+
+@media (width >= 1200px) {
+    .text-with-cta .text-with-cta-form-row {
+        flex-direction: row;
+    }
+
+    .text-with-cta .text-with-cta-form-row > * {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}
+
+/* Input */
+
+.text-with-cta .text-with-cta-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--component-input-field-gap);
+}
+
+/* The design puts the label inside the field, so it is exposed to assistive
+   technology only and the placeholder carries the visible text. */
+.text-with-cta .text-with-cta-field-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.text-with-cta .text-with-cta-field-control {
+    box-sizing: border-box;
+    width: 100%;
+    height: 40px;
+    padding-block: var(--component-input-field-padding-block);
+    padding-inline: var(--component-input-field-padding-inline);
+    border: 0;
+    border-block-end: var(--stroke-weight-s) solid var(--color-stroke-main-primary);
+    border-radius: 0;
+    background: none;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-sm);
+}
+
+.text-with-cta .text-with-cta-field-control::placeholder {
+    color: var(--color-text-main-disabled);
+    opacity: 1;
+}
+
+.text-with-cta .text-with-cta-field-control:focus-visible {
+    outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
+    outline-offset: 2px;
+}
+
+.text-with-cta .text-with-cta-field-control:user-invalid {
+    border-block-end-color: var(--color-text-action-default);
+}
+
+.text-with-cta .text-with-cta-field-select .text-with-cta-field-control {
+    appearance: none;
+    padding-inline-end: calc(24px + var(--dimension-spacing-general-xs));
+    background-image: url('/icons/chevron-down-20.svg');
+    background-repeat: no-repeat;
+    background-position: center right 2px;
+    background-size: 20px 20px;
+}
+
+[dir='rtl'] .text-with-cta .text-with-cta-field-select .text-with-cta-field-control {
+    background-position: center left 2px;
+}
+
+.text-with-cta .text-with-cta-field-select .text-with-cta-field-control:invalid {
+    color: var(--color-text-main-disabled);
+}
+
+/* selection-field */
+
+.text-with-cta .text-with-cta-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--dimension-spacing-general-s);
+    text-align: start;
+}
+
+.text-with-cta .text-with-cta-consent-control {
+    appearance: none;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+
+    /* Nudges the box onto the first line's cap height; resets the UA margin. */
+    margin: 2px 0 0;
+    border: var(--stroke-weight-m) solid var(--color-stroke-main-primary);
+    border-radius: var(--corner-radius-none);
+    background: none;
+    cursor: pointer;
+}
+
+.text-with-cta .text-with-cta-consent-control:checked {
+    border-color: var(--color-stroke-action-default);
+    background-color: var(--color-surface-action-default);
+    box-shadow: inset 0 0 0 var(--stroke-weight-m) var(--color-surface-page);
+}
+
+.text-with-cta .text-with-cta-consent-control:focus-visible {
+    outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
+    outline-offset: 2px;
+}
+
+.text-with-cta .text-with-cta-consent-label,
+.text-with-cta .text-with-cta-consent-label p {
+    margin: 0;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-sm);
+}
+
+.text-with-cta .text-with-cta-consent-label a {
+    color: inherit;
+    text-decoration-line: underline;
+    text-underline-position: from-font;
+}
+
+/* Button/text-standard — submit */
+
+.text-with-cta .text-with-cta-submit {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
-    background-color: rgb(0 0 0 / 55%);
+    gap: var(--component-button-gap);
 
-    &[hidden] {
-        display: none;
-    }
-
-    & .text-with-cta-modal-panel {
-        position: relative;
-        width: 100%;
-        max-width: 560px;
-        max-height: 90vh;
-        overflow-y: auto;
-        background-color: var(--background-color);
-    }
-
-    & .text-with-cta-modal-close {
-        position: absolute;
-        inset-block-start: 8px;
-        inset-inline-end: 8px;
-        padding: 0 8px;
-        border: 0;
-        background: none;
-        font-size: 1.75rem;
-        line-height: 1;
-        color: var(--text-color);
-        cursor: pointer;
-    }
+    /* Figma pins the button frame to 40px, so padding must not add to it. */
+    height: var(--component-button-height);
+    padding-block: 0;
+    padding-inline: var(--component-button-padding-inline);
+    border: var(--stroke-weight-s) solid var(--color-stroke-action-default);
+    border-radius: var(--component-button-corner-standard);
+    background: none;
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-button);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
-body.text-with-cta-modal-open {
-    overflow: hidden;
+.text-with-cta .text-with-cta-submit:hover {
+    background-color: var(--color-surface-action-default);
+    color: var(--color-text-on-action-default);
+}
+
+.text-with-cta .text-with-cta-status {
+    margin: 0;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    line-height: var(--typography-line-height-body-sm);
+}
+
+.text-with-cta .text-with-cta-status:empty {
+    display: none;
 }

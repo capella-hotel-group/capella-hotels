@@ -166,5 +166,11 @@
     "components": [
       "offers-carousel-item"
     ]
+  },
+  {
+    "id": "text-with-cta",
+    "components": [
+      "text-with-cta-signup-form"
+    ]
   }
 ]

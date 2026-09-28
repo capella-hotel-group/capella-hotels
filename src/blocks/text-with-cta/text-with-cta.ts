@@ -1,142 +1,238 @@
 import { moveInstrumentation } from '@/app/scripts.js';
-import { loadFragment } from '@/blocks/fragment/fragment.js';
+import { isUniversalEditor } from '@/utils/env.js';
 
-const THEMES = ['light-neutral', 'soft-sand'];
-const CTA_STYLES = ['underlined-text-link', 'solid-button'];
-const cellOf = (row?: Element) => row?.firstElementChild;
-const textOf = (row?: Element) => cellOf(row)?.textContent?.trim() || '';
+const BLOCK = 'text-with-cta';
 
-// Fragments are fetched once per path and shared by every CTA on the page.
-const fragmentCache = new Map<string, Promise<Node[] | null>>();
+/** Field index inside a sign-up form item row — one cell per model field. */
+const FIELD = {
+  triggerLabel: 0,
+  salutationLabel: 1,
+  salutationOptions: 2,
+  firstNameLabel: 3,
+  lastNameLabel: 4,
+  countryLabel: 5,
+  emailLabel: 6,
+  consentLabel: 7,
+  submitLabel: 8,
+  successMessage: 9,
+} as const;
+
+let uid = 0;
+
+const textOf = (cell?: Element | null): string => cell?.textContent?.trim() || '';
+
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string,
+  text?: string,
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+interface TextField {
+  name: string;
+  label: string;
+  type: 'text' | 'email';
+  autocomplete: AutoFill;
+}
 
 /**
- * Returns the nodes to show in the modal. When the authored fragment holds a block
- * that already modal-ises itself, its dialog content is unwrapped so the block's own
- * on-page trigger and duplicate close control are left behind.
+ * Renders one underlined field. The design shows the label inside the field, so the
+ * visible text is the placeholder and the real <label> is kept for screen readers.
  */
-function extractModalContent(fragment: HTMLElement): Node[] {
-  const nestedDialog = fragment.querySelector<HTMLElement>('[role="dialog"]');
-  const source = nestedDialog?.firstElementChild || nestedDialog || fragment;
-  source.querySelectorAll('[aria-label="Close"]').forEach((node) => node.remove());
-  return [...source.childNodes];
+function buildTextField(field: TextField, formId: string): HTMLElement {
+  const wrapper = el('div', `${BLOCK}-field`);
+  const id = `${formId}-${field.name}`;
+
+  const label = el('label', `${BLOCK}-field-label`, field.label);
+  label.htmlFor = id;
+
+  const input = el('input', `${BLOCK}-field-control`);
+  input.id = id;
+  input.name = field.name;
+  input.type = field.type;
+  input.placeholder = field.label;
+  input.autocomplete = field.autocomplete;
+  input.required = true;
+
+  wrapper.append(label, input);
+  return wrapper;
 }
 
-function loadModalContent(path: string): Promise<Node[] | null> {
-  if (!fragmentCache.has(path)) {
-    fragmentCache.set(
-      path,
-      loadFragment(path).then((fragment) => (fragment ? extractModalContent(fragment) : null)),
-    );
-  }
-  return fragmentCache.get(path)!;
+function buildSelectField(label: string, options: string[], formId: string): HTMLElement {
+  const wrapper = el('div', `${BLOCK}-field ${BLOCK}-field-select`);
+  const id = `${formId}-salutation`;
+
+  const fieldLabel = el('label', `${BLOCK}-field-label`, label);
+  fieldLabel.htmlFor = id;
+
+  const select = el('select', `${BLOCK}-field-control`);
+  select.id = id;
+  select.name = 'salutation';
+  select.required = true;
+
+  const placeholder = el('option', undefined, label);
+  placeholder.value = '';
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  select.append(placeholder);
+  options.forEach((option) => {
+    const item = el('option', undefined, option);
+    item.value = option;
+    select.append(item);
+  });
+
+  wrapper.append(fieldLabel, select);
+  return wrapper;
 }
 
-/** Builds an empty overlay dialog appended to <body>. */
-function buildModal() {
-  const overlay = document.createElement('div');
-  overlay.className = 'text-with-cta-modal';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.hidden = true;
+/** Consent row: the authored rich text is moved in as-is so its links survive. */
+function buildConsent(source: Element | undefined, formId: string): HTMLElement {
+  const wrapper = el('div', `${BLOCK}-consent`);
+  const id = `${formId}-consent`;
 
-  const panel = document.createElement('div');
-  panel.className = 'text-with-cta-modal-panel';
+  const input = el('input', `${BLOCK}-consent-control`);
+  input.id = id;
+  input.type = 'checkbox';
+  input.name = 'consent';
+  input.required = true;
 
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button';
-  closeBtn.className = 'text-with-cta-modal-close';
-  closeBtn.setAttribute('aria-label', 'Close');
-  closeBtn.innerHTML = '&times;';
+  const label = el('label', `${BLOCK}-consent-label`);
+  label.htmlFor = id;
+  if (source) label.append(...source.childNodes);
 
-  const body = document.createElement('div');
-  body.className = 'text-with-cta-modal-body';
+  wrapper.append(input, label);
+  return wrapper;
+}
 
-  panel.append(closeBtn, body);
-  overlay.append(panel);
+function buildRow(modifier: string, fields: HTMLElement[]): HTMLElement {
+  const row = el('div', `${BLOCK}-form-row ${BLOCK}-form-row-${modifier}`);
+  row.append(...fields);
+  return row;
+}
 
-  let lastFocused: HTMLElement | null = null;
-
-  const close = () => {
-    overlay.hidden = true;
-    document.body.classList.remove('text-with-cta-modal-open');
-    lastFocused?.focus();
+function wireDisclosure(trigger: HTMLButtonElement, form: HTMLFormElement, panel: HTMLElement): void {
+  const setExpanded = (expanded: boolean): void => {
+    trigger.setAttribute('aria-expanded', String(expanded));
+    form.hidden = !expanded;
+    panel.classList.toggle('is-expanded', expanded);
   };
 
-  const open = () => {
-    lastFocused = document.activeElement as HTMLElement | null;
-    overlay.hidden = false;
-    document.body.classList.add('text-with-cta-modal-open');
-    closeBtn.focus();
-  };
-
-  closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) close();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !overlay.hidden) close();
+  trigger.addEventListener('click', () => {
+    setExpanded(trigger.getAttribute('aria-expanded') !== 'true');
+    if (!form.hidden) form.querySelector<HTMLElement>('select, input')?.focus();
   });
 
-  document.body.append(overlay);
-  return { body, open };
+  form.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    setExpanded(false);
+    trigger.focus();
+  });
+
+  // The authoring iframe has no way to click through to the expanded state.
+  setExpanded(isUniversalEditor());
+}
+
+function buildSignupForm(row: Element): HTMLElement {
+  const cells = [...row.children];
+  const formId = `${BLOCK}-form-${(uid += 1)}`;
+  const label = (index: number, fallback: string): string => textOf(cells[index]) || fallback;
+
+  const panel = el('div', `${BLOCK}-signup`);
+  moveInstrumentation(row, panel);
+
+  const trigger = el('button', `${BLOCK}-trigger`, label(FIELD.triggerLabel, 'Join now'));
+  trigger.type = 'button';
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.setAttribute('aria-controls', formId);
+
+  const form = el('form', `${BLOCK}-form`);
+  form.id = formId;
+  form.noValidate = false;
+
+  const fields = el('div', `${BLOCK}-form-fields`);
+  const salutationOptions = label(FIELD.salutationOptions, '')
+    .split(',')
+    .map((option) => option.trim())
+    .filter(Boolean);
+
+  fields.append(
+    buildRow('three', [
+      buildSelectField(label(FIELD.salutationLabel, 'Title'), salutationOptions, formId),
+      buildTextField(
+        {
+          name: 'firstName',
+          label: label(FIELD.firstNameLabel, 'First name'),
+          type: 'text',
+          autocomplete: 'given-name',
+        },
+        formId,
+      ),
+      buildTextField(
+        { name: 'lastName', label: label(FIELD.lastNameLabel, 'Last name'), type: 'text', autocomplete: 'family-name' },
+        formId,
+      ),
+    ]),
+    buildRow('two', [
+      buildTextField(
+        { name: 'country', label: label(FIELD.countryLabel, 'Country'), type: 'text', autocomplete: 'country-name' },
+        formId,
+      ),
+      buildTextField(
+        { name: 'email', label: label(FIELD.emailLabel, 'Email'), type: 'email', autocomplete: 'email' },
+        formId,
+      ),
+    ]),
+    buildConsent(cells[FIELD.consentLabel], formId),
+  );
+
+  const submit = el('button', `${BLOCK}-submit`, label(FIELD.submitLabel, 'Sign up'));
+  submit.type = 'submit';
+
+  const status = el('p', `${BLOCK}-status`);
+  status.setAttribute('role', 'status');
+
+  form.append(fields, submit, status);
+  panel.append(trigger, form);
+
+  const successMessage = label(FIELD.successMessage, '');
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    status.textContent = successMessage;
+    form.reset();
+  });
+
+  wireDisclosure(trigger, form, panel);
+  return panel;
 }
 
 export default function decorate(block: HTMLElement): void {
-  const [titleRow, subtitleRow, themeRow, styleRow, labelRow, actionRow, urlRow, newTabRow] = [...block.children];
+  const rows = [...block.children];
+  const [titleRow, descriptionRow] = rows;
 
-  const theme = THEMES.includes(textOf(themeRow)) ? textOf(themeRow) : THEMES[0];
-  const ctaStyle = CTA_STYLES.includes(textOf(styleRow)) ? textOf(styleRow) : CTA_STYLES[0];
-  const action = textOf(actionRow);
-  const label = textOf(labelRow);
-  const href = urlRow?.querySelector('a')?.getAttribute('href') || '#';
-  const openInNewTab = textOf(newTabRow).toLowerCase() === 'true';
+  const text = el('div', `${BLOCK}-text`);
 
-  block.classList.add(`text-with-cta-theme-${theme}`, `text-with-cta-style-${ctaStyle}`);
-
-  const content = document.createElement('div');
-  content.className = 'text-with-cta-content';
-
-  const titleCell = cellOf(titleRow);
+  const titleCell = titleRow?.firstElementChild;
   if (titleCell) {
-    titleCell.classList.add('text-with-cta-title');
-    content.append(titleCell);
+    titleCell.classList.add(`${BLOCK}-title`);
+    text.append(titleCell);
   }
 
-  const subtitleCell = cellOf(subtitleRow);
-  if (subtitleCell) {
-    subtitleCell.classList.add('text-with-cta-subtitle');
-    content.append(subtitleCell);
+  const descriptionCell = descriptionRow?.firstElementChild;
+  if (descriptionCell) {
+    descriptionCell.classList.add(`${BLOCK}-description`);
+    text.append(descriptionCell);
   }
 
-  const actions = document.createElement('div');
-  actions.className = 'text-with-cta-actions';
+  const aside = el('div', `${BLOCK}-aside`);
+  rows.slice(2).forEach((row) => {
+    if (!row.children.length) return;
+    aside.append(buildSignupForm(row));
+  });
 
-  const cta = document.createElement('a');
-  cta.className = 'text-with-cta-cta';
-  cta.classList.add(`text-with-cta-cta-${ctaStyle}`);
-  cta.href = href;
-  cta.textContent = label;
-
-  const labelSource = labelRow?.querySelector('[data-aue-prop="ctaLabel"]');
-  if (labelSource) moveInstrumentation(labelSource, cta);
-
-  if (action === 'popup-form-modal') {
-    let modal: { body: HTMLElement; open: () => void } | null = null;
-    cta.setAttribute('aria-haspopup', 'dialog');
-    cta.addEventListener('click', async (event) => {
-      event.preventDefault();
-      if (!modal) modal = buildModal();
-      modal.open();
-      if (modal.body.hasChildNodes()) return;
-      const nodes = await loadModalContent(href);
-      if (nodes?.length) modal.body.append(...nodes);
-    });
-  } else if (openInNewTab) {
-    cta.target = '_blank';
-    cta.rel = 'noopener noreferrer';
-  }
-
-  actions.append(cta);
   block.textContent = '';
-  block.append(content, actions);
+  block.append(text, aside);
 }
