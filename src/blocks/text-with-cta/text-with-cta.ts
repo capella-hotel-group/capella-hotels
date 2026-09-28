@@ -1,7 +1,9 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { isUniversalEditor } from '@/utils/env.js';
 
 const BLOCK = 'text-with-cta';
+const ITEM_MODEL = 'text-with-cta-signup-form';
 
 /** Field index inside a sign-up form item row — one cell per model field. */
 const FIELD = {
@@ -20,6 +22,23 @@ const FIELD = {
 let uid = 0;
 
 const textOf = (cell?: Element | null): string => cell?.textContent?.trim() || '';
+
+/** Cells are always divs; a richtext field can emit bare paragraphs onto its row. */
+const cellsOf = (row: HTMLElement): HTMLElement[] => [...row.querySelectorAll<HTMLElement>(':scope > div')];
+
+/** The row's single content cell, or the row itself when the field emitted bare nodes. */
+const contentOf = (row?: HTMLElement): Element | undefined => (row ? cellsOf(row)[0] || row : undefined);
+
+/**
+ * Every block-level field emits exactly one cell, so only item rows hold several.
+ * Item rows also carry their model in the editor, which wins when present.
+ */
+function findItemRows(rows: HTMLElement[]): HTMLElement[] {
+  if (rows.some((row) => row.dataset.aueModel)) {
+    return rows.filter((row) => row.dataset.aueModel === ITEM_MODEL);
+  }
+  return rows.filter((row) => cellsOf(row).length > 1);
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -210,31 +229,30 @@ function buildSignupForm(row: Element): HTMLElement {
 }
 
 export default function decorate(block: HTMLElement): void {
-  const rows = [...block.children];
-  const [anchorRow, titleRow, descriptionRow] = rows;
-
-  const anchorId = textOf(anchorRow?.firstElementChild);
-  if (anchorId) block.id = anchorId.replace(/^#/, '');
+  const rows = [...block.children] as HTMLElement[];
+  const itemRows = findItemRows(rows);
+  const [titleRow, descriptionRow] = applyBlockIdentity(
+    block,
+    rows.filter((row) => !itemRows.includes(row)),
+    { contentRows: 2 },
+  );
 
   const text = el('div', `${BLOCK}-text`);
 
-  const titleCell = titleRow?.firstElementChild;
+  const titleCell = contentOf(titleRow);
   if (titleCell) {
     titleCell.classList.add(`${BLOCK}-title`);
     text.append(titleCell);
   }
 
-  const descriptionCell = descriptionRow?.firstElementChild;
+  const descriptionCell = contentOf(descriptionRow);
   if (descriptionCell) {
     descriptionCell.classList.add(`${BLOCK}-description`);
     text.append(descriptionCell);
   }
 
   const aside = el('div', `${BLOCK}-aside`);
-  rows.slice(3).forEach((row) => {
-    if (!row.children.length) return;
-    aside.append(buildSignupForm(row));
-  });
+  itemRows.forEach((row) => aside.append(buildSignupForm(row)));
 
   block.textContent = '';
   block.append(text, aside);
