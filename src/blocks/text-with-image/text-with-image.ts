@@ -36,6 +36,8 @@ export default function decorate(block: HTMLElement): void {
   const descriptionField = getField('description');
   const eyebrowSource = eyebrowField || rows[0]?.firstElementChild || null;
   const titleSource = titleField || rows[1]?.firstElementChild || null;
+  const titleParagraphs = titleSource ? [...titleSource.querySelectorAll('p')] : [];
+  const titleLines = titleParagraphs.length > 0 ? titleParagraphs : titleSource ? [titleSource] : [];
   const titleText = titleSource?.textContent?.trim() || '';
   const eyebrowText = eyebrowSource?.textContent?.trim() || '';
   const descriptionEl = descriptionField || rows[2]?.firstElementChild || null;
@@ -69,7 +71,7 @@ export default function decorate(block: HTMLElement): void {
     [...(ctaGroup?.children || [])].some((element) => element.textContent?.trim().toLowerCase() === 'true') ||
     getFieldText('cta_openInNewTab').toLowerCase() === 'true';
 
-  if (pictureEl) {
+  if (pictureEl && resolvedVariant === 'little-stars') {
     const responsiveImageQuery = window.matchMedia('(max-width: 767px)');
     const updateAltText = () => {
       if (desktopImg) {
@@ -102,7 +104,12 @@ export default function decorate(block: HTMLElement): void {
 
   if (titleText) {
     const h3 = document.createElement('h3');
-    h3.textContent = titleText;
+    titleLines
+      .filter((line) => line.textContent?.trim())
+      .forEach((line, index) => {
+        if (index > 0) h3.append(document.createElement('br'));
+        h3.append(...line.childNodes);
+      });
     if (titleSource) moveInstrumentation(titleSource, h3);
     textCol.append(h3);
   }
@@ -134,26 +141,29 @@ export default function decorate(block: HTMLElement): void {
     const stack = document.createElement('div');
     stack.className = 'gift-card-stack';
 
-    const giftCardRows: Element[] = [];
+    const giftCardRows: { row: Element; altField: string }[] = [];
     ['image1', 'image2', 'image3'].forEach((field) => {
       const row = getField(field)?.closest('div');
-      if (row?.querySelector('picture')) giftCardRows.push(row);
+      if (row?.querySelector('picture')) giftCardRows.push({ row, altField: `${field}Alt` });
     });
-    const layerRows = giftCardRows.length ? giftCardRows : pictureRows.slice(0, 3);
+    const layerRows = giftCardRows.length
+      ? giftCardRows
+      : pictureRows.slice(0, 3).map((row, index) => ({ row, altField: `image${index + 1}Alt` }));
     if (layerRows.length > 0) {
       stack.classList.add(`gift-card-count-${layerRows.length}`);
 
-      layerRows.forEach((row) => {
+      layerRows.forEach(({ row, altField }) => {
         const layer = document.createElement('div');
         layer.className = 'gift-card-layer';
 
         const rowPicture = row.querySelector('picture');
         const rowImg = rowPicture?.querySelector('img') || row.querySelector('img');
+        const cardAlt = getFieldText(altField) || rowImg?.getAttribute('alt') || '';
 
         if (rowPicture) {
           const cardPicture = rowPicture.cloneNode(true) as HTMLPictureElement;
           const cardImg = cardPicture.querySelector('img');
-          if (cardImg) cardImg.alt = rowImg?.getAttribute('alt') || altText || '';
+          if (cardImg) cardImg.alt = cardAlt;
           layer.append(cardPicture);
           moveInstrumentation(rowPicture, cardPicture);
         }
