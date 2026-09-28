@@ -75,6 +75,22 @@
               }
             }
           }
+        },
+        {
+          "title": "Header Section",
+          "id": "header-section",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/section/v1/section",
+                "template": {
+                  "name": "Header Section",
+                  "model": "header-section",
+                  "filter": "header-section"
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -608,6 +624,52 @@
           }
         },
         {
+          "title": "Link",
+          "id": "link",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Link",
+                  "model": "link-item"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Navigation Lists",
+          "id": "navigation-lists",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Navigation Lists",
+                  "model": "navigation-lists",
+                  "filter": "navigation-lists"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Navigation List Item",
+          "id": "navigation-list-item",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Navigation List Item",
+                  "model": "link-item"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Newsletter Form",
           "id": "newsletter-form",
           "plugins": {
@@ -711,6 +773,21 @@
                   "name": "Text with Image",
                   "model": "text-with-image",
                   "classes": ""
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Turneo Experience Detail",
+          "id": "turneo-experience-detail",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Turneo Experience Detail",
+                  "model": "turneo-experience-detail"
                 }
               }
             }

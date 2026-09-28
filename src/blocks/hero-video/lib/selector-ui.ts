@@ -134,14 +134,15 @@ export class SelectorUI {
    * Position the item list so item[index] is centered, without touching opacity.
    * Used during intro: selector is invisible so we pre-position before fade-in.
    */
-  positionForItem(index: number): void {
+  positionForItem(index: number): number | null {
     const translateY = this.translateForIndex(index);
-    if (translateY === null) return;
+    if (translateY === null) return null;
 
     this.pendingAnchorAnimations.forEach((a) => a.cancel());
     this.pendingAnchorAnimations = [];
 
     this.itemListEl.style.transform = `translateY(${translateY}px)`;
+    return translateY;
   }
   activateItem(index: number, animate: boolean): void {
     const prev = this.activeIndex;

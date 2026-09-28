@@ -2,7 +2,8 @@
   {
     "id": "main",
     "components": [
-      "section"
+      "section",
+      "header-section"
     ]
   },
   {
@@ -21,6 +22,7 @@
       "section-intro",
       "awards-list",
       "turneo-proxy-test",
+      "turneo-experience-detail",
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
@@ -39,6 +41,17 @@
       "footer-social-link",
       "footer-links",
       "footer-legal"
+    ]
+  },
+  {
+    "id": "header-section",
+    "components": [
+      "text",
+      "image",
+      "button",
+      "hero",
+      "navigation-lists",
+      "link"
     ]
   },
   {
@@ -197,6 +210,12 @@
     "id": "hero-video",
     "components": [
       "hero-video-item"
+    ]
+  },
+  {
+    "id": "navigation-lists",
+    "components": [
+      "navigation-list-item"
     ]
   },
   {

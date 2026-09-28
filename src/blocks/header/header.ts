@@ -202,7 +202,6 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
   const trigger = document.createElement('button');
   trigger.className = 'header-lang-trigger';
   trigger.type = 'button';
-  trigger.dataset.testid = 'header-lang-trigger';
   trigger.setAttribute('aria-expanded', 'false');
   trigger.setAttribute('aria-haspopup', 'listbox');
 
@@ -314,7 +313,6 @@ function buildCtaZone(label: string, href: string): HTMLAnchorElement | null {
   if (!label || !href) return null;
   const cta = document.createElement('a');
   cta.className = 'header-cta';
-  cta.dataset.testid = 'header-cta';
   cta.href = href;
   cta.textContent = label;
   return cta;
@@ -324,7 +322,6 @@ function buildMenuToggle(closeLabel: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.className = 'header-menu-toggle';
   button.type = 'button';
-  button.dataset.testid = 'header-menu-toggle';
   button.setAttribute('aria-label', 'Open navigation menu');
   button.setAttribute('aria-expanded', 'false');
 
@@ -453,7 +450,6 @@ function buildMenuPromo(): { root: HTMLDivElement; imageContainer: HTMLDivElemen
 
   const cta = document.createElement('a');
   cta.className = 'header-menu-promo-cta';
-  cta.dataset.testid = 'header-menu-promo-cta';
 
   root.append(imageContainer, cta);
   return { root, imageContainer, cta };
@@ -480,7 +476,6 @@ function buildMenuCategories(
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'header-menu-category-trigger';
-      button.dataset.testid = 'header-menu-category-trigger';
       button.textContent = category.label;
       trigger = button;
       content = buildCategoryContent(category);
@@ -488,7 +483,6 @@ function buildMenuCategories(
     } else {
       const anchor = document.createElement('a');
       anchor.className = 'header-menu-category-trigger';
-      anchor.dataset.testid = 'header-menu-category-trigger';
       anchor.href = category.href || '#';
       anchor.textContent = category.label;
       trigger = anchor;
@@ -635,6 +629,5 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   inner.className = 'header-inner';
   inner.append(menuToggle, logo, tools);
 
-  block.dataset.testid = 'header';
   block.replaceChildren(inner, panel);
 }

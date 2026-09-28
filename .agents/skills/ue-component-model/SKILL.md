@@ -61,6 +61,8 @@ Based on the JS analysis:
 
 Map the block's content expectations to component model fields. Read [references/field-types.md](references/field-types.md) for the full field type reference.
 
+**Required first fields (project rule):** unless the task says otherwise, every block model starts with `id` (text, label "Block ID") followed by `dataTestId` (text, label "Data Test ID"), before any content field. They are consumed by `applyBlockIdentity()` from `src/utils/block-identity.ts`, which reads rows 0 and 1. Keep these exact names and this exact order — see [docs/coding-guidelines.md](../../../docs/coding-guidelines.md) ("Block Identity Fields").
+
 **Common field mappings:**
 
 | Block expects...         | Use component type                    | Notes                                                 |

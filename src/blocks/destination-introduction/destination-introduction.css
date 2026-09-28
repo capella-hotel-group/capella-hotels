@@ -232,9 +232,24 @@
             aspect-ratio: auto;
             overflow: hidden;
             visibility: hidden;
+            opacity: 0;
 
             &.is-selected {
                 visibility: visible;
+                opacity: 1;
+                /* keeps the incoming image above the one fading out */
+                z-index: 1;
+            }
+
+            @media (prefers-reduced-motion: no-preference) {
+                /* visibility flips only once the fade-out has finished */
+                transition:
+                    opacity 0.5s ease,
+                    visibility 0s linear 0.5s;
+
+                &.is-selected {
+                    transition: opacity 0.5s ease;
+                }
             }
         }
     }

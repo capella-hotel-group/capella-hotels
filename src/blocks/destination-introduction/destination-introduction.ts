@@ -1,10 +1,12 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { applyBlockIdentity } from '@/utils/block-identity.js';
 
 // Row indices mirror the field order of the `destination-introduction` model
-// (eyebrow, title, body, footerCta). Changing that field list is a contract
-// change and must update these indices in the same commit.
+// (eyebrow, title, body, footerCta), after the leading identity rows. Changing
+// that field list is a contract change and must update these indices in the
+// same commit.
 const COPY_FIELDS = ['eyebrow', 'title', 'body', 'cta'] as const;
-const GALLERY_START = COPY_FIELDS.length;
+const IMAGE_MODEL = 'destination-introduction-image';
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
 // so the stylesheet owns the colour.
@@ -15,6 +17,12 @@ const ARROW_PATHS: Record<'prev' | 'next', string> = {
 
 function hasContent(cell: Element | null): cell is Element {
   return !!cell && (cell.textContent?.trim() !== '' || !!cell.querySelector('picture, img, a'));
+}
+
+// in the editor every gallery row carries the item model; outside it we fall back to the cell shape
+function isGalleryRow(row: HTMLElement): boolean {
+  if (row.dataset.aueModel) return row.dataset.aueModel === IMAGE_MODEL;
+  return !!row.querySelector('picture, img');
 }
 
 function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElement {
@@ -125,19 +133,24 @@ function buildThumbs(track: HTMLUListElement): HTMLUListElement {
  * @param block The block element
  */
 export default function decorate(block: HTMLElement): void {
-  const rows = [...block.children];
-  const galleryRows = rows.slice(GALLERY_START);
+  const rows = [...block.children] as HTMLElement[];
+  const galleryRows = rows.filter(isGalleryRow);
+  const copyRows = applyBlockIdentity(
+    block,
+    rows.filter((row) => !galleryRows.includes(row)),
+    { contentRows: COPY_FIELDS.length },
+  );
 
   const header = document.createElement('div');
   header.className = 'destination-introduction-header';
-  const eyebrow = buildCopy(rows[0], COPY_FIELDS[0]);
-  const title = buildCopy(rows[1], COPY_FIELDS[1]);
+  const eyebrow = buildCopy(copyRows[0], COPY_FIELDS[0]);
+  const title = buildCopy(copyRows[1], COPY_FIELDS[1]);
   if (title) splitOnLineBreaks(title);
   if (eyebrow) header.append(eyebrow);
   if (title) header.append(title);
 
-  const body = buildCopy(rows[2], COPY_FIELDS[2]);
-  const cta = buildCopy(rows[3], COPY_FIELDS[3]);
+  const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
+  const cta = buildCopy(copyRows[3], COPY_FIELDS[3]);
 
   const track = buildTrack(galleryRows);
   const slides = [...track.children] as HTMLElement[];
