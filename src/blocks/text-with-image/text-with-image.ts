@@ -5,7 +5,7 @@ export default function decorate(block: HTMLElement): void {
   const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
   if (blockId) block.id = blockId;
 
-  block.setAttribute('data-test-id', 'text-with-image');
+  block.setAttribute('data-testid', 'text-with-image');
 
   const getRowText = (row?: Element | null) =>
     row?.firstElementChild?.textContent?.trim() || row?.textContent?.trim() || '';
@@ -122,7 +122,7 @@ export default function decorate(block: HTMLElement): void {
     cta.className = 'cta-link';
     cta.href = ctaHref;
     cta.textContent = ctaText;
-    cta.setAttribute('data-test-id', 'text-with-image-cta');
+    cta.setAttribute('data-testid', 'text-with-image-cta');
     if (openInNewTab) cta.target = '_blank';
     textCol.append(cta);
   }
@@ -174,7 +174,7 @@ export default function decorate(block: HTMLElement): void {
     const imageLink = document.createElement('a');
     imageLink.className = 'image-link';
     imageLink.href = ctaHref;
-    imageLink.setAttribute('data-test-id', 'text-with-image-image-link');
+    imageLink.setAttribute('data-testid', 'text-with-image-image-link');
     if (openInNewTab) imageLink.target = '_blank';
     imageLink.append(...imageCol.childNodes);
     imageCol.append(imageLink);

@@ -1,5 +1,6 @@
 // src/blocks/hero-video/lib/intro.ts
 import type { IntroElements } from './types';
+import * as windowContext from './window-context';
 
 // Timeline (ms)
 const T_PHRASE_START = 800; // unified phrase fades in
@@ -166,7 +167,7 @@ export async function runIntro(
 export function shouldSkipIntro(): boolean {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
   if (document.documentElement.classList.contains('adobe-ue-edit')) return true;
-  if (window.self !== window.top) return true; // inside iframe (UE)
+  if (windowContext.isEmbeddedInIframe()) return true; // inside iframe (UE)
   return false;
 }
 
