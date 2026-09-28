@@ -1972,7 +1972,7 @@
         "valueType": "string"
       },
       {
-        "component": "text",
+        "component": "richtext",
         "name": "title",
         "label": "Title",
         "valueType": "string",
@@ -1982,8 +1982,7 @@
         "component": "richtext",
         "name": "description",
         "label": "Description",
-        "valueType": "string",
-        "required": true
+        "valueType": "string"
       },
       {
         "component": "text",
