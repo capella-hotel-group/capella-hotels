@@ -678,7 +678,7 @@
       {
         "component": "text",
         "name": "id",
-        "label": "Block ID",
+        "label": "Component Anchor ID",
         "description": "Sets the id attribute on the block, usable as an anchor target.",
         "valueType": "string",
         "value": ""
@@ -726,15 +726,50 @@
     "fields": [
       {
         "component": "reference",
-        "name": "image",
-        "label": "Image",
+        "name": "thumbnail",
+        "label": "Thumbnail",
+        "description": "Still image only. Doubles as the poster when the media is a video.",
         "valueType": "string",
         "multi": false
       },
       {
         "component": "text",
-        "name": "imageAlt",
-        "label": "Asset Alt Text",
+        "name": "thumbnailAlt",
+        "label": "Thumbnail Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "media",
+        "label": "Media Type",
+        "valueType": "string",
+        "multi": false,
+        "required": true,
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "mediaAsset",
+        "label": "Media",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "mediaAssetAlt",
+        "label": "Media Alt Text",
         "valueType": "string",
         "value": ""
       }
