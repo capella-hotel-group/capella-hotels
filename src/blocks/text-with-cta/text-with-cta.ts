@@ -23,11 +23,21 @@ let uid = 0;
 
 const textOf = (cell?: Element | null): string => cell?.textContent?.trim() || '';
 
-// in the editor item rows carry the item model; outside it they are the multi-cell
-// rows, since every block-level field emits a single cell
-function isItemRow(row: HTMLElement): boolean {
-  if (row.dataset.aueModel) return row.dataset.aueModel === ITEM_MODEL;
-  return row.children.length > 1;
+/** Cells are always divs; a richtext field can emit bare paragraphs onto its row. */
+const cellsOf = (row: HTMLElement): HTMLElement[] => [...row.querySelectorAll<HTMLElement>(':scope > div')];
+
+/** The row's single content cell, or the row itself when the field emitted bare nodes. */
+const contentOf = (row?: HTMLElement): Element | undefined => (row ? cellsOf(row)[0] || row : undefined);
+
+/**
+ * Every block-level field emits exactly one cell, so only item rows hold several.
+ * Item rows also carry their model in the editor, which wins when present.
+ */
+function findItemRows(rows: HTMLElement[]): HTMLElement[] {
+  if (rows.some((row) => row.dataset.aueModel)) {
+    return rows.filter((row) => row.dataset.aueModel === ITEM_MODEL);
+  }
+  return rows.filter((row) => cellsOf(row).length > 1);
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -220,7 +230,7 @@ function buildSignupForm(row: Element): HTMLElement {
 
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
-  const itemRows = rows.filter(isItemRow);
+  const itemRows = findItemRows(rows);
   const [titleRow, descriptionRow] = applyBlockIdentity(
     block,
     rows.filter((row) => !itemRows.includes(row)),
@@ -229,13 +239,13 @@ export default function decorate(block: HTMLElement): void {
 
   const text = el('div', `${BLOCK}-text`);
 
-  const titleCell = titleRow?.firstElementChild;
+  const titleCell = contentOf(titleRow);
   if (titleCell) {
     titleCell.classList.add(`${BLOCK}-title`);
     text.append(titleCell);
   }
 
-  const descriptionCell = descriptionRow?.firstElementChild;
+  const descriptionCell = contentOf(descriptionRow);
   if (descriptionCell) {
     descriptionCell.classList.add(`${BLOCK}-description`);
     text.append(descriptionCell);
