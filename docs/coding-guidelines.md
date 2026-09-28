@@ -40,54 +40,53 @@ Concretely:
 
 - Never drop an authored row. A row carrying `data-aue-model="<item-model>"` is a real item even when every field is still empty — render it (with a placeholder label if needed) so a freshly added item is visible and selectable. Silently returning `null` makes "Add item" look broken.
 - Identify item rows by `data-aue-model` first, falling back to cell shape or index for published content. Never rely on row position alone.
+- `data-aue-*` instrumentation attributes only exist inside the Universal Editor iframe, never in normal preview/live delivery HTML — don't build parsing logic (e.g. a `cellByProp` lookup) that only works there.
+- A conditionally-hidden field's cell can be dropped entirely from a row in real delivery HTML too, and different fields drop inconsistently (a hidden reference field may keep an empty placeholder cell while a hidden text field's cell vanishes). Don't gate parsing on an exact cell count or fixed offsets; identify each cell by what it contains (a `<picture>`, an `<a href>`, plain text) so parsing survives regardless of which cell got dropped.
 - Preserve instrumentation. Move authored elements into new wrappers instead of copying their text out — an element carrying `data-aue-prop` must survive, or the field loses inline editing. Use `moveInstrumentation()` when transferring `data-aue-*` to an element you build, and strip it from clones so UE does not count an item twice.
 - Decorate in place. `block.replaceChildren()` / rebuilding the DOM from parsed strings breaks inline editing; add classes to the authored elements and only re-parent them.
 - Keep every item reachable. If the design hides inactive items (carousel, tabs, accordion), they are unreachable on the UE canvas — reveal them under `.adobe-ue-edit` in CSS rather than shipping different markup, and handle `aue:ui-select` so selecting an item in the rail shows it.
 - Enforce item limits in `decorate()`, not in the model — xwalk has no min/max item count.
 - UE loads code from the `*.aem.page` origin, not localhost: push the branch before testing a fix in the editor.
 
-## Block Identity Fields
-
-Every block model starts with the same two authorable fields, in this order, before any content field:
-
-| Order | `name`       | Component | Label        | Effect                                                                                  |
-| ----- | ------------ | --------- | ------------ | --------------------------------------------------------------------------------------- |
-| 1     | `id`         | `text`    | Block ID     | Sets `id` on the block element (anchor target). Leading `#` is stripped.                |
-| 2     | `dataTestId` | `text`    | Data Test ID | Sets `data-test-id` on the block element. No attribute when the author leaves it empty. |
-
-Rules:
-
-- Add both fields to every new block model unless the task explicitly says otherwise, and keep them as the first two fields — row indices in `decorate()` depend on that order, so inserting them into an existing model means shifting every content row index by two.
-- Keep the field names `id` and `dataTestId`; only the labels are for authors. Never rename `id` to something else, and never add a `classes` field in this slot — `classes` is reserved by xwalk and emits no row, which would desynchronise the row indices.
-- Consume them with `applyBlockIdentity()` (`src/utils/block-identity.ts`), passing the number of non-item content rows the model emits. It splits from the tail, so pages authored before the model gained these fields keep working; it hides the identity rows with the block's own hidden class and returns the remaining content rows:
-
-```ts
-import { applyBlockIdentity } from '@/utils/block-identity.js';
-
-const [eyebrowRow, titleRow] = applyBlockIdentity(block, rows, {
-  hiddenClass: 'offers-carousel-hidden',
-  contentRows: 2,
-});
-```
-
-- Filter repeatable item rows out before calling it — `contentRows` counts only the block-level rows.
-
-- The hidden class must be block-scoped CSS (`.offers-carousel .offers-carousel-hidden { display: none; }`) — the rows are hidden, never removed, so the Universal Editor keeps them selectable.
-- Authors leave both fields empty by default; the block must render identically when they are.
-
 ## Test Automation
 
-QA automation hooks on `data-test-id`, and that attribute is authored, never hardcoded:
+Add `data-testid` attributes to support QA automation, scoped to:
 
-- It is written only by the `dataTestId` field of the block model (see "Block Identity Fields"), applied by `applyBlockIdentity()`.
-- It lands only on the block's root element. Never set `data-test-id` on inner elements — CTAs, form fields, carousel controls, wrappers, or anything else.
-- When the author leaves the field empty, no attribute is rendered. Do not fall back to the block slug or any other default.
-- If QA needs to reach an element inside a block, they scope from the block root through its stable classes or roles.
+- The root element of each block/component
+- CTA buttons and links
+- Form fields and submit actions
+- Carousel controls (next/prev)
+- Tabs, accordions, filters, search controls
+- Other key interactive elements required for automation
 
-Values are authored, so guide authors towards lowercase kebab-case names that describe a stable role — never CSS classes, translated text, URLs, or render order:
+Do not add `data-testid` to layout wrappers, decorative elements, or regular content/text elements.
 
-```html
-<div class="offers-carousel block" data-test-id="offers-carousel">…</div>
+Naming convention — lowercase kebab-case, prefixed with the exact block slug:
+
+```
+{block-name}
+{block-name}-{element}
+{block-name}-{action}
 ```
 
-Playwright needs `testIdAttribute: 'data-test-id'` in its config for `getByTestId()` to match. Multiple instances of the same block may share a value; automation scopes by position (`.nth(0)`) or the authors give each instance a distinct one.
+Examples:
+
+```html
+<section data-testid="hero-banner">
+  <a data-testid="hero-banner-primary-cta">Book now</a>
+</section>
+
+<form data-testid="newsletter-form">
+  <input data-testid="newsletter-form-email" type="email" />
+  <button data-testid="newsletter-form-submit" type="submit">Subscribe</button>
+</form>
+
+<section data-testid="offers-carousel">
+  <button data-testid="offers-carousel-previous" type="button">Previous</button>
+  <button data-testid="offers-carousel-next" type="button">Next</button>
+</section>
+```
+
+The value must describe a stable role, never CSS classes, translated/authored text, URLs, or render order/position. Use the block's actual source slug (e.g. `offers-carousel`, not `offer-carousel`).
+
+When a page has multiple instances of the same block, do not make `data-testid` page-unique (no `-1`/`-2` suffixes) — instances share the same root test ID, and automation scopes child selectors to the chosen instance (e.g. Playwright's `getByTestId('offers-carousel').nth(0)`). Only add an author-provided key (e.g. `data-automation-key`) if QA needs to target one semantic instance regardless of position.

@@ -5,6 +5,8 @@ export default function decorate(block: HTMLElement): void {
   const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
   if (blockId) block.id = blockId;
 
+  block.setAttribute('data-testid', 'text-with-image');
+
   const getRowText = (row?: Element | null) =>
     row?.firstElementChild?.textContent?.trim() || row?.textContent?.trim() || '';
   const getField = (name: string): Element | null => block.querySelector(`[data-aue-prop="${name}"]`);
@@ -120,6 +122,7 @@ export default function decorate(block: HTMLElement): void {
     cta.className = 'cta-link';
     cta.href = ctaHref;
     cta.textContent = ctaText;
+    cta.setAttribute('data-testid', 'text-with-image-cta');
     if (openInNewTab) cta.target = '_blank';
     textCol.append(cta);
   }
@@ -138,11 +141,11 @@ export default function decorate(block: HTMLElement): void {
     });
     const layerRows = giftCardRows.length ? giftCardRows : pictureRows.slice(0, 3);
     if (layerRows.length > 0) {
-      layerRows.forEach((row, index) => {
+      stack.classList.add(`gift-card-count-${layerRows.length}`);
+
+      layerRows.forEach((row) => {
         const layer = document.createElement('div');
         layer.className = 'gift-card-layer';
-        layer.style.setProperty('--gift-card-offset', `${index * 18}px`);
-        layer.style.setProperty('--gift-card-rotation', `${(index - 1) * 4}deg`);
 
         const rowPicture = row.querySelector('picture');
         const rowImg = rowPicture?.querySelector('img') || row.querySelector('img');
@@ -171,6 +174,7 @@ export default function decorate(block: HTMLElement): void {
     const imageLink = document.createElement('a');
     imageLink.className = 'image-link';
     imageLink.href = ctaHref;
+    imageLink.setAttribute('data-testid', 'text-with-image-image-link');
     if (openInNewTab) imageLink.target = '_blank';
     imageLink.append(...imageCol.childNodes);
     imageCol.append(imageLink);

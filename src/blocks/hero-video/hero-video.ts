@@ -1,7 +1,7 @@
 // src/blocks/hero-video/hero-video.ts
 import { resolveDAMUrl } from '@/utils/env';
 import { emitHeroImpression, emitItemSelect, emitMediaError } from './lib/analytics';
-import { runIntro, skipIntro } from './lib/intro';
+import { runIntro, shouldSkipIntro, skipIntro } from './lib/intro';
 import { MediaManager } from './lib/media-manager';
 import { SelectorUI } from './lib/selector-ui';
 import { initSoftNav } from './lib/soft-nav';
@@ -106,33 +106,29 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
 }
 
 function parseItems(itemRows: HTMLElement[]): HeroVideoItem[] {
-  return itemRows
-    .map((row): HeroVideoItem | null => {
-      const cells = [...row.children] as HTMLElement[];
-      // Model fields → cell indices:
-      //   cells[0] = label, cells[1] = video, cells[2] = poster,
-      //   cells[3] = link, cells[4] = focalDesktop, cells[5] = focalMobile
-      if (cells.length < 2) return null;
+  // Never drop an authored row (see docs/coding-guidelines.md): a freshly-added, still-empty
+  // hero-video-item must still render so it stays visible/selectable on the UE canvas.
+  return itemRows.map((row): HeroVideoItem => {
+    const cells = [...row.children] as HTMLElement[];
+    // Model fields → cell indices:
+    //   cells[0] = label, cells[1] = video, cells[2] = poster,
+    //   cells[3] = link, cells[4] = focalDesktop, cells[5] = focalMobile
+    const label = cells[0]?.textContent?.trim() ?? '';
 
-      const label = cells[0]?.textContent?.trim() ?? '';
+    const videoAnchor = cells[1]?.querySelector<HTMLAnchorElement>('a');
+    const rawVideo = (videoAnchor?.href ?? cells[1]?.textContent?.trim() ?? '').trim();
+    const looksLikeVideoUrl = /^https?:\/\//i.test(rawVideo) || rawVideo.startsWith('/');
+    const videoUrl = looksLikeVideoUrl ? resolveDAMUrl(rawVideo) : '';
 
-      const videoAnchor = cells[1]?.querySelector<HTMLAnchorElement>('a');
-      const rawVideo = (videoAnchor?.href ?? cells[1]?.textContent?.trim() ?? '').trim();
-      const looksLikeVideoUrl = /^https?:\/\//i.test(rawVideo) || rawVideo.startsWith('/');
-      const videoUrl = looksLikeVideoUrl ? resolveDAMUrl(rawVideo) : '';
+    const poster = cells[2]?.querySelector('picture') ?? null;
+    const posterUrl = poster?.querySelector<HTMLImageElement>('img')?.src ?? '';
+    const linkAnchor = cells[3]?.querySelector<HTMLAnchorElement>('a');
+    const link = linkAnchor?.href ?? null;
+    const focalDesktop = cells[4]?.textContent?.trim() || 'center';
+    const focalMobile = cells[5]?.textContent?.trim() || 'center';
 
-      const poster = cells[2]?.querySelector('picture') ?? null;
-      const posterUrl = poster?.querySelector<HTMLImageElement>('img')?.src ?? '';
-      const linkAnchor = cells[3]?.querySelector<HTMLAnchorElement>('a');
-      const link = linkAnchor?.href ?? null;
-      const focalDesktop = cells[4]?.textContent?.trim() || 'center';
-      const focalMobile = cells[5]?.textContent?.trim() || 'center';
-
-      if (!label || !videoUrl) return null;
-
-      return { label, videoUrl, posterUrl, link, focalDesktop, focalMobile, sourceRow: row };
-    })
-    .filter((item): item is HeroVideoItem => item !== null);
+    return { label, videoUrl, posterUrl, link, focalDesktop, focalMobile, sourceRow: row };
+  });
 }
 
 // ── DOM builder ───────────────────────────────────────────────────────────────
@@ -288,13 +284,8 @@ function buildDOM(config: HeroVideoConfig): {
   suffixEl.textContent = config.suffix;
   suffixEl.setAttribute('aria-hidden', 'true');
 
-  // "See" and the item list share one box so the prefix sits centered above the list; the prefix
-  // is absolutely positioned inside it, so it never shifts the (screen-centered) list.
-  const leadEl = document.createElement('div');
-  leadEl.className = 'hero-video-lead';
-  leadEl.append(prefixEl, itemListEl);
-
-  selectorEl.append(leadEl, suffixEl);
+  // "See" is now a real grid column (see hero-video.css) so it's naturally level with the list.
+  selectorEl.append(prefixEl, itemListEl, suffixEl);
 
   // ── Bottom controls (sound toggle only — mode toggling lives in a sibling block) ──
   const controlsEl = document.createElement('div');
@@ -337,13 +328,6 @@ function buildDOM(config: HeroVideoConfig): {
     destLink,
     expLink,
   };
-}
-
-function shouldSkipIntro(): boolean {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
-  if (document.documentElement.classList.contains('adobe-ue-edit')) return true;
-  if (window.self !== window.top) return true; // inside iframe (UE)
-  return false;
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
@@ -486,7 +470,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       () => {
         // Position list so active item is centered before split starts
         selectorUI.measureRows();
-        selectorUI.positionForItem(state.activeIndex);
+        return selectorUI.positionForItem(state.activeIndex);
       },
       () => {
         // Fade in active item while See/with... are splitting apart
