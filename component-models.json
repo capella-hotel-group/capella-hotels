@@ -678,7 +678,7 @@
       {
         "component": "text",
         "name": "id",
-        "label": "Block ID",
+        "label": "Component Anchor ID",
         "description": "Sets the id attribute on the block, usable as an anchor target.",
         "valueType": "string",
         "value": ""
@@ -726,15 +726,50 @@
     "fields": [
       {
         "component": "reference",
-        "name": "image",
-        "label": "Image",
+        "name": "thumbnail",
+        "label": "Thumbnail",
+        "description": "Still image only. Doubles as the poster when the media is a video.",
         "valueType": "string",
         "multi": false
       },
       {
         "component": "text",
-        "name": "imageAlt",
-        "label": "Asset Alt Text",
+        "name": "thumbnailAlt",
+        "label": "Thumbnail Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "media",
+        "label": "Media Type",
+        "valueType": "string",
+        "multi": false,
+        "required": true,
+        "value": "image",
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "mediaAsset",
+        "label": "Media",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "mediaAssetAlt",
+        "label": "Media Alt Text",
         "valueType": "string",
         "value": ""
       }
@@ -1791,102 +1826,121 @@
       {
         "component": "text",
         "name": "id",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
         "valueType": "string",
-        "label": "Component Anchor ID",
-        "value": "",
-        "placeholder": "e.g., text-with-cta"
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "valueType": "string",
+        "value": ""
       },
       {
         "component": "richtext",
         "name": "title",
-        "label": "Main Section Title",
+        "label": "Title",
+        "description": "Each paragraph renders as its own title line.",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
         "component": "richtext",
-        "name": "subtitle",
-        "label": "Subtitle / Description",
+        "name": "description",
+        "label": "Description",
         "valueType": "string",
         "value": ""
-      },
+      }
+    ]
+  },
+  {
+    "id": "text-with-cta-signup-form",
+    "fields": [
       {
-        "component": "select",
-        "name": "backgroundTheme",
-        "label": "Background Theme",
+        "component": "text",
+        "name": "triggerLabel",
+        "label": "Expand Link Label",
+        "description": "Shown while the form is collapsed.",
         "valueType": "string",
         "required": true,
-        "value": "light-neutral",
-        "options": [
-          {
-            "name": "Light Neutral",
-            "value": "light-neutral"
-          },
-          {
-            "name": "Soft Sand",
-            "value": "soft-sand"
-          }
-        ]
-      },
-      {
-        "component": "select",
-        "name": "ctaStyle",
-        "label": "CTA Style",
-        "valueType": "string",
-        "required": true,
-        "value": "underlined-text-link",
-        "options": [
-          {
-            "name": "Underlined Text Link",
-            "value": "underlined-text-link"
-          },
-          {
-            "name": "Solid Button",
-            "value": "solid-button"
-          }
-        ]
+        "value": "Join now"
       },
       {
         "component": "text",
-        "name": "ctaLabel",
-        "label": "CTA Label",
+        "name": "salutationLabel",
+        "label": "Salutation Field Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Title"
+      },
+      {
+        "component": "text",
+        "name": "salutationOptions",
+        "label": "Salutation Options",
+        "description": "Comma separated list, e.g. Mr, Mrs, Ms, Dr.",
+        "valueType": "string",
+        "required": true,
+        "value": "Mr, Mrs, Ms, Mx, Dr"
+      },
+      {
+        "component": "text",
+        "name": "firstNameLabel",
+        "label": "First Name Field Label",
+        "valueType": "string",
+        "required": true,
+        "value": "First name"
+      },
+      {
+        "component": "text",
+        "name": "lastNameLabel",
+        "label": "Last Name Field Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Last name"
+      },
+      {
+        "component": "text",
+        "name": "countryLabel",
+        "label": "Country Field Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Country"
+      },
+      {
+        "component": "text",
+        "name": "emailLabel",
+        "label": "Email Field Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Email"
+      },
+      {
+        "component": "richtext",
+        "name": "consentLabel",
+        "label": "Consent Checkbox Label",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
-        "component": "select",
-        "name": "ctaActionKind",
-        "label": "CTA Action Type",
+        "component": "text",
+        "name": "submitLabel",
+        "label": "Submit Button Label",
         "valueType": "string",
         "required": true,
-        "value": "external-url",
-        "options": [
-          {
-            "name": "Open Pop-up Form Modal",
-            "value": "popup-form-modal"
-          },
-          {
-            "name": "Navigate to External URL",
-            "value": "external-url"
-          }
-        ]
+        "value": "Sign up"
       },
       {
-        "component": "aem-content",
-        "name": "ctaTargetUrl",
-        "label": "CTA Target Action / URL",
-        "description": "Pop-up Form Modal: path to the fragment holding the form. Navigate to External URL: the destination URL.",
+        "component": "text",
+        "name": "successMessage",
+        "label": "Success Message",
         "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "boolean",
-        "name": "openInNewTab",
-        "label": "Open in New Tab",
-        "valueType": "boolean",
-        "value": false
+        "required": true,
+        "value": "Thank you, your details have been received."
       }
     ]
   },
