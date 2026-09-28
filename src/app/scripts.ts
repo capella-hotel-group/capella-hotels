@@ -52,7 +52,7 @@ export const SUPPORTED_SITES = ['global', 'bangkok', 'sanya', 'test-pages'];
 // is not yet set up) — see docs/header-footer-fragment-path-resolution.md. Empty string
 // means "no default": resolves to the root fragment (`/nav`, `/footer`). Set back to
 // 'global' to restore the previous default-to-global behavior once multi-language is set up.
-export const DEFAULT_SITE_SEGMENT = '';
+export const DEFAULT_SITE_SEGMENT = 'global';
 
 // Maps URL path slugs to valid BCP 47 language tags.
 // Only needed for slugs that differ from the BCP 47 primary (e.g. "jp" → "ja").
