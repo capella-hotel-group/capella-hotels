@@ -16,17 +16,20 @@ interface NavLanguage {
   label: string;
   shortLabel: string;
   href: string;
+  openInNewTab: boolean;
   source: Element;
 }
 
 interface NavLink {
   label: string;
   href: string;
+  openInNewTab: boolean;
   source: Element;
 }
 
 interface NavRegion {
   label: string;
+  mergeColumns: boolean;
   links: NavLink[];
   source: Element;
 }
@@ -40,9 +43,20 @@ interface NavPromo {
 interface NavCategory {
   label: string;
   href: string;
+  openInNewTab: boolean;
   regions: NavRegion[];
   promo: NavPromo | null;
   source: Element;
+}
+
+type NavMarker = 'open-in-new-tab' | 'open-in-same-tab' | 'merge-columns';
+
+// Strips a trailing "| <marker>" segment authored in the RTE (case-insensitive); text
+// that doesn't end in one of the 3 known markers is returned unchanged, unstripped.
+function splitMarker(raw: string): { label: string; marker: NavMarker | null } {
+  const match = raw.match(/^(.*)\|\s*(open-in-new-tab|open-in-same-tab|merge-columns)\s*$/i);
+  if (!match) return { label: raw.trim(), marker: null };
+  return { label: (match[1] ?? '').trim(), marker: (match[2] ?? '').toLowerCase() as NavMarker };
 }
 
 function getFragmentBasePath(): string {
@@ -73,11 +87,12 @@ function readLanguages(chromeSection: Element): NavLanguage[] {
   if (!innerList) return [];
   return [...innerList.children].map((item) => {
     const anchor = item.querySelector('a');
-    const label = anchor?.textContent?.trim() ?? '';
+    const { label, marker } = splitMarker(directText(item));
     return {
       label,
       shortLabel: label.slice(0, 2).toUpperCase(),
       href: anchor?.getAttribute('href') ?? '#',
+      openInNewTab: marker === 'open-in-new-tab',
       source: item,
     };
   });
@@ -85,9 +100,11 @@ function readLanguages(chromeSection: Element): NavLanguage[] {
 
 function readLinkItem(item: Element): NavLink {
   const anchor = item.querySelector<HTMLAnchorElement>('a');
+  const { label, marker } = splitMarker(directText(item));
   return {
-    label: anchor?.textContent?.trim() || directText(item),
+    label,
     href: anchor?.getAttribute('href') ?? '',
+    openInNewTab: marker === 'open-in-new-tab',
     source: item,
   };
 }
@@ -102,7 +119,7 @@ function readCategoryRegions(topItem: Element): NavRegion[] {
   let flatLinks: NavLink[] = [];
   const flushFlatLinks = () => {
     if (flatLinks.length) {
-      regions.push({ label: '', links: flatLinks, source: nestedList });
+      regions.push({ label: '', mergeColumns: false, links: flatLinks, source: nestedList });
       flatLinks = [];
     }
   };
@@ -110,8 +127,10 @@ function readCategoryRegions(topItem: Element): NavRegion[] {
     const childList = item.querySelector(':scope > ul');
     if (childList) {
       flushFlatLinks();
+      const { label, marker } = splitMarker(directText(item));
       regions.push({
-        label: directText(item),
+        label,
+        mergeColumns: marker === 'merge-columns',
         links: [...childList.children].map((linkItem) => readLinkItem(linkItem)),
         source: item,
       });
@@ -146,9 +165,11 @@ function readCategoryFromList(rootList: Element): NavCategory | null {
   const topItem = rootList.querySelector(':scope > li');
   if (!topItem) return null;
   const anchor = topItem.querySelector<HTMLAnchorElement>(':scope > a');
+  const { label, marker } = splitMarker(directText(topItem));
   return {
-    label: anchor?.textContent?.trim() || directText(topItem),
+    label,
     href: anchor?.getAttribute('href') ?? '',
+    openInNewTab: marker === 'open-in-new-tab',
     regions: readCategoryRegions(topItem),
     promo: null,
     source: topItem,
@@ -184,6 +205,7 @@ function getActiveLang(languages: NavLanguage[]): NavLanguage {
     label: 'English',
     shortLabel: 'EN',
     href: `${getFragmentBasePath()}/`,
+    openInNewTab: false,
     source: document.createElement('li'),
   };
   return (
@@ -229,6 +251,10 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
     const anchor = document.createElement('a');
     anchor.href = lang.href;
     anchor.textContent = lang.shortLabel;
+    if (lang.openInNewTab) {
+      anchor.target = '_blank';
+      anchor.rel = 'noopener';
+    }
     item.append(anchor);
 
     item.addEventListener('click', () => {
@@ -309,12 +335,16 @@ function buildLogo(
   return logo;
 }
 
-function buildCtaZone(label: string, href: string): HTMLAnchorElement | null {
+function buildCtaZone(label: string, href: string, openInNewTab: boolean): HTMLAnchorElement | null {
   if (!label || !href) return null;
   const cta = document.createElement('a');
   cta.className = 'header-cta';
   cta.href = href;
   cta.textContent = label;
+  if (openInNewTab) {
+    cta.target = '_blank';
+    cta.rel = 'noopener';
+  }
   return cta;
 }
 
@@ -347,6 +377,10 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
       const anchor = document.createElement('a');
       anchor.href = link.href;
       anchor.textContent = link.label;
+      if (link.openInNewTab) {
+        anchor.target = '_blank';
+        anchor.rel = 'noopener';
+      }
       moveInstrumentation(link.source, anchor);
       li.append(anchor);
     } else {
@@ -361,6 +395,102 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
   return grid;
 }
 
+// A region marked merge-columns joins the row of the ONE region immediately after it
+// (pairwise only, no chaining). A consumed partner's own marker is ignored, and a
+// marker on the last region in a category is a no-op (see design.md Decision 2).
+function groupRegions(regions: NavRegion[]): NavRegion[][] {
+  const groups: NavRegion[][] = [];
+  let i = 0;
+  while (i < regions.length) {
+    const region = regions[i];
+    if (!region) break;
+    const next = regions[i + 1];
+    if (region.mergeColumns && next) {
+      groups.push([region, next]);
+      i += 2;
+    } else {
+      if (region.mergeColumns) {
+        console.warn('[header] merge-columns on last region in category; nothing to merge with.');
+      }
+      groups.push([region]);
+      i += 1;
+    }
+  }
+  return groups;
+}
+
+const MERGE_ROW_COLUMNS = 4;
+
+interface MergeSlot {
+  label: string;
+  link: NavLink | null;
+}
+
+// Flattens a merged region pair into slots — one label+first-link slot per region, then
+// one link-only slot per remaining link — ready to be chunked into fixed-width grid rows.
+function flattenMergeSlots(regions: NavRegion[]): MergeSlot[] {
+  const slots: MergeSlot[] = [];
+  regions.forEach((region) => {
+    if (!region.links.length) {
+      slots.push({ label: region.label, link: null });
+      return;
+    }
+    region.links.forEach((link, index) => {
+      slots.push({ label: index === 0 ? region.label : '', link });
+    });
+  });
+  return slots;
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
+
+function buildMergedCell(slot: MergeSlot): HTMLDivElement {
+  const cell = document.createElement('div');
+  cell.className = 'header-menu-merged-cell';
+  // Always render the heading, even empty — reserves the same vertical space in every
+  // cell so link-only slots (no label) still align to the labeled cells' link row. A
+  // completely empty <p> collapses to 0 height (no line box), so use a non-breaking
+  // space instead of an empty string.
+  const heading = document.createElement('p');
+  heading.className = 'header-menu-region-label';
+  heading.textContent = slot.label || '\u00A0';
+  if (!slot.label) heading.setAttribute('aria-hidden', 'true');
+  cell.append(heading);
+  if (slot.link) {
+    if (slot.link.href) {
+      const anchor = document.createElement('a');
+      anchor.href = slot.link.href;
+      anchor.textContent = slot.link.label;
+      if (slot.link.openInNewTab) {
+        anchor.target = '_blank';
+        anchor.rel = 'noopener';
+      }
+      moveInstrumentation(slot.link.source, anchor);
+      cell.append(anchor);
+    } else {
+      const span = document.createElement('span');
+      span.className = 'nav-link is-disabled';
+      span.textContent = slot.link.label;
+      moveInstrumentation(slot.link.source, span);
+      cell.append(span);
+    }
+  }
+  return cell;
+}
+
+function buildMergedRows(regions: NavRegion[]): HTMLDivElement[] {
+  return chunk(flattenMergeSlots(regions), MERGE_ROW_COLUMNS).map((rowSlots) => {
+    const row = document.createElement('div');
+    row.className = 'header-menu-merged-row header-menu-block';
+    rowSlots.forEach((slot) => row.append(buildMergedCell(slot)));
+    return row;
+  });
+}
+
 function buildCategoryContent(category: NavCategory): HTMLDivElement {
   const content = document.createElement('div');
   content.className = 'header-menu-category-content';
@@ -369,17 +499,22 @@ function buildCategoryContent(category: NavCategory): HTMLDivElement {
   const inner = document.createElement('div');
   inner.className = 'header-menu-category-content-inner';
 
-  category.regions.forEach((region) => {
-    const regionEl = document.createElement('div');
-    regionEl.className = 'header-menu-region';
-    if (region.label) {
-      const heading = document.createElement('p');
-      heading.className = 'header-menu-region-label';
-      heading.textContent = region.label;
-      regionEl.append(heading);
+  groupRegions(category.regions).forEach((group) => {
+    const [region] = group;
+    if (group.length === 1 && region) {
+      const regionEl = document.createElement('div');
+      regionEl.className = 'header-menu-region header-menu-block';
+      if (region.label) {
+        const heading = document.createElement('p');
+        heading.className = 'header-menu-region-label';
+        heading.textContent = region.label;
+        regionEl.append(heading);
+      }
+      regionEl.append(buildLinkGrid(region.links));
+      inner.append(regionEl);
+      return;
     }
-    regionEl.append(buildLinkGrid(region.links));
-    inner.append(regionEl);
+    buildMergedRows(group).forEach((row) => inner.append(row));
   });
 
   content.append(inner);
@@ -485,6 +620,10 @@ function buildMenuCategories(
       anchor.className = 'header-menu-category-trigger';
       anchor.href = category.href || '#';
       anchor.textContent = category.label;
+      if (category.openInNewTab) {
+        anchor.target = '_blank';
+        anchor.rel = 'noopener';
+      }
       trigger = anchor;
       content = document.createElement('div');
       content.hidden = true;
@@ -573,7 +712,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const [logoImg, logoImgDark] = chromeSection.querySelectorAll('picture img');
   const chromeLinks = [...chromeSection.querySelectorAll<HTMLAnchorElement>('.default-content-wrapper > p > a')];
   const ctaAnchor = chromeLinks[0];
-  const closeMenuLabel = chromeLinks[1]?.textContent?.trim() || 'CLOSE';
+  const closeAnchor = chromeLinks[1];
+  const { label: ctaLabel, marker: ctaMarker } = splitMarker(ctaAnchor?.textContent ?? '');
+  const closeMenuLabel = splitMarker(closeAnchor?.textContent ?? '').label || 'CLOSE';
   const activeLang = getActiveLang(languages);
 
   const logo = buildLogo(
@@ -585,7 +726,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   );
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
-  const cta = buildCtaZone(ctaAnchor?.textContent?.trim() ?? '', ctaAnchor?.getAttribute('href') ?? '');
+  const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');
   const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel);
 
   const closeMenu = () => {

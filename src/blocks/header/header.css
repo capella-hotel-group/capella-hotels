@@ -398,7 +398,15 @@ button.header-menu-category-trigger::after {
     transform: translateY(0);
 }
 
-.header-menu-region + .header-menu-region {
+.header-menu-block + .header-menu-block {
+    margin-top: 32px;
+}
+
+.header-menu-merged-row {
+    display: block;
+}
+
+.header-menu-merged-cell + .header-menu-merged-cell {
     margin-top: 32px;
 }
 
@@ -422,13 +430,15 @@ button.header-menu-category-trigger::after {
     list-style: none;
 }
 
-.header-menu-link-grid li {
+.header-menu-link-grid li,
+.header-menu-merged-cell {
     /* Grid items default to min-width:auto, which ignores the track's minmax(...) lower
        bound and can still force a column wider than intended. */
     min-width: 0;
 }
 
-.header-menu-link-grid a {
+.header-menu-link-grid a,
+.header-menu-merged-cell a {
     display: block;
     color: var(--site-header-text);
     font-family: var(--type-font-family-heading, serif);
@@ -438,12 +448,14 @@ button.header-menu-category-trigger::after {
     text-decoration: none;
 }
 
-.header-menu-link-grid a:hover {
+.header-menu-link-grid a:hover,
+.header-menu-merged-cell a:hover {
     text-decoration: underline;
     text-underline-offset: 4px;
 }
 
-.header-menu-link-grid .nav-link.is-disabled {
+.header-menu-link-grid .nav-link.is-disabled,
+.header-menu-merged-cell .nav-link.is-disabled {
     display: block;
     color: var(--color-text-main-disabled, #6e6e6c);
     font-family: var(--type-font-family-heading, serif);
@@ -687,6 +699,32 @@ button.header-menu-category-trigger::after {
     }
 
     .header-menu-link-grid {
+        /* Fixed 4-column grid at this breakpoint (matches Figma node 6968:25912's desktop
+           mega-menu, where every region wraps at exactly 4 items per row) — the fluid
+           auto-fit used at smaller breakpoints only fits 3 columns in this rail's content
+           pane width, one short of the reference. */
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 24px 48px;
+    }
+
+    .header-menu-merged-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 24px 48px;
+    }
+
+    .header-menu-merged-cell + .header-menu-merged-cell {
+        margin-top: 0;
+    }
+
+    .header-menu-link-grid a,
+    .header-menu-merged-cell a,
+    .header-menu-link-grid .nav-link.is-disabled,
+    .header-menu-merged-cell .nav-link.is-disabled {
+        /* Caps a link's title to the column's own width so a long, unbreakable label
+           (e.g. "SHENZHEN(2029)") wraps onto a second line instead of overflowing past
+           the fixed 4-column track into the next column. */
+        max-width: 107px;
+        overflow-wrap: break-word;
     }
 }
