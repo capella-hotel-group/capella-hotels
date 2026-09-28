@@ -261,6 +261,7 @@
     }
 
     .destination-introduction-slide img,
+    .destination-introduction-slide video,
     .destination-introduction-thumb img {
         display: block;
         width: 100%;
