@@ -1791,18 +1791,18 @@
       {
         "component": "text",
         "name": "id",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
         "valueType": "string",
-        "label": "Component Anchor ID",
-        "value": "",
-        "placeholder": "e.g., text-with-cta"
+        "value": ""
       },
       {
         "component": "text",
         "name": "dataTestId",
-        "valueType": "string",
         "label": "Data Test ID",
-        "value": "",
-        "placeholder": "e.g., text-with-cta"
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "valueType": "string",
+        "value": ""
       },
       {
         "component": "richtext",
