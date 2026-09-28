@@ -236,6 +236,7 @@ export class MediaManager {
       this.pendingFadeIn = null;
       this.pendingFadeOut = null;
       this.posterEl.style.backgroundImage = item.posterUrl ? `url(${item.posterUrl})` : 'none';
+      this.posterEl.style.backgroundPosition = this.getFocalPosition(item);
       await this.fadeOutgoingToBlank(outgoing, mySeq);
       return;
     }

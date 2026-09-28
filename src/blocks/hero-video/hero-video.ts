@@ -106,26 +106,45 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
 }
 
 function parseItems(itemRows: HTMLElement[]): HeroVideoItem[] {
+  const cellText = (cell?: Element | null): string => cell?.textContent?.trim() ?? '';
+  const cellHref = (cell?: Element | null): string =>
+    cell?.querySelector<HTMLAnchorElement>('a')?.getAttribute('href')?.trim() ?? '';
+  const cellUrl = (cell?: Element | null): string => {
+    const href = cellHref(cell);
+    if (href) return href;
+    const text = cellText(cell);
+    return /^https?:\/\//i.test(text) || text.startsWith('/') ? text : '';
+  };
+  const looksLikeVideoReference = (value: string): boolean =>
+    /\.(mp4|m4v|mov|ogv|ogg|webm|m3u8)(?:[?#].*)?$/i.test(value);
+
   // Never drop an authored row (see docs/coding-guidelines.md): a freshly-added, still-empty
   // hero-video-item must still render so it stays visible/selectable on the UE canvas.
   return itemRows.map((row): HeroVideoItem => {
     const cells = [...row.children] as HTMLElement[];
-    // Model fields → cell indices:
-    //   cells[0] = label, cells[1] = video, cells[2] = poster,
-    //   cells[3] = link, cells[4] = focalDesktop, cells[5] = focalMobile
-    const label = cells[0]?.textContent?.trim() ?? '';
+    const label = cellText(cells[0]) || 'New destination';
+    const otherCells = cells.slice(1);
 
-    const videoAnchor = cells[1]?.querySelector<HTMLAnchorElement>('a');
-    const rawVideo = (videoAnchor?.href ?? cells[1]?.textContent?.trim() ?? '').trim();
-    const looksLikeVideoUrl = /^https?:\/\//i.test(rawVideo) || rawVideo.startsWith('/');
-    const videoUrl = looksLikeVideoUrl ? resolveDAMUrl(rawVideo) : '';
+    // Item rows can lose hidden optional cells in delivery HTML, so identify cells by what they
+    // contain instead of fixed offsets. The first cell is always the label; after that we match
+    // the poster by <picture>, the video by a video-like asset URL, then treat the remaining text
+    // cells as the desktop/mobile focal points in authored order.
+    const posterCell = otherCells.find((cell) => cell.querySelector('picture'));
+    const linkedCells = otherCells.filter((cell) => cell !== posterCell && cellUrl(cell));
+    const videoCell = linkedCells.find((cell) => looksLikeVideoReference(cellUrl(cell)));
+    const linkCell = linkedCells.find((cell) => cell !== videoCell);
 
-    const poster = cells[2]?.querySelector('picture') ?? null;
-    const posterUrl = poster?.querySelector<HTMLImageElement>('img')?.src ?? '';
-    const linkAnchor = cells[3]?.querySelector<HTMLAnchorElement>('a');
-    const link = linkAnchor?.href ?? null;
-    const focalDesktop = cells[4]?.textContent?.trim() || 'center';
-    const focalMobile = cells[5]?.textContent?.trim() || 'center';
+    const rawVideo = videoCell ? cellUrl(videoCell) : '';
+    const videoUrl = rawVideo ? resolveDAMUrl(rawVideo) : '';
+    const posterUrl = posterCell?.querySelector<HTMLImageElement>('picture img')?.src ?? '';
+    const linkHref = linkCell ? cellHref(linkCell) : '';
+    const link = linkHref || null;
+
+    const focalCells = otherCells.filter(
+      (cell) => cell !== posterCell && cell !== videoCell && cell !== linkCell && cellText(cell),
+    );
+    const focalDesktop = cellText(focalCells[0]) || 'center';
+    const focalMobile = cellText(focalCells[1]) || 'center';
 
     return { label, videoUrl, posterUrl, link, focalDesktop, focalMobile, sourceRow: row };
   });

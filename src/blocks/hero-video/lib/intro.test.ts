@@ -1,6 +1,7 @@
 // src/blocks/hero-video/lib/intro.test.ts
 import { runIntro, shouldSkipIntro, skipIntro } from './intro';
 import type { IntroElements } from './types';
+import * as windowContext from './window-context';
 
 function mockMatchMedia(matches: boolean): void {
   window.matchMedia = jest.fn().mockImplementation((query: string) => ({
@@ -47,8 +48,7 @@ describe('shouldSkipIntro', () => {
 
   it('returns true when running inside an iframe', () => {
     mockMatchMedia(false);
-    // `window.top` is non-configurable in jsdom, so fake the inequality via `self` instead.
-    jest.spyOn(window, 'self', 'get').mockReturnValue({} as Window & typeof globalThis);
+    jest.spyOn(windowContext, 'isEmbeddedInIframe').mockReturnValue(true);
     expect(shouldSkipIntro()).toBe(true);
   });
 });
