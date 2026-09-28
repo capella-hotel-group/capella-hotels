@@ -122,7 +122,7 @@ function parseItems(itemRows: HTMLElement[]): HeroVideoItem[] {
   // hero-video-item must still render so it stays visible/selectable on the UE canvas.
   return itemRows.map((row): HeroVideoItem => {
     const cells = [...row.children] as HTMLElement[];
-    const label = cellText(cells[0]);
+    const label = cellText(cells[0]) || 'New destination';
     const otherCells = cells.slice(1);
 
     // Item rows can lose hidden optional cells in delivery HTML, so identify cells by what they
