@@ -2,6 +2,8 @@
 import type { HeroVideoItem } from './types';
 
 const CROSSFADE_MS = 620;
+const SLIDE_MS = 900; // dedicated (slower) duration for the transition:'slide' item-switch, kept separate from CROSSFADE_MS so the default crossfade and load-failure/empty-item fallback stay snappy
+const SLIDE_EASE = 'cubic-bezier(0.33, 1, 0.68, 1)'; // standard ease-out-cubic, matches the intro's motion language
 const FIRST_FRAME_TIMEOUT_MS = 900;
 const LOAD_TIMEOUT_MS = 8000;
 const ERROR_RETRY_GRACE_MS = 400;
@@ -310,13 +312,13 @@ export class MediaManager {
       incoming.style.opacity = '1';
       outgoing.style.transform = 'translateX(0%)';
       const slideIn = incoming.animate([{ transform: 'translateX(100%)' }, { transform: 'translateX(0%)' }], {
-        duration: CROSSFADE_MS,
-        easing: 'ease-in-out',
+        duration: SLIDE_MS,
+        easing: SLIDE_EASE,
         fill: 'forwards',
       });
       const slideOut = outgoing.animate([{ transform: 'translateX(0%)' }, { transform: 'translateX(-100%)' }], {
-        duration: CROSSFADE_MS,
-        easing: 'ease-in-out',
+        duration: SLIDE_MS,
+        easing: SLIDE_EASE,
         fill: 'forwards',
       });
       this.pendingFadeIn = slideIn;

@@ -4,16 +4,16 @@ import * as windowContext from './window-context';
 
 // Timeline (ms)
 const T_PHRASE_START = 800; // unified phrase fades in
-const T_PHRASE_FADE = 400; // phrase fade-in duration
-const T_SPLIT_START = 2800; // phrase out → split layout in
-const T_PHRASE_SLIDE = 480; // whole "See with new eyes" phrase glides intact onto its resting spot
-const T_SPLIT_MOTION = 720; // "See" peels off, rising/fading, while the list rises in
+const T_PHRASE_FADE = 700; // phrase fade-in duration
+const T_SPLIT_START = 2200; // phrase out → split layout in
+const T_PHRASE_SLIDE = 700; // whole "See with new eyes" phrase glides intact onto its resting spot
+const T_SPLIT_MOTION = 1000; // "See" peels off, rising/fading, while the list rises in
 const T_CONTROLS_GAP = 180; // pause after the split settles before controls fade in
 const T_CONTROLS_FADE = 320; // controls fade-in duration
 const PHRASE_LIFT_PX = 28;
 const PREFIX_EXIT_PX = 64; // "See" ends this far up as it fades out
 const ITEMS_RISE_PX = 28; // list rises this far as it fades in
-const EASE_ENTRANCE = 'cubic-bezier(0.22, 1, 0.36, 1)'; // soft ease-out for the slide + rise
+const EASE_ENTRANCE = 'cubic-bezier(0.33, 1, 0.68, 1)'; // standard ease-out-cubic for the slide + rise
 const EASE_THROUGH = 'cubic-bezier(0.5, 0, 0.2, 1)'; // "See" gliding up and out
 const CENTERED_TRANSLATE = 'translate(-50%, -50%)';
 
@@ -68,7 +68,7 @@ export async function runIntro(
     ],
     {
       duration: T_PHRASE_FADE,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      easing: EASE_ENTRANCE,
       fill: 'forwards',
     },
   );
@@ -155,7 +155,7 @@ export async function runIntro(
   await delay(T_CONTROLS_GAP);
   const controlsIn = controls.animate([{ opacity: 0 }, { opacity: 1 }], {
     duration: T_CONTROLS_FADE,
-    easing: 'ease-out',
+    easing: EASE_ENTRANCE,
     fill: 'forwards',
   });
   await controlsIn.finished.catch(() => {});

@@ -226,6 +226,7 @@ function buildDOM(config: HeroVideoConfig): {
   prefixEl: HTMLElement;
   suffixEl: HTMLElement;
   itemListEl: HTMLUListElement;
+  itemsViewportEl: HTMLElement;
   controlsEl: HTMLElement;
   soundBtn: HTMLButtonElement;
   cursorEl: HTMLElement;
@@ -303,8 +304,16 @@ function buildDOM(config: HeroVideoConfig): {
   suffixEl.textContent = config.suffix;
   suffixEl.setAttribute('aria-hidden', 'true');
 
+  // Static (never transformed) viewport around the list — its own vertical center always lines up
+  // with the active item's fixed on-screen position (itemListEl only ever translates within it),
+  // so the mask-image fade in CSS reliably tracks distance-from-active regardless of which item's
+  // row happens to be selected, unlike putting the mask on itemListEl itself.
+  const itemsViewportEl = document.createElement('div');
+  itemsViewportEl.className = 'hero-video-items-viewport';
+  itemsViewportEl.append(itemListEl);
+
   // "See" is now a real grid column (see hero-video.css) so it's naturally level with the list.
-  selectorEl.append(prefixEl, itemListEl, suffixEl);
+  selectorEl.append(prefixEl, itemsViewportEl, suffixEl);
 
   // ── Bottom controls (sound toggle only — mode toggling lives in a sibling block) ──
   const controlsEl = document.createElement('div');
@@ -341,6 +350,7 @@ function buildDOM(config: HeroVideoConfig): {
     prefixEl,
     suffixEl,
     itemListEl,
+    itemsViewportEl,
     controlsEl,
     soundBtn,
     cursorEl,
@@ -429,7 +439,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     }
   }
 
-  const selectorUI = new SelectorUI(dom.itemListEl);
+  const selectorUI = new SelectorUI(dom.itemListEl, dom.itemsViewportEl);
   selectorUI.renderItems(items, state.activeIndex);
 
   // Recalculate row offsets after fonts load and on resize
