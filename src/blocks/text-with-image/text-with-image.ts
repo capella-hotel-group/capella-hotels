@@ -36,6 +36,8 @@ export default function decorate(block: HTMLElement): void {
   const descriptionField = getField('description');
   const eyebrowSource = eyebrowField || rows[0]?.firstElementChild || null;
   const titleSource = titleField || rows[1]?.firstElementChild || null;
+  const titleParagraphs = titleSource ? [...titleSource.querySelectorAll('p')] : [];
+  const titleLines = titleParagraphs.length > 0 ? titleParagraphs : titleSource ? [titleSource] : [];
   const titleText = titleSource?.textContent?.trim() || '';
   const eyebrowText = eyebrowSource?.textContent?.trim() || '';
   const descriptionEl = descriptionField || rows[2]?.firstElementChild || null;
@@ -102,7 +104,12 @@ export default function decorate(block: HTMLElement): void {
 
   if (titleText) {
     const h3 = document.createElement('h3');
-    h3.textContent = titleText;
+    titleLines
+      .filter((line) => line.textContent?.trim())
+      .forEach((line, index) => {
+        if (index > 0) h3.append(document.createElement('br'));
+        h3.append(...line.childNodes);
+      });
     if (titleSource) moveInstrumentation(titleSource, h3);
     textCol.append(h3);
   }
