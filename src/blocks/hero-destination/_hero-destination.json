@@ -1,0 +1,173 @@
+{
+  "definitions": [
+    {
+      "title": "Hero Destination",
+      "id": "hero-destination",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Hero Destination",
+              "model": "hero-destination",
+              "filter": "hero-destination"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Hero Destination Item",
+      "id": "hero-destination-item",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Hero Destination Item",
+              "model": "hero-destination-item"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "hero-destination",
+      "fields": [
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "autoplay",
+          "label": "Autoplay",
+          "value": true
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "autoplayInterval",
+          "label": "Autoplay Interval (seconds)",
+          "value": "3",
+          "condition": {
+            "===": [{ "var": "autoplay" }, true]
+          }
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "loop",
+          "label": "Loop back to first slide",
+          "value": true,
+          "condition": {
+            "===": [{ "var": "autoplay" }, true]
+          }
+        },
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "transitionEffect",
+          "label": "Transition Effect",
+          "value": "fade",
+          "options": [
+            { "name": "Fade", "value": "fade" },
+            { "name": "Slide", "value": "slide" },
+            { "name": "Cube", "value": "cube" },
+            { "name": "Coverflow", "value": "coverflow" },
+            { "name": "Flip", "value": "flip" },
+            { "name": "Creative", "value": "creative" },
+            { "name": "Cards", "value": "cards" }
+          ]
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "simulateTouch",
+          "label": "Allow drag/swipe with mouse (simulate touch)",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "hero-destination-item",
+      "fields": [
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "mediaType",
+          "label": "Media Type",
+          "value": "image",
+          "required": true,
+          "options": [
+            { "name": "Image", "value": "image" },
+            { "name": "Video", "value": "video" }
+          ]
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Image (Desktop)",
+          "multi": false,
+          "condition": {
+            "===": [{ "var": "mediaType" }, "image"]
+          }
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "imageMobile",
+          "label": "Image (Mobile)",
+          "multi": false,
+          "condition": {
+            "===": [{ "var": "mediaType" }, "image"]
+          }
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "imageAlt",
+          "label": "Alt Text",
+          "value": "",
+          "condition": {
+            "===": [{ "var": "mediaType" }, "image"]
+          }
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "video",
+          "label": "Video (Desktop)",
+          "multi": false,
+          "condition": {
+            "===": [{ "var": "mediaType" }, "video"]
+          }
+        },
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "videoMobile",
+          "label": "Video (Mobile)",
+          "multi": false,
+          "condition": {
+            "===": [{ "var": "mediaType" }, "video"]
+          }
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "heading",
+          "label": "Heading",
+          "value": "",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "hero-destination",
+      "components": ["hero-destination-item"]
+    }
+  ]
+}

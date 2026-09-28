@@ -38,13 +38,31 @@
       "fields": [
         {
           "component": "text",
+          "name": "id",
+          "valueType": "string",
+          "label": "Block ID",
+          "description": "Sets the id attribute on the block, usable as an anchor target.",
+          "value": "",
+          "placeholder": "e.g., offer-cards"
+        },
+        {
+          "component": "text",
+          "name": "dataTestId",
+          "valueType": "string",
+          "label": "Data Test ID",
+          "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+          "value": "",
+          "placeholder": "offers-carousel"
+        },
+        {
+          "component": "text",
           "name": "eyebrow",
           "label": "Primary Eyebrow Text",
           "valueType": "string",
           "value": ""
         },
         {
-          "component": "text",
+          "component": "richtext",
           "name": "title",
           "label": "Primary Main Title",
           "valueType": "string",
@@ -60,6 +78,7 @@
           "component": "reference",
           "name": "media_cardImage",
           "label": "Card Image",
+          "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
           "valueType": "string",
           "multi": false,
           "required": true
@@ -84,7 +103,6 @@
           "name": "content_headline",
           "label": "Card Title",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
@@ -92,34 +110,27 @@
           "name": "content_cardDescription",
           "label": "Card Description",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
           "component": "aem-content",
           "name": "ctas_primaryCta",
           "label": "Primary CTA URL",
-          "valueType": "string",
-          "required": true
+          "valueType": "string"
         },
         {
           "component": "text",
           "name": "ctas_primaryCtaText",
           "label": "Primary CTA Label",
           "valueType": "string",
-          "required": true,
           "value": ""
         },
         {
-          "component": "select",
+          "component": "boolean",
           "name": "ctas_primaryCtaOpenInNewTab",
           "label": "Primary CTA Open in new tab",
           "valueType": "string",
-          "value": "false",
-          "options": [
-            { "name": "No", "value": "false" },
-            { "name": "Yes", "value": "true" }
-          ]
+          "value": false
         },
         {
           "component": "aem-content",
@@ -135,15 +146,11 @@
           "value": ""
         },
         {
-          "component": "select",
+          "component": "boolean",
           "name": "ctas_secondaryCtaOpenInNewTab",
           "label": "Secondary CTA Open in new tab",
           "valueType": "string",
-          "value": "false",
-          "options": [
-            { "name": "No", "value": "false" },
-            { "name": "Yes", "value": "true" }
-          ]
+          "value": false
         }
       ]
     }
@@ -151,7 +158,10 @@
   "filters": [
     {
       "id": "offers-carousel",
-      "components": ["offers-carousel-item"]
+      "components": ["offers-carousel-item"],
+      "minItems": 1,
+      "maxItems": 3,
+      "customErrorMsg": "Add between 1 and 3 offer cards."
     }
   ]
 }

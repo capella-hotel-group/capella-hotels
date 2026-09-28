@@ -102,6 +102,17 @@
           "label": "Open Button Label",
           "valueType": "string",
           "value": "Subscribe"
+        },
+        {
+          "component": "select",
+          "name": "layout",
+          "label": "Layout",
+          "valueType": "string",
+          "value": "Modal",
+          "options": [
+            { "name": "Modal", "value": "Modal" },
+            { "name": "Inline", "value": "Inline" }
+          ]
         }
       ]
     }

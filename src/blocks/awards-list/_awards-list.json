@@ -53,25 +53,6 @@
         },
         {
           "component": "text",
-          "name": "cta",
-          "valueType": "string",
-          "label": "CTA Label"
-        },
-        {
-          "component": "aem-content",
-          "name": "cta_link",
-          "valueType": "string",
-          "label": "CTA Link"
-        },
-        {
-          "component": "boolean",
-          "name": "cta_openInNewTab",
-          "valueType": "boolean",
-          "value": false,
-          "label": "Open CTA in new tab"
-        },
-        {
-          "component": "text",
           "name": "id",
           "valueType": "string",
           "label": "Block ID",

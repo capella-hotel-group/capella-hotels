@@ -1,0 +1,2 @@
+/*! v0.1.0 | h52781fc8 */
+import{a as e,n as t,r as n,t as r}from"../../chunks/link-D_-gqzYp.js";function i(i){let a=t(i,`link`,0),o={label:e(i,`linkText`)||a,url:e(i,`link`)||a,openInNewTab:e(i,`openInNewTab`)||t(i,`openInNewTab`,1)},{content:s}=r(o);i.dataset.testid=`link`,i.replaceChildren(s),n(o.openInNewTab)&&i.append(o.openInNewTab)}export{i as default};

@@ -24,7 +24,7 @@
         {
           "component": "select",
           "name": "classes",
-          "label": "Variation",
+          "label": "Image Position",
           "valueType": "string",
           "multi": false,
           "options": [
@@ -36,7 +36,8 @@
               "name": "Image on Left",
               "value": "image-left"
             }
-          ]
+          ],
+          "value": "image-right"
         },
         {
           "component": "text",
@@ -59,32 +60,6 @@
           "required": true
         },
         {
-          "component": "reference",
-          "name": "image",
-          "label": "Desktop Asset",
-          "valueType": "string",
-          "required": true
-        },
-        {
-          "component": "text",
-          "name": "imageAlt",
-          "label": "Desktop Asset Alt Text",
-          "valueType": "string",
-          "required": true
-        },
-        {
-          "component": "reference",
-          "name": "imageMobile",
-          "label": "Tablet / Mobile Asset",
-          "valueType": "string"
-        },
-        {
-          "component": "text",
-          "name": "imageMobileAlt",
-          "label": "Tablet / Mobile Asset Alt Text",
-          "valueType": "string"
-        },
-        {
           "component": "text",
           "name": "cta",
           "label": "CTA Text",
@@ -102,6 +77,118 @@
           "label": "CTA Open in new tab",
           "valueType": "boolean",
           "value": false
+        },
+        {
+          "component": "select",
+          "name": "variation",
+          "label": "Variation",
+          "valueType": "string",
+          "multi": false,
+          "options": [
+            {
+              "name": "Little Stars",
+              "value": "little-stars"
+            },
+            {
+              "name": "Gift Card",
+              "value": "gift-card"
+            }
+          ],
+          "value": "little-stars"
+        },
+        {
+          "component": "reference",
+          "name": "image",
+          "label": "Desktop/Tablet Asset",
+          "valueType": "string",
+          "required": true,
+          "condition": {
+            "===": [{ "var": "variation" }, "little-stars"]
+          }
+        },
+        {
+          "component": "text",
+          "name": "imageAlt",
+          "label": "Desktop/Tablet Asset Alt Text",
+          "valueType": "string",
+          "required": true,
+          "condition": {
+            "===": [{ "var": "variation" }, "little-stars"]
+          }
+        },
+        {
+          "component": "reference",
+          "name": "imageMobile",
+          "label": "Mobile Asset",
+          "valueType": "string",
+          "condition": {
+            "===": [{ "var": "variation" }, "little-stars"]
+          }
+        },
+        {
+          "component": "text",
+          "name": "imageMobileAlt",
+          "label": "Mobile Asset Alt Text",
+          "valueType": "string",
+          "condition": {
+            "===": [{ "var": "variation" }, "little-stars"]
+          }
+        },
+        {
+          "component": "reference",
+          "name": "image1",
+          "label": "Gift Card Image 1",
+          "valueType": "string",
+          "required": true,
+          "condition": {
+            "===": [{ "var": "variation" }, "gift-card"]
+          }
+        },
+        {
+          "component": "text",
+          "name": "image1Alt",
+          "label": "Gift Card Image 1 Alt Text",
+          "valueType": "string",
+          "required": true,
+          "condition": {
+            "===": [{ "var": "variation" }, "gift-card"]
+          }
+        },
+        {
+          "component": "reference",
+          "name": "image2",
+          "label": "Gift Card Image 2",
+          "valueType": "string",
+          "condition": {
+            "===": [{ "var": "variation" }, "gift-card"]
+          }
+        },
+        {
+          "component": "text",
+          "name": "image2Alt",
+          "label": "Gift Card Image 2 Alt Text",
+          "valueType": "string",
+          "condition": {
+            "===": [{ "var": "variation" }, "gift-card"]
+          }
+        },
+        {
+          "component": "reference",
+          "name": "image3",
+          "label": "Gift Card Image 3",
+          "valueType": "string",
+          "condition": {
+            "===": [{ "var": "variation" }, "gift-card"]
+          }
+        },
+        {
+          "component": "text",
+          "name": "image3Alt",
+          "label": "Gift Card Image 3 Alt Text",
+          "valueType": "string",
+          "condition": {
+            "===": [{ "var": "variation" }, "gift-card"]
+          }
         },
         {
           "component": "text",

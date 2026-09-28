@@ -211,7 +211,10 @@ function buildSignupForm(row: Element): HTMLElement {
 
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children];
-  const [titleRow, descriptionRow] = rows;
+  const [anchorRow, titleRow, descriptionRow] = rows;
+
+  const anchorId = textOf(anchorRow?.firstElementChild);
+  if (anchorId) block.id = anchorId.replace(/^#/, '');
 
   const text = el('div', `${BLOCK}-text`);
 
@@ -228,7 +231,7 @@ export default function decorate(block: HTMLElement): void {
   }
 
   const aside = el('div', `${BLOCK}-aside`);
-  rows.slice(2).forEach((row) => {
+  rows.slice(3).forEach((row) => {
     if (!row.children.length) return;
     aside.append(buildSignupForm(row));
   });

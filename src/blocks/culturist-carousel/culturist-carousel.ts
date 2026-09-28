@@ -23,6 +23,20 @@ function applyLinkTarget(anchor: HTMLAnchorElement, openInNewTab?: boolean): voi
   anchor.rel = 'noopener noreferrer';
 }
 
+function isPopupEnabled(value: unknown): boolean {
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
+function containsBlockquote(html: string): boolean {
+  const content = document.createElement('div');
+  content.innerHTML = html;
+  return Boolean(content.querySelector('blockquote'));
+}
+
+function removePlainQuoteMarks(html: string): string {
+  return html.replace(/^(\s*<p>)(?:&quot;|")([\s\S]*?)(?:&quot;|")(\s*<\/p>\s*)$/i, '$1$2$3');
+}
+
 async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | null> {
   try {
     const publishBase = getPublishBaseUrl();
@@ -93,9 +107,10 @@ async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<v
   contentScroll.className = 'culturist-carousel-content-scroll';
 
   if (cfData.quote?.html) {
-    const quoteEl = document.createElement('blockquote');
-    quoteEl.className = 'culturist-carousel-quote';
-    quoteEl.innerHTML = cfData.quote.html;
+    const isQuote = containsBlockquote(cfData.quote.html);
+    const quoteEl = document.createElement(isQuote ? 'blockquote' : 'div');
+    quoteEl.className = isQuote ? 'culturist-carousel-quote' : 'culturist-carousel-quote-content';
+    quoteEl.innerHTML = isQuote ? cfData.quote.html : removePlainQuoteMarks(cfData.quote.html);
     contentScroll.append(quoteEl);
   }
 
@@ -147,7 +162,6 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
   closeBtn.type = 'button';
   closeBtn.className = 'culturist-carousel-card-modal-close';
   closeBtn.setAttribute('aria-label', 'Close popup');
-  closeBtn.textContent = 'x';
 
   const image = document.createElement('img');
   image.className = 'culturist-carousel-card-modal-image';
@@ -175,6 +189,9 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
 
   const openModal = (card: Record<string, any>) => {
     const { _path: cardImgPath } = card.image || {};
+    // Nothing to show a popup for; keep the modal closed instead of an empty white box.
+    if (!cardImgPath && !card.title) return;
+
     image.hidden = !cardImgPath;
     if (cardImgPath) {
       image.src = resolveAssetUrl(cardImgPath) ?? '';
@@ -182,6 +199,7 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
     }
     title.hidden = !card.title;
     title.textContent = card.title || '';
+    panel.classList.toggle('culturist-carousel-card-modal-panel--no-image', !cardImgPath);
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('culturist-carousel-modal-open');
@@ -190,12 +208,15 @@ function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, a
   return { openModal };
 }
 
-function buildCarouselCard(card: Record<string, any>, openCardModal: (card: Record<string, any>) => void): HTMLLIElement {
+function buildCarouselCard(
+  card: Record<string, any>,
+  openCardModal: (card: Record<string, any>) => void,
+): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'culturist-carousel-carousel-card';
 
   const cardHref = resolveLinkHref(card.cardLink, card.cardExternalLink);
-  const openAsPopup = card.openAsPopup === true;
+  const openAsPopup = isPopupEnabled(card.openAsPopup);
   let cardContent: HTMLElement;
   if (openAsPopup) {
     const popupButton = document.createElement('button');
@@ -254,7 +275,7 @@ async function renderGalleryCarousel(
   carouselCol.classList.remove('culturist-carousel-carousel--empty');
   cards.forEach((card) => {
     try {
-            track.append(buildCarouselCard(card, openCardModal));
+      track.append(buildCarouselCard(card, openCardModal));
     } catch (error) {
       console.error('[culturist-carousel] Skipping malformed card', card, error);
     }
@@ -265,22 +286,102 @@ async function renderGalleryCarousel(
   prevBtn.hidden = !hasMultiple;
   nextBtn.hidden = !hasMultiple;
 
+  const jumpToBoundary = (position: number) => {
+    const previousSnapType = track.style.scrollSnapType;
+    const previousScrollBehavior = track.style.scrollBehavior;
+    track.style.scrollSnapType = 'none';
+    track.style.scrollBehavior = 'auto';
+    track.scrollLeft = position;
+    track.style.scrollSnapType = previousSnapType;
+    track.style.scrollBehavior = previousScrollBehavior;
+  };
+
   const scrollByCard = (direction: number) => {
     const card = track.querySelector('.culturist-carousel-carousel-card');
     if (!card) return;
     const amount = card.getBoundingClientRect().width + 4;
     const maxScrollLeft = track.scrollWidth - track.clientWidth;
     if (direction > 0 && track.scrollLeft >= maxScrollLeft - 1) {
-      track.scrollTo({ left: 0, behavior: 'smooth' });
+      jumpToBoundary(0);
       return;
     }
     if (direction < 0 && track.scrollLeft <= 0) {
-      track.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
+      jumpToBoundary(maxScrollLeft);
       return;
     }
     track.scrollBy({ left: direction * amount, behavior: 'smooth' });
   };
 
+  // Desktop navigates via the prev/next arrows only; wheel/drag scrolling is a tablet/mobile-only affordance
+  const isDesktop = window.matchMedia('(min-width: 1200px)').matches;
+  if (!isDesktop && track.dataset.loopEvents !== 'true') {
+    let touchStartX: number | null = null;
+    let touchStartedAtBoundary = false;
+    let isScrollSettled = true;
+    let boundaryTimer: number | undefined;
+    track.dataset.loopEvents = 'true';
+
+    const wrapAtBoundary = (direction: number): boolean => {
+      const maxScrollLeft = track.scrollWidth - track.clientWidth;
+      const atEnd = track.scrollLeft >= maxScrollLeft - 1;
+      const atStart = track.scrollLeft <= 0;
+      if (!isScrollSettled) return false;
+      if (direction > 0 && atEnd) {
+        jumpToBoundary(0);
+        isScrollSettled = false;
+        return true;
+      }
+      if (direction < 0 && atStart) {
+        jumpToBoundary(maxScrollLeft);
+        isScrollSettled = false;
+        return true;
+      }
+      return false;
+    };
+
+    const updateBoundary = () => {
+      isScrollSettled = true;
+    };
+
+    track.addEventListener('scroll', () => {
+      isScrollSettled = false;
+      window.clearTimeout(boundaryTimer);
+      boundaryTimer = window.setTimeout(updateBoundary, 200);
+    });
+
+    track.addEventListener(
+      'wheel',
+      (event) => {
+        if (wrapAtBoundary(event.deltaX || event.deltaY)) event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    track.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'touch') {
+        touchStartX = event.clientX;
+        const maxScrollLeft = track.scrollWidth - track.clientWidth;
+        touchStartedAtBoundary = isScrollSettled && (track.scrollLeft <= 0 || track.scrollLeft >= maxScrollLeft - 1);
+      }
+    });
+
+    track.addEventListener('pointerup', (event) => {
+      if (touchStartX === null) return;
+      const direction = touchStartX - event.clientX;
+      touchStartX = null;
+      if (touchStartedAtBoundary && Math.abs(direction) > 30) wrapAtBoundary(direction);
+      touchStartedAtBoundary = false;
+    });
+
+    track.addEventListener('pointercancel', () => {
+      touchStartX = null;
+    });
+
+    track.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' && wrapAtBoundary(1)) event.preventDefault();
+      if (event.key === 'ArrowLeft' && wrapAtBoundary(-1)) event.preventDefault();
+    });
+  }
   prevBtn.onclick = () => scrollByCard(-1);
   nextBtn.onclick = () => scrollByCard(1);
 }
@@ -343,13 +444,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   destinationBtn.setAttribute('aria-haspopup', 'listbox');
   destinationBtn.setAttribute('aria-expanded', 'false');
 
-  // Invisible spacer mirrors the arrow's width so the label stays visually centered
-  const destinationSpacer = document.createElement('span');
-  destinationSpacer.className = 'culturist-carousel-destination-arrow culturist-carousel-destination-arrow--spacer';
-  destinationSpacer.setAttribute('aria-hidden', 'true');
-  destinationSpacer.textContent = '⌄';
-  destinationBtn.append(destinationSpacer);
-
   const destinationLabel = document.createElement('span');
   destinationLabel.className = 'culturist-carousel-destination-label';
   destinationBtn.append(destinationLabel);
@@ -357,14 +451,26 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const destinationArrow = document.createElement('span');
   destinationArrow.className = 'culturist-carousel-destination-arrow';
   destinationArrow.setAttribute('aria-hidden', 'true');
-  destinationArrow.textContent = '⌄';
   destinationArrow.hidden = !hasMultipleDestinations;
   destinationBtn.append(destinationArrow);
 
   const destinationList = document.createElement('ul');
   destinationList.className = 'culturist-carousel-destination-list';
   destinationList.setAttribute('role', 'listbox');
-  destinationList.hidden = true;
+
+  const destinationScrollbar = document.createElement('div');
+  destinationScrollbar.className = 'culturist-carousel-destination-scrollbar';
+  destinationScrollbar.setAttribute('aria-hidden', 'true');
+  destinationScrollbar.hidden = true;
+  const destinationScrollbarThumb = document.createElement('span');
+  destinationScrollbarThumb.className = 'culturist-carousel-destination-scrollbar-thumb';
+  destinationScrollbar.append(destinationScrollbarThumb);
+
+  // Groups the list and its custom scrollbar into a single dropdown box
+  const destinationDropdown = document.createElement('div');
+  destinationDropdown.className = 'culturist-carousel-destination-dropdown';
+  destinationDropdown.hidden = true;
+  destinationDropdown.append(destinationList, destinationScrollbar);
 
   // Culturist info slot
   const infoSlot = document.createElement('div');
@@ -398,6 +504,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const cardModal = buildCardModal(wrapper);
 
   let currentTabIndex = 0;
+  let selectTabGeneration = 0;
 
   const updateDestinationBtn = () => {
     const tabCells = itemRows[currentTabIndex]?.querySelectorAll(':scope > div');
@@ -413,14 +520,23 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     currentTabIndex = index;
     updateDestinationBtn();
 
+    // Bump the generation so a slower, superseded call can detect it's stale and bail out below.
+    const generation = ++selectTabGeneration;
+
     const cfRef = itemRows[currentTabIndex]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
     if (!cfRef) return;
 
     infoSlot.classList.add('is-fading');
     carouselCol.classList.add('is-fading');
-    await new Promise((resolve) => { window.setTimeout(resolve, 280); });
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 280);
+    });
+    if (generation !== selectTabGeneration) return;
+
     await renderCulturistInfo(infoSlot, cfRef);
     await renderGalleryCarousel(carouselCol, cfRef, cardModal.openModal);
+    if (generation !== selectTabGeneration) return;
+
     infoSlot.classList.remove('is-fading');
     carouselCol.classList.remove('is-fading');
   };
@@ -428,13 +544,30 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   updateDestinationBtn();
 
   const closeDestinationList = () => {
-    destinationList.hidden = true;
+    if (destinationDropdown.hidden) return;
+    destinationDropdown.classList.remove('is-open');
     destinationBtn.setAttribute('aria-expanded', 'false');
+    window.setTimeout(() => {
+      destinationDropdown.hidden = true;
+    }, 200);
+  };
+
+  const updateDestinationScrollbar = () => {
+    const maxScrollTop = destinationList.scrollHeight - destinationList.clientHeight;
+    destinationScrollbar.hidden = maxScrollTop <= 0;
+    if (maxScrollTop <= 0) return;
+    const thumbTravel = 80;
+    const thumbOffset = (destinationList.scrollTop / maxScrollTop) * thumbTravel;
+    destinationScrollbarThumb.style.transform = `translateY(${thumbOffset}px)`;
   };
 
   const openDestinationList = () => {
-    destinationList.hidden = false;
+    destinationDropdown.hidden = false;
     destinationBtn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => {
+      destinationDropdown.classList.add('is-open');
+      updateDestinationScrollbar();
+    });
   };
 
   itemRows.forEach((row, index) => {
@@ -460,11 +593,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     destinationList.append(listItem);
   });
 
+  destinationList.addEventListener('scroll', updateDestinationScrollbar);
+
   updateDestinationBtn();
 
   destinationBtn.addEventListener('click', () => {
     if (!hasMultipleDestinations) return;
-    if (destinationList.hidden) {
+    if (destinationDropdown.hidden) {
       openDestinationList();
     } else {
       closeDestinationList();
@@ -484,7 +619,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   });
 
   destinationWrapper.append(destinationBtn);
-  destinationWrapper.append(destinationList);
+  destinationWrapper.append(destinationDropdown);
   titleBlock.append(destinationWrapper);
 
   const titleSuffixText = titleSuffixRow?.textContent?.trim() || '';
