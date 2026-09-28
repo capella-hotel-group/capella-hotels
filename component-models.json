@@ -1797,6 +1797,14 @@
         "placeholder": "e.g., text-with-cta"
       },
       {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "value": "",
+        "placeholder": "e.g., text-with-cta"
+      },
+      {
         "component": "richtext",
         "name": "title",
         "label": "Title",

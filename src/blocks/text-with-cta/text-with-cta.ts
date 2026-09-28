@@ -1,7 +1,9 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { isUniversalEditor } from '@/utils/env.js';
 
 const BLOCK = 'text-with-cta';
+const ITEM_MODEL = 'text-with-cta-signup-form';
 
 /** Field index inside a sign-up form item row — one cell per model field. */
 const FIELD = {
@@ -20,6 +22,13 @@ const FIELD = {
 let uid = 0;
 
 const textOf = (cell?: Element | null): string => cell?.textContent?.trim() || '';
+
+// in the editor item rows carry the item model; outside it they are the multi-cell
+// rows, since every block-level field emits a single cell
+function isItemRow(row: HTMLElement): boolean {
+  if (row.dataset.aueModel) return row.dataset.aueModel === ITEM_MODEL;
+  return row.children.length > 1;
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -210,11 +219,13 @@ function buildSignupForm(row: Element): HTMLElement {
 }
 
 export default function decorate(block: HTMLElement): void {
-  const rows = [...block.children];
-  const [anchorRow, titleRow, descriptionRow] = rows;
-
-  const anchorId = textOf(anchorRow?.firstElementChild);
-  if (anchorId) block.id = anchorId.replace(/^#/, '');
+  const rows = [...block.children] as HTMLElement[];
+  const itemRows = rows.filter(isItemRow);
+  const [titleRow, descriptionRow] = applyBlockIdentity(
+    block,
+    rows.filter((row) => !itemRows.includes(row)),
+    { contentRows: 2 },
+  );
 
   const text = el('div', `${BLOCK}-text`);
 
@@ -231,10 +242,7 @@ export default function decorate(block: HTMLElement): void {
   }
 
   const aside = el('div', `${BLOCK}-aside`);
-  rows.slice(3).forEach((row) => {
-    if (!row.children.length) return;
-    aside.append(buildSignupForm(row));
-  });
+  itemRows.forEach((row) => aside.append(buildSignupForm(row)));
 
   block.textContent = '';
   block.append(text, aside);
