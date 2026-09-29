@@ -69,6 +69,46 @@ function buildCopy(row: Element | undefined, field: string): HTMLElement | null 
 }
 
 /**
+ * Reads an element-grouped CTA cell, which holds the label, the link and the
+ * open-in-new-tab flag as separate children rather than as separate cells.
+ */
+function readCta(cell: Element | null): { label: string; href: string; openInNewTab: boolean } {
+  const children = [...(cell?.children || [])];
+  const link = cell?.querySelector('a');
+  const isFlag = (element: Element): boolean => ['true', 'false'].includes(textOf(element).toLowerCase());
+  const label = children.find((element) => !element.querySelector('a') && !isFlag(element));
+
+  return {
+    // an authored link with no label renders as its own href, which still beats
+    // dropping the CTA and leaving the author with nothing on the page
+    label: textOf(label) || textOf(link),
+    href: link?.getAttribute('href') || '',
+    openInNewTab: children.some((element) => textOf(element).toLowerCase() === 'true'),
+  };
+}
+
+function buildCta(row: Element | undefined, field: string): HTMLElement | null {
+  const cell = row?.firstElementChild ?? null;
+  const { label, href, openInNewTab } = readCta(cell);
+  if (!label || !href) return null;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `destination-introduction-${field}`;
+  if (cell) moveInstrumentation(cell, wrapper);
+
+  const link = document.createElement('a');
+  link.href = href;
+  link.textContent = label;
+  if (openInNewTab) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+  wrapper.append(link);
+
+  return wrapper;
+}
+
+/**
  * Rewrites `<p>one<br>two</p>` as `<p>one</p><p>two</p>` so a heading written with
  * soft breaks lines up with one written as separate paragraphs. The stylesheet
  * indents the second child, which only works when each line is its own element.
@@ -230,7 +270,7 @@ export default function decorate(block: HTMLElement): void {
   if (title) header.append(title);
 
   const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
-  const cta = buildCopy(copyRows[3], COPY_FIELDS[3]);
+  const cta = buildCta(copyRows[3], COPY_FIELDS[3]);
 
   const slides = galleryRows.map(buildSlide);
   const track = buildTrack(slides);
