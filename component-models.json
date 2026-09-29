@@ -1924,7 +1924,7 @@
         "component": "boolean",
         "name": "ctas_primaryCtaOpenInNewTab",
         "label": "Primary Link Open in new tab",
-        "valueType": "string",
+        "valueType": "boolean",
         "value": false
       },
       {
@@ -1944,7 +1944,7 @@
         "component": "boolean",
         "name": "ctas_secondaryCtaOpenInNewTab",
         "label": "Secondary Link Open in new tab",
-        "valueType": "string",
+        "valueType": "boolean",
         "value": false
       }
     ]

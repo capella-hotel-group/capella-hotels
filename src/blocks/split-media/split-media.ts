@@ -5,6 +5,7 @@ import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { CarouselController } from './lib/carousel-controller';
 import { buildArrowNav, buildDotNav, buildSlide } from './lib/dom-builder';
 import { isItemRow, parseCarouselConfig, parseSlides } from './lib/parse';
+import { suppressTransitionsDuringResize } from './lib/resize-guard';
 
 export default function decorate(block: HTMLElement): void {
   block.setAttribute('data-testid', 'split-media');
@@ -27,6 +28,7 @@ export default function decorate(block: HTMLElement): void {
   track.className = 'split-media-track';
   slides.forEach((slide, index) => track.append(buildSlide(slide, index)));
   block.append(track);
+  suppressTransitionsDuringResize(block);
 
   const slideEls = [...track.children] as HTMLElement[];
   const dotCount = slides.length > 1 ? slides.length : 0;

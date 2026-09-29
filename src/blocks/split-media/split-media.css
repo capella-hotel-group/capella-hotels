@@ -313,6 +313,13 @@
     }
 }
 
+/* crossing a breakpoint mid-page-life recomputes each item's enter/exit transform; without this,
+   hidden slides would visibly sweep through the frame while the media query switches */
+.split-media.split-media-resizing .split-media-item,
+.split-media.split-media-resizing .split-media-overlay {
+    transition: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .split-media .split-media-item,
     .split-media .split-media-overlay {
