@@ -13,6 +13,17 @@
     margin-block-end: 0;
 }
 
+/* RTE-authored mailto:/tel: links render as body text, not default blue hyperlinks */
+.footer-contact-info a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.footer-contact-info a:hover,
+.footer-contact-info a:focus-visible {
+    text-decoration: underline;
+}
+
 @media (width >= 768px) {
     .footer-contact-info {
         min-width: 0;
