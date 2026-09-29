@@ -1,4 +1,5 @@
 import { applyBlockIdentity } from '@/utils/block-identity.js';
+import { isUniversalEditor } from '@/utils/env.js';
 
 const CARD_MODEL = 'offers-carousel-item';
 
@@ -189,7 +190,58 @@ function playEntry(card: HTMLElement, place: () => void): void {
   requestAnimationFrame(() => card.classList.remove('is-entering'));
 }
 
-function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
+// while the intro reveal runs the stack ignores every gesture, so a card cannot step forward
+// halfway through being placed
+type Gate = { locked: boolean };
+
+const INTRO_STAGGER_MS = 600;
+// mirrors --card-move-duration under `.offers-carousel-cards.is-intro` in the stylesheet
+const INTRO_DURATION_MS = 1200;
+
+/**
+ * Reveals the stack the first time it reaches the viewport: each card starts below its slot and
+ * rises into place while fading in, the rearmost card leading so the front card lands last.
+ */
+function initIntro(stack: HTMLElement, cards: HTMLElement[], gate: Gate): void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (isUniversalEditor() || !('IntersectionObserver' in window)) return;
+
+  gate.locked = true;
+  stack.classList.add('is-intro');
+  cards.forEach((card) => card.classList.add('is-intro-pending'));
+
+  const play = () => {
+    [...cards].reverse().forEach((card, step) => {
+      card.style.transitionDelay = `${step * INTRO_STAGGER_MS}ms`;
+    });
+    // read back the layout so the offsets and delays are committed before the cards are released
+    void stack.offsetHeight;
+
+    requestAnimationFrame(() => {
+      cards.forEach((card) => card.classList.remove('is-intro-pending'));
+      window.setTimeout(
+        () => {
+          cards.forEach((card) => card.style.removeProperty('transition-delay'));
+          stack.classList.remove('is-intro');
+          gate.locked = false;
+        },
+        (cards.length - 1) * INTRO_STAGGER_MS + INTRO_DURATION_MS,
+      );
+    });
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      play();
+    },
+    { threshold: 0.25 },
+  );
+  observer.observe(stack);
+}
+
+function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): void {
   // the first authored card leads the stack; Figma lists it last only because of paint order
   let activeIndex = 0;
   let swiping = false;
@@ -203,7 +255,7 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   // reel swipe: the front card slides down out of view, the cards behind push forward, and the
   // card that left reappears at the rear of the stack
   const goNext = () => {
-    if (swiping || cards.length < 2) return;
+    if (gate.locked || swiping || cards.length < 2) return;
     swiping = true;
 
     const leaving = cards[activeIndex]!;
@@ -220,7 +272,7 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
 
   // the reverse: the rear card comes up into the front slot while the others step back
   const goPrev = () => {
-    if (swiping || cards.length < 2) return;
+    if (gate.locked || swiping || cards.length < 2) return;
     activeIndex = (activeIndex - 1 + cards.length) % cards.length;
     playEntry(cards[activeIndex]!, update);
   };
@@ -233,7 +285,7 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
 
   cards.forEach((card, index) => {
     card.addEventListener('focusin', () => {
-      if (swiping) return;
+      if (gate.locked || swiping) return;
       activeIndex = index;
       update();
     });
@@ -249,6 +301,7 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   let start: { x: number; y: number } | null = null;
 
   stack?.addEventListener('pointerdown', (event) => {
+    if (gate.locked) return;
     event.stopPropagation();
     start = { x: event.clientX, y: event.clientY };
   });
@@ -289,6 +342,8 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   stack?.addEventListener(
     'wheel',
     (event) => {
+      // during the intro the stack is inert, so the wheel keeps scrolling the page
+      if (gate.locked) return;
       event.preventDefault();
       event.stopPropagation();
 
@@ -367,5 +422,9 @@ export default function decorate(block: HTMLElement): void {
   layout.append(copy, stage);
   block.append(layout);
 
-  if (rendered.length) wireInteraction(layout, rendered);
+  if (!rendered.length) return;
+
+  const gate: Gate = { locked: false };
+  wireInteraction(layout, rendered, gate);
+  initIntro(cards, rendered, gate);
 }
