@@ -55,51 +55,86 @@ function decorateLinks(cell: HTMLElement): void {
     .forEach((element) => element.classList.add('split-media-link-flag'));
 }
 
-// role is fixed by position — left is always the large "hero" style, right the compact
-// "detail" style with body copy/links, matching the two panels Figma shows
-function buildPanel(panel: SplitMediaPanel, role: 'left' | 'right'): HTMLDivElement {
-  const isDetail = role === 'right';
-
-  const item = document.createElement('div');
-  item.className = isDetail ? 'split-media-item split-media-item--detail' : 'split-media-item';
-  if (panel.sourceRow) moveInstrumentation(panel.sourceRow, item);
-
+// "Element Grouping" (fields sharing a prefix before the second underscore segment) puts each
+// media field's own <picture> wrapper alone in its cell, so it can be appended as-is
+function buildMedia(mediaCell?: HTMLElement): HTMLDivElement {
   const media = document.createElement('div');
   media.className = 'split-media-media';
-  if (panel.mediaCell) media.append(panel.mediaCell);
+  if (mediaCell) media.append(mediaCell);
+  return media;
+}
 
+function buildHeading(
+  eyebrow: HTMLElement | undefined,
+  headline: HTMLElement | undefined,
+  isDetail: boolean,
+): HTMLDivElement {
+  const heading = document.createElement('div');
+  heading.className = 'split-media-heading';
+
+  if (eyebrow) {
+    eyebrow.classList.add('split-media-eyebrow');
+    heading.append(eyebrow);
+  }
+
+  if (headline) {
+    headline.classList.add('split-media-headline');
+    headline.setAttribute('role', 'heading');
+    headline.setAttribute('aria-level', isDetail ? '3' : '2');
+    heading.append(headline);
+  }
+
+  return heading;
+}
+
+// left/hero panel: media + optional eyebrow + headline only, no description or CTAs
+function buildLeftPanel(panel: SplitMediaPanel): HTMLDivElement {
+  const item = document.createElement('div');
+  item.className = 'split-media-item split-media-item--left';
+
+  const media = buildMedia(panel.mediaCell);
   const overlay = document.createElement('div');
   overlay.className = 'split-media-overlay';
 
   const { contentCell } = panel;
   if (contentCell) {
-    // eyebrow/headline are plain "text" fields (bare <p>); description is "richtext" (its own
-    // <div>). An omitted optional eyebrow drops its cell entirely outside the editor, which
-    // would shift a fixed index — distinguishing by tag instead survives that.
+    // eyebrow/headline are plain "text" fields (bare <p>). An omitted optional eyebrow drops
+    // its element entirely, which would shift a fixed index — distinguishing by count instead
+    // of position survives that.
     const paragraphs = [...contentCell.querySelectorAll<HTMLElement>(':scope > p')];
-    const headline = getField(contentCell, 'content_headline') || paragraphs[paragraphs.length > 1 ? 1 : 0];
-    const eyebrow = getField(contentCell, 'content_eyebrow') || (paragraphs.length > 1 ? paragraphs[0] : undefined);
-    const description =
-      getField(contentCell, 'content_description') || contentCell.querySelector<HTMLElement>(':scope > div');
-
-    const heading = document.createElement('div');
-    heading.className = 'split-media-heading';
-
-    if (eyebrow) {
-      eyebrow.classList.add('split-media-eyebrow');
-      heading.append(eyebrow);
-    }
-
-    if (headline) {
-      headline.classList.add('split-media-headline');
-      headline.setAttribute('role', 'heading');
-      headline.setAttribute('aria-level', isDetail ? '3' : '2');
-      heading.append(headline);
-    }
+    const headline = getField(contentCell, 'leftContent_headline') || paragraphs[paragraphs.length > 1 ? 1 : 0];
+    const eyebrow = getField(contentCell, 'leftContent_eyebrow') || (paragraphs.length > 1 ? paragraphs[0] : undefined);
 
     const body = document.createElement('div');
     body.className = 'split-media-body';
-    body.append(heading);
+    body.append(buildHeading(eyebrow, headline, false));
+    overlay.append(body);
+  }
+
+  media.append(overlay);
+  item.append(media);
+  return item;
+}
+
+// right/detail panel: media + headline + description + up to two CTAs
+function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
+  const item = document.createElement('div');
+  item.className = 'split-media-item split-media-item--right';
+
+  const media = buildMedia(panel.mediaCell);
+  const overlay = document.createElement('div');
+  overlay.className = 'split-media-overlay';
+
+  const { contentCell } = panel;
+  if (contentCell) {
+    const paragraphs = [...contentCell.querySelectorAll<HTMLElement>(':scope > p')];
+    const headline = getField(contentCell, 'rightContent_headline') || paragraphs[0];
+    const description =
+      getField(contentCell, 'rightContent_description') || contentCell.querySelector<HTMLElement>(':scope > div');
+
+    const body = document.createElement('div');
+    body.className = 'split-media-body';
+    body.append(buildHeading(undefined, headline, true));
 
     // description+links sit in their own group so tablet/desktop can lay it out as the
     // heading's second grid column, matching Figma
@@ -127,21 +162,26 @@ function buildPanel(panel: SplitMediaPanel, role: 'left' | 'right'): HTMLDivElem
     overlay.append(body);
   }
 
-  // the overlay lives inside media (not as its sibling) so media's flex column pins it to
-  // the bottom edge — matches `.split-media-media { justify-content: flex-end }`
   media.append(overlay);
   item.append(media);
   return item;
 }
 
-// a slide is a purely visual grouping of two independently-authored panel rows — nothing to
-// move instrumentation from at this level, each panel already carries its own via buildPanel
+// a slide is one authored row now — move its instrumentation onto the <li>, not the panels
 export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement {
   const li = document.createElement('li');
   li.className = 'split-media-slide';
   li.setAttribute('aria-hidden', index === 0 ? 'false' : 'true');
+  if (slide.sourceRow) moveInstrumentation(slide.sourceRow, li);
 
-  li.append(buildPanel(slide.left, 'left'), buildPanel(slide.right, 'right'));
+  // Each slot clips its own incoming/outgoing pair. Mobile panels travel their own height,
+  // so staggering them cannot expose the track or let an inactive panel cover its neighbour.
+  [buildLeftPanel(slide.left), buildRightPanel(slide.right)].forEach((panel) => {
+    const slot = document.createElement('div');
+    slot.className = 'split-media-slot';
+    slot.append(panel);
+    li.append(slot);
+  });
   return li;
 }
 

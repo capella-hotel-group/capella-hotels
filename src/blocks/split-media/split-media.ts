@@ -1,6 +1,6 @@
 // src/blocks/split-media/split-media.ts
-// Rows (authored): 0=id, 1=dataTestId, 2=autoplay, 3=autoplayInterval, 4..n=panels, paired up
-// sequentially two-at-a-time into slides — see lib/parse.ts
+// Rows (authored): 0=id, 1=dataTestId, 2=autoplay, 3=autoplayInterval, 4..n=slides.
+// Each slide contains both panels — see lib/parse.ts
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { CarouselController } from './lib/carousel-controller';
 import { buildArrowNav, buildDotNav, buildSlide } from './lib/dom-builder';
@@ -28,7 +28,6 @@ export default function decorate(block: HTMLElement): void {
   track.className = 'split-media-track';
   slides.forEach((slide, index) => track.append(buildSlide(slide, index)));
   block.append(track);
-  suppressTransitionsDuringResize(block);
 
   const slideEls = [...track.children] as HTMLElement[];
   const dotCount = slides.length > 1 ? slides.length : 0;
@@ -45,5 +44,9 @@ export default function decorate(block: HTMLElement): void {
   }
   if (dotCount > 0) block.append(dotNav);
 
+  suppressTransitionsDuringResize(block, {
+    onStart: () => carousel.beginResize(),
+    onEnd: () => carousel.endResize(),
+  });
   carousel.init();
 }

@@ -1,14 +1,38 @@
-// src/blocks/split-media/lib/resize-guard.ts
 const RESIZE_SETTLE_MS = 150;
 
-// breakpoint changes swap each item's enter/exit transform value; without suppressing the
-// transition while the viewport is actively resizing, hidden slides visibly sweep through the
-// frame as the media query recomputes ahead of the next JS-triggered slide change
-export function suppressTransitionsDuringResize(block: HTMLElement, className = 'split-media-resizing'): void {
+interface ResizeGuardOptions {
+  className?: string;
+  onStart?: () => void;
+  onEnd?: () => void;
+}
+
+// Suppress breakpoint-driven transforms before asking the controller to settle its current
+// transition. Keep queued navigation paused until resizing stops and transitions are restored.
+export function suppressTransitionsDuringResize(
+  block: HTMLElement,
+  { className = 'split-media-resizing', onStart, onEnd }: ResizeGuardOptions = {},
+): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  window.addEventListener('resize', () => {
+  let resizing = false;
+  const handleResize = (): void => {
     block.classList.add(className);
+    if (!resizing) {
+      resizing = true;
+      onStart?.();
+    }
     clearTimeout(timer);
-    timer = setTimeout(() => block.classList.remove(className), RESIZE_SETTLE_MS);
-  });
+    timer = setTimeout(() => {
+      // Commit the breakpoint's resting transforms before restoring transitions.
+      void block.offsetHeight;
+      block.classList.remove(className);
+      resizing = false;
+      onEnd?.();
+    }, RESIZE_SETTLE_MS);
+  };
+  window.addEventListener('resize', handleResize);
+  return () => {
+    window.removeEventListener('resize', handleResize);
+    clearTimeout(timer);
+    block.classList.remove(className);
+  };
 }

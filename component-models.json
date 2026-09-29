@@ -1955,84 +1955,108 @@
     ]
   },
   {
-    "id": "split-media-item",
+    "id": "split-media-slide",
     "fields": [
       {
         "component": "reference",
-        "name": "media_image",
-        "label": "Panel Image",
+        "name": "leftMedia_image",
+        "label": "Left Panel Image",
         "valueType": "string",
         "multi": false,
         "required": true
       },
       {
         "component": "text",
-        "name": "media_imageAlt",
-        "label": "Asset Alt Text",
+        "name": "leftMedia_imageAlt",
+        "label": "Left Panel Asset Alt Text",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
         "component": "text",
-        "name": "content_eyebrow",
-        "label": "Eyebrow",
+        "name": "leftContent_eyebrow",
+        "label": "Left Panel Eyebrow",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "text",
-        "name": "content_headline",
-        "label": "Headline",
+        "name": "leftContent_headline",
+        "label": "Left Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "rightMedia_image",
+        "label": "Right Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "rightMedia_imageAlt",
+        "label": "Right Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "rightContent_headline",
+        "label": "Right Panel Headline",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
         "component": "richtext",
-        "name": "content_description",
-        "label": "Description",
-        "description": "Leave empty for a panel that shows only an eyebrow and headline.",
+        "name": "rightContent_description",
+        "label": "Right Panel Description",
+        "description": "Leave empty for a panel that shows only a headline.",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "aem-content",
-        "name": "ctas_primaryCta",
-        "label": "Primary Link URL",
+        "name": "rightCtas_primaryCta",
+        "label": "Right Panel Primary Link URL",
         "valueType": "string"
       },
       {
         "component": "text",
-        "name": "ctas_primaryCtaText",
-        "label": "Primary Link Label",
+        "name": "rightCtas_primaryCtaText",
+        "label": "Right Panel Primary Link Label",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "boolean",
-        "name": "ctas_primaryCtaOpenInNewTab",
-        "label": "Primary Link Open in new tab",
+        "name": "rightCtas_primaryCtaOpenInNewTab",
+        "label": "Right Panel Primary Link Open in new tab",
         "valueType": "boolean",
         "value": false
       },
       {
         "component": "aem-content",
-        "name": "ctas_secondaryCta",
-        "label": "Secondary Link URL",
+        "name": "rightCtas_secondaryCta",
+        "label": "Right Panel Secondary Link URL",
         "valueType": "string"
       },
       {
         "component": "text",
-        "name": "ctas_secondaryCtaText",
-        "label": "Secondary Link Label",
+        "name": "rightCtas_secondaryCtaText",
+        "label": "Right Panel Secondary Link Label",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "boolean",
-        "name": "ctas_secondaryCtaOpenInNewTab",
-        "label": "Secondary Link Open in new tab",
+        "name": "rightCtas_secondaryCtaOpenInNewTab",
+        "label": "Right Panel Secondary Link Open in new tab",
         "valueType": "boolean",
         "value": false
       }

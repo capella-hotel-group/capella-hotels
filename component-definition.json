@@ -731,15 +731,15 @@
           }
         },
         {
-          "title": "Split Media Panel",
-          "id": "split-media-item",
+          "title": "Split Media Slide",
+          "id": "split-media-slide",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Split Media Panel",
-                  "model": "split-media-item"
+                  "name": "Split Media Slide",
+                  "model": "split-media-slide"
                 }
               }
             }
