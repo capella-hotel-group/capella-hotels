@@ -36,6 +36,7 @@
       "hero-destination",
       "rte",
       "choose-space",
+      "split-media",
       "footer",
       "footer-contact",
       "footer-social-link",
@@ -226,6 +227,14 @@
     "minItems": 1,
     "maxItems": 3,
     "customErrorMsg": "Add between 1 and 3 offer cards."
+  },
+  {
+    "id": "split-media",
+    "components": [
+      "split-media-item"
+    ],
+    "minItems": 2,
+    "customErrorMsg": "Add at least 2 media panels (left + right)."
   },
   {
     "id": "text-with-cta",

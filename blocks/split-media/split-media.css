@@ -1,0 +1,327 @@
+/* Geometry mirrors the Figma "Content-card/split/media" frames 7806:56072 (393),
+   7806:55969 (834) and 7806:55712 (1440) — two stacked panels on mobile/tablet,
+   two side-by-side panels on desktop. Slides are stacked absolutely inside a
+   fixed-aspect-ratio track; only the panels themselves move to animate a transition. */
+
+.split-media {
+    position: relative;
+    width: 100%;
+    margin: 0;
+}
+
+.split-media .split-media-track {
+    position: relative;
+    aspect-ratio: 393 / 852;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    list-style: none;
+}
+
+/* extra slides/panels past the model's own limits stay in the DOM for the editor only */
+.split-media .split-media-hidden {
+    display: none;
+}
+
+.split-media .split-media-slide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.split-media .split-media-slide[aria-hidden='true'] {
+    pointer-events: none;
+}
+
+.split-media .split-media-item {
+    position: relative;
+    overflow: hidden;
+    transform: translateY(0);
+    backface-visibility: hidden;
+    will-change: transform;
+    /* Exit/hidden transform is set per-breakpoint below; a symmetric ease-in-out reads as
+       smoother than a punchy ease-out over this large a distance (a full panel height). */
+    transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* mobile/tablet: both panels rise up from below, right following left by a short stagger so
+   the pair reads as sequential rather than two things happening at once */
+.split-media .split-media-slide[aria-hidden='true'] .split-media-item {
+    transform: translateY(100%);
+}
+
+.split-media .split-media-item--detail {
+    transition-delay: 0.15s;
+}
+
+/* the picture and the overlay both live inside this cell, so it — not the item — is the
+   flex box that pins the overlay to the bottom edge */
+.split-media .split-media-media {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 var(--dimension-layout-module-padding-inline-s) var(--dimension-layout-module-padding-inline-s);
+}
+
+.split-media .split-media-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 40%));
+}
+
+.split-media .split-media-media picture,
+.split-media .split-media-media img {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.split-media .split-media-media img {
+    object-fit: cover;
+}
+
+.split-media .split-media-overlay {
+    position: relative;
+    z-index: 1;
+    color: var(--color-text-main-inverse-heading);
+    opacity: 0;
+    transform: translateY(16px);
+    will-change: opacity, transform;
+    /* Exit: fades/drops out quickly with no delay, so the text never lingers once its panel
+       is no longer active. */
+    transition:
+        opacity 0.35s cubic-bezier(0.4, 0, 1, 1),
+        transform 0.35s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* content fades in only after the panel itself has become active, and only once it has
+   travelled most of the way into place — timed to land close to the panel's own 0.75s
+   transform finishing, instead of trailing noticeably behind it */
+.split-media .split-media-slide[aria-hidden='false'] .split-media-overlay {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+        opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.25s,
+        transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+}
+
+/* mobile/tablet: the right panel's own transform already starts 0.15s late, so its text
+   follows suit and keeps the same gap after its panel settles as the left panel's text does */
+.split-media .split-media-slide[aria-hidden='false'] .split-media-item--detail .split-media-overlay {
+    transition-delay: 0.4s;
+}
+
+.split-media .split-media-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-l);
+}
+
+.split-media .split-media-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-l);
+}
+
+.split-media .split-media-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-eyebrow-to-title);
+}
+
+.split-media .split-media-eyebrow {
+    margin: 0;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-eyebrow);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+    text-transform: uppercase;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+}
+
+.split-media .split-media-headline {
+    margin: 0;
+    font-family: var(--type-font-family-heading);
+    font-weight: var(--type-font-weight-heading);
+    font-size: var(--typography-fontsize-heading-h1);
+    line-height: var(--typography-line-height-heading-h1);
+}
+
+/* the right/detail panel renders the compact headline size */
+.split-media .split-media-item--detail .split-media-headline {
+    font-size: var(--typography-fontsize-heading-h3);
+    line-height: var(--typography-line-height-heading-h3);
+}
+
+.split-media .split-media-description {
+    margin: 0;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+}
+
+.split-media .split-media-eyebrow > *,
+.split-media .split-media-headline > *,
+.split-media .split-media-description > * {
+    margin: 0;
+    font: inherit;
+    color: inherit;
+}
+
+.split-media .split-media-links {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-spacing-general-m);
+}
+
+/* the open-in-new-tab booleans and the paragraphs the links were lifted out of */
+.split-media .split-media-link-flag {
+    display: none;
+}
+
+.split-media .split-media-link {
+    display: inline-flex;
+    align-items: center;
+    height: var(--component-button-height);
+    padding-block: var(--component-button-padding-block);
+    border-radius: var(--component-button-corner-standard);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-text-link);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-action-inverse-default);
+    text-decoration: underline;
+    text-decoration-thickness: var(--stroke-weight-s);
+    text-underline-offset: 3px;
+    text-transform: uppercase;
+}
+
+.split-media .split-media-link-divider {
+    flex: none;
+    width: var(--stroke-weight-s);
+    height: 20px;
+    background: var(--color-stroke-action-inverse-default);
+}
+
+.split-media .split-media-controls {
+    position: absolute;
+    z-index: 2;
+    inset-inline: 0;
+    top: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: var(--dimension-spacing-general-s);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.split-media .split-media-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-icon-action-opaque-inverse);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.split-media .split-media-dots {
+    position: absolute;
+    z-index: 2;
+    bottom: var(--dimension-spacing-general-l);
+    left: 50%;
+    display: flex;
+    gap: var(--dimension-spacing-general-xs);
+    transform: translateX(-50%);
+}
+
+.split-media .split-media-dot {
+    position: relative;
+    width: var(--dimension-spacing-general-xs);
+    height: var(--dimension-spacing-general-xs);
+    padding: 0;
+    border: none;
+    border-radius: var(--corner-radius-round);
+    background: var(--color-icon-action-opaque-inverse);
+    cursor: pointer;
+}
+
+/* enlarges the tappable area well past the small visual dot without affecting spacing */
+.split-media .split-media-dot::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+}
+
+.split-media .split-media-dot.is-active {
+    background: var(--color-icon-on-action-default);
+}
+
+@media (width >= 768px) {
+    .split-media .split-media-track {
+        aspect-ratio: 834 / 1194;
+    }
+
+    /* tablet+desktop lay the heading and the description+links out as two side-by-side
+       columns; mobile keeps them stacked (the body's own flex column above) */
+    .split-media .split-media-item--detail .split-media-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+    }
+}
+
+@media (width >= 1200px) {
+    .split-media .split-media-track {
+        aspect-ratio: 1440 / 900;
+    }
+
+    .split-media .split-media-slide {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+    }
+
+    /* desktop only: the left panel drops in from above, the right panel still rises from
+       below — both play at the same time since they're two independent grid children (no
+       stagger here, unlike mobile/tablet, since they enter from opposite directions already) */
+    .split-media .split-media-slide[aria-hidden='true'] .split-media-item:not(.split-media-item--detail) {
+        transform: translateY(-100%);
+    }
+
+    .split-media .split-media-item--detail {
+        transition-delay: 0s;
+    }
+
+    .split-media .split-media-slide[aria-hidden='false'] .split-media-item--detail .split-media-overlay {
+        transition-delay: 0.25s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .split-media .split-media-item,
+    .split-media .split-media-overlay {
+        transition: none;
+        transform: none;
+    }
+
+    .split-media .split-media-overlay {
+        opacity: 1;
+    }
+}
+
