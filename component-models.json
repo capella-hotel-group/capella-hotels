@@ -1910,6 +1910,135 @@
     ]
   },
   {
+    "id": "split-media",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": "",
+        "placeholder": "e.g., split-media"
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "value": "",
+        "placeholder": "split-media"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "autoplay",
+        "label": "Autoplay",
+        "value": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "autoplayInterval",
+        "label": "Autoplay Interval (seconds)",
+        "value": "6",
+        "condition": {
+          "===": [
+            {
+              "var": "autoplay"
+            },
+            true
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "split-media-item",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "media_image",
+        "label": "Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "media_imageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "content_eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "content_headline",
+        "label": "Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "content_description",
+        "label": "Description",
+        "description": "Leave empty for a panel that shows only an eyebrow and headline.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "ctas_primaryCta",
+        "label": "Primary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctas_primaryCtaText",
+        "label": "Primary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "ctas_primaryCtaOpenInNewTab",
+        "label": "Primary Link Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "aem-content",
+        "name": "ctas_secondaryCta",
+        "label": "Secondary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "ctas_secondaryCtaText",
+        "label": "Secondary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "ctas_secondaryCtaOpenInNewTab",
+        "label": "Secondary Link Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "text-with-cta",
     "fields": [
       {
