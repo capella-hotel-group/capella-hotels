@@ -174,7 +174,14 @@ export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement
   li.setAttribute('aria-hidden', index === 0 ? 'false' : 'true');
   if (slide.sourceRow) moveInstrumentation(slide.sourceRow, li);
 
-  li.append(buildLeftPanel(slide.left), buildRightPanel(slide.right));
+  // Each slot clips its own incoming/outgoing pair. Mobile panels travel their own height,
+  // so staggering them cannot expose the track or let an inactive panel cover its neighbour.
+  [buildLeftPanel(slide.left), buildRightPanel(slide.right)].forEach((panel) => {
+    const slot = document.createElement('div');
+    slot.className = 'split-media-slot';
+    slot.append(panel);
+    li.append(slot);
+  });
   return li;
 }
 

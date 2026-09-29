@@ -4,6 +4,14 @@
    fixed-aspect-ratio track; only the panels themselves move to animate a transition. */
 
 .split-media {
+    --split-media-panel-duration: 1200ms;
+    --split-media-motion-easing: cubic-bezier(0.37, 0, 0.63, 1);
+    --split-media-panel-stagger: 100ms;
+    --split-media-text-duration: 500ms;
+    --split-media-text-delay: 900ms;
+    --split-media-text-exit-duration: 250ms;
+    --split-media-text-offset: 8px;
+
     position: relative;
     width: 100%;
     margin: 0;
@@ -27,17 +35,23 @@
 .split-media .split-media-slide {
     position: absolute;
     inset: 0;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
+
+.split-media .split-media-slot {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .split-media .split-media-slide[aria-hidden='true'] {
     pointer-events: none;
 }
 
-/* Entrance-ready resting state: fully off-track, on the side each panel enters from. Mobile/
-   tablet items span the FULL track (not just their own visual half — split-media-media below
-   carves out the half each shows) so a 100% transform always equals the track height; that's
-   what lets the same offset satisfy both "clear the whole track when parked" and "gap-free
-   hand-off between an exiting and entering instance of the same slot" at once. */
+/* Each panel travels one slot height. Matching incoming/outgoing transforms meet exactly
+   at the slot edge, including when the right slot starts later on mobile/tablet. */
 .split-media .split-media-item {
     position: absolute;
     inset: 0;
@@ -45,17 +59,17 @@
     transform: translateY(100%);
     backface-visibility: hidden;
     will-change: transform;
-    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform var(--split-media-panel-duration) var(--split-media-motion-easing);
 }
 
-/* entrance: both panels rise from below, right starting ~150ms after left so the pair reads as
+/* entrance: both panels rise from below, right starting 100ms after left so the pair reads as
    sequential rather than simultaneous — replays every time this slide becomes active */
 .split-media .split-media-slide[aria-hidden='false'] .split-media-item {
     transform: translateY(0);
 }
 
 .split-media .split-media-slide[aria-hidden='false'] .split-media-item--right {
-    transition-delay: 150ms;
+    transition-delay: var(--split-media-panel-stagger);
 }
 
 /* the slide JS just deactivated keeps moving the SAME direction it was already travelling (up,
@@ -66,18 +80,10 @@
 }
 
 .split-media .split-media-slide--leaving .split-media-item--right {
-    transition-delay: 150ms;
+    transition-delay: var(--split-media-panel-stagger);
 }
 
-/* one-frame transition suppression while JS resets the just-left slide back to its entrance
-   side, so that reset itself never animates visibly back across the track */
-.split-media .split-media-slide--settling .split-media-item {
-    transition: none;
-}
-
-/* the picture and the overlay both live inside this cell, so it — not the item — is the
-   flex box that pins the overlay to the bottom edge. Mobile/tablet: the item box is now the
-   FULL track (see above), so this carves out just the top/bottom half each panel shows. */
+/* The image and text share a moving panel, with the overlay pinned to its bottom edge. */
 .split-media .split-media-media {
     position: absolute;
     inset: 0;
@@ -85,14 +91,6 @@
     flex-direction: column;
     justify-content: flex-end;
     padding: 0 var(--dimension-layout-module-padding-inline-s) var(--dimension-layout-module-padding-inline-s);
-}
-
-.split-media .split-media-item--left .split-media-media {
-    inset: 0 0 50% 0;
-}
-
-.split-media .split-media-item--right .split-media-media {
-    inset: 50% 0 0 0;
 }
 
 .split-media .split-media-media::after {
@@ -124,33 +122,35 @@
     z-index: 1;
     color: var(--color-text-main-inverse-heading);
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(var(--split-media-text-offset));
     will-change: opacity, transform;
     transition: none;
 }
 
-/* content only fades in once its own panel has fully landed (0.55s), never while the image is
-   still visibly sliding into place */
+/* Text starts as the panel approaches its resting position, connecting the two motions. */
 .split-media .split-media-slide[aria-hidden='false'] .split-media-overlay {
     opacity: 1;
     transform: translateY(0);
     transition:
-        opacity 0.35s ease-out 0.55s,
-        transform 0.35s ease-out 0.55s;
+        opacity var(--split-media-text-duration) var(--split-media-motion-easing) var(--split-media-text-delay),
+        transform var(--split-media-text-duration) var(--split-media-motion-easing) var(--split-media-text-delay);
 }
 
-/* mobile/tablet: the right panel's own entrance already starts 150ms late, so its own landing
-   time — and therefore its text fade — follows suit (0.55s + 0.15s) */
+/* The right panel's text follows the same stagger as its image. */
 .split-media .split-media-slide[aria-hidden='false'] .split-media-item--right .split-media-overlay {
-    transition-delay: 0.7s;
+    transition-delay: calc(var(--split-media-text-delay) + var(--split-media-panel-stagger));
 }
 
 /* the text fades out as soon as its panel starts leaving, rather than vanishing instantly
    while the panel is still visibly sliding away */
 .split-media .split-media-slide--leaving .split-media-overlay {
     transition:
-        opacity 0.35s ease-out,
-        transform 0.35s ease-out;
+        opacity var(--split-media-text-exit-duration) var(--split-media-motion-easing),
+        transform var(--split-media-text-exit-duration) var(--split-media-motion-easing);
+}
+
+.split-media .split-media-slide--leaving .split-media-item--right .split-media-overlay {
+    transition-delay: var(--split-media-panel-stagger);
 }
 
 .split-media .split-media-body {
@@ -320,26 +320,17 @@
 }
 
 @media (width >= 1200px) {
+    .split-media {
+        --split-media-panel-stagger: 0ms;
+    }
+
     .split-media .split-media-track {
         aspect-ratio: 1440 / 900;
     }
 
     .split-media .split-media-slide {
-        display: grid;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr;
-    }
-
-    /* desktop lays panels out side by side as normal grid columns instead of the mobile/tablet
-       full-track overlay trick, so each item only needs to cover its own column/row cell again */
-    .split-media .split-media-item {
-        position: relative;
-        inset: auto;
-    }
-
-    .split-media .split-media-item--left .split-media-media,
-    .split-media .split-media-item--right .split-media-media {
-        inset: 0;
     }
 
     /* desktop: items are full track height (one grid row, two columns) — left rests above,
@@ -354,16 +345,6 @@
         transform: translateY(100%);
     }
 
-    .split-media .split-media-slide[aria-hidden='false'] .split-media-item--right {
-        transition-delay: 0s;
-    }
-
-    /* desktop has no panel stagger, so both panels land at 0.55s — reset back down from the
-       mobile/tablet override above */
-    .split-media .split-media-slide[aria-hidden='false'] .split-media-item--right .split-media-overlay {
-        transition-delay: 0.55s;
-    }
-
     /* desktop mirrors each slot's own entrance side (left drops from above, so it keeps falling
        below; right rises from below, so it keeps rising above) for the same contiguous-strip
        reason as the mobile/tablet rule above */
@@ -373,22 +354,28 @@
 
     .split-media .split-media-slide--leaving .split-media-item--right {
         transform: translateY(-100%);
-        transition-delay: 0s;
     }
+}
+
+/* Reset/reuse a slide without animating it back across the track. Include text so a
+   cancelled transition can finish at its final opacity/position too. */
+.split-media .split-media-slide.split-media-slide--settling .split-media-item,
+.split-media .split-media-slide.split-media-slide--settling .split-media-overlay {
+    transition: none;
 }
 
 /* crossing a breakpoint mid-page-life recomputes each item's enter/exit transform; without this,
    hidden slides would visibly sweep through the frame while the media query switches */
-.split-media.split-media-resizing .split-media-item,
-.split-media.split-media-resizing .split-media-overlay {
+.split-media.split-media-resizing .split-media-slide .split-media-item,
+.split-media.split-media-resizing .split-media-slide .split-media-overlay {
     transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
     /* only suppress the animation, not the transform itself — the transform is what keeps
        inactive slides off-track, so removing it entirely would show every slide at once */
-    .split-media .split-media-item,
-    .split-media .split-media-overlay {
+    .split-media .split-media-slide[aria-hidden] .split-media-item,
+    .split-media .split-media-slide[aria-hidden] .split-media-overlay {
         transition: none;
     }
 }
