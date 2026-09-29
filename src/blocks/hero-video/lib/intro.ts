@@ -130,6 +130,12 @@ export async function runIntro(
     ],
     { duration: T_SPLIT_MOTION, easing: EASE_THROUGH, fill: 'forwards' },
   );
+  await prefixLeave.finished.catch(() => {});
+  prefix.style.opacity = '0';
+  prefix.style.transform = 'translate(0, 0)';
+  prefixLeave.cancel();
+
+  // "See" is fully gone now — only then does the destination list rise/fade in.
   const itemsIn = itemList.animate(
     [
       { opacity: 0, transform: `translateY(${restY + ITEMS_RISE_PX}px)` },
@@ -137,13 +143,9 @@ export async function runIntro(
     ],
     { duration: T_SPLIT_MOTION, easing: EASE_ENTRANCE, fill: 'forwards' },
   );
-
-  await Promise.all([prefixLeave.finished, itemsIn.finished]).catch(() => {});
-
+  await itemsIn.finished.catch(() => {});
   itemList.style.opacity = '1';
   itemList.style.transform = `translateY(${restY}px)`;
-  prefix.style.opacity = '0';
-  prefixLeave.cancel();
   itemsIn.cancel();
 
   itemList.inert = false;
@@ -181,6 +183,7 @@ export function skipIntro(elements: IntroElements): void {
   introPhrase.style.display = 'none';
   prefix.style.opacity = '0';
   prefix.style.display = '';
+  prefix.style.transform = 'translate(0, 0)';
   suffix.style.opacity = '1';
   suffix.style.transform = '';
   itemList.style.opacity = '1';
