@@ -1,14 +1,43 @@
 name: Build
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-    - uses: actions/checkout@v6
-    - name: Use Node.js 20
-      uses: actions/setup-node@v6
-      with:
-        node-version: 24
-    - run: npm ci
-    - run: npm run lint
+      - uses: actions/checkout@v6
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+      - name: Build JSON models
+        run: npm run build:json
+
+      - name: Setup git user
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Commit built files
+        env:
+          HUSKY: "0"
+        run: |
+          git add blocks/ scripts/ styles/ chunks/ component-models.json component-definition.json component-filters.json
+          if git diff --staged --quiet; then
+            echo "No changes to built files"
+          else
+            git commit -m "chore: rebuild from CI"
+            git push origin HEAD
+          fi
