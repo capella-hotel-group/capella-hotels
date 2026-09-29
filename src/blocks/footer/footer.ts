@@ -47,7 +47,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (!fragment) fragment = await loadFragment(`${getFragmentBasePath()}/footer`);
   if (!fragment) return;
 
-  applyBackgroundTheme(block, fragment.querySelector('.footer'));
+  applyBackgroundTheme(block.closest('footer') as HTMLElement, fragment.querySelector('.footer'));
 
   // Each footer-* block decorates itself into the leaf class footer.css expects (see its own
   // .ts file); this only assembles the already-built pieces into the shared layout groups.
