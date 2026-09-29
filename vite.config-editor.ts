@@ -34,7 +34,7 @@ export default defineConfig({
         },
         entryFileNames: 'scripts/[name].js',
         manualChunks,
-        chunkFileNames: 'chunks/[name].js',
+        chunkFileNames: 'chunks/editor/[name].js',
         format: 'es',
       },
       preserveEntrySignatures: 'exports-only',

@@ -1,8 +1,6 @@
 name: Build
 on:
   push:
-    branches-ignore:
-      - main
 
 jobs:
   build:
@@ -26,11 +24,13 @@ jobs:
         run: npm run build:json
 
       - name: Setup git user
+        if: github.ref != 'refs/heads/main'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
       - name: Commit built files
+        if: github.ref != 'refs/heads/main'
         env:
           HUSKY: "0"
         run: |
