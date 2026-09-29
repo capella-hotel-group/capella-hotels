@@ -27,8 +27,10 @@ export default defineConfig({
       external: [scriptsEntry, aemEntry],
       output: {
         paths: {
-          [scriptsEntry]: '/scripts/scripts.js',
-          [aemEntry]: '/scripts/aem.js',
+          // relative so the URL matches head.html's module on author (/content/<site>.resource/...);
+          // an absolute path loads a second scripts.js instance and duplicates header/footer
+          [scriptsEntry]: './scripts.js',
+          [aemEntry]: './aem.js',
         },
         entryFileNames: 'scripts/[name].js',
         manualChunks,
