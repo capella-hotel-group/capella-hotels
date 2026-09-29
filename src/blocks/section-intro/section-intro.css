@@ -2,9 +2,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 32px;
-    padding: 96px 24px 40px;
-    background: #fff;
+    gap: var(--dimension-spacing-heading-to-content);
+    padding-top: var(--dimension-layout-module-padding-top);
+    padding-bottom: var(--dimension-layout-module-padding-block-s);
+    padding-inline: var(--dimension-layout-module-padding-inline-s);
+    background: var(--color-surface-page);
     text-align: center;
 }
 
@@ -12,22 +14,22 @@
     width: 100%;
     max-width: 345px;
     margin: 0;
-    color: #1b364b;
-    font-family: var(--heading-font-family);
-    font-size: 24px;
-    font-weight: 400;
-    line-height: 28px;
+    color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h3);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h3);
     text-align: center;
 }
 
 .section-intro .section-intro-text {
     width: 100%;
-    max-width: 345px;
-    color: #262727;
-    font-family: var(--heading-font-family);
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 22px;
+    max-width: 600px;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-subtitle);
+    font-size: var(--typography-fontsize-heading-subtitle);
+    font-weight: var(--type-font-weight-subtitle);
+    line-height: var(--typography-line-height-heading-subtitle);
     text-align: center;
 }
 
@@ -36,45 +38,25 @@
 }
 
 .section-intro .section-intro-text p + p {
-    margin-top: 16px;
+    margin-top: var(--typography-paragraph-spacing-body-m);
 }
 
 @media (width >= 768px) {
-    .section-intro {
-        gap: 48px;
-        padding: 112px 48px 40px;
-    }
-
     .section-intro .section-intro-title {
         max-width: 738px;
-        font-size: 36px;
-        line-height: 40px;
-    }
-
-    .section-intro .section-intro-text {
-        max-width: 738px;
-        font-size: 24px;
-        line-height: 24px;
+        font-size: var(--typography-fontsize-heading-h2);
+        line-height: var(--typography-line-height-heading-h2);
     }
 }
 
 @media (width >= 1200px) {
     .section-intro {
-        gap: 56px;
-        padding: 120px 80px 80px;
+        padding-bottom: var(--dimension-layout-module-padding-block);
     }
 
     .section-intro .section-intro-title {
         max-width: 1280px;
-        font-size: 40px;
-        line-height: 40px;
-    }
-
-    .section-intro .section-intro-text {
-        max-width: 800px;
-    }
-
-    .section-intro .section-intro-text p + p {
-        margin-top: 20px;
+        font-size: var(--typography-fontsize-heading-h2);
+        line-height: var(--typography-line-height-heading-h2);
     }
 }

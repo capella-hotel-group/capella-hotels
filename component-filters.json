@@ -2,7 +2,8 @@
   {
     "id": "main",
     "components": [
-      "section"
+      "section",
+      "header-section"
     ]
   },
   {
@@ -21,6 +22,7 @@
       "section-intro",
       "awards-list",
       "turneo-proxy-test",
+      "turneo-experience-detail",
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
@@ -39,6 +41,17 @@
       "footer-social-link",
       "footer-links",
       "footer-legal"
+    ]
+  },
+  {
+    "id": "header-section",
+    "components": [
+      "text",
+      "image",
+      "button",
+      "hero",
+      "navigation-lists",
+      "link"
     ]
   },
   {
@@ -158,18 +171,6 @@
     ]
   },
   {
-    "id": "filters-grid",
-    "components": [
-      "filters-grid-tab"
-    ]
-  },
-  {
-    "id": "filters-grid-tab",
-    "components": [
-      "filters-grid-filter"
-    ]
-  },
-  {
     "id": "footer-legal",
     "components": [
       "footer-legal-link"
@@ -200,6 +201,12 @@
     ]
   },
   {
+    "id": "navigation-lists",
+    "components": [
+      "navigation-list-item"
+    ]
+  },
+  {
     "id": "offers-carousel",
     "components": [
       "offers-carousel-item"
@@ -207,5 +214,11 @@
     "minItems": 1,
     "maxItems": 3,
     "customErrorMsg": "Add between 1 and 3 offer cards."
+  },
+  {
+    "id": "text-with-cta",
+    "components": [
+      "text-with-cta-signup-form"
+    ]
   }
 ]

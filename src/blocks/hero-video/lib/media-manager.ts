@@ -2,6 +2,8 @@
 import type { HeroVideoItem } from './types';
 
 const CROSSFADE_MS = 620;
+const SLIDE_MS = 900; // dedicated (slower) duration for the transition:'slide' item-switch, kept separate from CROSSFADE_MS so the default crossfade and load-failure/empty-item fallback stay snappy
+const SLIDE_EASE = 'cubic-bezier(0.33, 1, 0.68, 1)'; // standard ease-out-cubic, matches the intro's motion language
 const FIRST_FRAME_TIMEOUT_MS = 900;
 const LOAD_TIMEOUT_MS = 8000;
 const ERROR_RETRY_GRACE_MS = 400;
@@ -200,6 +202,25 @@ export class MediaManager {
     );
   }
 
+  /** Fade the outgoing layer to transparent (revealing the poster/blank background beneath). */
+  private async fadeOutgoingToBlank(outgoing: HTMLVideoElement, mySeq: number): Promise<void> {
+    const startOpacity = outgoing.style.opacity || '1';
+    if (startOpacity !== '0') {
+      const fade = outgoing.animate([{ opacity: startOpacity }, { opacity: '0' }], {
+        duration: CROSSFADE_MS,
+        easing: 'ease-in-out',
+        fill: 'forwards',
+      });
+      this.pendingFadeOut = fade;
+      await fade.finished.catch(() => {});
+      if (this.sequenceId !== mySeq) return;
+      this.pendingFadeOut = null;
+      fade.cancel();
+    }
+    outgoing.style.opacity = '0';
+    outgoing.pause();
+  }
+
   /** Switch to a new item's video with opacity crossfade. */
   async switchTo(item: HeroVideoItem): Promise<void> {
     this.sequenceId += 1;
@@ -207,6 +228,20 @@ export class MediaManager {
 
     const incoming = this.inactiveVideo;
     const outgoing = this.activeVideo;
+
+    if (!item.videoUrl) {
+      // Freshly-added item with no media authored yet (UE "+ Add") — fade to blank instead of
+      // setting an empty video src, which the browser resolves against the page's own URL and
+      // errors on rather than treating as "no source".
+      this.pendingFadeIn?.cancel();
+      this.pendingFadeOut?.cancel();
+      this.pendingFadeIn = null;
+      this.pendingFadeOut = null;
+      this.posterEl.style.backgroundImage = item.posterUrl ? `url(${item.posterUrl})` : 'none';
+      this.posterEl.style.backgroundPosition = this.getFocalPosition(item);
+      await this.fadeOutgoingToBlank(outgoing, mySeq);
+      return;
+    }
 
     // If the active layer is already playing this URL, avoid redundant reload/fade.
     const activeSrc = this.normalizeUrl(outgoing.currentSrc || outgoing.src);
@@ -246,27 +281,12 @@ export class MediaManager {
       });
 
     if (loadFailed) {
-      // True load failure (persistent video.error). Fade the outgoing video out to reveal the
+      // True load failure (persistent load error). Fade the outgoing video out to reveal the
       // new item's poster underneath. Leave outgoing.src loaded so re-selecting the previous
       // item can resume cheaply, and don't swap activeLayer so future dedup still references
       // the last successfully-playing item.
       if (this.sequenceId !== mySeq) return;
-
-      const startOpacity = outgoing.style.opacity || '1';
-      if (startOpacity !== '0') {
-        const fade = outgoing.animate([{ opacity: startOpacity }, { opacity: '0' }], {
-          duration: CROSSFADE_MS,
-          easing: 'ease-in-out',
-          fill: 'forwards',
-        });
-        this.pendingFadeOut = fade;
-        await fade.finished.catch(() => {});
-        if (this.sequenceId !== mySeq) return;
-        this.pendingFadeOut = null;
-        fade.cancel();
-      }
-      outgoing.style.opacity = '0';
-      outgoing.pause();
+      await this.fadeOutgoingToBlank(outgoing, mySeq);
       return;
     }
 
@@ -292,13 +312,13 @@ export class MediaManager {
       incoming.style.opacity = '1';
       outgoing.style.transform = 'translateX(0%)';
       const slideIn = incoming.animate([{ transform: 'translateX(100%)' }, { transform: 'translateX(0%)' }], {
-        duration: CROSSFADE_MS,
-        easing: 'ease-in-out',
+        duration: SLIDE_MS,
+        easing: SLIDE_EASE,
         fill: 'forwards',
       });
       const slideOut = outgoing.animate([{ transform: 'translateX(0%)' }, { transform: 'translateX(-100%)' }], {
-        duration: CROSSFADE_MS,
-        easing: 'ease-in-out',
+        duration: SLIDE_MS,
+        easing: SLIDE_EASE,
         fill: 'forwards',
       });
       this.pendingFadeIn = slideIn;

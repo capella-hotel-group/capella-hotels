@@ -124,11 +124,6 @@
         margin-block-start: var(--dimension-spacing-general-l);
         padding-inline: calc(var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl));
 
-        p {
-            display: contents;
-            margin: 0;
-        }
-
         a {
             display: inline-flex;
             align-items: center;
@@ -232,9 +227,24 @@
             aspect-ratio: auto;
             overflow: hidden;
             visibility: hidden;
+            opacity: 0;
 
             &.is-selected {
                 visibility: visible;
+                opacity: 1;
+                /* keeps the incoming image above the one fading out */
+                z-index: 1;
+            }
+
+            @media (prefers-reduced-motion: no-preference) {
+                /* visibility flips only once the fade-out has finished */
+                transition:
+                    opacity 0.5s ease,
+                    visibility 0s linear 0.5s;
+
+                &.is-selected {
+                    transition: opacity 0.5s ease;
+                }
             }
         }
     }
@@ -246,6 +256,7 @@
     }
 
     .destination-introduction-slide img,
+    .destination-introduction-slide video,
     .destination-introduction-thumb img {
         display: block;
         width: 100%;

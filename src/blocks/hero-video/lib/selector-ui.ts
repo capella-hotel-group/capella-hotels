@@ -7,6 +7,7 @@ const OPACITY_MS = 190;
 
 export class SelectorUI {
   private itemListEl: HTMLUListElement;
+  private viewportEl: HTMLElement;
   private items: HeroVideoItem[] = [];
   private rowOffsets: number[] = [];
   private listHeight = 0;
@@ -16,8 +17,9 @@ export class SelectorUI {
   private pendingOpacityAnimations: Animation[] = [];
   private introComplete = false;
 
-  constructor(itemListEl: HTMLUListElement) {
+  constructor(itemListEl: HTMLUListElement, viewportEl: HTMLElement) {
     this.itemListEl = itemListEl;
+    this.viewportEl = viewportEl;
   }
 
   setIntroComplete(complete: boolean): void {
@@ -107,12 +109,15 @@ export class SelectorUI {
   }
 
   /**
-   * Cache the Y offset (center of each row, relative to the list top) and the
-   * total list height. Call after font load and on resize.
+   * Cache the Y offset (center of each row, relative to the list top) and the viewport's own
+   * height (the fixed, never-transformed mask window the list sits in — NOT the <ul>'s own
+   * height, which shrinks/grows with row count and font-size and would drift out of sync with
+   * the viewport's true center, e.g. at mobile's smaller row height). Call after font load and
+   * on resize.
    */
   measureRows(): void {
     const listRect = this.itemListEl.getBoundingClientRect();
-    this.listHeight = listRect.height;
+    this.listHeight = this.viewportEl.getBoundingClientRect().height;
     this.rowOffsets = [...this.itemListEl.children].map((li) => {
       const rect = li.getBoundingClientRect();
       return rect.top + rect.height / 2 - listRect.top;
@@ -120,7 +125,7 @@ export class SelectorUI {
   }
 
   /**
-   * Vertical translate (px) that brings item[index] to the list's vertical
+   * Vertical translate (px) that brings item[index] to the viewport's vertical
    * center — which coincides with the fixed, centered prefix/suffix.
    */
   private translateForIndex(index: number): number | null {
@@ -134,14 +139,15 @@ export class SelectorUI {
    * Position the item list so item[index] is centered, without touching opacity.
    * Used during intro: selector is invisible so we pre-position before fade-in.
    */
-  positionForItem(index: number): void {
+  positionForItem(index: number): number | null {
     const translateY = this.translateForIndex(index);
-    if (translateY === null) return;
+    if (translateY === null) return null;
 
     this.pendingAnchorAnimations.forEach((a) => a.cancel());
     this.pendingAnchorAnimations = [];
 
     this.itemListEl.style.transform = `translateY(${translateY}px)`;
+    return translateY;
   }
   activateItem(index: number, animate: boolean): void {
     const prev = this.activeIndex;

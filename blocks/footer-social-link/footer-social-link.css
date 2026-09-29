@@ -1,0 +1,2 @@
+/*! v0.1.0 | haf42bf9a */
+.footer-social-list{gap:var(--dimension-spacing-general-xs);margin:0;padding:0;list-style:none;display:flex}.footer-social-list a{border-radius:50%;justify-content:center;align-items:center;width:40px;height:40px;display:flex}.footer-social-list .icon{width:32px;height:32px}@media (min-width:768px){.footer-social{min-width:0}}

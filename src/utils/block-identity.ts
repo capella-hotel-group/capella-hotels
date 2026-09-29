@@ -1,8 +1,8 @@
 interface BlockIdentityOptions {
-  /** block-scoped class that hides the consumed rows, e.g. `offers-carousel-hidden` */
-  hiddenClass: string;
   /** number of rows the model emits after the identity rows, items excluded */
   contentRows: number;
+  /** block-scoped class that hides the consumed rows; omit when the block rebuilds its DOM */
+  hiddenClass?: string;
 }
 
 const IDENTITY_ROW_COUNT = 2;
@@ -18,7 +18,7 @@ const IDENTITY_ROW_COUNT = 2;
 export function applyBlockIdentity(
   block: HTMLElement,
   rows: HTMLElement[],
-  { hiddenClass, contentRows }: BlockIdentityOptions,
+  { contentRows, hiddenClass }: BlockIdentityOptions,
 ): HTMLElement[] {
   const identityCount = Math.min(Math.max(rows.length - contentRows, 0), IDENTITY_ROW_COUNT);
   const identityRows = rows.slice(0, identityCount);
@@ -30,7 +30,7 @@ export function applyBlockIdentity(
   const testId = testIdRow?.textContent?.trim();
   if (testId) block.dataset.testId = testId;
 
-  identityRows.forEach((row) => row.classList.add(hiddenClass));
+  if (hiddenClass) identityRows.forEach((row) => row.classList.add(hiddenClass));
 
   return rows.slice(identityCount);
 }

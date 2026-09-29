@@ -1,0 +1,39 @@
+/* footer-legal — legal link list + copyright line; the desktop grid-area placement is
+   owned by footer.css since it composes the shared `.footer-inner` grid. */
+.footer-legal-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-s);
+    margin: 0 0 var(--dimension-spacing-general-l);
+    padding: 0;
+    list-style: none;
+}
+
+.footer-legal-list a {
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration: none;
+}
+
+.footer-legal-list a:hover {
+    text-decoration: underline;
+}
+
+.footer-copyright {
+    margin: 0;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    text-align: start;
+}
+
+@media (width >= 768px) {
+    .footer-legal-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--dimension-spacing-general-xl);
+        margin-block-end: var(--dimension-spacing-general-l);
+    }
+}

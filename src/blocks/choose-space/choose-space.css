@@ -107,28 +107,29 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
+        /* Figma 1440: container padding 80, so the inset copy lands on 112 and the
+           heading's outdented first line on 80 */
         padding-inline: var(--dimension-layout-module-padding-inline-s);
-        padding-block-end: var(--dimension-layout-module-padding-block-s);
+        padding-block-end: var(--dimension-layout-margin-m);
         color: var(--color-text-main-inverse-heading);
 
-        @media (width >= 768px) {
-            padding-inline: var(--dimension-layout-module-padding-inline-s);
-        }
-
         @media (width >= 1200px) {
-            /* Figma indents the hero copy at 112, less than the 296 the selector
-               title below it uses */
-            padding-inline: calc(112 * var(--fluid-unit));
-            padding-block-end: calc(64 * var(--fluid-unit));
+            /* same band as offers-carousel: the content stops growing at the 1440
+               artboard, so past it the side padding absorbs the slack */
+            width: 100%;
+            max-width: calc(var(--dimension-layout-40vw) + var(--dimension-layout-60vw));
+            margin-inline: auto;
         }
     }
 
     .choose-space-eyebrow {
+        padding-inline-start: var(--dimension-spacing-general-2xl);
         margin: 0 0 var(--dimension-spacing-eyebrow-to-title);
         font-family: var(--type-font-family-body);
-        font-size: var(--typography-fontsize-body-m);
+        font-size: var(--typography-fontsize-body-eyebrow);
         font-weight: var(--type-font-weight-body-reg);
-        line-height: var(--typography-line-height-body-md);
+        line-height: var(--typography-line-height-body-eyebrow);
+        letter-spacing: var(--typography-letter-spacing-body-eyebrow);
         text-transform: uppercase;
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
@@ -136,7 +137,6 @@
 
     .choose-space-panel-title {
         margin: 0;
-        max-width: 18ch;
         font-family: var(--type-font-family-heading);
         font-size: var(--typography-fontsize-heading-h1);
         font-weight: var(--type-font-weight-heading);
@@ -150,15 +150,28 @@
             font: inherit;
             color: inherit;
         }
+
+        /* the copy is inset by 2xl and only the heading's first line hangs out of it */
+        > :nth-child(n + 2) {
+            padding-inline-start: var(--dimension-spacing-general-2xl);
+        }
+
+        /* right edge lines up with the 600px copy column; below desktop the column is
+           already narrow, so an extra cap would break the authored lines a second time */
+        @media (width >= 1200px) {
+            max-width: 600px;
+        }
     }
 
+    /* Figma styles the panel copy with heading/subtitle, not a body style */
     .choose-space-panel-description {
-        margin-block-start: var(--dimension-spacing-eyebrow-to-text);
-        max-width: 46ch;
-        font-family: var(--type-font-family-body);
-        font-size: var(--typography-fontsize-body-m);
-        font-weight: var(--type-font-weight-body-reg);
-        line-height: var(--typography-line-height-body-md);
+        padding-inline-start: var(--dimension-spacing-general-2xl);
+        margin-block-start: var(--dimension-spacing-heading-to-content);
+        max-width: calc(600px + var(--dimension-spacing-general-2xl));
+        font-family: var(--type-font-family-subtitle);
+        font-size: var(--typography-fontsize-heading-subtitle);
+        font-weight: var(--type-font-weight-subtitle);
+        line-height: var(--typography-line-height-heading-subtitle);
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
 
@@ -176,7 +189,8 @@
         flex-wrap: wrap;
         align-items: center;
         gap: var(--dimension-spacing-general-2xl);
-        margin-block-start: var(--dimension-spacing-general-m);
+        padding-inline-start: var(--dimension-spacing-general-2xl);
+        margin-block-start: var(--dimension-spacing-heading-to-content);
     }
 
     /* ---------- links ---------- */
@@ -193,7 +207,7 @@
         padding-block: var(--component-button-padding-block);
         border-radius: var(--component-button-corner-standard);
         font-family: var(--type-font-family-cta);
-        font-size: var(--typography-fontsize-body-m);
+        font-size: var(--typography-fontsize-body-text-link);
         font-weight: var(--type-font-weight-text-link);
         line-height: var(--typography-line-height-body-md);
         text-transform: uppercase;
