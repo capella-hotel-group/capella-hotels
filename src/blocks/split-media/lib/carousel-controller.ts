@@ -8,6 +8,10 @@ export interface CarouselControllerOptions {
   autoplay: boolean;
 }
 
+// covers the longest exit (mobile/tablet right panel: 150ms stagger + 550ms travel) with room
+// to spare; used only to know when it's safe to snap the slide back to its entrance side
+const LEAVING_SETTLE_MS = 700;
+
 export class CarouselController {
   private readonly slides: HTMLElement[];
   private readonly dots: HTMLButtonElement[];
@@ -15,6 +19,7 @@ export class CarouselController {
   private readonly canAutoplay: boolean;
   private activeIndex = 0;
   private timerId: ReturnType<typeof setInterval> | null = null;
+  private readonly leavingTimers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
 
   constructor({ slides, dots, intervalSeconds, autoplay }: CarouselControllerOptions) {
     this.slides = slides;
@@ -55,15 +60,38 @@ export class CarouselController {
   // toggling aria-hidden (not display:none) is what replays the CSS entrance transitions on
   // every activation, and keeps every slide reachable/selectable in the Universal Editor
   private setActive(index: number): void {
-    this.slides[this.activeIndex]?.setAttribute('aria-hidden', 'true');
+    const previous = this.slides[this.activeIndex];
+    previous?.setAttribute('aria-hidden', 'true');
     this.dots[this.activeIndex]?.classList.remove('is-active');
     this.dots[this.activeIndex]?.removeAttribute('aria-selected');
 
     this.activeIndex = index;
 
+    if (previous) this.markLeaving(previous);
     this.slides[this.activeIndex]?.setAttribute('aria-hidden', 'false');
     this.dots[this.activeIndex]?.classList.add('is-active');
     this.dots[this.activeIndex]?.setAttribute('aria-selected', 'true');
+  }
+
+  // keeps the outgoing slide moving past center instead of reversing back to its entrance side
+  // (see split-media.css), then snaps it back once fully offscreen so it's ready to enter again
+  private markLeaving(slide: HTMLElement): void {
+    const pending = this.leavingTimers.get(slide);
+    if (pending !== undefined) clearTimeout(pending);
+
+    slide.classList.remove('split-media-slide--settling');
+    slide.classList.add('split-media-slide--leaving');
+
+    const timer = setTimeout(() => {
+      slide.classList.add('split-media-slide--settling');
+      slide.classList.remove('split-media-slide--leaving');
+      // force a reflow so the instant reset is committed with transitions off — without this,
+      // the browser can batch the disable/re-enable into one frame and animate the reset anyway
+      void slide.offsetHeight;
+      requestAnimationFrame(() => slide.classList.remove('split-media-slide--settling'));
+      this.leavingTimers.delete(slide);
+    }, LEAVING_SETTLE_MS);
+    this.leavingTimers.set(slide, timer);
   }
 
   private start(): void {

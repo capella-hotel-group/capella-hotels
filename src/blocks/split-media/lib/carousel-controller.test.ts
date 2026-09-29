@@ -173,4 +173,44 @@ describe('CarouselController', () => {
       expect(slides[0].getAttribute('aria-hidden')).toBe('false');
     });
   });
+
+  describe('leaving/settling classes', () => {
+    it('marks the outgoing slide as leaving, then settles it back after the transition window', () => {
+      jest.useFakeTimers();
+      mockMatchMedia(false);
+      const slides = buildSlides(2);
+      const dots = buildDots(2);
+      const carousel = new CarouselController({ slides, dots, intervalSeconds: 6, autoplay: false });
+      carousel.init();
+
+      carousel.goTo(1);
+      expect(slides[0].classList.contains('split-media-slide--leaving')).toBe(true);
+
+      jest.advanceTimersByTime(700);
+      expect(slides[0].classList.contains('split-media-slide--settling')).toBe(true);
+      expect(slides[0].classList.contains('split-media-slide--leaving')).toBe(false);
+
+      jest.advanceTimersByTime(16);
+      expect(slides[0].classList.contains('split-media-slide--settling')).toBe(false);
+    });
+
+    it('re-marks a slide that becomes active again before it finished settling', () => {
+      jest.useFakeTimers();
+      mockMatchMedia(false);
+      const slides = buildSlides(3);
+      const dots = buildDots(3);
+      const carousel = new CarouselController({ slides, dots, intervalSeconds: 6, autoplay: false });
+      carousel.init();
+
+      carousel.goTo(1);
+      carousel.goTo(0);
+      carousel.goTo(1);
+      expect(slides[0].classList.contains('split-media-slide--leaving')).toBe(true);
+
+      jest.advanceTimersByTime(700);
+      jest.advanceTimersByTime(16);
+      expect(slides[0].classList.contains('split-media-slide--leaving')).toBe(false);
+      expect(slides[0].classList.contains('split-media-slide--settling')).toBe(false);
+    });
+  });
 });

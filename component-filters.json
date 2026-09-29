@@ -219,10 +219,10 @@
   {
     "id": "split-media",
     "components": [
-      "split-media-item"
+      "split-media-slide"
     ],
-    "minItems": 2,
-    "customErrorMsg": "Add at least 2 media panels (left + right)."
+    "minItems": 1,
+    "customErrorMsg": "Add at least 1 slide."
   },
   {
     "id": "text-with-cta",

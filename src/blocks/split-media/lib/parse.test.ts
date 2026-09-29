@@ -41,7 +41,7 @@ describe('parseCarouselConfig', () => {
 describe('isItemRow', () => {
   it('trusts the authored aue model when present', () => {
     const withModel = row();
-    withModel.dataset.aueModel = 'split-media-item';
+    withModel.dataset.aueModel = 'split-media-slide';
     expect(isItemRow(withModel)).toBe(true);
 
     const withOtherModel = row();
@@ -59,28 +59,29 @@ describe('isItemRow', () => {
 });
 
 describe('parseSlides', () => {
-  function panelRow(hasPicture: boolean): HTMLElement {
+  function slideRow(): HTMLElement {
     const div = document.createElement('div');
-    if (hasPicture) div.innerHTML = '<picture><img src="a.jpg"></picture>';
+    div.innerHTML =
+      '<div><picture><img src="left.jpg"></picture></div>' +
+      '<div><p>Eyebrow</p><p>Headline</p></div>' +
+      '<div><picture><img src="right.jpg"></picture></div>' +
+      '<div><p>Headline</p></div>' +
+      '<div></div>';
     return div;
   }
 
-  it('pairs rows sequentially two-at-a-time into slides', () => {
-    const rows = [panelRow(true), panelRow(true), panelRow(true), panelRow(true)];
+  it('maps each row directly to one slide with 5 fixed-position cells', () => {
+    const rows = [slideRow(), slideRow()];
     const slides = parseSlides(rows);
-    expect(slides).toHaveLength(2);
-    expect(slides[0].left.sourceRow).toBe(rows[0]);
-    expect(slides[0].right.sourceRow).toBe(rows[1]);
-    expect(slides[1].left.sourceRow).toBe(rows[2]);
-    expect(slides[1].right.sourceRow).toBe(rows[3]);
-  });
 
-  it('keeps a still-odd trailing panel with an empty placeholder partner', () => {
-    const rows = [panelRow(true), panelRow(true), panelRow(true)];
-    const slides = parseSlides(rows);
     expect(slides).toHaveLength(2);
-    expect(slides[1].left.sourceRow).toBe(rows[2]);
-    expect(slides[1].right).toEqual({});
+    expect(slides[0].sourceRow).toBe(rows[0]);
+    expect(slides[0].left.mediaCell).toBe(rows[0].children[0]);
+    expect(slides[0].left.contentCell).toBe(rows[0].children[1]);
+    expect(slides[0].right.mediaCell).toBe(rows[0].children[2]);
+    expect(slides[0].right.contentCell).toBe(rows[0].children[3]);
+    expect(slides[0].right.ctaCell).toBe(rows[0].children[4]);
+    expect(slides[1].sourceRow).toBe(rows[1]);
   });
 
   it('returns no slides for an empty item list', () => {
