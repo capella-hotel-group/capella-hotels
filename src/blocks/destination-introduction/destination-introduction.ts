@@ -29,11 +29,12 @@ function hasContent(cell: Element | null): cell is Element {
   return !!cell && (cell.textContent?.trim() !== '' || !!cell.querySelector('picture, img, a'));
 }
 
-// in the editor every gallery row carries the item model; outside it the gallery
-// rows are the multi-cell ones, since every block-level field emits a single cell
+// In the editor every gallery row carries the item model. Outside it a gallery row
+// is either multi-cell — every block-level field emits a single cell — or the single
+// image cell that items authored before the media fields existed still emit.
 function isGalleryRow(row: HTMLElement): boolean {
   if (row.dataset.aueModel) return row.dataset.aueModel === IMAGE_MODEL;
-  return row.children.length > 1;
+  return row.children.length > 1 || !!row.querySelector('picture, img');
 }
 
 function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElement {
@@ -68,6 +69,46 @@ function buildCopy(row: Element | undefined, field: string): HTMLElement | null 
 }
 
 /**
+ * Reads an element-grouped CTA cell, which holds the label, the link and the
+ * open-in-new-tab flag as separate children rather than as separate cells.
+ */
+function readCta(cell: Element | null): { label: string; href: string; openInNewTab: boolean } {
+  const children = [...(cell?.children || [])];
+  const link = cell?.querySelector('a');
+  const isFlag = (element: Element): boolean => ['true', 'false'].includes(textOf(element).toLowerCase());
+  const label = children.find((element) => !element.querySelector('a') && !isFlag(element));
+
+  return {
+    // an authored link with no label renders as its own href, which still beats
+    // dropping the CTA and leaving the author with nothing on the page
+    label: textOf(label) || textOf(link),
+    href: link?.getAttribute('href') || '',
+    openInNewTab: children.some((element) => textOf(element).toLowerCase() === 'true'),
+  };
+}
+
+function buildCta(row: Element | undefined, field: string): HTMLElement | null {
+  const cell = row?.firstElementChild ?? null;
+  const { label, href, openInNewTab } = readCta(cell);
+  if (!label || !href) return null;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `destination-introduction-${field}`;
+  if (cell) moveInstrumentation(cell, wrapper);
+
+  const link = document.createElement('a');
+  link.href = href;
+  link.textContent = label;
+  if (openInNewTab) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+  wrapper.append(link);
+
+  return wrapper;
+}
+
+/**
  * Rewrites `<p>one<br>two</p>` as `<p>one</p><p>two</p>` so a heading written with
  * soft breaks lines up with one written as separate paragraphs. The stylesheet
  * indents the second child, which only works when each line is its own element.
@@ -95,11 +136,14 @@ function splitOnLineBreaks(container: Element): void {
   });
 }
 
-/** Alt text collapses into the cell of the field it suffixes, arriving as a sibling of the picture. */
+/** Alt text collapses into the cell of the field it suffixes, arriving as a sibling of the asset. */
 function altOf(cell?: Element | null): string {
   const authored = cell?.querySelector('img')?.getAttribute('alt');
   if (authored) return authored;
-  const sibling = [...(cell?.children || [])].find((element) => !element.querySelector('picture, img, a'));
+  // a video cell holds only its link, whose text is the asset URL and not a description
+  const sibling = [...(cell?.children || [])].find(
+    (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a'),
+  );
   return textOf(sibling);
 }
 
@@ -149,10 +193,13 @@ function buildSlide(row: HTMLElement, index: number): Slide {
 
   const thumbnailCell = cells[ITEM.thumbnail];
   const thumbnail = thumbnailCell?.querySelector('picture') ?? null;
+  // items authored before the media fields existed carry one image cell, which
+  // stands in for both the thumbnail and the media
+  const mediaCell = cells.length > 1 ? cells[ITEM.mediaAsset] : thumbnailCell;
   const isVideo = textOf(cells[ITEM.media]).toLowerCase() === 'video';
   const poster = thumbnail?.querySelector('img')?.getAttribute('src') || '';
-  const video = isVideo ? buildVideo(cells[ITEM.mediaAsset], poster) : null;
-  const picture = isVideo ? null : buildPicture(cells[ITEM.mediaAsset]);
+  const video = isVideo ? buildVideo(mediaCell, poster) : null;
+  const picture = isVideo ? null : buildPicture(mediaCell);
   const media = video ?? picture;
   if (media) element.append(media);
 
@@ -162,7 +209,7 @@ function buildSlide(row: HTMLElement, index: number): Slide {
     // without an authored thumbnail an image slide can still supply one; a video
     // slide cannot, so it falls back to a numbered button
     thumbnail: thumbnail ?? picture,
-    label: altOf(thumbnailCell) || altOf(cells[ITEM.mediaAsset]) || `Show media ${index + 1}`,
+    label: altOf(thumbnailCell) || altOf(mediaCell) || `Show media ${index + 1}`,
   };
 }
 
@@ -223,7 +270,7 @@ export default function decorate(block: HTMLElement): void {
   if (title) header.append(title);
 
   const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
-  const cta = buildCopy(copyRows[3], COPY_FIELDS[3]);
+  const cta = buildCta(copyRows[3], COPY_FIELDS[3]);
 
   const slides = galleryRows.map(buildSlide);
   const track = buildTrack(slides);
