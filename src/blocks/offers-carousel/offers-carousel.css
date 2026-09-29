@@ -303,6 +303,35 @@
     transition: none;
 }
 
+/* Intro reveal: the stack is inert and runs slower than a swipe while the cards assemble.
+   Duration is mirrored by INTRO_DURATION_MS in the block. */
+.offers-carousel .offers-carousel-cards.is-intro {
+    /* the clip margin lets the front card rise from below its slot without being cut off,
+       unlike the plain overflow clipping the stack uses at rest */
+    overflow: clip;
+    overflow-clip-margin: 240px;
+}
+
+.offers-carousel .offers-carousel-cards.is-intro .offers-carousel-card {
+    --card-move-duration: 1.2s;
+
+    pointer-events: none;
+    /* the fade finishes early so each card is solid for most of its flight and never blends
+       into the one behind it */
+    transition:
+        opacity 0.3s ease-out,
+        transform var(--card-move-duration) var(--card-move-easing);
+}
+
+/* Each card waits below its slot; the block removes this class with a per-card transition-delay
+   so they rise and fade in one after another. */
+.offers-carousel .offers-carousel-cards.is-intro .offers-carousel-card.is-intro-pending {
+    --card-shift: 180px;
+
+    opacity: 0;
+    transition: none;
+}
+
 @media (width >= 768px) {
     /* the 360px stack is fixed, the copy column takes whatever is left */
     .offers-carousel .offers-carousel-layout {

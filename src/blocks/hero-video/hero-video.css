@@ -80,22 +80,26 @@
 }
 
 /* ── Selector UI ─────────────────────────────────────────────────────── */
-/* Three auto columns centered as a group: "See", the list, and the suffix sit side by side,
-   centered together like the phrase "<destination> with new eyes". */
+/* "See" sits in a fixed 0-width first column (rendered via overflow: visible) so its reserved
+   width never counts toward centering the visible group — only the list and suffix columns do,
+   keeping them on true center regardless of "See"'s own text width. column-gap is 0 (not the
+   usual token) so that 0-width column doesn't still add a phantom gap on the invisible side —
+   the real gap between list and suffix is added back explicitly via suffix's own margin. */
 .hero-video-selector {
     position: absolute;
     inset: 0;
     z-index: 2;
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: 0 auto auto;
     justify-content: center;
     align-items: center;
-    column-gap: var(--dimension-spacing-general-l);
+    column-gap: 0;
     pointer-events: none;
 }
 
 .hero-video-prefix {
     justify-self: end;
+    overflow: visible;
 }
 
 .hero-video-prefix,
@@ -114,6 +118,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4em;
+    margin-left: var(--dimension-spacing-general-l);
 }
 
 .hero-video-suffix::after {
@@ -130,6 +135,7 @@
    to item count) so the fade always spans a fixed span around the always-centered active item. */
 .hero-video-items-viewport {
     height: 20rem;
+    min-width: max-content;
     overflow: hidden;
     mask-image: linear-gradient(180deg, rgba(0 0 0 / 0%) 0%, #000 50%, rgba(0 0 0 / 0%) 100%);
     -webkit-mask-image: linear-gradient(180deg, rgba(0 0 0 / 0%) 0%, #000 50%, rgba(0 0 0 / 0%) 100%);
@@ -281,7 +287,6 @@
     .hero-video-suffix {
         font-size: var(--typography-fontsize-heading-h3);
         line-height: var(--typography-line-height-heading-h3);
-        justify-self: center;
     }
 
     .hero-video-item-btn {

@@ -124,11 +124,6 @@
         margin-block-start: var(--dimension-spacing-general-l);
         padding-inline: calc(var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl));
 
-        p {
-            display: contents;
-            margin: 0;
-        }
-
         a {
             display: inline-flex;
             align-items: center;

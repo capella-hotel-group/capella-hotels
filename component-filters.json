@@ -172,18 +172,6 @@
     ]
   },
   {
-    "id": "filters-grid",
-    "components": [
-      "filters-grid-tab"
-    ]
-  },
-  {
-    "id": "filters-grid-tab",
-    "components": [
-      "filters-grid-filter"
-    ]
-  },
-  {
     "id": "footer-legal",
     "components": [
       "footer-legal-link"
