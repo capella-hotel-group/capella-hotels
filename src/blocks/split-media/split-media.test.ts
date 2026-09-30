@@ -86,16 +86,18 @@ describe('split-media integration', () => {
     }
     expect(element.querySelectorAll('.split-media-slide[inert]')).toHaveLength(2);
   });
-  it('keeps Pause independent of hidden controls and does not resume on manual navigation or visibility', () => {
+  it('keeps autoplay without a visible Pause button and supports keyboard pause on the focused carousel', () => {
     const element = block(['', '', 'true', '6', 'false', 'false']);
     decorate(element);
-    click(element, '.split-media-autoplay');
-    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(element.querySelector('.split-media-autoplay')).toBeNull();
+    expect(element.querySelector('button')).toBeNull();
+    element.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     document.dispatchEvent(new Event('visibilitychange'));
     jest.advanceTimersByTime(20000);
     expect(active(element)).toBe(1);
-    expect(element.querySelector('.split-media-autoplay')!.textContent).toBe('Play');
-    click(element, '.split-media-autoplay');
+    expect(element.getAttribute('aria-label')).toContain('paused');
+    element.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
     jest.advanceTimersByTime(6000);
     expect(active(element)).toBe(2);
   });

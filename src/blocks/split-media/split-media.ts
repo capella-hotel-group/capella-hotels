@@ -51,23 +51,19 @@ export default function decorate(block: HTMLElement): void {
   const { nav: dotNav, dots } = buildDotNav(multiple && showDots ? slides.length : 0);
   const listeners = new AbortController();
   const { signal } = listeners;
-  const play = document.createElement('button');
-  play.type = 'button';
-  play.className = 'split-media-autoplay';
-  play.dataset.testid = 'split-media-autoplay-toggle';
   const updatePause = (paused: boolean): void => {
-    play.textContent = paused ? 'Play' : 'Pause';
-    play.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
-    play.setAttribute('aria-pressed', String(paused));
+    block.setAttribute(
+      'aria-label',
+      paused ? 'Split media slideshow, paused. Press Space to play' : 'Split media slideshow. Press Space to pause',
+    );
   };
-  updatePause(false);
   const slideEls = [...track.children] as HTMLElement[];
   const carousel = new CarouselController({
     slides: slideEls,
     dots,
     intervalSeconds,
     autoplay,
-    onPauseChange: updatePause,
+    onPauseChange: multiple && autoplay ? updatePause : undefined,
   });
   dots.forEach((dot, index) => dot.addEventListener('click', () => carousel.goTo(index), { signal }));
   if (multiple && showControls) {
@@ -76,21 +72,27 @@ export default function decorate(block: HTMLElement): void {
     next.addEventListener('click', () => carousel.next(), { signal });
     block.append(nav);
   }
-  block.classList.toggle('split-media--pagination', Boolean(dots.length || (multiple && autoplay)));
+  block.classList.toggle('split-media--pagination', Boolean(dots.length));
   if (dots.length) block.append(dotNav);
-  if (multiple && autoplay) {
-    play.addEventListener('click', () => carousel.togglePause(), { signal });
-    block.append(play);
-  }
   if (multiple) {
     block.tabIndex = 0;
     block.setAttribute('role', 'region');
     block.setAttribute('aria-roledescription', 'carousel');
-    block.setAttribute('aria-label', 'Split media slideshow');
+    if (autoplay) {
+      block.setAttribute('aria-keyshortcuts', 'Space');
+      updatePause(false);
+    } else {
+      block.setAttribute('aria-label', 'Split media slideshow');
+    }
     block.addEventListener(
       'keydown',
       (event) => {
         if (!(event.target instanceof Element) || event.target.closest(INTERACTIVE_TARGET)) return;
+        if (event.key === ' ' && autoplay) {
+          event.preventDefault();
+          carousel.togglePause();
+          return;
+        }
         if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
         event.preventDefault();
         if (event.key === 'ArrowRight') carousel.next();

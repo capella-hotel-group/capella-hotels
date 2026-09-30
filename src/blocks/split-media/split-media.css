@@ -318,22 +318,6 @@
     user-select: none;
 }
 
-.split-media .split-media-autoplay {
-    position: absolute;
-    z-index: 2;
-    bottom: 12px;
-    right: 12px;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid currentColor;
-    border-radius: 2px;
-    background: rgb(0 0 0 / 45%);
-    color: white;
-    font: inherit;
-    cursor: pointer;
-}
-
 .split-media.split-media--pagination .split-media-item--right .split-media-media {
     padding-bottom: max(80px, var(--dimension-layout-module-padding-inline-s));
 }

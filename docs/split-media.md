@@ -6,9 +6,9 @@ The slide model is unchanged.
 
 - Missing settings enable autoplay, dots and Previous/Next. Explicit `false` is respected.
 - The autoplay interval defaults to 6 seconds and starts after the image/text transition finishes.
-  Manual navigation restarts the full countdown. Pause remains paused until Play is selected.
-- Dots and Previous/Next can be hidden independently. Pause/Play remains available when autoplay
-  is enabled and there is more than one slide.
+  Manual navigation restarts the full countdown.
+- Dots and Previous/Next can be hidden independently. No visible Pause/Play button is rendered.
+  When the carousel has focus, Space pauses or resumes autoplay; the paused state persists.
 - Horizontal mouse/touch gestures work with either navigation group hidden. Release must travel
   at least 40 CSS pixels, farther horizontally than vertically. Taps do not navigate.
 - Left/Right keys navigate when the carousel region is focused. Inactive slides are inert.
@@ -22,14 +22,13 @@ through `npm run build:json` and `npm run build`.
 
 ## Validation, 2026-09-30
 
-- `npm test -- --runInBand`: 62 tests passed, including legacy/new parsing, all four navigation
-  combinations, transition fallback, queued navigation, autoplay restart, Pause, visibility,
+- `npm test -- --runInBand`: tests cover legacy/new parsing, all four navigation
+  combinations, transition fallback, queued navigation, autoplay restart, keyboard pause, visibility,
   reduced motion, resize, gestures, multiple instances and removal/replacement cleanup.
 - `npm run lint`, TypeScript (through `npm run build`), runtime/editor build and JSON generation passed.
 - Native Chrome: CMS `/test-pages/split-media-content-card` at widths 393, 834 and 1440;
-  autoplay, Pause, coordinate clicks on dots, rapid destination changes and breakpoint resize.
-  Buttons measure 32x32 pixels for dots and 44x44 for arrows. Mobile spacing was corrected so
-  Pause is clear of the header and pagination is clear of slide CTAs.
+  autoplay, coordinate clicks on dots, rapid destination changes and breakpoint resize.
+  Buttons measure 32x32 pixels for dots and 44x44 for arrows. Pagination is clear of slide CTAs.
 - Local distinct-slide fixture `/drafts/split-media-hidden`: left/right touch-emulated swipes and
   mouse drag navigate with both navigation groups hidden; taps and vertical gestures do not.
 - Live UE authoring has not been exercised against a pushed branch. Instrumentation retention
