@@ -130,7 +130,9 @@ function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
     const paragraphs = [...contentCell.querySelectorAll<HTMLElement>(':scope > p')];
     const headline = getField(contentCell, 'rightContent_headline') || paragraphs[0];
     const description =
-      getField(contentCell, 'rightContent_description') || contentCell.querySelector<HTMLElement>(':scope > div');
+      getField(contentCell, 'rightContent_description') ||
+      contentCell.querySelector<HTMLElement>(':scope > div') ||
+      paragraphs.find((paragraph) => paragraph !== headline);
 
     const body = document.createElement('div');
     body.className = 'split-media-body';

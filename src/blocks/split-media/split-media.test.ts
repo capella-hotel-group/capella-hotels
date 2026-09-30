@@ -131,4 +131,14 @@ describe('split-media integration', () => {
     expect(element.querySelector('.split-media-track--swipe')).toBeNull();
     expect(element.hasAttribute('tabindex')).toBe(false);
   });
+  it('renders a published richtext description emitted as a second paragraph', () => {
+    const element = block([], 1);
+    const content = element.querySelector<HTMLElement>('[data-aue-model="split-media-slide"] > div:nth-child(4)')!;
+    content.innerHTML = '<p>Nature guide</p><p>Discover the island with Ketut.</p>';
+
+    decorate(element);
+
+    expect(element.querySelector('.split-media-item--right .split-media-headline')?.textContent).toBe('Nature guide');
+    expect(element.querySelector('.split-media-description')?.textContent).toBe('Discover the island with Ketut.');
+  });
 });
