@@ -362,14 +362,18 @@
         flex-direction: column;
         align-items: flex-end;
         gap: var(--dimension-spacing-general-s);
-        max-width: 100%;
+        /* the card hugs its copy; these caps are the Figma widths, so long copy
+           wraps instead of stretching the card across the media */
+        max-width: calc(100% - 64px);
 
         @media (width >= 768px) {
             inset-block-end: -76px;
+            max-width: 369px;
         }
 
         @media (width >= 1200px) {
             inset-block-end: -65px;
+            max-width: 350px;
         }
     }
 
@@ -395,6 +399,9 @@
         flex-direction: column;
         gap: var(--dimension-layout-module-gutter-xs);
         min-width: 0;
+        /* Figma sets word-break on the card's text; long names must not push the
+           card past its cap */
+        overflow-wrap: break-word;
     }
 
     .hotel-architect-card-identity {
