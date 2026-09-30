@@ -1,5 +1,5 @@
 // src/blocks/split-media/lib/parse.test.ts
-import { isItemRow, parseCarouselConfig, parseSlides } from './parse';
+import { isItemRow, parseBlockConfig, parseCarouselConfig, parseSlides } from './parse';
 
 function cell(text: string): HTMLElement {
   const div = document.createElement('div');
@@ -21,9 +21,9 @@ describe('parseCarouselConfig', () => {
     expect(parseCarouselConfig([row(cell('no')), row(cell('6'))]).autoplay).toBe(false);
   });
 
-  it('falls back to false autoplay when the cell is missing or unrecognized', () => {
-    expect(parseCarouselConfig([]).autoplay).toBe(false);
-    expect(parseCarouselConfig([row(cell('maybe')), row(cell('6'))]).autoplay).toBe(false);
+  it('falls back to true autoplay when the cell is missing or unrecognized', () => {
+    expect(parseCarouselConfig([]).autoplay).toBe(true);
+    expect(parseCarouselConfig([row(cell('maybe')), row(cell('6'))]).autoplay).toBe(true);
   });
 
   it('parses a positive numeric interval', () => {
@@ -86,5 +86,50 @@ describe('parseSlides', () => {
 
   it('returns no slides for an empty item list', () => {
     expect(parseSlides([])).toEqual([]);
+  });
+});
+
+describe('parseBlockConfig compatibility', () => {
+  const config = (...values: string[]) => parseBlockConfig(values.map((value) => row(cell(value))));
+  it('defaults existing slide-only CMS content to autoplay with both navigation groups', () => {
+    expect(config()).toEqual({
+      id: '',
+      dataTestId: '',
+      autoplay: true,
+      intervalSeconds: 6,
+      showDots: true,
+      showControls: true,
+    });
+  });
+  it.each([
+    [['hero', 'qa', 'false'], false, 6, true, true],
+    [['hero', 'qa', 'false', '9'], false, 9, true, true],
+    [['hero', 'qa', 'true', '4', 'false', 'true'], true, 4, false, true],
+    [['hero', 'qa', 'false', 'false', 'false'], false, 6, false, false],
+    [['hero', 'qa', 'true', '6seconds', 'true', 'false'], true, 6, true, false],
+    [['hero', 'qa', 'true', 'false', 'true', 'false'], true, 6, true, false],
+  ])('keeps identity and settings aligned for %j', (values, autoplay, intervalSeconds, showDots, showControls) => {
+    expect(config(...values)).toEqual({
+      id: 'hero',
+      dataTestId: 'qa',
+      autoplay,
+      intervalSeconds,
+      showDots,
+      showControls,
+    });
+  });
+  it('reads instrumented fields by name even when reordered or omitted', () => {
+    const controls = row(cell('false'));
+    controls.firstElementChild!.setAttribute('data-aue-prop', 'showControls');
+    const identity = row(cell('hero'));
+    identity.setAttribute('data-aue-prop', 'id');
+    expect(parseBlockConfig([controls, identity])).toEqual({
+      id: 'hero',
+      dataTestId: '',
+      autoplay: true,
+      intervalSeconds: 6,
+      showDots: true,
+      showControls: false,
+    });
   });
 });

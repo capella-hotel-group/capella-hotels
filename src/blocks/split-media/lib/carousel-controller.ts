@@ -5,6 +5,7 @@ export interface CarouselControllerOptions {
   dots: HTMLButtonElement[];
   intervalSeconds: number;
   autoplay: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 interface SlideTransition {
@@ -23,16 +24,20 @@ export class CarouselController {
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   private activeIndex = 0;
   private pendingIndex: number | null = null;
-  private timerId: ReturnType<typeof setInterval> | null = null;
+  private timerId: ReturnType<typeof setTimeout> | null = null;
   private transition: SlideTransition | null = null;
   private resizing = false;
+  private gesturing = false;
+  private paused = false;
+  private readonly onPauseChange?: (paused: boolean) => void;
   private destroyed = false;
 
-  constructor({ slides, dots, intervalSeconds, autoplay }: CarouselControllerOptions) {
+  constructor({ slides, dots, intervalSeconds, autoplay, onPauseChange }: CarouselControllerOptions) {
     this.slides = slides;
     this.dots = dots;
     this.intervalMs = intervalSeconds * 1000;
     this.autoplay = autoplay;
+    this.onPauseChange = onPauseChange;
   }
 
   init(): void {
@@ -45,6 +50,7 @@ export class CarouselController {
   /** Keep just the latest manual destination while the current image/text rhythm finishes. */
   goTo(index: number): void {
     if (this.destroyed || !Number.isInteger(index) || !this.slides[index]) return;
+    this.stop();
     this.pendingIndex = index;
     this.flushPending();
     this.start();
@@ -60,7 +66,24 @@ export class CarouselController {
     this.goTo(((this.pendingIndex ?? this.activeIndex) - 1 + this.slides.length) % this.slides.length);
   }
 
+  togglePause(): void {
+    this.paused = !this.paused;
+    this.onPauseChange?.(this.paused);
+    this.start();
+  }
+
+  beginGesture(): void {
+    this.gesturing = true;
+    this.stop();
+  }
+
+  endGesture(): void {
+    this.gesturing = false;
+    this.start();
+  }
+
   beginResize(): void {
+    this.stop();
     this.resizing = true;
     this.finishTransition();
   }
@@ -68,6 +91,7 @@ export class CarouselController {
   endResize(): void {
     this.resizing = false;
     this.flushPending();
+    this.start();
   }
 
   destroy(): void {
@@ -91,10 +115,13 @@ export class CarouselController {
 
   private updateActive(index: number): void {
     this.activeIndex = index;
-    this.slides.forEach((slide, slideIndex) => slide.setAttribute('aria-hidden', String(slideIndex !== index)));
+    this.slides.forEach((slide, slideIndex) => {
+      slide.setAttribute('aria-hidden', String(slideIndex !== index));
+      slide.toggleAttribute('inert', slideIndex !== index);
+    });
     this.dots.forEach((dot, dotIndex) => {
       dot.classList.toggle('is-active', dotIndex === index);
-      dot.setAttribute('aria-selected', String(dotIndex === index));
+      dot.setAttribute('aria-current', String(dotIndex === index));
     });
   }
 
@@ -156,20 +183,33 @@ export class CarouselController {
       this.transition = null;
     }
     this.flushPending();
+    this.start();
   }
 
   private start(): void {
     this.stop();
-    if (this.destroyed || !this.autoplay || this.slides.length < 2 || this.reducedMotion.matches || document.hidden)
+    if (
+      this.destroyed ||
+      !this.autoplay ||
+      this.paused ||
+      this.gesturing ||
+      this.resizing ||
+      this.transition ||
+      this.pendingIndex !== null ||
+      this.slides.length < 2 ||
+      this.reducedMotion.matches ||
+      document.hidden
+    )
       return;
-    this.timerId = setInterval(() => {
-      if (!this.transition && !this.resizing && this.pendingIndex === null) this.next();
+    this.timerId = setTimeout(() => {
+      this.timerId = null;
+      this.next();
     }, this.intervalMs);
   }
 
   private stop(): void {
     if (this.timerId !== null) {
-      clearInterval(this.timerId);
+      clearTimeout(this.timerId);
       this.timerId = null;
     }
   }
