@@ -1727,7 +1727,7 @@
       },
       {
         "component": "text",
-        "name": "name",
+        "name": "personName",
         "label": "Name",
         "valueType": "string",
         "value": ""
