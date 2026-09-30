@@ -25,9 +25,10 @@ const COPY_ROWS = [
   '<div><div><p><a href="/story">Learn more</a></p><p>true</p></div></div>',
 ].join('');
 
-function imageRow(index: number, overlay: 'true' | 'false', model = false): string {
+function imageRow(index: number, overlay: 'true' | 'false', model = false, thumbnail = ''): string {
   const attribute = model ? ' data-aue-model="hotel-architect-image"' : '';
-  return `<div${attribute}><div><picture><img src="img${index}.jpg" alt="Image ${index}"></picture></div><div>${overlay}</div></div>`;
+  const thumbnailCell = thumbnail ? `<picture><img src="${thumbnail}" alt="Thumb ${index}"></picture>` : '';
+  return `<div${attribute}><div><picture><img src="img${index}.jpg" alt="Image ${index}"></picture></div><div>${thumbnailCell}</div><div>${overlay}</div></div>`;
 }
 
 function cardRow(model = false): string {
@@ -83,11 +84,25 @@ describe('hotel-architect', () => {
   });
 
   it('keeps the overlay on when the flag cell is missing', () => {
-    const block = build(COPY_ROWS + '<div><div><picture><img src="a.jpg"></picture></div></div>');
+    const block = build(COPY_ROWS + '<div><div><picture><img src="a.jpg"></picture></div><div></div></div>');
 
     decorate(block);
 
     expect(block.querySelector('.hotel-architect-slide-no-overlay')).toBeNull();
+  });
+
+  it('falls back to the image when no thumbnail is authored', () => {
+    const block = build(COPY_ROWS + imageRow(1, 'true', false, 'thumb1.jpg') + imageRow(2, 'true'));
+
+    decorate(block);
+
+    const thumbs = block.querySelectorAll<HTMLImageElement>('.hotel-architect-thumb img');
+    expect(thumbs[0]!.getAttribute('src')).toBe('thumb1.jpg');
+    expect(thumbs[1]!.getAttribute('src')).toBe('img2.jpg');
+    // the slides keep their own image either way
+    expect(
+      [...block.querySelectorAll<HTMLImageElement>('.hotel-architect-slide img')].map((img) => img.getAttribute('src')),
+    ).toEqual(['img1.jpg', 'img2.jpg']);
   });
 
   it('steps and wraps through the gallery', () => {
@@ -123,7 +138,9 @@ describe('hotel-architect', () => {
   });
 
   it('renders an empty editor item so a freshly added one stays selectable', () => {
-    const block = build(COPY_ROWS + '<div data-aue-model="hotel-architect-image"><div></div><div>true</div></div>');
+    const block = build(
+      COPY_ROWS + '<div data-aue-model="hotel-architect-image"><div></div><div></div><div>true</div></div>',
+    );
 
     decorate(block);
 

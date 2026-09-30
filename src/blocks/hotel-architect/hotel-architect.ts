@@ -9,10 +9,10 @@ const COPY_FIELDS = ['eyebrow', 'title', 'body', 'primaryCta', 'secondaryCta'] a
 const IMAGE_MODEL = 'hotel-architect-image';
 const CARD_MODEL = 'hotel-architect-card';
 
-// Cell indices mirror the item models; the `*Alt` fields collapse into the cell
-// of the field they suffix and the `cta*` fields group into a single cell, so
-// neither claims an index of its own.
-const IMAGE_CELLS = { image: 0, overlay: 1 } as const;
+// Cell indices mirror the `hotel-architect-card` model; `photoAlt` collapses into
+// the cell of the field it suffixes and the `cta*` fields group into one cell, so
+// neither claims an index of its own. The gallery item is read by cell content
+// instead, because both of its assets are pictures.
 const CARD_CELLS = { photo: 0, name: 1, role: 2, cta: 3 } as const;
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
@@ -41,16 +41,21 @@ function isOverlayEnabled(cell: Element | null | undefined): boolean {
 
 /**
  * In the editor every item row carries its model. Outside it the two item models
- * are told apart by cell count: a gallery image emits the image and the overlay
- * flag, the card emits portrait, name, role and the grouped CTA.
+ * are told apart by cell content: every gallery cell after the image holds either
+ * a picture or the overlay flag, where the card also carries its name and role.
  */
 function itemModelOf(row: HTMLElement): string | null {
   const model = row.dataset.aueModel;
   if (model) return model === IMAGE_MODEL || model === CARD_MODEL ? model : null;
 
   const cells = cellsOf(row);
-  if (cells.length >= 3) return CARD_MODEL;
-  return cells.some((cell) => cell.querySelector('picture, img')) ? IMAGE_MODEL : null;
+  // a block-level field always emits exactly one cell, so it can never be an item
+  if (cells.length < 2) return null;
+
+  const isGalleryCell = (cell: Element): boolean =>
+    !!cell.querySelector('picture, img') || ['', 'true', 'false'].includes(textOf(cell).toLowerCase());
+
+  return cells.slice(1).every(isGalleryCell) ? IMAGE_MODEL : CARD_MODEL;
 }
 
 /** Alt text collapses into the cell of the field it suffixes, arriving as a sibling of the asset. */
@@ -168,24 +173,31 @@ function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElemen
 interface Slide {
   element: HTMLLIElement;
   picture: HTMLElement | null;
+  thumbnail: HTMLElement | null;
   label: string;
 }
 
 function buildSlide(row: HTMLElement, index: number): Slide {
   const cells = cellsOf(row);
-  const imageCell = cells[IMAGE_CELLS.image] ?? row;
+  // both assets arrive as pictures, so they are told apart by order rather than
+  // by index, which would shift whenever a cell is dropped
+  const assetCells = cells.filter((cell) => cell.querySelector('picture'));
+  const [imageCell, thumbnailCell] = assetCells.length ? assetCells : [cells[0] ?? row];
+  const flagCell = cells.find((cell) => ['true', 'false'].includes(textOf(cell).toLowerCase()));
+
   const element = document.createElement('li');
   element.className = 'hotel-architect-slide';
   moveInstrumentation(row, element);
 
   const picture = buildPicture(imageCell);
   if (picture) element.append(picture);
-  if (!isOverlayEnabled(cells[IMAGE_CELLS.overlay])) element.classList.add('hotel-architect-slide-no-overlay');
+  if (!isOverlayEnabled(flagCell)) element.classList.add('hotel-architect-slide-no-overlay');
 
   return {
     element,
     picture,
-    label: altOf(imageCell) || `Show image ${index + 1}`,
+    thumbnail: buildPicture(thumbnailCell),
+    label: altOf(imageCell) || altOf(thumbnailCell) || `Show image ${index + 1}`,
   };
 }
 
@@ -202,14 +214,19 @@ function buildThumbs(slides: Slide[]): HTMLUListElement {
     button.dataset.testid = 'hotel-architect-thumb';
     button.setAttribute('aria-label', slide.label);
 
-    if (slide.picture) {
-      const clone = slide.picture.cloneNode(true) as Element;
-      // the clone would otherwise carry a copy of the item's data-aue-* attributes,
-      // which makes the editor list every gallery item twice in the content tree
-      [clone, ...clone.querySelectorAll('*')].forEach((element) => moveInstrumentation(element, null));
+    // an authored thumbnail is used as-is; without one the slide's own image
+    // stands in, and its copy must shed the item's data-aue-* attributes or the
+    // editor lists every gallery item twice in the content tree
+    let thumbnail = slide.thumbnail;
+    if (!thumbnail && slide.picture) {
+      thumbnail = slide.picture.cloneNode(true) as HTMLElement;
+      [thumbnail, ...thumbnail.querySelectorAll('*')].forEach((element) => moveInstrumentation(element, null));
+    }
+
+    if (thumbnail) {
       // the button is already labelled, so the thumbnail is decorative here
-      clone.querySelector('img')?.setAttribute('alt', '');
-      button.append(clone);
+      thumbnail.querySelector('img')?.setAttribute('alt', '');
+      button.append(thumbnail);
     }
 
     item.append(button);

@@ -1684,22 +1684,27 @@
         "value": ""
       },
       {
-        "component": "select",
+        "component": "reference",
+        "name": "thumbnail",
+        "label": "Thumbnail",
+        "description": "Optional. The image itself is used when this is empty.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnailAlt",
+        "label": "Thumbnail Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
         "name": "overlay",
         "label": "Dark Image Overlay",
-        "description": "Dims the image so the carousel controls stay legible. Enabled by default.",
-        "valueType": "string",
-        "value": "true",
-        "options": [
-          {
-            "name": "Enabled",
-            "value": "true"
-          },
-          {
-            "name": "Disabled",
-            "value": "false"
-          }
-        ]
+        "description": "Dims the image so the carousel controls stay legible.",
+        "valueType": "boolean",
+        "value": true
       }
     ]
   },
