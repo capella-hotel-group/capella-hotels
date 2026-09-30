@@ -46,7 +46,7 @@ describe('CarouselController', () => {
 
       expect(slides[0].getAttribute('aria-hidden')).toBe('false');
       expect(dots[0].classList.contains('is-active')).toBe(true);
-      expect(dots[0].getAttribute('aria-selected')).toBe('true');
+      expect(dots[0].getAttribute('aria-current')).toBe('true');
     });
 
     it('goTo activates the target slide/dot and deactivates the previous one', () => {
@@ -62,7 +62,7 @@ describe('CarouselController', () => {
       expect(slides[2].getAttribute('aria-hidden')).toBe('false');
       expect(dots[0].classList.contains('is-active')).toBe(false);
       expect(dots[2].classList.contains('is-active')).toBe(true);
-      expect(dots[2].getAttribute('aria-selected')).toBe('true');
+      expect(dots[2].getAttribute('aria-current')).toBe('true');
     });
   });
 
@@ -309,6 +309,34 @@ describe('CarouselController', () => {
       finish(slides[0]);
       finish(slides[1]);
       expect(slides[3].getAttribute('aria-hidden')).toBe('false');
+    });
+
+    it('waits a full autoplay interval after the final queued transition completes', () => {
+      const { slides, carousel } = setup(4, true, 6);
+      carousel.next();
+      carousel.goTo(3);
+      jest.advanceTimersByTime(3100);
+      expect(slides[3].getAttribute('aria-hidden')).toBe('false');
+      jest.advanceTimersByTime(5999);
+      expect(slides[3].getAttribute('aria-hidden')).toBe('false');
+      jest.advanceTimersByTime(1);
+      expect(slides[0].getAttribute('aria-hidden')).toBe('false');
+    });
+
+    it('suspends autoplay during gestures and resize, then starts one fresh countdown', () => {
+      const { slides, carousel } = setup(3, true, 6);
+      carousel.beginGesture();
+      jest.advanceTimersByTime(10000);
+      expect(slides[0].getAttribute('aria-hidden')).toBe('false');
+      carousel.endGesture();
+      jest.advanceTimersByTime(5000);
+      carousel.beginResize();
+      jest.advanceTimersByTime(10000);
+      expect(slides[0].getAttribute('aria-hidden')).toBe('false');
+      carousel.endResize();
+      expect(jest.getTimerCount()).toBe(1);
+      jest.advanceTimersByTime(6000);
+      expect(slides[1].getAttribute('aria-hidden')).toBe('false');
     });
 
     it('settles a cancelled transition and consumes the latest queued target', () => {

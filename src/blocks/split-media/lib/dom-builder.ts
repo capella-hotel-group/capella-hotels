@@ -1,5 +1,5 @@
 // src/blocks/split-media/lib/dom-builder.ts
-import { moveInstrumentation } from '@/app/scripts.js';
+import { moveInstrumentation } from '@/app/scripts';
 import type { SplitMediaPanel, SplitMediaSlide } from './types';
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
@@ -185,11 +185,11 @@ export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement
   return li;
 }
 
-/** Builds `count` dot buttons inside a tablist nav. Callers wire click handlers and decide whether to append the nav. */
+/** Builds `count` dot buttons inside a labelled group. Callers wire click handlers and decide whether to append the nav. */
 export function buildDotNav(count: number): { nav: HTMLDivElement; dots: HTMLButtonElement[] } {
   const nav = document.createElement('div');
   nav.className = 'split-media-dots';
-  nav.setAttribute('role', 'tablist');
+  nav.setAttribute('role', 'group');
   nav.setAttribute('aria-label', 'Slides');
 
   const dots: HTMLButtonElement[] = [];
@@ -197,7 +197,7 @@ export function buildDotNav(count: number): { nav: HTMLDivElement; dots: HTMLBut
     const dot = document.createElement('button');
     dot.type = 'button';
     dot.className = 'split-media-dot';
-    dot.setAttribute('role', 'tab');
+    dot.dataset.testid = 'split-media-dot';
     dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
     dots.push(dot);
     nav.append(dot);

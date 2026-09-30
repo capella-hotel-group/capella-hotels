@@ -262,6 +262,8 @@
 }
 
 .split-media .split-media-nav {
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -276,33 +278,70 @@
 .split-media .split-media-dots {
     position: absolute;
     z-index: 2;
-    bottom: var(--dimension-spacing-general-l);
+    bottom: 18px;
     left: 50%;
     display: flex;
-    gap: var(--dimension-spacing-general-xs);
+    gap: 4px;
     transform: translateX(-50%);
 }
 
 .split-media .split-media-dot {
-    position: relative;
-    width: var(--dimension-spacing-general-xs);
-    height: var(--dimension-spacing-general-xs);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
     padding: 0;
     border: none;
-    border-radius: var(--corner-radius-round);
-    background: var(--color-icon-action-opaque-inverse);
+    border-radius: 50%;
+    background: transparent;
     cursor: pointer;
 }
 
-/* enlarges the tappable area well past the small visual dot without affecting spacing */
 .split-media .split-media-dot::before {
     content: '';
-    position: absolute;
-    inset: -14px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-icon-action-opaque-inverse);
+    pointer-events: none;
 }
 
-.split-media .split-media-dot.is-active {
+.split-media .split-media-dot.is-active::before {
     background: var(--color-icon-on-action-default);
+}
+
+.split-media .split-media-track--swipe {
+    touch-action: pan-y pinch-zoom;
+}
+
+.split-media .split-media-track--swipe img {
+    user-select: none;
+}
+
+.split-media .split-media-autoplay {
+    position: absolute;
+    z-index: 2;
+    bottom: 12px;
+    right: 12px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    background: rgb(0 0 0 / 45%);
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.split-media.split-media--pagination .split-media-item--right .split-media-media {
+    padding-bottom: max(80px, var(--dimension-layout-module-padding-inline-s));
+}
+
+.split-media button:focus-visible,
+.split-media:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
 }
 
 @media (width >= 768px) {
