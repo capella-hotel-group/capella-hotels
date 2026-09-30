@@ -9,12 +9,6 @@ const COPY_FIELDS = ['eyebrow', 'title', 'body', 'primaryCta', 'secondaryCta'] a
 const IMAGE_MODEL = 'hotel-architect-image';
 const CARD_MODEL = 'hotel-architect-card';
 
-// Cell indices mirror the `hotel-architect-card` model; `photoAlt` collapses into
-// the cell of the field it suffixes and the `cta*` fields group into one cell, so
-// neither claims an index of its own. The gallery item is read by cell content
-// instead, because both of its assets are pictures.
-const CARD_CELLS = { photo: 0, name: 1, role: 2, cta: 3 } as const;
-
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
 // so the stylesheet owns the colour.
 const ARROW_PATHS: Record<'prev' | 'next', string> = {
@@ -49,8 +43,10 @@ function itemModelOf(row: HTMLElement): string | null {
   if (model) return model === IMAGE_MODEL || model === CARD_MODEL ? model : null;
 
   const cells = cellsOf(row);
-  // a block-level field always emits exactly one cell, so it can never be an item
-  if (cells.length < 2) return null;
+  if (!cells.length) return null;
+
+  // none of this block's own fields is an asset, so a lone picture is a gallery item
+  if (cells.length === 1) return cells[0]!.querySelector('picture, img') ? IMAGE_MODEL : null;
 
   const isGalleryCell = (cell: Element): boolean =>
     !!cell.querySelector('picture, img') || ['', 'true', 'false'].includes(textOf(cell).toLowerCase());
@@ -120,31 +116,45 @@ function buildCopy(row: Element | undefined, field: string): HTMLElement | null 
   return wrapper;
 }
 
+/** Splits a node's own children at every direct `<br>`, or null when there is none. */
+function linesOf(node: Element): DocumentFragment[] | null {
+  if (![...node.childNodes].some((child) => child.nodeName === 'BR')) return null;
+
+  const lines = [document.createDocumentFragment()];
+  [...node.childNodes].forEach((child) => {
+    if (child.nodeName === 'BR') lines.push(document.createDocumentFragment());
+    else lines[lines.length - 1]!.append(child);
+  });
+
+  return lines.filter((line) => line.textContent?.trim());
+}
+
+function wrapLines(lines: DocumentFragment[], tagName: string): HTMLElement[] {
+  return lines.map((line) => {
+    // a fresh element rather than a clone, so no data-aue-* attribute is duplicated
+    const element = document.createElement(tagName);
+    element.append(line);
+    return element;
+  });
+}
+
 /**
- * Rewrites `<p>one<br>two</p>` as `<p>one</p><p>two</p>` so a heading written with
- * soft breaks lines up with one written as separate paragraphs. The stylesheet
- * indents the second child, which only works when each line is its own element.
+ * Rewrites soft breaks as one paragraph per line so a heading written with `<br>`
+ * lines up with one written as separate paragraphs. The stylesheet indents the
+ * second child, which only works when each line is its own element. The breaks sit
+ * either inside a paragraph or, when the field holds a single line of rich text,
+ * directly in the authored cell.
  */
 function splitOnLineBreaks(container: Element): void {
+  const ownLines = linesOf(container);
+  if (ownLines) {
+    container.replaceChildren(...wrapLines(ownLines, 'p'));
+    return;
+  }
+
   [...container.children].forEach((element) => {
-    if (!element.querySelector('br')) return;
-
-    const lines = [document.createDocumentFragment()];
-    [...element.childNodes].forEach((node) => {
-      if (node.nodeName === 'BR') lines.push(document.createDocumentFragment());
-      else lines[lines.length - 1]!.append(node);
-    });
-
-    const paragraphs = lines
-      .filter((line) => line.textContent?.trim())
-      .map((line) => {
-        // a fresh element rather than a clone, so no data-aue-* attribute is duplicated
-        const paragraph = document.createElement(element.tagName);
-        paragraph.append(line);
-        return paragraph;
-      });
-
-    if (paragraphs.length) element.replaceWith(...paragraphs);
+    const lines = linesOf(element);
+    if (lines?.length) element.replaceWith(...wrapLines(lines, element.tagName));
   });
 }
 
@@ -257,12 +267,17 @@ function buildDots(slides: Slide[]): HTMLOListElement {
 
 function buildCard(row: HTMLElement): HTMLElement {
   const cells = cellsOf(row);
+  // an empty text field drops its cell from the delivered row, so the portrait and
+  // the CTA are found by what they hold and the name and role are what is left
+  const photoCell = cells.find((cell) => cell.querySelector('picture'));
+  const ctaCell = cells.find((cell) => cell.querySelector('a[href]'));
+  const textCells = cells.filter((cell) => cell !== photoCell && cell !== ctaCell && hasContent(cell));
+
   const card = document.createElement('div');
   card.className = 'hotel-architect-card';
   card.dataset.testid = 'hotel-architect-card';
   moveInstrumentation(row, card);
 
-  const photoCell = cells[CARD_CELLS.photo];
   const picture = buildPicture(photoCell);
   if (picture) {
     const figure = document.createElement('div');
@@ -279,9 +294,9 @@ function buildCard(row: HTMLElement): HTMLElement {
   identity.className = 'hotel-architect-card-identity';
   content.append(identity);
 
-  (['name', 'role'] as const).forEach((field) => {
-    const cell = cells[CARD_CELLS[field]];
-    if (!hasContent(cell)) return;
+  (['name', 'role'] as const).forEach((field, index) => {
+    const cell = textCells[index];
+    if (!cell) return;
     const element = document.createElement('p');
     element.className = `hotel-architect-card-${field}`;
     moveInstrumentation(cell, element);
@@ -289,7 +304,7 @@ function buildCard(row: HTMLElement): HTMLElement {
     identity.append(element);
   });
 
-  const link = buildLink(cells[CARD_CELLS.cta], 'hotel-architect-card-cta');
+  const link = buildLink(ctaCell, 'hotel-architect-card-cta');
   if (link) {
     const cta = document.createElement('div');
     cta.className = 'hotel-architect-card-cta';

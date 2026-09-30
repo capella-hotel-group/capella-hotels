@@ -15,25 +15,29 @@ jest.mock(
   { virtual: true },
 );
 
+// Mirrors the markup the pipeline actually delivers: rich text arrives unwrapped
+// with soft breaks, and a CTA group emits its label, link and flag as siblings.
 const COPY_ROWS = [
   '<div><div>the-architect</div></div>',
   '<div><div>architect-qa</div></div>',
   '<div><div>THE RESORT</div></div>',
-  '<div><div><p>RED EARTH,</p><p>GREEN CANOPY</p></div></div>',
-  '<div><div><p>Outside, 30 acres of lush landscapes.</p></div></div>',
-  '<div><div><p><a href="/book">Book your stay</a></p><p>false</p></div></div>',
-  '<div><div><p><a href="/story">Learn more</a></p><p>true</p></div></div>',
+  '<div><div>RED EARTH,<br>GREEN CANOPY</div></div>',
+  '<div><div>Outside, 30 acres of lush landscapes.</div></div>',
+  '<div><div><p>Book your stay</p><p><a href="/book">/book</a></p><p>false</p></div></div>',
+  '<div><div><p>Learn more</p><p><a href="/story">/story</a></p><p>true</p></div></div>',
 ].join('');
 
 function imageRow(index: number, overlay: 'true' | 'false', model = false, thumbnail = ''): string {
   const attribute = model ? ' data-aue-model="hotel-architect-image"' : '';
-  const thumbnailCell = thumbnail ? `<picture><img src="${thumbnail}" alt="Thumb ${index}"></picture>` : '';
-  return `<div${attribute}><div><picture><img src="img${index}.jpg" alt="Image ${index}"></picture></div><div>${thumbnailCell}</div><div>${overlay}</div></div>`;
+  // an empty reference keeps its cell, an empty text field drops it
+  const thumbnailCell = thumbnail ? `<div><picture><img src="${thumbnail}" alt="Thumb ${index}"></picture></div>` : '';
+  return `<div${attribute}><div><picture><img src="img${index}.jpg" alt="Image ${index}"></picture></div>${thumbnailCell}<div>${overlay}</div></div>`;
 }
 
-function cardRow(model = false): string {
+function cardRow(model = false, name = 'Andre Fu'): string {
   const attribute = model ? ' data-aue-model="hotel-architect-card"' : '';
-  return `<div${attribute}><div><picture><img src="fu.jpg" alt="Andre Fu"></picture></div><div>Andre Fu</div><div>The architect in his own words</div><div><p><a href="/architect">Discover</a></p><p>false</p></div></div>`;
+  const nameCell = name ? `<div>${name}</div>` : '';
+  return `<div${attribute}><div><picture><img src="fu.jpg" alt="Andre Fu"></picture></div>${nameCell}<div>The architect in his own words</div><div><p>Discover</p><p><a href="/architect">/architect</a></p><p>false</p></div></div>`;
 }
 
 function build(rows: string): HTMLElement {
@@ -89,6 +93,19 @@ describe('hotel-architect', () => {
     decorate(block);
 
     expect(block.querySelector('.hotel-architect-slide-no-overlay')).toBeNull();
+  });
+
+  it('reads the card by cell content when an empty text field drops its cell', () => {
+    const block = build(COPY_ROWS + imageRow(1, 'true') + cardRow(false, ''));
+
+    decorate(block);
+
+    const card = block.querySelector('.hotel-architect-card')!;
+    expect(card.querySelector('.hotel-architect-card-name')?.textContent).toBe('The architect in his own words');
+    expect(card.querySelector('.hotel-architect-card-role')).toBeNull();
+    expect(card.querySelector('a')?.getAttribute('href')).toBe('/architect');
+    expect(card.querySelector('a')?.textContent).toBe('Discover');
+    expect(card.querySelector('.hotel-architect-card-photo img')?.getAttribute('src')).toBe('fu.jpg');
   });
 
   it('falls back to the image when no thumbnail is authored', () => {
