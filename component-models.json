@@ -1577,6 +1577,180 @@
     ]
   },
   {
+    "id": "hotel-architect",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Component Anchor ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "description": "One paragraph per line. The second line is indented, as in the design.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "body",
+        "label": "Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "primaryCta",
+        "label": "Primary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "primaryCta_link",
+        "label": "Primary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "primaryCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "secondaryCta",
+        "label": "Secondary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "secondaryCta_link",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "secondaryCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "hotel-architect-image",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Image Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "overlay",
+        "label": "Dark Image Overlay",
+        "description": "Dims the image so the carousel controls stay legible. Enabled by default.",
+        "valueType": "string",
+        "value": "true",
+        "options": [
+          {
+            "name": "Enabled",
+            "value": "true"
+          },
+          {
+            "name": "Disabled",
+            "value": "false"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hotel-architect-card",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "photo",
+        "label": "Portrait",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "photoAlt",
+        "label": "Portrait Alt Text",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Name",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "role",
+        "label": "Role",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "cta",
+        "label": "CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "label": "CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "interactive-asset",
     "fields": [
       {
