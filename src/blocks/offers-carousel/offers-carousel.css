@@ -94,8 +94,9 @@
     --card-x: -50%;
     --card-y: 0px;
     --card-shift: 0px;
-    --card-move-duration: 0.32s;
+    --card-move-duration: 0.55s;
     --card-move-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --card-leave-easing: cubic-bezier(0.55, 0, 1, 0.45);
 
     position: absolute;
     top: 0;
@@ -254,6 +255,8 @@
     top: calc((var(--card-count) - 1) * var(--card-step));
     width: min(320px, 100%);
     height: 328px;
+    /* the front card is already the one being read, so clicking it leads nowhere */
+    cursor: default;
     opacity: 1;
     pointer-events: auto;
 }
@@ -290,14 +293,50 @@
     opacity: 0;
     pointer-events: none;
     transition:
-        opacity 0.22s ease-in,
-        transform 0.22s cubic-bezier(0.55, 0, 1, 0.45);
+        opacity 0.42s ease-in,
+        transform 0.42s var(--card-leave-easing);
 }
 
 /* Part two: the card takes the rear slot with transitions off, then the block drops this class
    so it rises into place and fades back in. */
 .offers-carousel .offers-carousel-card.is-entering {
     --card-shift: 56px;
+
+    opacity: 0;
+    transition: none;
+}
+
+/* Intermediate hops of a multi-step move: constant speed, each hop lasting exactly as long as the
+   gap between two steps. Duration is mirrored by STEP_INTERVAL_MS in the block. */
+.offers-carousel .offers-carousel-cards.is-chaining .offers-carousel-card {
+    --card-move-duration: 0.29s;
+    --card-move-easing: linear;
+}
+
+/* Intro reveal: the stack is inert and runs slower than a swipe while the cards assemble.
+   Duration is mirrored by INTRO_DURATION_MS in the block. */
+.offers-carousel .offers-carousel-cards.is-intro {
+    /* the clip margin lets the front card rise from below its slot without being cut off,
+       unlike the plain overflow clipping the stack uses at rest */
+    overflow: clip;
+    overflow-clip-margin: 240px;
+}
+
+.offers-carousel .offers-carousel-cards.is-intro .offers-carousel-card {
+    --card-move-duration: 1.2s;
+
+    pointer-events: none;
+    /* the fade finishes early so each card is solid for most of its flight and never blends
+       into the one behind it */
+    transition:
+        opacity 0.3s ease-out,
+        transform var(--card-move-duration) var(--card-move-easing);
+}
+
+/* Each card waits below its slot; the block removes this class with a per-card transition-delay
+   so they rise and fade in one after another. */
+.offers-carousel .offers-carousel-cards.is-intro .offers-carousel-card.is-intro-pending {
+    --card-shift: 180px;
 
     opacity: 0;
     transition: none;
