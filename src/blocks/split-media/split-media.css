@@ -1,7 +1,7 @@
 /* Geometry mirrors the Figma "Content-card/split/media" frames 7806:56072 (393),
    7806:55969 (834) and 7806:55712 (1440) — two stacked panels on mobile/tablet,
    two side-by-side panels on desktop. Slides are stacked absolutely inside a
-   fixed-aspect-ratio track; only the panels themselves move to animate a transition. */
+   viewport-height track; only the panels themselves move to animate a transition. */
 
 .split-media {
     --split-media-panel-duration: 1200ms;
@@ -19,7 +19,8 @@
 
 .split-media .split-media-track {
     position: relative;
-    aspect-ratio: 393 / 852;
+    height: 100vh;
+    height: 100dvh;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -27,7 +28,14 @@
     list-style: none;
 }
 
-/* extra slides/panels past the model's own limits stay in the DOM for the editor only */
+/* Declared once and never swapped mid-gesture: the block drives vertical movement itself, so the
+   compositor must not commit a page scroll before the first touchmove has been classified.
+   pinch-zoom stays available for WCAG 1.4.4. */
+.split-media .split-media-track--scroll {
+    touch-action: pan-x pinch-zoom;
+}
+
+/* Retain unconsumed authored configuration without affecting layout. */
 .split-media .split-media-hidden {
     display: none;
 }
@@ -90,7 +98,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 0 var(--dimension-layout-module-padding-inline-s) var(--dimension-layout-module-padding-inline-s);
+    padding: var(--dimension-layout-module-padding-inline-s);
 }
 
 .split-media .split-media-media::after {
@@ -120,11 +128,20 @@
 .split-media .split-media-overlay {
     position: relative;
     z-index: 1;
+    min-height: 0;
+    max-height: 100%;
     color: var(--color-text-main-inverse-heading);
     opacity: 0;
     transform: translateY(var(--split-media-text-offset));
     will-change: opacity, transform;
     transition: none;
+}
+
+/* Added by JS only while the copy really overflows. A permanent scroll container would swallow page
+   scrolling through overscroll containment whenever the pointer sits over copy that fits. */
+.split-media .split-media-overlay--scrollable {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
 }
 
 /* Text starts as the panel approaches its resting position, connecting the two motions. */
@@ -217,6 +234,7 @@
     display: flex;
     align-items: center;
     gap: var(--dimension-spacing-general-m);
+    flex-wrap: wrap;
 }
 
 /* the open-in-new-tab booleans and the paragraphs the links were lifted out of */
@@ -248,107 +266,12 @@
     background: var(--color-stroke-action-inverse-default);
 }
 
-.split-media .split-media-controls {
-    position: absolute;
-    z-index: 2;
-    inset-inline: 0;
-    top: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-inline: var(--dimension-spacing-general-s);
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-.split-media .split-media-nav {
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--color-icon-action-opaque-inverse);
-    cursor: pointer;
-    pointer-events: auto;
-}
-
-.split-media .split-media-dots {
-    position: absolute;
-    z-index: 2;
-    bottom: 18px;
-    left: 50%;
-    display: flex;
-    gap: 4px;
-    transform: translateX(-50%);
-}
-
-.split-media .split-media-dot {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    cursor: pointer;
-}
-
-.split-media .split-media-dot::before {
-    content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-icon-action-opaque-inverse);
-    pointer-events: none;
-}
-
-.split-media .split-media-dot.is-active::before {
-    background: var(--color-icon-on-action-default);
-}
-
-.split-media .split-media-track--swipe {
-    touch-action: pan-y pinch-zoom;
-}
-
-.split-media .split-media-track--swipe img {
-    user-select: none;
-}
-
-.split-media .split-media-autoplay {
-    position: absolute;
-    z-index: 2;
-    bottom: 12px;
-    right: 12px;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid currentColor;
-    border-radius: 2px;
-    background: rgb(0 0 0 / 45%);
-    color: white;
-    font: inherit;
-    cursor: pointer;
-}
-
-.split-media.split-media--pagination .split-media-item--right .split-media-media {
-    padding-bottom: max(80px, var(--dimension-layout-module-padding-inline-s));
-}
-
-.split-media button:focus-visible,
 .split-media:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: -2px;
 }
 
 @media (width >= 768px) {
-    .split-media .split-media-track {
-        aspect-ratio: 834 / 1194;
-    }
-
     /* tablet+desktop lay the heading and the description+links out as two side-by-side
        columns; mobile keeps them stacked (the body's own flex column above) */
     .split-media .split-media-item--right .split-media-body {
@@ -361,10 +284,6 @@
 @media (width >= 1200px) {
     .split-media {
         --split-media-panel-stagger: 0ms;
-    }
-
-    .split-media .split-media-track {
-        aspect-ratio: 1440 / 900;
     }
 
     .split-media .split-media-slide {
@@ -417,4 +336,57 @@
     .split-media .split-media-slide[aria-hidden] .split-media-overlay {
         transition: none;
     }
+}
+
+.split-media .split-media-description > * + * {
+    margin-top: 1em;
+}
+
+.split-media .split-media-description :is(ul, ol) {
+    padding-inline-start: 1.5em;
+}
+
+.split-media .split-media-description a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.split-media .split-media-overlay:focus-visible,
+.split-media a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+}
+
+.split-media .split-media-placeholder {
+    display: none;
+}
+
+.adobe-ue-edit .split-media .split-media-track {
+    height: auto;
+    overflow: visible;
+}
+
+.adobe-ue-edit .split-media .split-media-slide {
+    position: relative;
+    height: 100vh;
+    height: 100dvh;
+    pointer-events: auto;
+}
+
+.adobe-ue-edit .split-media .split-media-slide .split-media-item,
+.adobe-ue-edit .split-media .split-media-slide .split-media-overlay {
+    transform: none;
+    opacity: 1;
+    transition: none;
+}
+
+.adobe-ue-edit .split-media .split-media-placeholder {
+    display: block;
+    position: absolute;
+    inset: 40% 10% auto;
+    z-index: 1;
+    padding: 1rem;
+    background: white;
+    color: black;
+    text-align: center;
 }

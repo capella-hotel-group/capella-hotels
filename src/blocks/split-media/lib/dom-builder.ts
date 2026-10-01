@@ -2,13 +2,6 @@
 import { moveInstrumentation } from '@/app/scripts';
 import type { SplitMediaPanel, SplitMediaSlide } from './types';
 
-// Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
-// so the stylesheet owns the colour. Shared with destination-introduction's nav.
-const ARROW_PATHS: Record<'prev' | 'next', string> = {
-  prev: 'M19.71 4C15.98 7.16 12.47 10.56 9 14C10.79 15.78 12.59 17.56 14.44 19.27C15.96 20.68 18.13 22.69 19.71 24C16.71 20.46 11 14 11 14C11 14 18.2116 5.76279 19.71 4Z',
-  next: 'M9 4C12.73 7.16 16.24 10.56 19.71 14C17.92 15.78 16.12 17.56 14.27 19.27C12.75 20.68 10.58 22.69 9 24C12 20.46 17.5 14 17.5 14C17.5 14 10.4984 5.76279 9 4Z',
-};
-
 function isEnabled(value: string): boolean {
   return ['true', 'yes', 'enabled'].includes(value.trim().toLowerCase());
 }
@@ -129,19 +122,23 @@ function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
   if (contentCell) {
     const paragraphs = [...contentCell.querySelectorAll<HTMLElement>(':scope > p')];
     const headline = getField(contentCell, 'rightContent_headline') || paragraphs[0];
-    const description =
-      getField(contentCell, 'rightContent_description') || contentCell.querySelector<HTMLElement>(':scope > div');
+    const authoredDescription = getField(contentCell, 'rightContent_description');
 
     const body = document.createElement('div');
     body.className = 'split-media-body';
     body.append(buildHeading(undefined, headline, true));
+
+    // Published richtext can be several sibling paragraphs/lists, not one wrapper.
+    // Move the original nodes after extracting the headline to retain all formatting.
+    const description = authoredDescription || document.createElement('div');
+    if (!authoredDescription) description.append(...contentCell.childNodes);
 
     // description+links sit in their own group so tablet/desktop can lay it out as the
     // heading's second grid column, matching Figma
     const copy = document.createElement('div');
     copy.className = 'split-media-copy';
 
-    if (description) {
+    if (authoredDescription || description.textContent?.trim() || description.querySelector('img, br')) {
       description.classList.add('split-media-description');
       copy.append(description);
     }
@@ -182,60 +179,11 @@ export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement
     slot.append(panel);
     li.append(slot);
   });
-  return li;
-}
-
-/** Builds `count` dot buttons inside a labelled group. Callers wire click handlers and decide whether to append the nav. */
-export function buildDotNav(count: number): { nav: HTMLDivElement; dots: HTMLButtonElement[] } {
-  const nav = document.createElement('div');
-  nav.className = 'split-media-dots';
-  nav.setAttribute('role', 'group');
-  nav.setAttribute('aria-label', 'Slides');
-
-  const dots: HTMLButtonElement[] = [];
-  for (let index = 0; index < count; index += 1) {
-    const dot = document.createElement('button');
-    dot.type = 'button';
-    dot.className = 'split-media-dot';
-    dot.dataset.testid = 'split-media-dot';
-    dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
-    dots.push(dot);
-    nav.append(dot);
+  if (!li.querySelector('img') && !li.textContent?.trim()) {
+    const placeholder = document.createElement('p');
+    placeholder.className = 'split-media-placeholder';
+    placeholder.textContent = 'Add images and text to this slide';
+    li.append(placeholder);
   }
-
-  return { nav, dots };
-}
-
-function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = `split-media-nav split-media-nav-${direction}`;
-  button.dataset.testid = direction === 'prev' ? 'split-media-previous' : 'split-media-next';
-  button.setAttribute('aria-label', label);
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 28 28');
-  svg.setAttribute('width', '28');
-  svg.setAttribute('height', '28');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('fill', 'currentColor');
-  path.setAttribute('d', ARROW_PATHS[direction]);
-  svg.append(path);
-  button.append(svg);
-
-  return button;
-}
-
-/** Builds the prev/next arrow pair. Callers wire click handlers and decide whether to append the nav. */
-export function buildArrowNav(): { nav: HTMLDivElement; prev: HTMLButtonElement; next: HTMLButtonElement } {
-  const nav = document.createElement('div');
-  nav.className = 'split-media-controls';
-
-  const prev = buildArrow('prev', 'Previous slide');
-  const next = buildArrow('next', 'Next slide');
-  nav.append(prev, next);
-
-  return { nav, prev, next };
+  return li;
 }

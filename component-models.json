@@ -2115,34 +2115,6 @@
         "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
         "value": "",
         "placeholder": "split-media"
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "autoplay",
-        "label": "Autoplay",
-        "value": true
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "autoplayInterval",
-        "label": "Autoplay Interval (seconds)",
-        "value": "6"
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "showDots",
-        "label": "Show Dots",
-        "value": true
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "showControls",
-        "label": "Show Previous/Next Controls",
-        "value": true
       }
     ]
   },

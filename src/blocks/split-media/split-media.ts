@@ -1,12 +1,32 @@
 import { CarouselController } from './lib/carousel-controller';
-import { buildArrowNav, buildDotNav, buildSlide } from './lib/dom-builder';
-import { bindGestures, INTERACTIVE_TARGET } from './lib/gesture';
+import { buildSlide } from './lib/dom-builder';
+import { INTERACTIVE_TARGET } from './lib/gesture';
 import { isItemRow, parseBlockConfig, parseSlides } from './lib/parse';
+import { registerScrollController } from './lib/scroll-controller';
 import { suppressTransitionsDuringResize } from './lib/resize-guard';
 
 // A single observer covers all instances, including UE replacing children in place.
 const instances = new Map<HTMLElement, { track: HTMLElement; cleanup: () => void }>();
 let removalObserver: MutationObserver | undefined;
+
+// Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard. A copy that fits
+// must stay out of the way: a scroll container would swallow page scrolling via overscroll containment.
+function syncCopyFocus(slides: HTMLElement[]): void {
+  slides.forEach((slide) => {
+    slide.querySelectorAll<HTMLElement>('.split-media-overlay').forEach((overlay) => {
+      const scrollable = overlay.scrollHeight > overlay.clientHeight + 1;
+      overlay.classList.toggle('split-media-overlay--scrollable', scrollable);
+      if (scrollable) {
+        overlay.tabIndex = 0;
+        overlay.setAttribute('role', 'group');
+      } else {
+        overlay.removeAttribute('tabindex');
+        overlay.removeAttribute('role');
+      }
+    });
+  });
+}
+
 function observeRemoval(block: HTMLElement, track: HTMLElement, cleanup: () => void): void {
   instances.set(block, { track, cleanup });
   removalObserver ??= new MutationObserver(() => {
@@ -30,7 +50,7 @@ export default function decorate(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
   const itemRows = rows.filter(isItemRow);
   const configRows = rows.filter((row) => !itemRows.includes(row));
-  const { autoplay, intervalSeconds, showDots, showControls, id, dataTestId } = parseBlockConfig(configRows);
+  const { id, dataTestId } = parseBlockConfig(configRows);
   if (id) block.id = id.replace(/^#/, '');
   if (dataTestId) block.dataset.testId = dataTestId;
   configRows.forEach((row) => row.classList.add('split-media-hidden'));
@@ -48,40 +68,15 @@ export default function decorate(block: HTMLElement): void {
   block.append(track);
 
   const multiple = slides.length > 1;
-  const { nav: dotNav, dots } = buildDotNav(multiple && showDots ? slides.length : 0);
+  const editing = Boolean(block.closest('.adobe-ue-edit'));
   const listeners = new AbortController();
   const { signal } = listeners;
-  const play = document.createElement('button');
-  play.type = 'button';
-  play.className = 'split-media-autoplay';
-  play.dataset.testid = 'split-media-autoplay-toggle';
-  const updatePause = (paused: boolean): void => {
-    play.textContent = paused ? 'Play' : 'Pause';
-    play.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
-    play.setAttribute('aria-pressed', String(paused));
-  };
-  updatePause(false);
   const slideEls = [...track.children] as HTMLElement[];
-  const carousel = new CarouselController({
-    slides: slideEls,
-    dots,
-    intervalSeconds,
-    autoplay,
-    onPauseChange: updatePause,
-  });
-  dots.forEach((dot, index) => dot.addEventListener('click', () => carousel.goTo(index), { signal }));
-  if (multiple && showControls) {
-    const { nav, prev, next } = buildArrowNav();
-    prev.addEventListener('click', () => carousel.previous(), { signal });
-    next.addEventListener('click', () => carousel.next(), { signal });
-    block.append(nav);
-  }
-  block.classList.toggle('split-media--pagination', Boolean(dots.length || (multiple && autoplay)));
-  if (dots.length) block.append(dotNav);
-  if (multiple && autoplay) {
-    play.addEventListener('click', () => carousel.togglePause(), { signal });
-    block.append(play);
-  }
+  const carousel = new CarouselController(slideEls);
+  carousel.init();
+  const scroll = registerScrollController(block, carousel);
+  if (multiple && !editing) track.classList.add('split-media-track--scroll');
+  syncCopyFocus(slideEls);
   if (multiple) {
     block.tabIndex = 0;
     block.setAttribute('role', 'region');
@@ -90,44 +85,37 @@ export default function decorate(block: HTMLElement): void {
     block.addEventListener(
       'keydown',
       (event) => {
+        if (editing || event.target !== block || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
         if (!(event.target instanceof Element) || event.target.closest(INTERACTIVE_TARGET)) return;
-        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-        event.preventDefault();
-        if (event.key === 'ArrowRight') carousel.next();
-        else carousel.previous();
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        if (carousel.requestStep(event.key === 'ArrowDown' ? 1 : -1) !== 'edge') event.preventDefault();
       },
       { signal },
     );
   }
-  const gesture = multiple
-    ? bindGestures(track, {
-        next: () => carousel.next(),
-        previous: () => carousel.previous(),
-        begin: () => carousel.beginGesture(),
-        end: () => carousel.endGesture(),
-      })
-    : undefined;
-  if (gesture) track.classList.add('split-media-track--swipe');
   const clearResize = suppressTransitionsDuringResize(block, {
     onStart: () => {
       carousel.beginResize();
-      gesture?.cancel();
+      scroll.cancel();
     },
-    onEnd: () => carousel.endResize(),
+    onEnd: () => {
+      carousel.endResize();
+      scroll.resize();
+      syncCopyFocus(slideEls);
+    },
   });
   block.addEventListener(
     'aue:ui-select',
     (event) => {
       const index = slideEls.findIndex((slide) => event.target instanceof Node && slide.contains(event.target));
-      if (index >= 0) carousel.goTo(index);
+      if (index >= 0) carousel.select(index);
     },
     { signal },
   );
-  carousel.init();
   observeRemoval(block, track, () => {
+    scroll.cleanup();
     carousel.destroy();
     listeners.abort();
     clearResize();
-    gesture?.cleanup();
   });
 }

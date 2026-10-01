@@ -1,100 +1,80 @@
 import { bindGestures } from './gesture';
 
-function pointer(target: EventTarget, type: string, x: number, y = 0, id = 1): void {
-  const event = new Event(type, { bubbles: true, cancelable: true });
-  Object.assign(event, { clientX: x, clientY: y, pointerId: id, button: 0 });
+function pointer(target: EventTarget, type: string, x: number, y: number, extra = {}) {
+  const event = new MouseEvent(type, { clientX: x, clientY: y, bubbles: true, cancelable: true, button: 0 });
+  Object.defineProperties(event, {
+    pointerId: { value: 1 },
+    pointerType: { value: 'mouse' },
+    ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, { value: v }])),
+  });
   target.dispatchEvent(event);
+  return event;
 }
-
-describe('split-media gestures', () => {
-  let surface: HTMLElement;
-  let cleanup: () => void;
-  let cancel: () => void;
-  const next = jest.fn();
-  const previous = jest.fn();
-  const begin = jest.fn();
-  const end = jest.fn();
-  beforeEach(() => {
-    jest.useFakeTimers();
-    jest.clearAllMocks();
-    surface = document.createElement('div');
-    document.body.append(surface);
-    ({ cleanup, cancel } = bindGestures(surface, { next, previous, begin, end }));
+function touch(target: EventTarget, type: string, y: number, count = 1) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperties(event, {
+    touches: {
+      value:
+        type === 'touchend'
+          ? []
+          : Array.from({ length: count }, (_, id) => ({ identifier: id, clientX: 100, clientY: y })),
+    },
+    changedTouches: { value: [{ identifier: 0, clientX: 100, clientY: y }] },
   });
-  afterEach(() => {
-    cleanup();
-    surface.remove();
-    jest.useRealTimers();
-  });
-
-  it('advances on left drag and reverses on right drag only after release', () => {
-    pointer(surface, 'pointerdown', 100);
-    pointer(window, 'pointermove', 40);
-    expect(next).not.toHaveBeenCalled();
-    pointer(window, 'pointerup', 40);
-    expect(next).toHaveBeenCalledTimes(1);
-    pointer(surface, 'pointerdown', 40);
-    pointer(window, 'pointerup', 100);
-    expect(previous).toHaveBeenCalledTimes(1);
-    expect(begin).toHaveBeenCalledTimes(2);
-    expect(end).toHaveBeenCalledTimes(2);
-  });
-
-  it('preserves taps, short drags and vertical scroll', () => {
-    for (const [x, y] of [
-      [100, 0],
-      [70, 0],
-      [40, 100],
-    ]) {
-      pointer(surface, 'pointerdown', 100);
-      pointer(window, 'pointerup', x, y);
-    }
-    expect(next).not.toHaveBeenCalled();
-    expect(previous).not.toHaveBeenCalled();
-  });
-
-  it('ignores interactive and editable targets', () => {
-    surface.innerHTML = '<a href="#">CTA</a><button>Button</button><input><div contenteditable="true">Edit</div>';
-    [...surface.children].forEach((child) => {
-      pointer(child, 'pointerdown', 100);
-      pointer(window, 'pointerup', 0);
-    });
-    expect(begin).not.toHaveBeenCalled();
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('cancels on pointercancel, multitouch and resize cancellation', () => {
-    pointer(surface, 'pointerdown', 100);
-    pointer(window, 'pointercancel', 0);
-    pointer(surface, 'pointerdown', 100);
-    pointer(surface, 'pointerdown', 100, 0, 2);
-    pointer(window, 'pointerup', 0);
-    pointer(surface, 'pointerdown', 100);
-    cancel();
-    pointer(window, 'pointerup', 0);
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('keeps autoplay suspended until every contact of a pinch is released', () => {
-    pointer(surface, 'pointerdown', 100);
-    pointer(surface, 'pointerdown', 50, 0, 2);
-    pointer(window, 'pointerup', 0);
-    expect(end).not.toHaveBeenCalled();
-    pointer(window, 'pointerup', 0, 0, 2);
-    expect(end).toHaveBeenCalledTimes(1);
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('suppresses the generated click after dragging and removes listeners on cleanup', () => {
-    pointer(surface, 'pointerdown', 100);
-    pointer(window, 'pointerup', 0);
-    expect(surface.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))).toBe(false);
-    jest.advanceTimersByTime(500);
-    expect(surface.dispatchEvent(new MouseEvent('click', { cancelable: true }))).toBe(true);
-    cleanup();
-    pointer(surface, 'pointerdown', 100);
-    pointer(window, 'pointerup', 0);
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(jest.getTimerCount()).toBe(0);
-  });
+  target.dispatchEvent(event);
+  return event;
+}
+it('steps vertically only on release and suppresses the drag click', () => {
+  const surface = document.createElement('div');
+  document.body.append(surface);
+  const actions = { begin: jest.fn(() => true), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };
+  const binding = bindGestures(surface, actions);
+  pointer(surface, 'pointerdown', 100, 200);
+  pointer(window, 'pointermove', 100, 100);
+  expect(actions.end).not.toHaveBeenCalled();
+  pointer(window, 'pointerup', 100, 100);
+  expect(actions.end).toHaveBeenCalledWith(1);
+  const click = new MouseEvent('click', { cancelable: true, bubbles: true });
+  surface.dispatchEvent(click);
+  expect(click.defaultPrevented).toBe(true);
+  binding.cleanup();
+  surface.remove();
+});
+it('leaves taps, horizontal drags, interactive elements and text selection alone', () => {
+  const surface = document.createElement('div');
+  surface.innerHTML = '<a href="#cta">CTA</a><div class="split-media-overlay"><p>Text</p></div>';
+  document.body.append(surface);
+  const actions = { begin: jest.fn(() => true), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };
+  const binding = bindGestures(surface, actions);
+  for (const target of [surface.querySelector('a')!, surface.querySelector('p')!]) {
+    pointer(target, 'pointerdown', 100, 200);
+    pointer(window, 'pointermove', 100, 100);
+    pointer(window, 'pointerup', 100, 100);
+  }
+  pointer(surface, 'pointerdown', 100, 200);
+  pointer(window, 'pointerup', 100, 200);
+  pointer(surface, 'pointerdown', 100, 200);
+  pointer(window, 'pointermove', 200, 205);
+  pointer(window, 'pointerup', 200, 205);
+  expect(actions.begin).not.toHaveBeenCalled();
+  expect(actions.end).not.toHaveBeenCalled();
+  binding.cleanup();
+  surface.remove();
+});
+it('cancels touch recognition for pinch and passes an outward edge to native scroll', () => {
+  const surface = document.createElement('div');
+  document.body.append(surface);
+  const actions = { begin: jest.fn(() => false), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };
+  const binding = bindGestures(surface, actions);
+  touch(surface, 'touchstart', 200);
+  expect(touch(surface, 'touchmove', 100).defaultPrevented).toBe(false);
+  touch(surface, 'touchend', 100);
+  expect(actions.end).not.toHaveBeenCalled();
+  touch(surface, 'touchstart', 200);
+  touch(surface, 'touchstart', 200, 2);
+  touch(surface, 'touchmove', 100, 2);
+  touch(surface, 'touchend', 100);
+  expect(actions.begin).toHaveBeenCalledTimes(1);
+  binding.cleanup();
+  surface.remove();
 });
