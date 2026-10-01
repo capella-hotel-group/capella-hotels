@@ -7,7 +7,7 @@ interface ResizeGuardOptions {
 }
 
 // Suppress breakpoint-driven transforms before asking the controller to settle its current
-// transition. Keep queued navigation paused until resizing stops and transitions are restored.
+// transition. Navigation stays paused until resizing stops and transitions are restored.
 export function suppressTransitionsDuringResize(
   block: HTMLElement,
   { className = 'split-media-resizing', onStart, onEnd }: ResizeGuardOptions = {},
@@ -30,7 +30,22 @@ export function suppressTransitionsDuringResize(
     }, RESIZE_SETTLE_MS);
   };
   window.addEventListener('resize', handleResize);
+  const track = block.querySelector<HTMLElement>('.split-media-track');
+  // Only width crosses a breakpoint. The track is 100dvh, so its height also changes every time a
+  // mobile URL bar collapses — reacting to that would cancel gestures and re-align mid-scroll.
+  let lastWidth = track?.getBoundingClientRect().width;
+  const observer =
+    typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(() => {
+          const width = track?.getBoundingClientRect().width;
+          if (width === undefined || width === lastWidth) return;
+          lastWidth = width;
+          handleResize();
+        });
+  if (track) observer?.observe(track);
   return () => {
+    observer?.disconnect();
     window.removeEventListener('resize', handleResize);
     clearTimeout(timer);
     block.classList.remove(className);

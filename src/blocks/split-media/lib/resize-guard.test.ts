@@ -71,4 +71,39 @@ describe('suppressTransitionsDuringResize', () => {
     expect(onEnd).not.toHaveBeenCalled();
     expect(block.classList.contains('split-media-resizing')).toBe(false);
   });
+
+  it('ignores dynamic-viewport height changes and reacts to width changes', () => {
+    jest.useFakeTimers();
+    let notify = (): void => {};
+    const original = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(callback: () => void) {
+        notify = callback;
+      }
+      observe(): void {}
+      disconnect(): void {}
+      unobserve(): void {}
+    } as unknown as typeof ResizeObserver;
+
+    const block = document.createElement('div');
+    const track = document.createElement('ul');
+    track.className = 'split-media-track';
+    block.append(track);
+    let size = { width: 1440, height: 900 };
+    track.getBoundingClientRect = () => ({ ...size, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} });
+    const onStart = jest.fn();
+    const cleanup = suppressTransitionsDuringResize(block, { onStart });
+
+    // the mobile URL bar collapsing only changes 100dvh, never the breakpoint
+    size = { width: 1440, height: 840 };
+    notify();
+    expect(onStart).not.toHaveBeenCalled();
+
+    size = { width: 834, height: 840 };
+    notify();
+    expect(onStart).toHaveBeenCalledTimes(1);
+
+    cleanup();
+    globalThis.ResizeObserver = original;
+  });
 });
