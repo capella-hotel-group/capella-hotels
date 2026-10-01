@@ -168,7 +168,7 @@ it('finishes the alignment even when animation frames never arrive', () => {
     const { controller } = setup(100);
     expect(wheel(120).defaultPrevented).toBe(true);
     expect(y).toBe(0);
-    jest.advanceTimersByTime(1100);
+    jest.advanceTimersByTime(5000);
     expect(y).toBe(100);
     expect(controller.index).toBe(0);
   } finally {

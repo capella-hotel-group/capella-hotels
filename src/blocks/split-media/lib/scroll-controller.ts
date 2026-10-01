@@ -2,31 +2,36 @@ import type { CarouselController, Direction } from './carousel-controller';
 import { bindGestures } from './gesture';
 
 /*
- * Tuning knobs. Each line: what it decides — lower it — raise it.
+ * Tuning knobs. Each line: what it decides — lower it — raise it. Every value is either a ratio or a
+ * duration, so one set covers mobile, tablet and desktop; nothing here is a per-breakpoint pixel size.
  *
  * ALIGN_TOLERANCE   px of slop that still counts as aligned. Subpixel rounding, browser zoom and a
- *                   fractional 100dvh mean `top` is never exactly 0.
+ *                   fractional 100dvh (iOS reports e.g. 745.5) mean `top` is never exactly 0.
  *                   lower: ownership drops right after snapping — raise: visibly off the edge.
- * WHEEL_THRESHOLD   px of wheel accumulated before one slide step. A mouse notch is 120px, a
- *                   trackpad a few px per event, so they accumulate.
+ * WHEEL_THRESHOLD   px of wheel accumulated before one slide step. A mouse notch is 120px, a trackpad
+ *                   a few px per event, so they accumulate. Desktop only; touch uses the drag path.
  *                   lower: trigger-happy, easy to overshoot — raise: needs a deliberate flick.
  * WHEEL_IDLE_MS     silence that ends a burst. Within a burst, input after a step is swallowed, the
- *                   scroll listener keeps ownership, and a boundary will not release the page.
- *                   lower: trackpad inertia leaks through and skips slides — raise: slower to let go.
+ *                   scroll listener keeps ownership, and a boundary will not release the page. Must
+ *                   outlast the gaps in macOS trackpad inertia or one swipe would skip slides.
+ *                   lower: inertia leaks through and skips slides — raise: slower to let go.
  * SETTLE_MS         duration of the ease-out that lands the block on the viewport top. Also drives
- *                   the x3 fallback timer, since background tabs freeze animation frames.
+ *                   the x3 fallback timer, since background tabs freeze animation frames. Paired with
+ *                   SNAP_VISIBILITY: the travel is at most (1 - SNAP_VISIBILITY) of the viewport.
  *                   lower: abrupt snap — raise: sluggish, user can out-scroll it.
  * SNAP_VISIBILITY   share of the viewport the block must cover before the coordinator claims it,
  *                   while still travelling towards it. Never compare against wheel delta: trackpad
  *                   deltas are a few px and the block slips past.
- *                   lower: grabs the page early — raise: must scroll almost to the edge first.
- *                   At a 817px viewport: 0.75 snaps from top<=204px, 0.5 from top<=408px.
+ *                   lower: grabs the page early, long involuntary jump — raise: user can park the
+ *                   block half on screen and nothing ever snaps.
+ *                   Snaps from top <= (1 - value) x viewport: 0.6 means 340px on a 850px phone,
+ *                   478px on a 1194px tablet, 360px on a 900px desktop.
  */
-const ALIGN_TOLERANCE = 2;
+const ALIGN_TOLERANCE = 3;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
-const SETTLE_MS = 350;
-export const SNAP_VISIBILITY = 0.75;
+const SETTLE_MS = 400;
+export const SNAP_VISIBILITY = 0.6;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;

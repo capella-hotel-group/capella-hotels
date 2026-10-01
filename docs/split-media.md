@@ -61,19 +61,29 @@ unchanged.
 
 ### Tuning
 
-All five knobs live at the top of `src/blocks/split-media/lib/scroll-controller.ts`.
+All five knobs live at the top of `src/blocks/split-media/lib/scroll-controller.ts`. They are
+ratios and durations, never per-breakpoint pixel sizes, so one set covers every device.
 
-| Constant                 | Decides                                                  | Lower it                                        | Raise it                                   |
-| ------------------------ | -------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------ |
-| `ALIGN_TOLERANCE` (2px)  | slop that still counts as aligned                        | ownership drops right after snapping            | snap sits visibly off the edge             |
-| `WHEEL_THRESHOLD` (40px) | wheel accumulated per slide step                         | trigger-happy, easy to overshoot                | needs a deliberate flick                   |
-| `WHEEL_IDLE_MS` (200ms)  | silence that ends a burst                                | trackpad inertia leaks through and skips slides | slower to hand the page back at a boundary |
-| `SETTLE_MS` (350ms)      | ease-out that lands the block, and the x3 fallback timer | abrupt snap                                     | sluggish, the user can out-scroll it       |
-| `SNAP_VISIBILITY` (0.75) | viewport share the block must cover to be claimed        | grabs the page early                            | must scroll almost to the edge first       |
+| Constant                 | Decides                                                  | Lower it                                        | Raise it                                    |
+| ------------------------ | -------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
+| `ALIGN_TOLERANCE` (3px)  | slop that still counts as aligned                        | ownership drops right after snapping            | snap sits visibly off the edge              |
+| `WHEEL_THRESHOLD` (40px) | wheel accumulated per slide step                         | trigger-happy, easy to overshoot                | needs a deliberate flick                    |
+| `WHEEL_IDLE_MS` (200ms)  | silence that ends a burst                                | trackpad inertia leaks through and skips slides | slower to hand the page back at a boundary  |
+| `SETTLE_MS` (400ms)      | ease-out that lands the block, and the x3 fallback timer | abrupt snap                                     | sluggish, the user can out-scroll it        |
+| `SNAP_VISIBILITY` (0.6)  | viewport share the block must cover to be claimed        | grabs the page early, long involuntary jump     | block can sit half on screen and never snap |
 
-`SNAP_VISIBILITY` is the one authors notice. At a 817px viewport it snaps from `top <= 204px`;
-`0.5` would snap from `top <= 408px`. It must never be compared against the wheel delta —
-trackpads emit a few pixels per event and the block slips past unsnapped.
+`SNAP_VISIBILITY` is the one authors notice. The block is claimed from
+`top <= (1 - value) x viewport`, so 0.6 snaps from 340px on a 850px phone, 478px on a
+1194px tablet and 360px on a 900px desktop — the same feel everywhere because the trigger is
+a share, not a pixel count. It must never be compared against the wheel delta: trackpads emit
+a few pixels per event and the block would slip past unsnapped.
+
+`ALIGN_TOLERANCE` is 3px rather than 1px because iOS reports a fractional `100dvh`
+(e.g. 745.5) and browser zoom adds its own rounding. `SETTLE_MS` is paired with
+`SNAP_VISIBILITY`: the settle travels at most `(1 - SNAP_VISIBILITY)` of the viewport, so
+lowering the threshold without raising the duration makes the jump feel thrown.
+`WHEEL_THRESHOLD` and `WHEEL_IDLE_MS` only affect pointer devices — touch runs through the
+drag path, which has its own 40px release threshold in `gesture.ts`.
 
 ## Controller
 
