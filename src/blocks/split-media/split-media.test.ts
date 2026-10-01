@@ -118,7 +118,10 @@ describe('split-media integration', () => {
 
     expect(overflowing!.tabIndex).toBe(0);
     expect(overflowing!.getAttribute('role')).toBe('group');
+    expect(overflowing!.classList.contains('split-media-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
+    // a non-overflowing overlay must not become a scroll container, or it blocks page scroll chaining
+    expect(fitting!.classList.contains('split-media-overlay--scrollable')).toBe(false);
   });
   it('makes empty authored slides selectable and every UE slide accessible', () => {
     document.body.classList.add('adobe-ue-edit');

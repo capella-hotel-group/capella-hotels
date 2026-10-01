@@ -65,6 +65,9 @@ function reset(): void {
   burst = undefined;
   entries.forEach((entry) => entry.cancelGesture());
 }
+function wheeling(): boolean {
+  return Boolean(burst && performance.now() - burst.time < WHEEL_IDLE_MS);
+}
 function candidate(delta: number, excluded?: Entry): Entry | undefined {
   let best: Entry | undefined;
   let bestDistance = Infinity;
@@ -94,7 +97,12 @@ function onWheel(event: WheelEvent): void {
   if (fresh) burst = { time, total: 0, consumed: false };
   const current = burst!;
   current.time = time;
-  if (owner && (!owner.block.isConnected || !aligned(owner))) owner = undefined;
+  if (owner && !owner.block.isConnected) owner = undefined;
+  // Chrome keeps animating its fling after preventDefault; re-settle rather than hand the page back mid-gesture.
+  else if (owner && !aligned(owner)) {
+    if (current.consumed) align(owner);
+    else owner = undefined;
+  }
   if (!owner) {
     const entry = candidate(delta, current.released);
     if (!entry) return;
@@ -145,7 +153,7 @@ function attach(): void {
   window.addEventListener(
     'scroll',
     () => {
-      if (owner && !aligned(owner)) {
+      if (owner && !aligned(owner) && !wheeling()) {
         owner.cancelGesture();
         owner = undefined;
       }

@@ -34,8 +34,11 @@ unchanged.
   Universal Editor keep `touch-action: auto`.
 - Overflowing copy wins. A gesture that starts in a scrollable overlay stays with that
   overlay for its whole duration — reaching its boundary neither changes slide nor chains
-  to the page. An overlay that actually overflows gets `tabindex="0"` and `role="group"`
-  so keyboard users can scroll it too; the attributes are removed again when it fits.
+  to the page. An overlay that actually overflows gets `tabindex="0"`, `role="group"` and
+  `split-media-overlay--scrollable`, which is what carries `overflow-y: auto` and
+  `overscroll-behavior-y: contain`. Copy that fits is never a scroll container: a permanent
+  one swallows page scrolling through overscroll containment whenever the pointer sits
+  over it, which freezes the page before the block is even aligned.
 - At the first or last slide only a fresh outward gesture releases the page; inward
   gestures still navigate. There is no loop and no queued destination: input during a
   transition is consumed, not replayed.
@@ -43,7 +46,9 @@ unchanged.
   external navigation, when the tab hides, a dialog/menu opens, the window blurs, or the
   block/track is removed or replaced. No body scroll lock is used.
 - Only one alignment runs per gesture, so a scroll that cannot settle within the tolerance
-  can never pin the carousel to an edge slide.
+  can never pin the carousel to an edge slide. Chrome keeps animating its wheel fling after
+  `preventDefault`, so while a burst is still live the coordinator re-settles the block
+  instead of handing the page back; ownership is only released once the wheel goes quiet.
 - The resize guard watches track _width_ only. The track is `100dvh`, so its height also
   changes every time a mobile URL bar collapses, and reacting to that would cancel gestures
   and re-align the page mid-scroll. Both breakpoints are width-based.

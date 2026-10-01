@@ -115,16 +115,29 @@ it('enters from below at the last slide and navigates back on the next gesture',
   expect(controller.index).toBe(1);
 });
 it('enters once per burst when alignment never settles', () => {
-  const scrollTo = jest.fn();
-  window.scrollTo = scrollTo;
+  window.scrollTo = jest.fn();
   const { controller } = setup(100);
+  const select = jest.spyOn(controller, 'select');
   expect(wheel(120).defaultPrevented).toBe(true);
   expect(wheel(120).defaultPrevented).toBe(true);
-  expect(scrollTo).toHaveBeenCalledTimes(1);
+  expect(select).toHaveBeenCalledTimes(1);
   expect(controller.index).toBe(0);
   fresh();
   wheel(120);
-  expect(scrollTo).toHaveBeenCalledTimes(2);
+  expect(select).toHaveBeenCalledTimes(2);
+});
+it('re-settles instead of releasing when the browser keeps scrolling mid-burst', () => {
+  const { controller } = setup(60);
+  expect(wheel(120).defaultPrevented).toBe(true);
+  expect(y).toBe(60);
+  // Chrome keeps animating its fling after preventDefault, dragging the block off the alignment point.
+  y += 200;
+  expect(wheel(120).defaultPrevented).toBe(true);
+  expect(y).toBe(60);
+  expect(controller.index).toBe(0);
+  fresh();
+  wheel(60);
+  expect(controller.index).toBe(1);
 });
 it('consumes wheel input until an animated transition and the burst both finish', () => {
   window.matchMedia = jest

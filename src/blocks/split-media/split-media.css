@@ -130,13 +130,18 @@
     z-index: 1;
     min-height: 0;
     max-height: 100%;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
     color: var(--color-text-main-inverse-heading);
     opacity: 0;
     transform: translateY(var(--split-media-text-offset));
     will-change: opacity, transform;
     transition: none;
+}
+
+/* Added by JS only while the copy really overflows. A permanent scroll container would swallow page
+   scrolling through overscroll containment whenever the pointer sits over copy that fits. */
+.split-media .split-media-overlay--scrollable {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
 }
 
 /* Text starts as the panel approaches its resting position, connecting the two motions. */

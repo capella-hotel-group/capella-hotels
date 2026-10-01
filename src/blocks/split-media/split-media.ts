@@ -9,11 +9,14 @@ import { suppressTransitionsDuringResize } from './lib/resize-guard';
 const instances = new Map<HTMLElement, { track: HTMLElement; cleanup: () => void }>();
 let removalObserver: MutationObserver | undefined;
 
-// Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard.
+// Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard. A copy that fits
+// must stay out of the way: a scroll container would swallow page scrolling via overscroll containment.
 function syncCopyFocus(slides: HTMLElement[]): void {
   slides.forEach((slide) => {
     slide.querySelectorAll<HTMLElement>('.split-media-overlay').forEach((overlay) => {
-      if (overlay.scrollHeight > overlay.clientHeight + 1) {
+      const scrollable = overlay.scrollHeight > overlay.clientHeight + 1;
+      overlay.classList.toggle('split-media-overlay--scrollable', scrollable);
+      if (scrollable) {
         overlay.tabIndex = 0;
         overlay.setAttribute('role', 'group');
       } else {
