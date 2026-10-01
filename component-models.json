@@ -539,14 +539,6 @@
     "id": "culturist-card",
     "fields": [
       {
-        "component": "text",
-        "name": "id",
-        "label": "Block ID",
-        "valueType": "string",
-        "value": "",
-        "placeholder": "e.g., culturist-card"
-      },
-      {
         "component": "aem-content",
         "name": "cfReference",
         "label": "Culturist Content Fragment",
@@ -574,7 +566,7 @@
         "valueType": "string"
       },
       {
-        "component": "text",
+        "component": "richtext",
         "name": "experienceTitle",
         "label": "Experience Section Title",
         "valueType": "string",
@@ -598,6 +590,14 @@
         "label": "Enquire Open in New Tab",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Block ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., culturist-card"
       }
     ]
   },
