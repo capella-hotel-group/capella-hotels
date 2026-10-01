@@ -40,6 +40,9 @@ function wheel(deltaY: number, target: Element = document.body, options: WheelEv
 function fresh() {
   jest.advanceTimersByTime(201);
 }
+function settled() {
+  jest.advanceTimersByTime(600);
+}
 beforeEach(() => {
   jest.useFakeTimers();
   cleanups = [];
@@ -63,9 +66,10 @@ afterEach(() => {
 it('clamps entry without skipping the first slide, then requires a new gesture', () => {
   const { controller } = setup(100);
   expect(wheel(150).defaultPrevented).toBe(true);
-  expect(y).toBe(100);
   wheel(80);
   expect(controller.index).toBe(0);
+  settled();
+  expect(y).toBe(100);
   fresh();
   wheel(40);
   expect(controller.index).toBe(1);
@@ -108,11 +112,47 @@ it('enters from below at the last slide and navigates back on the next gesture',
   y = 100;
   const { controller } = setup();
   wheel(-120);
+  settled();
   expect(y).toBe(0);
   expect(controller.index).toBe(2);
   fresh();
   wheel(-40);
   expect(controller.index).toBe(1);
+});
+it('settles onto the alignment point with an animation instead of jumping', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const { controller } = setup(100);
+  expect(wheel(120).defaultPrevented).toBe(true);
+  expect(y).toBe(0);
+  jest.advanceTimersByTime(150);
+  expect(y).toBeGreaterThan(0);
+  expect(y).toBeLessThan(100);
+  settled();
+  expect(y).toBe(100);
+  expect(controller.index).toBe(0);
+});
+it('captures the block on approach even with small trackpad deltas', () => {
+  // jsdom reports a 768px viewport, so the approach band is 192px
+  const { controller } = setup(150);
+  expect(wheel(8).defaultPrevented).toBe(true);
+  settled();
+  expect(y).toBe(150);
+  expect(controller.index).toBe(0);
+});
+it('ignores a block it has already scrolled past', () => {
+  y = 400;
+  const { controller } = setup();
+  expect(wheel(8).defaultPrevented).toBe(false);
+  expect(y).toBe(408);
+  expect(controller.index).toBe(0);
+});
+it('stays out of the way until the block is within the approach band', () => {
+  const { controller } = setup(400);
+  expect(wheel(8).defaultPrevented).toBe(false);
+  expect(y).toBe(8);
+  expect(controller.index).toBe(0);
 });
 it('enters once per burst when alignment never settles', () => {
   window.scrollTo = jest.fn();
@@ -122,17 +162,17 @@ it('enters once per burst when alignment never settles', () => {
   expect(wheel(120).defaultPrevented).toBe(true);
   expect(select).toHaveBeenCalledTimes(1);
   expect(controller.index).toBe(0);
-  fresh();
+  settled();
   wheel(120);
   expect(select).toHaveBeenCalledTimes(2);
 });
 it('re-settles instead of releasing when the browser keeps scrolling mid-burst', () => {
   const { controller } = setup(60);
   expect(wheel(120).defaultPrevented).toBe(true);
-  expect(y).toBe(60);
   // Chrome keeps animating its fling after preventDefault, dragging the block off the alignment point.
   y += 200;
   expect(wheel(120).defaultPrevented).toBe(true);
+  settled();
   expect(y).toBe(60);
   expect(controller.index).toBe(0);
   fresh();

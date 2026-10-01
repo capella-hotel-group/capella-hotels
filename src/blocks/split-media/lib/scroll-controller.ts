@@ -4,6 +4,8 @@ import { bindGestures } from './gesture';
 const ALIGN_TOLERANCE = 2;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
+const SETTLE_MS = 350;
+const APPROACH_RATIO = 0.25;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
@@ -21,6 +23,7 @@ let owner: Entry | undefined;
 let burst: WheelBurst | undefined;
 let listeners: AbortController | undefined;
 let modalObserver: MutationObserver | undefined;
+let settleFrame: number | undefined;
 
 function suspended(): boolean {
   return (
@@ -52,15 +55,41 @@ function canScroll(copy: HTMLElement, delta: number): boolean {
 function scrollCopy(copy: HTMLElement, delta: number): void {
   copy.scrollTop = Math.max(0, Math.min(copy.scrollHeight - copy.clientHeight, copy.scrollTop + delta));
 }
-function align(entry: Entry): void {
-  window.scrollTo({ top: window.scrollY + entry.block.getBoundingClientRect().top, behavior: 'instant' });
+function stopSettle(): void {
+  if (settleFrame !== undefined) cancelAnimationFrame(settleFrame);
+  settleFrame = undefined;
+}
+function settling(): boolean {
+  return settleFrame !== undefined;
+}
+function align(entry: Entry, animate = false): void {
+  stopSettle();
+  const start = window.scrollY;
+  const distance = entry.block.getBoundingClientRect().top;
+  const jump = (top: number): void => window.scrollTo({ top, behavior: 'instant' });
+  if (
+    !animate ||
+    Math.abs(distance) <= ALIGN_TOLERANCE ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    jump(start + distance);
+    return;
+  }
+  const begin = performance.now();
+  const step = (now: number): void => {
+    const progress = Math.min((now - begin) / SETTLE_MS, 1);
+    jump(start + distance * (1 - (1 - progress) ** 3));
+    settleFrame = progress < 1 ? requestAnimationFrame(step) : undefined;
+  };
+  settleFrame = requestAnimationFrame(step);
 }
 function enter(entry: Entry, direction: Direction): void {
   entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
   owner = entry;
-  align(entry);
+  align(entry, true);
 }
 function reset(): void {
+  stopSettle();
   owner = undefined;
   burst = undefined;
   entries.forEach((entry) => entry.cancelGesture());
@@ -71,12 +100,14 @@ function wheeling(): boolean {
 function candidate(delta: number, excluded?: Entry): Entry | undefined {
   let best: Entry | undefined;
   let bestDistance = Infinity;
+  // Trackpads emit deltas of a few pixels, so the band cannot be the delta itself or the block slips past.
+  const band = Math.max(Math.abs(delta), window.innerHeight * APPROACH_RATIO);
   entries.forEach((entry) => {
     if (entry === excluded || !entry.block.isConnected) return;
     const { top, height } = entry.block.getBoundingClientRect();
     if (height <= 0) return;
     const reachable =
-      Math.abs(top) <= ALIGN_TOLERANCE || (delta > 0 ? top > 0 && top <= delta : top < 0 && top >= delta);
+      Math.abs(top) <= ALIGN_TOLERANCE || (delta > 0 ? top > 0 && top <= band : top < 0 && top >= -band);
     if (!reachable || Math.abs(top) >= bestDistance) return;
     best = entry;
     bestDistance = Math.abs(top);
@@ -99,8 +130,8 @@ function onWheel(event: WheelEvent): void {
   current.time = time;
   if (owner && !owner.block.isConnected) owner = undefined;
   // Chrome keeps animating its fling after preventDefault; re-settle rather than hand the page back mid-gesture.
-  else if (owner && !aligned(owner)) {
-    if (current.consumed) align(owner);
+  else if (owner && !aligned(owner) && !settling()) {
+    if (current.consumed) align(owner, true);
     else owner = undefined;
   }
   if (!owner) {
@@ -119,7 +150,7 @@ function onWheel(event: WheelEvent): void {
   }
   const entry = owner;
   if (current.released === entry) return;
-  if (current.consumed || entry.carousel.isBusy) {
+  if (settling() || current.consumed || entry.carousel.isBusy) {
     event.preventDefault();
     current.consumed = true;
     return;
@@ -153,7 +184,7 @@ function attach(): void {
   window.addEventListener(
     'scroll',
     () => {
-      if (owner && !aligned(owner) && !wheeling()) {
+      if (owner && !aligned(owner) && !wheeling() && !settling()) {
         owner.cancelGesture();
         owner = undefined;
       }
@@ -253,7 +284,10 @@ export function registerScrollController(
     cleanup() {
       binding.cleanup();
       entries.delete(entry);
-      if (owner === entry) owner = undefined;
+      if (owner === entry) {
+        stopSettle();
+        owner = undefined;
+      }
       if (burst?.released === entry || !entries.size) burst = undefined;
       if (!entries.size) {
         listeners?.abort();
