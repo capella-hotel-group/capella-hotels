@@ -30,8 +30,45 @@ type CulturistCardData = {
 
 const cfCache = new Map<string, Promise<CulturistCardData | null>>();
 
-const fieldOf = (block: Element, name: string): Element | null => block.querySelector(`[data-aue-prop="${name}"]`);
 const textFromField = (field?: Element | null): string => field?.textContent?.trim() || '';
+
+function fieldOf(block: Element, name: string): Element | null {
+  const authoredField = block.querySelector(`[data-aue-prop="${name}"]`);
+  if (authoredField) return authoredField;
+
+  const rows = [...block.children];
+  const imageIndex = rows.findIndex((row) => row.querySelector('picture'));
+  if (imageIndex < 0) return null;
+
+  if (name === 'cfReference') {
+    return (
+      rows
+        .slice(0, imageIndex)
+        .find((row) => row.querySelector('a[href]') || textFromField(row).startsWith('/content/dam/')) || null
+    );
+  }
+
+  if (name === 'primaryImage' || name === 'primaryImageAlt') return rows[imageIndex] || null;
+  if (name === 'id') {
+    return (
+      [rows[0], rows[rows.length - 1]].find((row) => {
+        if (!row) return false;
+        const value = textFromField(row);
+        return value && !/^(true|false)$/i.test(value) && !row.querySelector('picture, a[href]');
+      }) || null
+    );
+  }
+
+  const rowOffsets: Record<string, number> = {
+    experienceEyebrow: 1,
+    experienceTitle: 2,
+    enquireLabel: 3,
+    enquireLink: 4,
+    enquireOpenInNewTab: 5,
+  };
+  const offset = rowOffsets[name];
+  return offset === undefined ? null : rows[imageIndex + offset] || null;
+}
 
 function getReferencePath(value: ReferenceValue): string | null {
   if (!value) return null;
@@ -213,7 +250,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const primaryImageField = fieldOf(block, 'primaryImage');
   const primaryPicture = getAuthoredPicture(primaryImageField);
-  const primaryAlt = textFromField(fieldOf(block, 'primaryImageAlt'));
+  const primaryAlt = textFromField(fieldOf(block, 'primaryImageAlt')) || primaryPicture?.querySelector('img')?.alt || '';
   if (primaryPicture && primaryAlt) setPictureAlt(primaryPicture, primaryAlt);
 
   const layout = document.createElement('div');
