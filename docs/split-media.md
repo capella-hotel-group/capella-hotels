@@ -59,6 +59,22 @@ unchanged.
   changes every time a mobile URL bar collapses, and reacting to that would cancel gestures
   and re-align the page mid-scroll. Both breakpoints are width-based.
 
+### Tuning
+
+All five knobs live at the top of `src/blocks/split-media/lib/scroll-controller.ts`.
+
+| Constant                 | Decides                                                  | Lower it                                        | Raise it                                   |
+| ------------------------ | -------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------ |
+| `ALIGN_TOLERANCE` (2px)  | slop that still counts as aligned                        | ownership drops right after snapping            | snap sits visibly off the edge             |
+| `WHEEL_THRESHOLD` (40px) | wheel accumulated per slide step                         | trigger-happy, easy to overshoot                | needs a deliberate flick                   |
+| `WHEEL_IDLE_MS` (200ms)  | silence that ends a burst                                | trackpad inertia leaks through and skips slides | slower to hand the page back at a boundary |
+| `SETTLE_MS` (350ms)      | ease-out that lands the block, and the x3 fallback timer | abrupt snap                                     | sluggish, the user can out-scroll it       |
+| `SNAP_VISIBILITY` (0.75) | viewport share the block must cover to be claimed        | grabs the page early                            | must scroll almost to the edge first       |
+
+`SNAP_VISIBILITY` is the one authors notice. At a 817px viewport it snaps from `top <= 204px`;
+`0.5` would snap from `top <= 408px`. It must never be compared against the wheel delta —
+trackpads emit a few pixels per event and the block slips past unsnapped.
+
 ## Controller
 
 `CarouselController` takes only the slide elements and exposes `index`, `count`, `isBusy`

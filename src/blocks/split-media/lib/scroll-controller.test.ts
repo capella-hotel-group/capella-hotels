@@ -1,5 +1,5 @@
 import { CarouselController } from './carousel-controller';
-import { registerScrollController } from './scroll-controller';
+import { registerScrollController, SNAP_VISIBILITY } from './scroll-controller';
 
 let cleanups: (() => void)[];
 let y = 0;
@@ -141,7 +141,8 @@ it('captures the block on approach even with small trackpad deltas', () => {
   expect(controller.index).toBe(0);
 });
 it('snaps as soon as the block owns half the viewport', () => {
-  const top = Math.round(window.innerHeight / 2) - 20;
+  // the fixture block outgrows the viewport, so coverage is simply (viewport - top) / viewport
+  const top = Math.round(window.innerHeight * (1 - Math.min(SNAP_VISIBILITY + 0.03, 1)));
   const { controller } = setup(top);
   expect(wheel(8).defaultPrevented).toBe(true);
   settled();
@@ -149,7 +150,7 @@ it('snaps as soon as the block owns half the viewport', () => {
   expect(controller.index).toBe(0);
 });
 it('leaves the page alone while the block is still a minor part of the viewport', () => {
-  const { controller } = setup(Math.round(window.innerHeight * 0.75));
+  const { controller } = setup(Math.round(window.innerHeight * (1 - (SNAP_VISIBILITY - 0.05))));
   expect(wheel(8).defaultPrevented).toBe(false);
   expect(controller.index).toBe(0);
   expect(y).toBe(8);

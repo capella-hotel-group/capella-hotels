@@ -1,11 +1,32 @@
 import type { CarouselController, Direction } from './carousel-controller';
 import { bindGestures } from './gesture';
 
+/*
+ * Tuning knobs. Each line: what it decides — lower it — raise it.
+ *
+ * ALIGN_TOLERANCE   px of slop that still counts as aligned. Subpixel rounding, browser zoom and a
+ *                   fractional 100dvh mean `top` is never exactly 0.
+ *                   lower: ownership drops right after snapping — raise: visibly off the edge.
+ * WHEEL_THRESHOLD   px of wheel accumulated before one slide step. A mouse notch is 120px, a
+ *                   trackpad a few px per event, so they accumulate.
+ *                   lower: trigger-happy, easy to overshoot — raise: needs a deliberate flick.
+ * WHEEL_IDLE_MS     silence that ends a burst. Within a burst, input after a step is swallowed, the
+ *                   scroll listener keeps ownership, and a boundary will not release the page.
+ *                   lower: trackpad inertia leaks through and skips slides — raise: slower to let go.
+ * SETTLE_MS         duration of the ease-out that lands the block on the viewport top. Also drives
+ *                   the x3 fallback timer, since background tabs freeze animation frames.
+ *                   lower: abrupt snap — raise: sluggish, user can out-scroll it.
+ * SNAP_VISIBILITY   share of the viewport the block must cover before the coordinator claims it,
+ *                   while still travelling towards it. Never compare against wheel delta: trackpad
+ *                   deltas are a few px and the block slips past.
+ *                   lower: grabs the page early — raise: must scroll almost to the edge first.
+ *                   At a 817px viewport: 0.75 snaps from top<=204px, 0.5 from top<=408px.
+ */
 const ALIGN_TOLERANCE = 2;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
 const SETTLE_MS = 350;
-const SNAP_VISIBILITY = 0.5;
+export const SNAP_VISIBILITY = 0.75;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
