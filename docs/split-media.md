@@ -18,9 +18,15 @@ unchanged.
 
 ## Navigation
 
-- A shared scroll coordinator owns at most one block at a time. Entering from above selects
-  the first slide, entering from below the last; the entry gesture is consumed to align the
-  block to the viewport (within 2px) and never also changes slide.
+- A shared scroll coordinator owns at most one block at a time. It claims the block as soon
+  as the block covers at least half the viewport and the page is still travelling towards
+  it, then settles it onto the viewport top with a 350ms eased animation (instant under
+  `prefers-reduced-motion`, with a timer fallback because background tabs freeze animation
+  frames). Coverage, not wheel delta, is the trigger: trackpads emit a few pixels per event
+  and a delta-sized window would let the block slip past. The direction rule keeps a block
+  the user has already left from grabbing the page back.
+- Entering from above selects the first slide, entering from below the last; the entry
+  gesture is consumed to align the block (within 2px) and never also changes slide.
 - Wheel: vertical-dominant events only, `ctrlKey` and already-handled events ignored.
   `deltaMode` is normalised (line = 16px, page = viewport height). One step needs 40px of
   accumulated delta; a burst ends after 200ms of wheel silence, and after a step every

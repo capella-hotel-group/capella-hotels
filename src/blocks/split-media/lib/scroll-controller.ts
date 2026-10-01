@@ -5,7 +5,7 @@ const ALIGN_TOLERANCE = 2;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
 const SETTLE_MS = 350;
-const APPROACH_RATIO = 0.25;
+const SNAP_VISIBILITY = 0.5;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
@@ -24,6 +24,7 @@ let burst: WheelBurst | undefined;
 let listeners: AbortController | undefined;
 let modalObserver: MutationObserver | undefined;
 let settleFrame: number | undefined;
+let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
 function suspended(): boolean {
   return (
@@ -57,7 +58,9 @@ function scrollCopy(copy: HTMLElement, delta: number): void {
 }
 function stopSettle(): void {
   if (settleFrame !== undefined) cancelAnimationFrame(settleFrame);
+  if (settleTimer !== undefined) clearTimeout(settleTimer);
   settleFrame = undefined;
+  settleTimer = undefined;
 }
 function settling(): boolean {
   return settleFrame !== undefined;
@@ -79,9 +82,18 @@ function align(entry: Entry, animate = false): void {
   const step = (now: number): void => {
     const progress = Math.min((now - begin) / SETTLE_MS, 1);
     jump(start + distance * (1 - (1 - progress) ** 3));
-    settleFrame = progress < 1 ? requestAnimationFrame(step) : undefined;
+    if (progress < 1) {
+      settleFrame = requestAnimationFrame(step);
+      return;
+    }
+    stopSettle();
   };
   settleFrame = requestAnimationFrame(step);
+  // Background tabs freeze animation frames; without this the block would stay stuck mid-settle.
+  settleTimer = setTimeout(() => {
+    stopSettle();
+    jump(window.scrollY + entry.block.getBoundingClientRect().top);
+  }, SETTLE_MS * 3);
 }
 function enter(entry: Entry, direction: Direction): void {
   entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
@@ -100,17 +112,19 @@ function wheeling(): boolean {
 function candidate(delta: number, excluded?: Entry): Entry | undefined {
   let best: Entry | undefined;
   let bestDistance = Infinity;
-  // Trackpads emit deltas of a few pixels, so the band cannot be the delta itself or the block slips past.
-  const band = Math.max(Math.abs(delta), window.innerHeight * APPROACH_RATIO);
+  const viewport = window.innerHeight;
   entries.forEach((entry) => {
     if (entry === excluded || !entry.block.isConnected) return;
-    const { top, height } = entry.block.getBoundingClientRect();
-    if (height <= 0) return;
-    const reachable =
-      Math.abs(top) <= ALIGN_TOLERANCE || (delta > 0 ? top > 0 && top <= band : top < 0 && top >= -band);
-    if (!reachable || Math.abs(top) >= bestDistance) return;
+    const rect = entry.block.getBoundingClientRect();
+    if (rect.height <= 0 || viewport <= 0) return;
+    // Claim the block once it owns most of the viewport, never by wheel delta: trackpads emit a few
+    // pixels at a time and the block would slip past. Direction keeps a block we left from grabbing back.
+    const covered = (Math.min(rect.bottom, viewport) - Math.max(rect.top, 0)) / viewport;
+    const approaching = delta > 0 ? rect.top > 0 : rect.top < 0;
+    const reachable = Math.abs(rect.top) <= ALIGN_TOLERANCE || (approaching && covered >= SNAP_VISIBILITY);
+    if (!reachable || Math.abs(rect.top) >= bestDistance) return;
     best = entry;
-    bestDistance = Math.abs(top);
+    bestDistance = Math.abs(rect.top);
   });
   return best;
 }

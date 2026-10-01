@@ -134,12 +134,46 @@ it('settles onto the alignment point with an animation instead of jumping', () =
   expect(controller.index).toBe(0);
 });
 it('captures the block on approach even with small trackpad deltas', () => {
-  // jsdom reports a 768px viewport, so the approach band is 192px
   const { controller } = setup(150);
   expect(wheel(8).defaultPrevented).toBe(true);
   settled();
   expect(y).toBe(150);
   expect(controller.index).toBe(0);
+});
+it('snaps as soon as the block owns half the viewport', () => {
+  const top = Math.round(window.innerHeight / 2) - 20;
+  const { controller } = setup(top);
+  expect(wheel(8).defaultPrevented).toBe(true);
+  settled();
+  expect(y).toBe(top);
+  expect(controller.index).toBe(0);
+});
+it('leaves the page alone while the block is still a minor part of the viewport', () => {
+  const { controller } = setup(Math.round(window.innerHeight * 0.75));
+  expect(wheel(8).defaultPrevented).toBe(false);
+  expect(controller.index).toBe(0);
+  expect(y).toBe(8);
+});
+it('finishes the alignment even when animation frames never arrive', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const frame = window.requestAnimationFrame;
+  const cancel = window.cancelAnimationFrame;
+  // a background tab freezes frames: the fallback timer has to land the block anyway
+  window.requestAnimationFrame = jest.fn(() => 1) as unknown as typeof window.requestAnimationFrame;
+  window.cancelAnimationFrame = jest.fn();
+  try {
+    const { controller } = setup(100);
+    expect(wheel(120).defaultPrevented).toBe(true);
+    expect(y).toBe(0);
+    jest.advanceTimersByTime(1100);
+    expect(y).toBe(100);
+    expect(controller.index).toBe(0);
+  } finally {
+    window.requestAnimationFrame = frame;
+    window.cancelAnimationFrame = cancel;
+  }
 });
 it('ignores a block it has already scrolled past', () => {
   y = 400;
