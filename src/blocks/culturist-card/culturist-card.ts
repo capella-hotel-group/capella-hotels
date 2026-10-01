@@ -280,8 +280,15 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (titleText) {
     const title = document.createElement('h3');
     title.className = 'culturist-card-title';
-    title.textContent = titleText;
-    if (titleField) moveInstrumentation(titleField, title);
+    if (titleField) {
+      moveInstrumentation(titleField, title);
+      const paragraphs = [...titleField.children].filter((child) => child.tagName === 'P');
+      const sources = paragraphs.length ? paragraphs : [titleField];
+      sources.forEach((source, index) => {
+        if (index > 0) title.append(document.createElement('br'));
+        while (source.firstChild) title.append(source.firstChild);
+      });
+    }
     experience.append(title);
   }
 
