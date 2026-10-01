@@ -9,6 +9,8 @@
 const APP_BUILDER_URL =
   'https://3599957-turneoapp-stage.adobeioruntime.net/api/v1/web/turneo-app/get-experience-data.json';
 
+export const APP_BUILDER_ORIGIN = new URL(APP_BUILDER_URL).origin;
+
 export interface TurneoExperience {
   id: string;
   title: string;

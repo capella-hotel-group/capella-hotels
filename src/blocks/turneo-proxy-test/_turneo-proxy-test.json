@@ -19,7 +19,22 @@
   "models": [
     {
       "id": "turneo-proxy-test",
-      "fields": []
+      "fields": [
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "storeId",
+          "label": "Turneo Store ID",
+          "description": "Real Turneo storeId to filter experiences by (from the Turneo dashboard). Leave empty to show all."
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "detailPagePath",
+          "label": "Detail Page Path",
+          "description": "Path to a page containing a Turneo Experience Detail block, used by the \"View Detail (New Page)\" button, e.g. /experiences/detail"
+        }
+      ]
     }
   ],
   "filters": []
