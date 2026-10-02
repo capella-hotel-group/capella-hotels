@@ -33,8 +33,7 @@ function active(element: HTMLElement): number {
     (slide) => slide.getAttribute('aria-hidden') === 'false',
   );
 }
-// jsdom has no IntersectionObserver, so the entrance guard has nothing to observe without this.
-/** Stubs IntersectionObserver for the duration of the test and returns its callback. */
+/** Stubs IntersectionObserver, which jsdom does not provide, and returns its callback. */
 function observeIntersection(): (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void {
   let notify: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void = () => {};
   globalThis.IntersectionObserver = class {
