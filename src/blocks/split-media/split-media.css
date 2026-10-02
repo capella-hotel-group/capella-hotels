@@ -379,10 +379,13 @@
     overflow: visible;
 }
 
+/* Authoring: every slide is laid out at once, so the viewport-height unit is the slide rather than
+   the block. Cap it to prevent layout issues in the Universal Editor. */
 .adobe-ue-edit .split-media .split-media-slide {
     position: relative;
     height: 100vh;
     height: 100dvh;
+    max-height: 1080px;
     pointer-events: auto;
 }
 
