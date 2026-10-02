@@ -1,0 +1,425 @@
+/* hotel-architect
+   Figma: desktop 8035:20745 (1440), tablet 8035:20836 (834), mobile 8035:20923 (393).
+   Source order follows the block's model field order so the Universal Editor lists
+   the gallery images and the architect card last in the content tree; `order`
+   restores the reading order. Everything nests under the block class, so no rule
+   can leak to another block. */
+.hotel-architect {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface-general-subtle);
+    color: var(--color-text-main-body);
+
+    /* These two resolve differently in the live Figma file (40/44/48 and 16/18/18)
+       than in tokens.css (36/48/48 and 20/20/22), which was synced from frames that
+       no longer exist. Scoped to the block so the design is matched without moving
+       the globals under every other block; the globals need their own audit. */
+    --typography-line-height-heading-h1: 40px;
+    --typography-line-height-body-md: 16px;
+
+    @media (width >= 768px) {
+        --typography-line-height-heading-h1: 44px;
+        --typography-line-height-body-md: 18px;
+    }
+
+    @media (width >= 1200px) {
+        --typography-line-height-heading-h1: 48px;
+
+        flex-direction: row;
+        align-items: center;
+        /* room for the architect card, which hangs below the media */
+        padding-block-end: calc(72 * var(--fluid-unit));
+    }
+
+    /* ---------- copy ---------- */
+
+    .hotel-architect-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        /* clears the architect card, which overlaps the top of this column */
+        padding-block-start: 120px;
+        padding-block-end: var(--dimension-layout-module-padding-block);
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+
+        @media (width >= 768px) {
+            padding-block-start: var(--dimension-layout-module-padding-block);
+        }
+
+        @media (width >= 1200px) {
+            /* Figma: copy 576/1440, media 864/1440 */
+            flex: 0 0 40%;
+            padding-inline-start: var(--dimension-layout-module-padding-inline-s);
+            padding-inline-end: var(--dimension-layout-module-padding-inline-xs);
+        }
+    }
+
+    .hotel-architect-header {
+        order: 1;
+    }
+
+    .hotel-architect-eyebrow {
+        /* the design indents everything but the first title line */
+        padding-inline-start: var(--dimension-spacing-general-2xl);
+        margin-block-end: var(--dimension-spacing-eyebrow-to-title);
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-eyebrow);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-eyebrow);
+        letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+        color: var(--color-text-main-heading);
+        text-transform: uppercase;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+
+    .hotel-architect-title {
+        font-family: var(--type-font-family-heading);
+        font-size: var(--typography-fontsize-heading-h1);
+        font-weight: var(--type-font-weight-heading);
+        line-height: var(--typography-line-height-heading-h1);
+        color: var(--color-text-main-heading);
+        text-transform: uppercase;
+
+        > * {
+            margin: 0;
+            font: inherit;
+            color: inherit;
+        }
+
+        /* authors write the heading as one paragraph per line, so nothing is
+           indented when there is just one */
+        > :nth-child(2) {
+            padding-inline-start: var(--dimension-spacing-general-2xl);
+        }
+    }
+
+    .hotel-architect-body {
+        order: 3;
+        max-width: calc(600px + var(--dimension-spacing-general-2xl));
+        margin-block-start: var(--dimension-spacing-heading-to-content);
+        padding-inline-start: var(--dimension-spacing-general-2xl);
+        font-family: var(--type-font-family-subtitle);
+        font-size: var(--typography-fontsize-heading-subtitle);
+        font-weight: var(--type-font-weight-subtitle);
+        line-height: var(--typography-line-height-heading-subtitle);
+        color: var(--color-text-main-body);
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+
+        > * {
+            margin: 0;
+        }
+
+        > * + * {
+            margin-block-start: var(--dimension-spacing-general-m);
+        }
+
+        @media (width >= 1200px) {
+            order: 2;
+        }
+    }
+
+    .hotel-architect-cta {
+        order: 4;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dimension-spacing-general-m);
+        margin-block-start: var(--dimension-spacing-content-to-bottom-cta);
+        padding-inline-start: var(--dimension-spacing-general-2xl);
+
+        /* Figma spaces the tablet CTA off module/gutter/L, not content-to-bottom-cta */
+        @media (width >= 768px) {
+            margin-block-start: var(--dimension-layout-module-gutter-l);
+        }
+
+        @media (width >= 1200px) {
+            margin-block-start: var(--dimension-spacing-content-to-bottom-cta);
+        }
+    }
+
+    .hotel-architect-cta-divider {
+        width: var(--stroke-weight-s);
+        height: 20px;
+        background-color: var(--color-stroke-main-primary);
+    }
+
+    .hotel-architect-cta a,
+    .hotel-architect-card-cta a {
+        display: inline-flex;
+        align-items: center;
+        /* Figma fixes Button/text-standard at 40px, which overrides its padding-block */
+        min-height: var(--component-button-height);
+        border-radius: var(--component-button-corner-standard);
+        font-family: var(--type-font-family-cta);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-text-link);
+        line-height: var(--typography-line-height-body-md);
+        color: var(--color-text-action-default);
+        text-transform: uppercase;
+        text-decoration-line: underline;
+        text-decoration-style: solid;
+        text-decoration-skip-ink: auto;
+        text-decoration-thickness: 7%;
+        text-underline-offset: 20.5%;
+    }
+
+    /* ---------- gallery thumbnails ---------- */
+
+    .hotel-architect-thumbs {
+        order: 2;
+        display: flex;
+        gap: var(--dimension-layout-carousel-item-gap-s);
+        margin: 0;
+        margin-block-start: var(--dimension-spacing-heading-to-content);
+        padding: 0;
+        list-style: none;
+
+        > li {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        @media (width >= 1200px) {
+            order: 3;
+            margin-block-start: var(--dimension-layout-module-gutter-m);
+        }
+    }
+
+    .hotel-architect-thumb {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        padding: 0;
+        border: 0;
+        background-color: #000;
+        cursor: pointer;
+    }
+
+    /* ---------- media ---------- */
+
+    .hotel-architect-media {
+        /* drawn before the copy while staying after it in the source order */
+        order: -1;
+        position: relative;
+        min-width: 0;
+
+        @media (width >= 1200px) {
+            /* Figma: copy 576/1440, media 864/1440 */
+            flex: 0 0 60%;
+            order: 0;
+        }
+    }
+
+    .hotel-architect-frame {
+        position: relative;
+        /* Figma: mobile 393x490, tablet 834x660, desktop 864x720 */
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        background-color: #000;
+
+        @media (width >= 768px) {
+            aspect-ratio: 834 / 660;
+        }
+
+        @media (width >= 1200px) {
+            aspect-ratio: 6 / 5;
+        }
+    }
+
+    .hotel-architect-track {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .hotel-architect-slide {
+        position: absolute;
+        inset: 0;
+        visibility: hidden;
+        opacity: 0;
+
+        &.is-selected {
+            /* keeps the incoming image above the one fading out */
+            z-index: 1;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* the dark scrim authors can switch off per image */
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgb(0 0 0 / 40%);
+        }
+
+        &.hotel-architect-slide-no-overlay::after {
+            background-color: transparent;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            /* visibility flips only once the fade-out has finished */
+            transition:
+                opacity 0.5s ease,
+                visibility 0s linear 0.5s;
+
+            &.is-selected {
+                transition: opacity 0.5s ease;
+            }
+        }
+    }
+
+    .hotel-architect-slide picture,
+    .hotel-architect-thumb picture {
+        display: block;
+        height: 100%;
+    }
+
+    .hotel-architect-slide img,
+    .hotel-architect-thumb img,
+    .hotel-architect-card-photo img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .hotel-architect-nav {
+        position: absolute;
+        top: 50%;
+        z-index: 2;
+        translate: 0 -50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--color-icon-on-action-default);
+        cursor: pointer;
+        /* the glyph is white per Figma; the shadow keeps it legible over pale images */
+        filter: drop-shadow(0 1px 3px rgb(0 0 0 / 45%));
+    }
+
+    .hotel-architect-nav-prev {
+        inset-inline-start: var(--dimension-spacing-general-l);
+    }
+
+    .hotel-architect-nav-next {
+        inset-inline-end: var(--dimension-spacing-general-l);
+    }
+
+    .hotel-architect-dots {
+        /* Figma only composes the pagination into the desktop layout */
+        display: none;
+
+        @media (width >= 1200px) {
+            position: absolute;
+            /* Figma: 88x56 hit area, 10px clear of the media's bottom edge */
+            inset-block-end: 10px;
+            inset-inline: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--dimension-spacing-general-xs);
+            margin: 0;
+            padding-block: 24px;
+            padding-inline: 0;
+            list-style: none;
+        }
+    }
+
+    .hotel-architect-dot {
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        border: 0;
+        border-radius: var(--corner-radius-round);
+        background-color: var(--color-icon-action-opaque-inverse);
+        cursor: pointer;
+
+        &[aria-current='true'] {
+            background-color: var(--color-icon-on-action-default);
+        }
+    }
+
+    /* ---------- architect card ---------- */
+
+    .hotel-architect-cards {
+        position: absolute;
+        /* hangs past the bottom-end corner of the media, per Figma */
+        inset-block-end: -69px;
+        inset-inline-end: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: var(--dimension-spacing-general-s);
+        max-width: 100%;
+
+        @media (width >= 768px) {
+            inset-block-end: -76px;
+        }
+
+        @media (width >= 1200px) {
+            inset-block-end: -65px;
+        }
+    }
+
+    .hotel-architect-card {
+        display: flex;
+        gap: var(--dimension-spacing-general-l);
+        max-width: 100%;
+        padding-block: var(--dimension-layout-card-padding-block);
+        padding-inline: var(--dimension-layout-card-padding-inline);
+        background-color: var(--color-surface-general-light);
+    }
+
+    .hotel-architect-card-photo {
+        flex: 0 0 auto;
+        width: 80px;
+        height: 80px;
+        border-radius: var(--corner-radius-round);
+        overflow: hidden;
+    }
+
+    .hotel-architect-card-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--dimension-layout-module-gutter-xs);
+        min-width: 0;
+    }
+
+    .hotel-architect-card-identity {
+        display: flex;
+        flex-direction: column;
+        gap: var(--dimension-spacing-general-s);
+    }
+
+    .hotel-architect-card-name {
+        margin: 0;
+        font-family: var(--type-font-family-subtitle);
+        font-size: var(--typography-fontsize-heading-subtitle);
+        font-weight: var(--type-font-weight-subtitle);
+        line-height: var(--typography-line-height-heading-subtitle);
+        color: var(--color-text-main-body);
+    }
+
+    .hotel-architect-card-role {
+        margin: 0;
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-md);
+        color: var(--color-text-main-body);
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+}

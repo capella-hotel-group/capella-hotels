@@ -56,15 +56,9 @@
           "valueType": "string"
         },
         {
-          "component": "text",
+          "component": "richtext",
           "name": "title",
           "label": "Title",
-          "valueType": "string"
-        },
-        {
-          "component": "text",
-          "name": "titleContinuation",
-          "label": "Title Second Line",
           "valueType": "string"
         },
         {

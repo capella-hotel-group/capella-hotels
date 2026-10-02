@@ -49,7 +49,7 @@
           "name": "description",
           "valueType": "string",
           "label": "Section Description",
-          "required": true
+          "required": false
         },
         {
           "component": "text",
@@ -83,7 +83,20 @@
           "valueType": "string",
           "name": "description",
           "label": "Award Text",
-          "required": true
+          "required": false
+        },
+        {
+          "component": "aem-content",
+          "valueType": "string",
+          "name": "link",
+          "label": "Award Item URL"
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "openInNewTab",
+          "label": "Open in new tab",
+          "value": false
         }
       ]
     }

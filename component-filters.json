@@ -28,6 +28,7 @@
       "destination-cards",
       "experience-tiles",
       "destination-introduction",
+      "hotel-architect",
       "interactive-asset",
       "filters-grid",
       "offers-carousel",
@@ -36,6 +37,7 @@
       "hero-destination",
       "rte",
       "choose-space",
+      "culturist-card",
       "split-media",
       "footer",
       "footer-contact",
@@ -202,6 +204,13 @@
     ]
   },
   {
+    "id": "hotel-architect",
+    "components": [
+      "hotel-architect-image",
+      "hotel-architect-card"
+    ]
+  },
+  {
     "id": "navigation-lists",
     "components": [
       "navigation-list-item"
@@ -219,10 +228,10 @@
   {
     "id": "split-media",
     "components": [
-      "split-media-item"
+      "split-media-slide"
     ],
-    "minItems": 2,
-    "customErrorMsg": "Add at least 2 media panels (left + right)."
+    "minItems": 1,
+    "customErrorMsg": "Add at least 1 slide."
   },
   {
     "id": "text-with-cta",

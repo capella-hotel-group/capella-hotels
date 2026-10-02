@@ -1,5 +1,5 @@
 // src/blocks/split-media/lib/parse.test.ts
-import { isItemRow, parseCarouselConfig, parseSlides } from './parse';
+import { isItemRow, parseBlockConfig, parseSlides } from './parse';
 
 function cell(text: string): HTMLElement {
   const div = document.createElement('div');
@@ -13,35 +13,10 @@ function row(...cells: HTMLElement[]): HTMLElement {
   return div;
 }
 
-describe('parseCarouselConfig', () => {
-  it('parses autoplay true/yes and false/no', () => {
-    expect(parseCarouselConfig([row(cell('true')), row(cell('6'))]).autoplay).toBe(true);
-    expect(parseCarouselConfig([row(cell('yes')), row(cell('6'))]).autoplay).toBe(true);
-    expect(parseCarouselConfig([row(cell('false')), row(cell('6'))]).autoplay).toBe(false);
-    expect(parseCarouselConfig([row(cell('no')), row(cell('6'))]).autoplay).toBe(false);
-  });
-
-  it('falls back to false autoplay when the cell is missing or unrecognized', () => {
-    expect(parseCarouselConfig([]).autoplay).toBe(false);
-    expect(parseCarouselConfig([row(cell('maybe')), row(cell('6'))]).autoplay).toBe(false);
-  });
-
-  it('parses a positive numeric interval', () => {
-    expect(parseCarouselConfig([row(cell('true')), row(cell('4'))]).intervalSeconds).toBe(4);
-  });
-
-  it('falls back to the default interval when missing, non-numeric, or non-positive', () => {
-    expect(parseCarouselConfig([]).intervalSeconds).toBe(6);
-    expect(parseCarouselConfig([row(cell('true')), row(cell('abc'))]).intervalSeconds).toBe(6);
-    expect(parseCarouselConfig([row(cell('true')), row(cell('0'))]).intervalSeconds).toBe(6);
-    expect(parseCarouselConfig([row(cell('true')), row(cell('-2'))]).intervalSeconds).toBe(6);
-  });
-});
-
 describe('isItemRow', () => {
   it('trusts the authored aue model when present', () => {
     const withModel = row();
-    withModel.dataset.aueModel = 'split-media-item';
+    withModel.dataset.aueModel = 'split-media-slide';
     expect(isItemRow(withModel)).toBe(true);
 
     const withOtherModel = row();
@@ -59,31 +34,50 @@ describe('isItemRow', () => {
 });
 
 describe('parseSlides', () => {
-  function panelRow(hasPicture: boolean): HTMLElement {
+  function slideRow(): HTMLElement {
     const div = document.createElement('div');
-    if (hasPicture) div.innerHTML = '<picture><img src="a.jpg"></picture>';
+    div.innerHTML =
+      '<div><picture><img src="left.jpg"></picture></div>' +
+      '<div><p>Eyebrow</p><p>Headline</p></div>' +
+      '<div><picture><img src="right.jpg"></picture></div>' +
+      '<div><p>Headline</p></div>' +
+      '<div></div>';
     return div;
   }
 
-  it('pairs rows sequentially two-at-a-time into slides', () => {
-    const rows = [panelRow(true), panelRow(true), panelRow(true), panelRow(true)];
+  it('maps each row directly to one slide with 5 fixed-position cells', () => {
+    const rows = [slideRow(), slideRow()];
     const slides = parseSlides(rows);
-    expect(slides).toHaveLength(2);
-    expect(slides[0].left.sourceRow).toBe(rows[0]);
-    expect(slides[0].right.sourceRow).toBe(rows[1]);
-    expect(slides[1].left.sourceRow).toBe(rows[2]);
-    expect(slides[1].right.sourceRow).toBe(rows[3]);
-  });
 
-  it('keeps a still-odd trailing panel with an empty placeholder partner', () => {
-    const rows = [panelRow(true), panelRow(true), panelRow(true)];
-    const slides = parseSlides(rows);
     expect(slides).toHaveLength(2);
-    expect(slides[1].left.sourceRow).toBe(rows[2]);
-    expect(slides[1].right).toEqual({});
+    expect(slides[0].sourceRow).toBe(rows[0]);
+    expect(slides[0].left.mediaCell).toBe(rows[0].children[0]);
+    expect(slides[0].left.contentCell).toBe(rows[0].children[1]);
+    expect(slides[0].right.mediaCell).toBe(rows[0].children[2]);
+    expect(slides[0].right.contentCell).toBe(rows[0].children[3]);
+    expect(slides[0].right.ctaCell).toBe(rows[0].children[4]);
+    expect(slides[1].sourceRow).toBe(rows[1]);
   });
 
   it('returns no slides for an empty item list', () => {
     expect(parseSlides([])).toEqual([]);
+  });
+});
+
+describe('parseBlockConfig compatibility', () => {
+  const config = (...values: string[]) => parseBlockConfig(values.map((value) => row(cell(value))));
+  it('reads only identity from new and legacy rows', () => {
+    expect(config()).toEqual({ id: '', dataTestId: '' });
+    expect(config('hero', 'qa')).toEqual({ id: 'hero', dataTestId: 'qa' });
+    expect(config('hero', 'qa', 'true', '6', 'true', 'true')).toEqual({ id: 'hero', dataTestId: 'qa' });
+    expect(config('false', '6', 'true', 'false')).toEqual({ id: '', dataTestId: '' });
+  });
+  it('uses instrumentation for reordered and omitted fields including legacy fields', () => {
+    const old = row(cell('true'));
+    old.dataset.aueProp = 'autoplay';
+    const identity = row(cell('hero'));
+    identity.dataset.aueProp = 'id';
+    expect(parseBlockConfig([old, identity])).toEqual({ id: 'hero', dataTestId: '' });
+    expect(parseBlockConfig([old])).toEqual({ id: '', dataTestId: '' });
   });
 });
