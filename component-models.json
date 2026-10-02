@@ -536,6 +536,72 @@
     ]
   },
   {
+    "id": "culturist-card",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfReference",
+        "label": "Culturist Content Fragment",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "primaryImage",
+        "label": "Primary Media Asset",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "primaryImageAlt",
+        "label": "Primary Media Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "experienceEyebrow",
+        "label": "Experience Subtitle Eyebrow",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "experienceTitle",
+        "label": "Experience Section Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "enquireLabel",
+        "label": "Enquire CTA Label",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "enquireLink",
+        "label": "Enquire CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "enquireOpenInNewTab",
+        "label": "Enquire Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Block ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., culturist-card"
+      }
+    ]
+  },
+  {
     "id": "culturist-carousel",
     "fields": [
       {
@@ -1171,6 +1237,44 @@
             "value": "clean-white"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "showBrandLogo",
+        "label": "Show Brand Logo",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "reference",
+        "name": "brandLogo",
+        "label": "Brand Logo Image Asset",
+        "valueType": "string",
+        "required": true,
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "showBrandLogo"
+            },
+            true
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "brandLogoAltText",
+        "label": "Brand Logo Alt Text",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "showBrandLogo"
+            },
+            true
+          ]
+        }
       }
     ]
   },

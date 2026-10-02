@@ -23,6 +23,26 @@ footer.footer-theme-clean-white {
     color: var(--color-text-main-body);
 }
 
+.footer-brand-logo {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    margin-block-end: var(--dimension-layout-module-gutter-l);
+}
+
+.footer-brand-logo picture {
+    display: block;
+    width: min(100%, 112px);
+}
+
+.footer-brand-logo img {
+    display: block;
+    width: 100%;
+    max-height: 80px;
+    object-fit: contain;
+    object-position: left center;
+}
+
 /* ---------- dividers ---------- */
 
 .footer-divider {
@@ -62,6 +82,10 @@ footer.footer-theme-clean-white {
 /* ---------- tablet (768–1199px) ---------- */
 
 @media (width >= 768px) {
+    .footer-brand-logo picture {
+        width: min(100%, 128px);
+    }
+
     /* contact info is wider than social in the Figma tablet frame */
     .footer-contact {
         display: grid;
@@ -81,10 +105,16 @@ footer.footer-theme-clean-white {
         display: grid;
         grid-template-columns: minmax(0, 0.8fr) minmax(0, 280px) minmax(0, 280px) minmax(0, 1.3fr);
         grid-template-areas:
+            'brand brand brand brand'
             'contact nav1 nav2 newsletter'
             'divider divider divider divider'
             'legal legal legal legal';
         column-gap: var(--dimension-layout-module-gutter-xl);
+    }
+
+    .footer-brand-logo {
+        grid-area: brand;
+        margin-block-end: var(--dimension-layout-module-gutter-l);
     }
 
     /* higher specificity than footer-links.css's plain `.footer-nav-columns` (mobile/tablet
