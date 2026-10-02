@@ -77,8 +77,8 @@
     transition: transform var(--split-media-panel-duration) var(--split-media-motion-easing);
 }
 
-/* entrance: both panels rise from below, right starting 100ms after left so the pair reads as
-   sequential rather than simultaneous — replays every time this slide becomes active.
+/* entrance: both panels rise from below, the right one a stagger behind the left so the pair reads
+   as sequential rather than simultaneous — replays every time this slide becomes active.
    `--pending` suppresses the whole active state rather than pinning a transform of its own: the
    resting position differs per breakpoint (desktop parks the left panel above, not below), so
    letting the base rules apply is the only way to be correct everywhere. */
@@ -379,10 +379,13 @@
     overflow: visible;
 }
 
+/* Authoring: every slide is laid out at once, so the viewport-height unit is the slide rather than
+   the block. Cap it to prevent layout issues in the Universal Editor. */
 .adobe-ue-edit .split-media .split-media-slide {
     position: relative;
     height: 100vh;
     height: 100dvh;
+    max-height: 1080px;
     pointer-events: auto;
 }
 
