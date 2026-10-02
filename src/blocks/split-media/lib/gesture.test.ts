@@ -33,7 +33,7 @@ it('steps vertically only on release and suppresses the drag click', () => {
   pointer(window, 'pointermove', 100, 100);
   expect(actions.end).not.toHaveBeenCalled();
   pointer(window, 'pointerup', 100, 100);
-  expect(actions.end).toHaveBeenCalledWith(1);
+  expect(actions.end).toHaveBeenCalledWith(1, expect.any(Number));
   const click = new MouseEvent('click', { cancelable: true, bubbles: true });
   surface.dispatchEvent(click);
   expect(click.defaultPrevented).toBe(true);
@@ -61,7 +61,26 @@ it('leaves taps, horizontal drags, interactive elements and text selection alone
   binding.cleanup();
   surface.remove();
 });
-it('cancels touch recognition for pinch and passes an outward edge to native scroll', () => {
+it('still recognises a touch swipe that starts on a link, without breaking the tap', () => {
+  const surface = document.createElement('div');
+  surface.innerHTML = '<a href="#cta">CTA</a>';
+  document.body.append(surface);
+  const link = surface.querySelector('a')!;
+  const actions = { begin: jest.fn(() => true), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };
+  const binding = bindGestures(surface, actions);
+
+  touch(link, 'touchstart', 200);
+  touch(link, 'touchend', 200);
+  expect(actions.begin).not.toHaveBeenCalled();
+
+  touch(link, 'touchstart', 200);
+  expect(touch(link, 'touchmove', 100).defaultPrevented).toBe(true);
+  touch(link, 'touchend', 100);
+  expect(actions.end).toHaveBeenCalledWith(1, expect.any(Number));
+  binding.cleanup();
+  surface.remove();
+});
+it('cancels touch recognition for pinch and leaves a declined gesture to the browser', () => {
   const surface = document.createElement('div');
   document.body.append(surface);
   const actions = { begin: jest.fn(() => false), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };

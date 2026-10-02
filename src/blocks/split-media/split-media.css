@@ -28,9 +28,10 @@
     list-style: none;
 }
 
-/* Declared once and never swapped mid-gesture: the block drives vertical movement itself, so the
-   compositor must not commit a page scroll before the first touchmove has been classified.
-   pinch-zoom stays available for WCAG 1.4.4. */
+/* Declared once and never swapped mid-gesture: the block drives every vertical movement itself — the
+   carousel steps, the overlay's own scrolling and, at the first/last slide, the page scroll that
+   carries the reader out of the block. The compositor must not commit a page scroll before the first
+   touchmove has been classified. pinch-zoom stays available for WCAG 1.4.4. */
 .split-media .split-media-track--scroll {
     touch-action: pan-x pinch-zoom;
 }
@@ -138,10 +139,11 @@
 }
 
 /* Added by JS only while the copy really overflows. A permanent scroll container would swallow page
-   scrolling through overscroll containment whenever the pointer sits over copy that fits. */
+   scrolling through overscroll containment whenever the pointer sits over copy that fits. No
+   `overscroll-behavior` here either: the scrolling itself is JS-driven on both the wheel and touch
+   paths, so containment would only ever fire once the controller has deliberately released the page. */
 .split-media .split-media-overlay--scrollable {
     overflow-y: auto;
-    overscroll-behavior-y: contain;
 }
 
 /* Text starts as the panel approaches its resting position, connecting the two motions. */

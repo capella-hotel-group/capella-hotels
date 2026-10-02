@@ -14,6 +14,9 @@ export function suppressTransitionsDuringResize(
 ): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let resizing = false;
+  const track = block.querySelector<HTMLElement>('.split-media-track');
+  const measure = (): number => (track ? track.getBoundingClientRect().width : window.innerWidth);
+  let lastWidth = measure();
   const handleResize = (): void => {
     block.classList.add(className);
     if (!resizing) {
@@ -29,24 +32,21 @@ export function suppressTransitionsDuringResize(
       onEnd?.();
     }, RESIZE_SETTLE_MS);
   };
-  window.addEventListener('resize', handleResize);
-  const track = block.querySelector<HTMLElement>('.split-media-track');
   // Only width crosses a breakpoint. The track is 100dvh, so its height also changes every time a
-  // mobile URL bar collapses — reacting to that would cancel gestures and re-align mid-scroll.
-  let lastWidth = track?.getBoundingClientRect().width;
-  const observer =
-    typeof ResizeObserver === 'undefined'
-      ? undefined
-      : new ResizeObserver(() => {
-          const width = track?.getBoundingClientRect().width;
-          if (width === undefined || width === lastWidth) return;
-          lastWidth = width;
-          handleResize();
-        });
+  // mobile URL bar collapses — and that fires `resize` just as it fires the observer, so both paths
+  // have to go through the same check or a URL bar would cancel the gesture and re-align mid-scroll.
+  const handleWidthChange = (): void => {
+    const width = measure();
+    if (width === lastWidth) return;
+    lastWidth = width;
+    handleResize();
+  };
+  window.addEventListener('resize', handleWidthChange);
+  const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(handleWidthChange);
   if (track) observer?.observe(track);
   return () => {
     observer?.disconnect();
-    window.removeEventListener('resize', handleResize);
+    window.removeEventListener('resize', handleWidthChange);
     clearTimeout(timer);
     block.classList.remove(className);
   };

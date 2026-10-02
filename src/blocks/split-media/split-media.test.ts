@@ -113,6 +113,10 @@ describe('split-media integration', () => {
     Object.defineProperties(overflowing!, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
     Object.defineProperties(fitting!, { scrollHeight: { value: 200 }, clientHeight: { value: 200 } });
 
+    // the guard only reacts to a width change, and jsdom reports a zero-sized track
+    const track = element.querySelector<HTMLElement>('.split-media-track')!;
+    track.getBoundingClientRect = () =>
+      ({ width: 834, height: 900, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} }) as DOMRect;
     window.dispatchEvent(new Event('resize'));
     jest.advanceTimersByTime(150);
 
@@ -120,7 +124,8 @@ describe('split-media integration', () => {
     expect(overflowing!.getAttribute('role')).toBe('group');
     expect(overflowing!.classList.contains('split-media-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
-    // a non-overflowing overlay must not become a scroll container, or it blocks page scroll chaining
+    // a non-overflowing overlay must not become a scroll container, or it takes focus and wheel input
+    // the page is better off keeping
     expect(fitting!.classList.contains('split-media-overlay--scrollable')).toBe(false);
   });
   it('makes empty authored slides selectable and every UE slide accessible', () => {
