@@ -222,8 +222,12 @@ main .filters-grid .filters-grid-results {
 }
 
 main .filters-grid .filters-grid-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Figma right-aligns a trailing incomplete row (node 7806:55768: 5 cards = 3 + 2, the 2
+       sit in the last two columns, not the first two) - grid auto-placement always fills
+       from the start, so this needs flex-wrap + justify-content: flex-end instead. */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     row-gap: var(--dimension-layout-module-gutter-l);
     /* Figma's mobile row is 345 wide: 160 + 25 + 160, so the column gap is the remainder. */
     column-gap: 25px;
@@ -234,11 +238,12 @@ main .filters-grid .filters-grid-list {
 }
 
 main .filters-grid .filters-grid-card-item {
+    flex: 0 0 calc((100% - 25px) / 2);
     min-width: 0;
 }
 
 main .filters-grid .filters-grid-empty {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
     list-style: none;
     text-align: center;
 }
@@ -636,6 +641,10 @@ body.filters-grid-modal-open {
         gap: var(--dimension-layout-module-gutter-l);
     }
 
+    main .filters-grid .filters-grid-card-item {
+        flex-basis: calc((100% - var(--dimension-layout-module-gutter-l)) / 2);
+    }
+
     main .filters-grid .filters-grid-card {
         aspect-ratio: 200 / 244;
     }
@@ -668,7 +677,6 @@ body.filters-grid-modal-open {
 
     main .filters-grid .filters-grid-layout {
         grid-template-columns: 304px minmax(0, 760px);
-        column-gap: 216px;
     }
 
     /* Desktop lines the filter list back up with the first card row. */
@@ -677,8 +685,11 @@ body.filters-grid-modal-open {
     }
 
     main .filters-grid .filters-grid-list {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--dimension-spacing-general-5xl);
+    }
+
+    main .filters-grid .filters-grid-card-item {
+        flex-basis: calc((100% - 2 * var(--dimension-spacing-general-5xl)) / 3);
     }
 
     .filters-grid-modal {
@@ -720,8 +731,11 @@ body.filters-grid-modal-open {
     }
 
     main .filters-grid .filters-grid-layout {
+        /* No 496px token exists; `justify-content: space-between` (inherited from the 768
+           rule) distributes the shell's remaining width into this one gap, so the column
+           math (304 + listing) always lands on Figma's 496px for this capped 1680px content
+           width, without a magic number. */
         grid-template-columns: 304px minmax(0, 880px);
-        column-gap: 496px;
     }
 
     main .filters-grid .filters-grid-card {
