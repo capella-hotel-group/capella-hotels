@@ -1,5 +1,5 @@
 import { CarouselController } from './carousel-controller';
-import { registerScrollController, SNAP_VISIBILITY } from './scroll-controller';
+import { registerScrollController, SNAP_DISTANCE } from './scroll-controller';
 
 let cleanups: (() => void)[];
 let y = 0;
@@ -39,6 +39,27 @@ function wheel(deltaY: number, target: Element = document.body, options: WheelEv
 }
 function fresh() {
   jest.advanceTimersByTime(201);
+}
+function touch(target: Element, type: string, clientY: number) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  const list = type === 'touchend' ? [] : [{ identifier: 0, clientX: 100, clientY }];
+  Object.defineProperties(event, {
+    touches: { value: list },
+    changedTouches: { value: [{ identifier: 0, clientX: 100, clientY }] },
+  });
+  target.dispatchEvent(event);
+  return event;
+}
+/** One finger travelling `distance` px upwards (positive) or downwards, in `steps` even moves. */
+function swipe(target: Element, distance: number, steps = 4, gap = 16) {
+  let position = 400;
+  touch(target, 'touchstart', position);
+  for (let index = 0; index < steps; index += 1) {
+    jest.advanceTimersByTime(gap);
+    position -= distance / steps;
+    touch(target, 'touchmove', position);
+  }
+  touch(target, 'touchend', position);
 }
 function settled() {
   jest.advanceTimersByTime(600);
@@ -119,6 +140,31 @@ it('enters from below at the last slide and navigates back on the next gesture',
   wheel(-40);
   expect(controller.index).toBe(1);
 });
+it('keeps your place when you come back up to a block you had already started', () => {
+  const { controller } = setup(500);
+  y = 500;
+  wheel(40);
+  expect(controller.index).toBe(1);
+  // the page drifts past the block, then the reader turns around and scrolls back up to it
+  y = 620;
+  fresh();
+  wheel(-40);
+  settled();
+  expect(y).toBe(500);
+  expect(controller.index).toBe(1);
+});
+it('restarts the story whenever the block is entered travelling downwards', () => {
+  const { controller } = setup(500);
+  y = 500;
+  wheel(40);
+  expect(controller.index).toBe(1);
+  y = 350;
+  fresh();
+  wheel(40);
+  settled();
+  expect(y).toBe(500);
+  expect(controller.index).toBe(0);
+});
 it('settles onto the alignment point with an animation instead of jumping', () => {
   window.matchMedia = jest
     .fn()
@@ -140,17 +186,16 @@ it('captures the block on approach even with small trackpad deltas', () => {
   expect(y).toBe(150);
   expect(controller.index).toBe(0);
 });
-it('snaps as soon as the block owns half the viewport', () => {
-  // the fixture block outgrows the viewport, so coverage is simply (viewport - top) / viewport
-  const top = Math.round(window.innerHeight * (1 - Math.min(SNAP_VISIBILITY + 0.03, 1)));
+it('snaps as soon as the block reaches the snap band', () => {
+  const top = Math.round(window.innerHeight * SNAP_DISTANCE) - 10;
   const { controller } = setup(top);
   expect(wheel(8).defaultPrevented).toBe(true);
   settled();
   expect(y).toBe(top);
   expect(controller.index).toBe(0);
 });
-it('leaves the page alone while the block is still a minor part of the viewport', () => {
-  const { controller } = setup(Math.round(window.innerHeight * (1 - (SNAP_VISIBILITY - 0.05))));
+it('leaves the page alone while the block is still outside the snap band', () => {
+  const { controller } = setup(Math.round(window.innerHeight * SNAP_DISTANCE) + 10);
   expect(wheel(8).defaultPrevented).toBe(false);
   expect(controller.index).toBe(0);
   expect(y).toBe(8);
@@ -253,6 +298,36 @@ it('keeps a copy gesture in the copy after reaching the bottom', () => {
   fresh();
   wheel(40, copy);
   expect(controller.index).toBe(1);
+});
+it('carries the page itself when a touch swipe has nowhere left to go in the block', () => {
+  const { block, controller } = setup(0, 2);
+  controller.select(1);
+  // the track suppresses native panning, so the last slide must hand the page scroll to JS, not drop it
+  swipe(block, 120);
+  expect(y).toBe(120);
+  expect(controller.index).toBe(1);
+});
+it('snaps the next block into place from the release momentum', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const { block, controller } = setup(0, 2);
+  const next = setup(900);
+  controller.select(1);
+  swipe(block, 700);
+  expect(y).toBe(700);
+  settled();
+  expect(y).toBe(900);
+  expect(next.controller.index).toBe(0);
+});
+it('releases a modal immediately instead of scrolling the page under it', () => {
+  const { block } = setup(0, 2);
+  const dialog = document.createElement('dialog');
+  dialog.open = true;
+  document.body.append(dialog);
+  swipe(block, 120);
+  expect(y).toBe(0);
+  dialog.remove();
 });
 it('does not capture horizontal input, zoom, prevented events, single slides or editor', () => {
   const { block, controller } = setup();

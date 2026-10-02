@@ -2,10 +2,21 @@ import type { Direction } from './carousel-controller';
 
 export const INTERACTIVE_TARGET =
   'a, button, input, textarea, select, [contenteditable]:not([contenteditable="false"]), .adobe-ue-edit [data-aue-prop]';
+// Touch has no hover and no second button, so a link cannot opt out of scrolling the way it can for a
+// mouse: the 6px threshold below already separates a tap from a swipe, and the click suppression at
+// the end of a drag keeps the tap intact. Only controls that consume a drag themselves stay excluded.
+export const TOUCH_BLOCKING_TARGET =
+  'input, textarea, select, [contenteditable]:not([contenteditable="false"]), .adobe-ue-edit [data-aue-prop]';
+// Weight of the newest sample in the release velocity, and the pause before lift-off that cancels it.
+const VELOCITY_SMOOTHING = 0.7;
+const VELOCITY_IDLE_MS = 80;
+// Coalesced touchmoves report a large jump across a sub-millisecond gap; past this the reading is an
+// artefact of the event batching rather than how fast the finger actually moved.
+const VELOCITY_LIMIT = 4;
 interface GestureActions {
   begin: (target: Element, direction: Direction, touch: boolean) => boolean;
   move: (delta: number) => void;
-  end: (direction: Direction | null) => boolean;
+  end: (direction: Direction | null, velocity: number) => boolean;
   cancel: () => void;
 }
 interface Contact {
@@ -13,6 +24,8 @@ interface Contact {
   x: number;
   y: number;
   lastY: number;
+  lastTime: number;
+  velocity: number;
   target: Element;
   touch: boolean;
   owned: boolean;
@@ -32,10 +45,10 @@ export function bindGestures(
   };
   const start = (id: number, x: number, y: number, target: EventTarget | null, touch: boolean): void => {
     cancel();
-    if (!(target instanceof Element) || target.closest(INTERACTIVE_TARGET)) return;
+    if (!(target instanceof Element) || target.closest(touch ? TOUCH_BLOCKING_TARGET : INTERACTIVE_TARGET)) return;
     // Mouse dragging text remains native selection; touch can scroll the same copy region.
     if (!touch && target.closest('.split-media-overlay')) return;
-    contact = { id, x, y, lastY: y, target, touch, owned: false };
+    contact = { id, x, y, lastY: y, lastTime: performance.now(), velocity: 0, target, touch, owned: false };
   };
   const move = (x: number, y: number, event: Event): void => {
     const current = contact;
@@ -55,7 +68,12 @@ export function bindGestures(
       current.owned = true;
     }
     if (event.cancelable) event.preventDefault();
-    actions.move(current.lastY - y);
+    const now = performance.now();
+    const delta = current.lastY - y;
+    const sample = Math.max(-VELOCITY_LIMIT, Math.min(VELOCITY_LIMIT, delta / Math.max(1, now - current.lastTime)));
+    current.velocity = VELOCITY_SMOOTHING * sample + (1 - VELOCITY_SMOOTHING) * current.velocity;
+    current.lastTime = now;
+    actions.move(delta);
     current.lastY = y;
   };
   const end = (x: number, y: number): void => {
@@ -66,7 +84,9 @@ export function bindGestures(
     const dx = x - current.x;
     const dy = current.y - y;
     const direction = Math.abs(dy) >= 40 && Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 1 : -1) : null;
-    if (actions.end(direction)) suppressClickUntil = performance.now() + 400;
+    // A finger resting before it lifts means a deliberate stop, not momentum.
+    const velocity = performance.now() - current.lastTime > VELOCITY_IDLE_MS ? 0 : current.velocity;
+    if (actions.end(direction, velocity)) suppressClickUntil = performance.now() + 400;
   };
   surface.addEventListener(
     'pointerdown',

@@ -15,27 +15,35 @@ import { bindGestures } from './gesture';
  *                   scroll listener keeps ownership, and a boundary will not release the page. Must
  *                   outlast the gaps in macOS trackpad inertia or one swipe would skip slides.
  *                   lower: inertia leaks through and skips slides — raise: slower to let go.
- * SETTLE_MS         duration of the ease-out that lands the block on the viewport top. Also drives
- *                   the x3 fallback timer, since background tabs freeze animation frames. Paired with
- *                   SNAP_VISIBILITY: the travel is at most (1 - SNAP_VISIBILITY) of the viewport.
+ * SETTLE_MIN/MAX_MS bounds of the ease-out that lands the block on the viewport top. The duration
+ *                   scales with the travel between them, so a few px of correction and a near-full
+ *                   viewport jump do not share one timing. MAX also drives the x3 fallback timer,
+ *                   since background tabs freeze animation frames.
  *                   lower: abrupt snap — raise: sluggish, user can out-scroll it.
- * SNAP_VISIBILITY   share of the viewport the block must cover before the coordinator claims it,
- *                   while still travelling towards it. Never compare against wheel delta: trackpad
- *                   deltas are a few px and the block slips past.
- *                   lower: grabs the page early, long involuntary jump — raise: user can park the
- *                   block half on screen and nothing ever snaps.
- *                   Snaps from top <= (1 - value) x viewport: 0.6 means 340px on a 850px phone,
- *                   478px on a 1194px tablet, 360px on a 900px desktop.
+ * FLING_DECAY       per-16ms survival of the touch momentum the block runs itself, because the track
+ *                   suppresses native panning and there is no browser fling to inherit.
+ *                   lower: stops dead on release — raise: glides far past the intended slide.
+ * FLING_MIN_SPEED   px/ms at which that momentum is considered spent.
+ * SNAP_DISTANCE     how far from the alignment point the block may be and still be claimed, as a
+ *                   share of the viewport, while still travelling towards it. Never compare against
+ *                   wheel delta: trackpad deltas are a few px and the block slips past.
+ *                   lower: user can park the block near the top and nothing ever snaps — raise:
+ *                   grabs the page early, long involuntary jump.
+ *                   0.25 claims a 100dvh block from 25% off the top, i.e. once ~75% of it is visible.
  */
 const ALIGN_TOLERANCE = 3;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
-const SETTLE_MS = 400;
-export const SNAP_VISIBILITY = 0.6;
+const SETTLE_MIN_MS = 220;
+const SETTLE_MAX_MS = 620;
+const FLING_DECAY = 0.95;
+const FLING_MIN_SPEED = 0.02;
+export const SNAP_DISTANCE = 0.25;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
   cancelGesture: () => void;
+  visited: boolean;
 }
 interface WheelBurst {
   time: number;
@@ -51,6 +59,11 @@ let listeners: AbortController | undefined;
 let modalObserver: MutationObserver | undefined;
 let settleFrame: number | undefined;
 let settleTimer: ReturnType<typeof setTimeout> | undefined;
+let flingFrame: number | undefined;
+
+function reducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 function suspended(): boolean {
   return (
@@ -82,52 +95,67 @@ function canScroll(copy: HTMLElement, delta: number): boolean {
 function scrollCopy(copy: HTMLElement, delta: number): void {
   copy.scrollTop = Math.max(0, Math.min(copy.scrollHeight - copy.clientHeight, copy.scrollTop + delta));
 }
-function stopSettle(): void {
+function scrollPage(delta: number): void {
+  window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+}
+function stopScrollAnimation(): void {
   if (settleFrame !== undefined) cancelAnimationFrame(settleFrame);
+  if (flingFrame !== undefined) cancelAnimationFrame(flingFrame);
   if (settleTimer !== undefined) clearTimeout(settleTimer);
   settleFrame = undefined;
+  flingFrame = undefined;
   settleTimer = undefined;
 }
 function settling(): boolean {
   return settleFrame !== undefined;
 }
+function flinging(): boolean {
+  return flingFrame !== undefined;
+}
 function align(entry: Entry, animate = false): void {
-  stopSettle();
+  stopScrollAnimation();
   const start = window.scrollY;
   const distance = entry.block.getBoundingClientRect().top;
   const jump = (top: number): void => window.scrollTo({ top, behavior: 'instant' });
-  if (
-    !animate ||
-    Math.abs(distance) <= ALIGN_TOLERANCE ||
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  ) {
+  if (!animate || Math.abs(distance) <= ALIGN_TOLERANCE || reducedMotion()) {
     jump(start + distance);
     return;
   }
+  // Scale with the travel, otherwise a few px of correction reads as abrupt at the same duration
+  // that leaves a near-full-viewport jump feeling sluggish enough to be out-scrolled.
+  const viewport = window.innerHeight || 1;
+  const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, (Math.abs(distance) / viewport) * SETTLE_MAX_MS));
   const begin = performance.now();
   const step = (now: number): void => {
-    const progress = Math.min((now - begin) / SETTLE_MS, 1);
+    const progress = Math.min((now - begin) / duration, 1);
     jump(start + distance * (1 - (1 - progress) ** 3));
     if (progress < 1) {
       settleFrame = requestAnimationFrame(step);
       return;
     }
-    stopSettle();
+    stopScrollAnimation();
   };
   settleFrame = requestAnimationFrame(step);
   // Background tabs freeze animation frames; without this the block would stay stuck mid-settle.
   settleTimer = setTimeout(() => {
-    stopSettle();
+    stopScrollAnimation();
     jump(window.scrollY + entry.block.getBoundingClientRect().top);
-  }, SETTLE_MS * 3);
+  }, duration * 3);
+}
+function claim(entry: Entry): void {
+  owner = entry;
+  entry.visited = true;
 }
 function enter(entry: Entry, direction: Direction): void {
-  entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
-  owner = entry;
+  // Downwards is the reading direction, so it always restarts the story. Upwards only rewinds to the
+  // end on a first encounter: coming back to a block you were half way through keeps your place.
+  if (direction > 0) entry.carousel.select(0);
+  else if (!entry.visited) entry.carousel.select(entry.carousel.count - 1);
+  claim(entry);
   align(entry, true);
 }
 function reset(): void {
-  stopSettle();
+  stopScrollAnimation();
   owner = undefined;
   burst = undefined;
   entries.forEach((entry) => entry.cancelGesture());
@@ -143,22 +171,57 @@ function candidate(delta: number, excluded?: Entry): Entry | undefined {
     if (entry === excluded || !entry.block.isConnected) return;
     const rect = entry.block.getBoundingClientRect();
     if (rect.height <= 0 || viewport <= 0) return;
-    // Claim the block once it owns most of the viewport, never by wheel delta: trackpads emit a few
-    // pixels at a time and the block would slip past. Direction keeps a block we left from grabbing back.
-    const covered = (Math.min(rect.bottom, viewport) - Math.max(rect.top, 0)) / viewport;
+    // Claim the block once it is close enough to the alignment point, never by wheel delta: trackpads
+    // emit a few pixels at a time and the block would slip past. Direction keeps a block we left from
+    // grabbing back.
     const approaching = delta > 0 ? rect.top > 0 : rect.top < 0;
-    const reachable = Math.abs(rect.top) <= ALIGN_TOLERANCE || (approaching && covered >= SNAP_VISIBILITY);
+    const reachable =
+      Math.abs(rect.top) <= ALIGN_TOLERANCE || (approaching && Math.abs(rect.top) <= SNAP_DISTANCE * viewport);
     if (!reachable || Math.abs(rect.top) >= bestDistance) return;
     best = entry;
     bestDistance = Math.abs(rect.top);
   });
   return best;
 }
+/**
+ * Touch release. The track suppresses native panning, so there is no browser fling to inherit: the
+ * block runs the momentum and checks for a snap target on every frame of it.
+ */
+function fling(velocity: number, excluded?: Entry): void {
+  stopScrollAnimation();
+  const snap = (direction: Direction): boolean => {
+    const entry = candidate(direction, excluded);
+    if (!entry || aligned(entry)) return false;
+    enter(entry, direction);
+    return true;
+  };
+  let speed = velocity;
+  if (reducedMotion() || Math.abs(speed) < FLING_MIN_SPEED) {
+    snap(speed < 0 ? -1 : 1);
+    return;
+  }
+  let last = performance.now();
+  const step = (now: number): void => {
+    const elapsed = Math.max(1, now - last);
+    last = now;
+    speed *= FLING_DECAY ** (elapsed / 16);
+    scrollPage(speed * elapsed);
+    // enter() restarts the animation as a settle, so this frame must not queue another fling frame.
+    if (snap(speed < 0 ? -1 : 1)) return;
+    if (Math.abs(speed) < FLING_MIN_SPEED) {
+      stopScrollAnimation();
+      return;
+    }
+    flingFrame = requestAnimationFrame(step);
+  };
+  flingFrame = requestAnimationFrame(step);
+}
 function onWheel(event: WheelEvent): void {
   if (suspended()) {
     reset();
     return;
   }
+  if (flinging()) stopScrollAnimation();
   if (event.defaultPrevented || !event.cancelable || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX))
     return;
   const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
@@ -174,21 +237,22 @@ function onWheel(event: WheelEvent): void {
     if (current.consumed) align(owner, true);
     else owner = undefined;
   }
-  if (!owner) {
-    const entry = candidate(delta, current.released);
-    if (!entry) return;
-    if (!aligned(entry)) {
+  let entry = owner;
+  if (!entry) {
+    const found = candidate(delta, current.released);
+    if (!found) return;
+    if (!aligned(found)) {
       event.preventDefault();
       // One alignment per gesture: a scroll that cannot settle must not keep re-selecting the edge slide.
       if (!current.consumed) {
-        enter(entry, direction);
+        enter(found, direction);
         current.consumed = true;
       }
       return;
     }
-    owner = entry;
+    claim(found);
+    entry = found;
   }
-  const entry = owner;
   if (current.released === entry) return;
   if (settling() || current.consumed || entry.carousel.isBusy) {
     event.preventDefault();
@@ -224,7 +288,7 @@ function attach(): void {
   window.addEventListener(
     'scroll',
     () => {
-      if (owner && !aligned(owner) && !wheeling() && !settling()) {
+      if (owner && !aligned(owner) && !wheeling() && !settling() && !flinging()) {
         owner.cancelGesture();
         owner = undefined;
       }
@@ -255,61 +319,66 @@ export function registerScrollController(
   resize: () => void;
 } {
   if (carousel.count < 2 || block.closest('.adobe-ue-edit')) return { cleanup() {}, cancel() {}, resize() {} };
-  const entry: Entry = { block, carousel, cancelGesture: () => {} };
-  let gesture: 'slide' | 'copy' | 'approach' | 'entry' | undefined;
+  const entry: Entry = { block, carousel, cancelGesture: () => {}, visited: false };
+  let gesture: 'slide' | 'copy' | 'entry' | 'page' | undefined;
   let copy: HTMLElement | undefined;
+  let exited: Entry | undefined;
   const binding = bindGestures(block, {
     begin(target, direction, touch) {
-      if (suspended()) return false;
-      if (owner && owner !== entry && aligned(owner)) return false;
       gesture = undefined;
       copy = undefined;
-      if (!aligned(entry)) {
-        const top = block.getBoundingClientRect().top;
-        if (!touch || direction * top <= 0) return false;
-        gesture = 'approach';
-        return true;
-      }
-      owner = entry;
-      if (carousel.isBusy) {
-        gesture = 'entry';
-        return true;
-      }
-      copy = copyAt(target, entry);
-      if (copy && canScroll(copy, direction)) {
-        gesture = 'copy';
-        return true;
-      }
-      if (edge(entry, direction)) {
+      exited = undefined;
+      if (suspended()) return false;
+      const blocked = Boolean(owner && owner !== entry && aligned(owner));
+      if (!blocked && aligned(entry)) {
+        claim(entry);
+        if (carousel.isBusy) {
+          gesture = 'entry';
+          return true;
+        }
+        copy = copyAt(target, entry);
+        if (copy && canScroll(copy, direction)) {
+          gesture = 'copy';
+          return true;
+        }
+        if (!edge(entry, direction)) {
+          gesture = 'slide';
+          return true;
+        }
         owner = undefined;
-        return false;
+        exited = entry;
       }
-      gesture = 'slide';
+      // Nothing inside the block can consume this swipe, and the track suppresses native panning, so
+      // the block has to carry the page itself — otherwise the gesture would simply do nothing.
+      if (!touch) return false;
+      stopScrollAnimation();
+      gesture = 'page';
       return true;
     },
     move(delta) {
       if (gesture === 'copy' && copy) scrollCopy(copy, delta);
-      if (gesture !== 'approach') return;
-      const top = block.getBoundingClientRect().top;
-      if (Math.abs(top) <= ALIGN_TOLERANCE || (delta > 0 ? top >= 0 && top <= delta : top <= 0 && top >= delta)) {
-        enter(entry, delta > 0 ? 1 : -1);
-        gesture = 'entry';
-      } else window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+      if (gesture === 'page') scrollPage(delta);
     },
-    end(direction) {
-      const changed =
-        gesture === 'slide' &&
+    end(direction, velocity) {
+      const current = gesture;
+      gesture = undefined;
+      copy = undefined;
+      if (current === 'page') {
+        fling(velocity, exited);
+        return false;
+      }
+      return (
+        current === 'slide' &&
         direction !== null &&
         !suspended() &&
         aligned(entry) &&
-        carousel.requestStep(direction) === 'changed';
-      gesture = undefined;
-      copy = undefined;
-      return changed;
+        carousel.requestStep(direction) === 'changed'
+      );
     },
     cancel() {
       gesture = undefined;
       copy = undefined;
+      exited = undefined;
     },
   });
   entry.cancelGesture = binding.cancel;
@@ -325,11 +394,12 @@ export function registerScrollController(
       binding.cleanup();
       entries.delete(entry);
       if (owner === entry) {
-        stopSettle();
+        stopScrollAnimation();
         owner = undefined;
       }
       if (burst?.released === entry || !entries.size) burst = undefined;
       if (!entries.size) {
+        stopScrollAnimation();
         listeners?.abort();
         listeners = undefined;
         modalObserver?.disconnect();

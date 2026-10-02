@@ -78,6 +78,9 @@ export class CarouselController {
   /** Immediate selection for viewport entry and authoring, with no queued destination. */
   select(index: number): void {
     if (this.destroyed || !Number.isInteger(index) || !this.slides[index]) return;
+    // Re-selecting the slide already showing would still flash `--settling`, which kills whatever
+    // entrance transition is mid-flight — the reveal on first scroll depends on this staying a no-op.
+    if (index === this.index && this.transition === null) return;
     this.finishTransition();
     this.slides.forEach((slide) => slide.classList.add('split-media-slide--settling'));
     this.updateActive(index);

@@ -33,6 +33,23 @@ function active(element: HTMLElement): number {
     (slide) => slide.getAttribute('aria-hidden') === 'false',
   );
 }
+// jsdom has no IntersectionObserver, so the entrance guard has nothing to observe without this.
+/** Stubs IntersectionObserver for the duration of the test and returns its callback. */
+function observeIntersection(): (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void {
+  let notify: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void = () => {};
+  globalThis.IntersectionObserver = class {
+    constructor(callback: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void) {
+      notify = callback;
+    }
+    observe(): void {}
+    disconnect(): void {}
+    unobserve(): void {}
+    takeRecords(): [] {
+      return [];
+    }
+  } as unknown as typeof IntersectionObserver;
+  return (records) => notify(records);
+}
 describe('split-media integration', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -43,6 +60,7 @@ describe('split-media integration', () => {
   });
   afterEach(async () => {
     document.body.replaceChildren();
+    Reflect.deleteProperty(globalThis, 'IntersectionObserver');
     await Promise.resolve();
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
@@ -113,6 +131,10 @@ describe('split-media integration', () => {
     Object.defineProperties(overflowing!, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
     Object.defineProperties(fitting!, { scrollHeight: { value: 200 }, clientHeight: { value: 200 } });
 
+    // the guard only reacts to a width change, and jsdom reports a zero-sized track
+    const track = element.querySelector<HTMLElement>('.split-media-track')!;
+    track.getBoundingClientRect = () =>
+      ({ width: 834, height: 900, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} }) as DOMRect;
     window.dispatchEvent(new Event('resize'));
     jest.advanceTimersByTime(150);
 
@@ -120,8 +142,44 @@ describe('split-media integration', () => {
     expect(overflowing!.getAttribute('role')).toBe('group');
     expect(overflowing!.classList.contains('split-media-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
-    // a non-overflowing overlay must not become a scroll container, or it blocks page scroll chaining
+    // a non-overflowing overlay must not become a scroll container, or it takes focus and wheel input
+    // the page is better off keeping
     expect(fitting!.classList.contains('split-media-overlay--scrollable')).toBe(false);
+  });
+  it('holds the entrance animation until the block is scrolled into view', () => {
+    const element = block();
+    const reveal = observeIntersection();
+    decorate(element);
+
+    expect(element.classList.contains('split-media-pending')).toBe(true);
+    reveal([{ isIntersecting: false, intersectionRatio: 0 }]);
+    expect(element.classList.contains('split-media-pending')).toBe(true);
+    reveal([{ isIntersecting: true, intersectionRatio: 0.5 }]);
+    expect(element.classList.contains('split-media-pending')).toBe(false);
+  });
+  it('releases a block that is already on screen on the very first observation', () => {
+    const element = block();
+    const reveal = observeIntersection();
+    decorate(element);
+
+    // below the 0.5 threshold, so `isIntersecting` is false — but it is visible and must not be held
+    reveal([{ isIntersecting: false, intersectionRatio: 0.2 }]);
+    expect(element.classList.contains('split-media-pending')).toBe(false);
+  });
+  it('never holds the entrance in the editor or under reduced motion', () => {
+    observeIntersection();
+    document.body.classList.add('adobe-ue-edit');
+    const edited = block();
+    decorate(edited);
+    expect(edited.classList.contains('split-media-pending')).toBe(false);
+    document.body.classList.remove('adobe-ue-edit');
+
+    window.matchMedia = jest
+      .fn()
+      .mockReturnValue({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+    const reduced = block();
+    decorate(reduced);
+    expect(reduced.classList.contains('split-media-pending')).toBe(false);
   });
   it('makes empty authored slides selectable and every UE slide accessible', () => {
     document.body.classList.add('adobe-ue-edit');
