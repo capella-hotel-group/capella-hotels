@@ -31,6 +31,20 @@ function end(el: Element, type = 'transitionend'): void {
   Object.defineProperty(event, 'propertyName', { value: 'transform' });
   el.dispatchEvent(event);
 }
+it('leaves the slide already showing untouched so a running entrance is not cut short', () => {
+  setup();
+  const track = slides[0]!.parentElement!;
+  const observer = new MutationObserver(() => {});
+  observer.observe(track, { attributes: true, subtree: true, attributeFilter: ['class', 'aria-hidden', 'inert'] });
+
+  controller.select(0);
+  expect(observer.takeRecords()).toHaveLength(0);
+
+  controller.select(1);
+  expect(observer.takeRecords().length).toBeGreaterThan(0);
+  expect(controller.index).toBe(1);
+  observer.disconnect();
+});
 afterEach(() => {
   controller?.destroy();
   document.body.replaceChildren();

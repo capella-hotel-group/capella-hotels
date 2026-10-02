@@ -26,8 +26,20 @@ unchanged.
   the trigger: trackpads emit a few pixels per event
   and a delta-sized window would let the block slip past. The direction rule keeps a block
   the user has already left from grabbing the page back.
-- Entering from above selects the first slide, entering from below the last; the entry
-  gesture is consumed to align the block (within 2px) and never also changes slide.
+- Entering from above always selects the first slide: downwards is the reading direction, so
+  the story restarts. Entering from below only selects the last slide on a first encounter —
+  after that the current slide is kept, so a reader who leaves a block half way through and
+  scrolls back up to it is not thrown to the end. Either way the entry gesture is consumed to
+  align the block (within 2px) and never also changes slide.
+- The entrance animation is held back until the block is on screen. Without that it would run
+  at decoration time, far above the fold, and the reader would arrive at a block that is
+  already settled. `split-media-pending` suppresses the active state until an
+  `IntersectionObserver` reports half the block visible; removing it hands over to the same
+  transitions a slide change uses. The class is never added in Universal Editor or under
+  `prefers-reduced-motion`, and anything already on screen at the first observation is
+  released immediately so nothing above the fold is delayed. Do not try to decide this from
+  the block's own geometry at decoration time: sections above it have not been laid out yet
+  and it reports a top of 0.
 - Wheel: vertical-dominant events only, `ctrlKey` and already-handled events ignored.
   `deltaMode` is normalised (line = 16px, page = viewport height). One step needs 40px of
   accumulated delta; a burst ends after 200ms of wheel silence, and after a step every

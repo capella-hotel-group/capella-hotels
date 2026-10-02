@@ -43,6 +43,7 @@ interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
   cancelGesture: () => void;
+  visited: boolean;
 }
 interface WheelBurst {
   time: number;
@@ -141,9 +142,16 @@ function align(entry: Entry, animate = false): void {
     jump(window.scrollY + entry.block.getBoundingClientRect().top);
   }, duration * 3);
 }
-function enter(entry: Entry, direction: Direction): void {
-  entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
+function claim(entry: Entry): void {
   owner = entry;
+  entry.visited = true;
+}
+function enter(entry: Entry, direction: Direction): void {
+  // Downwards is the reading direction, so it always restarts the story. Upwards only rewinds to the
+  // end on a first encounter: coming back to a block you were half way through keeps your place.
+  if (direction > 0) entry.carousel.select(0);
+  else if (!entry.visited) entry.carousel.select(entry.carousel.count - 1);
+  claim(entry);
   align(entry, true);
 }
 function reset(): void {
@@ -229,21 +237,22 @@ function onWheel(event: WheelEvent): void {
     if (current.consumed) align(owner, true);
     else owner = undefined;
   }
-  if (!owner) {
-    const entry = candidate(delta, current.released);
-    if (!entry) return;
-    if (!aligned(entry)) {
+  let entry = owner;
+  if (!entry) {
+    const found = candidate(delta, current.released);
+    if (!found) return;
+    if (!aligned(found)) {
       event.preventDefault();
       // One alignment per gesture: a scroll that cannot settle must not keep re-selecting the edge slide.
       if (!current.consumed) {
-        enter(entry, direction);
+        enter(found, direction);
         current.consumed = true;
       }
       return;
     }
-    owner = entry;
+    claim(found);
+    entry = found;
   }
-  const entry = owner;
   if (current.released === entry) return;
   if (settling() || current.consumed || entry.carousel.isBusy) {
     event.preventDefault();
@@ -310,7 +319,7 @@ export function registerScrollController(
   resize: () => void;
 } {
   if (carousel.count < 2 || block.closest('.adobe-ue-edit')) return { cleanup() {}, cancel() {}, resize() {} };
-  const entry: Entry = { block, carousel, cancelGesture: () => {} };
+  const entry: Entry = { block, carousel, cancelGesture: () => {}, visited: false };
   let gesture: 'slide' | 'copy' | 'entry' | 'page' | undefined;
   let copy: HTMLElement | undefined;
   let exited: Entry | undefined;
@@ -322,7 +331,7 @@ export function registerScrollController(
       if (suspended()) return false;
       const blocked = Boolean(owner && owner !== entry && aligned(owner));
       if (!blocked && aligned(entry)) {
-        owner = entry;
+        claim(entry);
         if (carousel.isBusy) {
           gesture = 'entry';
           return true;

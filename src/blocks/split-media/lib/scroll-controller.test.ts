@@ -140,6 +140,31 @@ it('enters from below at the last slide and navigates back on the next gesture',
   wheel(-40);
   expect(controller.index).toBe(1);
 });
+it('keeps your place when you come back up to a block you had already started', () => {
+  const { controller } = setup(500);
+  y = 500;
+  wheel(40);
+  expect(controller.index).toBe(1);
+  // the page drifts past the block, then the reader turns around and scrolls back up to it
+  y = 620;
+  fresh();
+  wheel(-40);
+  settled();
+  expect(y).toBe(500);
+  expect(controller.index).toBe(1);
+});
+it('restarts the story whenever the block is entered travelling downwards', () => {
+  const { controller } = setup(500);
+  y = 500;
+  wheel(40);
+  expect(controller.index).toBe(1);
+  y = 350;
+  fresh();
+  wheel(40);
+  settled();
+  expect(y).toBe(500);
+  expect(controller.index).toBe(0);
+});
 it('settles onto the alignment point with an animation instead of jumping', () => {
   window.matchMedia = jest
     .fn()
