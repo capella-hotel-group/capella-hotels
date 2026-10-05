@@ -174,12 +174,6 @@
     ]
   },
   {
-    "id": "filters-grid",
-    "components": [
-      "experience-tiles-item"
-    ]
-  },
-  {
     "id": "footer-legal",
     "components": [
       "footer-legal-link"
