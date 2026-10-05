@@ -176,12 +176,6 @@
     "customErrorMsg": "Add at least 1 slide."
   },
   {
-    "id": "filters-grid",
-    "components": [
-      "experience-tiles-item"
-    ]
-  },
-  {
     "id": "footer-legal",
     "components": [
       "footer-legal-link"
