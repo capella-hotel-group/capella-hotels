@@ -868,114 +868,131 @@
     ]
   },
   {
-    "id": "experience-tiles-item",
+    "id": "experience-tiles",
     "fields": [
       {
         "component": "text",
-        "name": "visualEyebrow",
-        "label": "Location Eyebrow",
+        "name": "id",
         "valueType": "string",
-        "required": true,
-        "value": ""
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": "",
+        "placeholder": "e.g., experience-tiles"
       },
       {
-        "component": "richtext",
-        "name": "headline",
-        "label": "Experience Title",
+        "component": "text",
+        "name": "dataTestId",
         "valueType": "string",
-        "required": true,
-        "value": ""
-      },
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "value": "",
+        "placeholder": "experience-tiles"
+      }
+    ]
+  },
+  {
+    "id": "experience-tiles-slide",
+    "fields": [
       {
         "component": "reference",
-        "name": "visualImage",
-        "label": "Tile Image",
+        "name": "leftMedia_image",
+        "label": "Left Panel Image",
         "valueType": "string",
-        "required": true,
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "visualImageAlt",
-        "label": "Tile Image Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detailTitle",
-        "label": "Guide / Activity Title",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "richtext",
-        "name": "description",
-        "label": "Experience Description",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "name": "detailsImage",
-        "label": "Details Tile Image",
-        "valueType": "string",
-        "required": true,
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "detailsImageAlt",
-        "label": "Details Image Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "enquireLabel",
-        "label": "Enquire CTA Label",
-        "valueType": "string",
-        "required": true,
-        "value": "ENQUIRE"
-      },
-      {
-        "component": "aem-content",
-        "name": "enquireModalPath",
-        "label": "Enquire Modal Fragment Path",
-        "description": "Path to the fragment holding the enquiry form modal content.",
-        "valueType": "string",
+        "multi": false,
         "required": true
       },
       {
+        "component": "text",
+        "name": "leftMedia_imageAlt",
+        "label": "Left Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "leftContent_eyebrow",
+        "label": "Left Panel Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "leftContent_headline",
+        "label": "Left Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "rightMedia_image",
+        "label": "Right Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "rightMedia_imageAlt",
+        "label": "Right Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "rightContent_headline",
+        "label": "Right Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "rightContent_description",
+        "label": "Right Panel Description",
+        "description": "Leave empty for a panel that shows only a headline.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "rightCtas_primaryCta",
+        "label": "Right Panel Primary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "rightCtas_primaryCtaText",
+        "label": "Right Panel Primary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
         "component": "boolean",
-        "name": "enquireOpenInNewTab",
-        "label": "Enquire Opens in New Tab",
+        "name": "rightCtas_primaryCtaOpenInNewTab",
+        "label": "Right Panel Primary Link Open in new tab",
         "valueType": "boolean",
         "value": false
       },
       {
-        "component": "text",
-        "name": "detailsLabel",
-        "label": "Details CTA Label",
-        "valueType": "string",
-        "required": true,
-        "value": "DETAILS"
+        "component": "aem-content",
+        "name": "rightCtas_secondaryCta",
+        "label": "Right Panel Secondary Link URL",
+        "valueType": "string"
       },
       {
-        "component": "aem-content",
-        "name": "detailsUrl",
-        "label": "Details Destination URL",
+        "component": "text",
+        "name": "rightCtas_secondaryCtaText",
+        "label": "Right Panel Secondary Link Label",
         "valueType": "string",
-        "required": true
+        "value": ""
       },
       {
         "component": "boolean",
-        "name": "detailsOpenInNewTab",
-        "label": "Details Opens in New Tab",
+        "name": "rightCtas_secondaryCtaOpenInNewTab",
+        "label": "Right Panel Secondary Link Open in new tab",
         "valueType": "boolean",
         "value": false
       }
