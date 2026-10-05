@@ -197,9 +197,11 @@ function buildDetailsLink(cfData: CulturistCardData): HTMLAnchorElement | null {
   return details;
 }
 
-function buildEnquireLink(block: HTMLElement): HTMLAnchorElement | null {
-  const labelField = fieldOf(block, 'enquireLabel');
-  const linkField = fieldOf(block, 'enquireLink');
+function buildEnquireLink(
+  labelField: Element | null,
+  linkField: Element | null,
+  openInNewTabField: Element | null,
+): HTMLAnchorElement | null {
   const label = textFromField(labelField);
   const href = getAuthoredLinkHref(linkField);
   if (!label || !href) return null;
@@ -209,7 +211,7 @@ function buildEnquireLink(block: HTMLElement): HTMLAnchorElement | null {
   enquire.href = href;
   enquire.textContent = label;
 
-  if (textFromField(fieldOf(block, 'enquireOpenInNewTab')).toLowerCase() === 'true') {
+  if (textFromField(openInNewTabField).toLowerCase() === 'true') {
     applyLinkTarget(enquire, true);
   }
   if (labelField) moveInstrumentation(labelField, enquire);
@@ -241,6 +243,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (blockId) block.id = blockId.replace(/^#/, '');
 
   const cfReference = getAuthoredReferencePath(fieldOf(block, 'cfReference'));
+  const eyebrowField = fieldOf(block, 'experienceEyebrow');
+  const titleField = fieldOf(block, 'experienceTitle');
+  const enquireLabelField = fieldOf(block, 'enquireLabel');
+  const enquireLinkField = fieldOf(block, 'enquireLink');
+  const enquireOpenInNewTabField = fieldOf(block, 'enquireOpenInNewTab');
+  const primaryImageField = fieldOf(block, 'primaryImage');
+  const primaryImageAltField = fieldOf(block, 'primaryImageAlt');
   const cfData = cfReference ? await fetchCFDetails(cfReference) : null;
   if (!cfData) {
     block.textContent = '';
@@ -248,9 +257,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     return;
   }
 
-  const primaryImageField = fieldOf(block, 'primaryImage');
   const primaryPicture = getAuthoredPicture(primaryImageField);
-  const primaryAlt = textFromField(fieldOf(block, 'primaryImageAlt')) || primaryPicture?.querySelector('img')?.alt || '';
+  const primaryAlt = textFromField(primaryImageAltField) || primaryPicture?.querySelector('img')?.alt || '';
   if (primaryPicture && primaryAlt) setPictureAlt(primaryPicture, primaryAlt);
 
   const layout = document.createElement('div');
@@ -302,7 +310,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const experience = document.createElement('div');
   experience.className = 'culturist-card-experience';
 
-  const eyebrowField = fieldOf(block, 'experienceEyebrow');
+  const enquire = buildEnquireLink(enquireLabelField, enquireLinkField, enquireOpenInNewTabField);
   const eyebrowText = textFromField(eyebrowField);
   if (eyebrowText) {
     const eyebrow = document.createElement('p');
@@ -312,7 +320,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     experience.append(eyebrow);
   }
 
-  const titleField = fieldOf(block, 'experienceTitle');
   const titleText = textFromField(titleField);
   if (titleText) {
     const title = document.createElement('h3');
@@ -332,7 +339,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const gallery = buildGallery(cfData);
   if (gallery) experience.append(gallery);
 
-  const enquire = buildEnquireLink(block);
   const details = buildDetailsLink(cfData);
   if (enquire || details) {
     const ctas = document.createElement('div');
