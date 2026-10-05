@@ -1,0 +1,164 @@
+/* src/blocks/hero-destination/hero-destination.css */
+
+.hero-destination-container .hero-destination-wrapper {
+    max-width: unset;
+    padding: 0;
+}
+
+.hero-destination {
+    position: relative;
+    width: 100%;
+    height: 100vh; /* fallback */
+    height: 100svh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background: #000;
+}
+
+/* Authoring: cap height to prevent layout issues in the Universal Editor */
+.adobe-ue-edit .hero-destination {
+    max-height: 1080px;
+}
+
+.hero-destination-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: rgb(0 0 0 / 40%);
+    display: none;
+    pointer-events: none;
+}
+
+.hero-destination-track {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    perspective: 1600px;
+}
+
+.hero-destination-track--swipeable {
+    touch-action: pan-y;
+    cursor: grab;
+    user-select: none;
+}
+
+.hero-destination-track--swipeable:active {
+    cursor: grabbing;
+}
+
+.hero-destination-slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-destination-slide[aria-hidden='true'] {
+    pointer-events: none;
+}
+
+.hero-destination-media {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    backface-visibility: hidden;
+    transition:
+        transform 0.75s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-destination-media picture,
+.hero-destination-media img,
+.hero-destination-media video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Belt-and-suspenders alongside the JS dragstart guard: stops the browser's native
+       image/video drag-ghost from hijacking the swipe gesture on desktop. */
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+.hero-destination-heading {
+    position: relative;
+    z-index: 55;
+    max-width: 800px;
+    margin: 0;
+    padding-inline: var(--dimension-layout-module-padding-inline-xs);
+    color: var(--color-text-main-inverse-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    line-height: var(--typography-line-height-heading-h2);
+    font-weight: var(--type-font-weight-heading);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(28px);
+    /* Exit: fades/drops out quickly with no delay, so it never lingers over the next slide's
+       background once its slide is no longer active. */
+    transition:
+        opacity 0.35s cubic-bezier(0.4, 0, 1, 1),
+        transform 0.35s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.hero-destination-slide[aria-hidden='false'] .hero-destination-heading {
+    opacity: 1;
+    transform: translateY(0);
+    /* Enter: waits for the background effect to fully settle, then rises in with a softer, longer
+       premium ease (matches .hero-destination-media's transition duration). */
+    transition:
+        opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s,
+        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-destination-heading,
+    .hero-destination-slide[aria-hidden='false'] .hero-destination-heading {
+        transition: opacity 0.3s ease;
+        transform: none;
+    }
+}
+
+.hero-destination-dots {
+    position: absolute;
+    z-index: 60;
+    bottom: var(--dimension-spacing-general-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--dimension-spacing-general-xs);
+}
+
+.hero-destination-dot {
+    position: relative;
+    width: var(--dimension-spacing-general-xs);
+    height: var(--dimension-spacing-general-xs);
+    padding: 0;
+    border: none;
+    border-radius: var(--corner-radius-round);
+    background: var(--color-icon-action-opaque-inverse);
+    cursor: pointer;
+}
+
+/* Enlarges the tappable area well past the small visual dot (mobile target-size accessibility)
+   without affecting layout/spacing between dots. */
+.hero-destination-dot::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+}
+
+.hero-destination-dot.is-active {
+    background: var(--color-icon-on-action-default);
+}
+
+@media (width >= 768px) {
+    .hero-destination-heading {
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+    }
+}

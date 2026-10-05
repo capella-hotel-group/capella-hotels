@@ -1,59 +1,162 @@
+/* footer
+   Figma: desktop 6512:19717 (1440), tablet 6512:19888 (834), mobile 6512:20326 (393).
+   footer.ts only assembles already-decorated pieces into the shared layout — each footer-*
+   sub-block owns its own leaf styling in its own CSS file. This file owns: the root `footer`
+   element, `.footer-inner`'s flex/grid scaffolding, dividers, the `.footer-heading` label shared
+   by footer-contact.ts and footer-social-link.ts, and the two group wrappers footer.ts builds
+   itself (`.footer-newsletter`, `.footer-contact`) — including the desktop CSS Grid placement,
+   which must stay here since it's the only place that knows the shared grid-template-areas. */
 footer {
-    background-color: rgb(153 158 163);
-    font-size: 1rem;
+    background-color: var(--color-surface-general-light);
     position: relative;
 }
 
-.footer-inner {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 40px var(--header-padding-x, 40px) 24px;
-    display: flex;
-    flex-wrap: wrap;
+/* authored via the "Footer" block's Background Color Theme field (light-sand is the default) */
+footer.footer-theme-clean-white {
+    background-color: var(--color-surface-primary-default);
 }
 
-.footer-item {
-    width: 50%;
-    color: #fff;
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    font-weight: 300;
-    line-height: 19.2px;
-    letter-spacing: 0.16px;
-    margin: 0 0 12px;
-    padding: 0;
+.footer-inner {
+    display: flex;
+    flex-direction: column;
+    padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
+    color: var(--color-text-main-body);
 }
+
+.footer-brand-logo {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    margin-block-end: var(--dimension-layout-module-gutter-l);
+}
+
+.footer-brand-logo picture {
+    display: block;
+    width: min(100%, 112px);
+}
+
+.footer-brand-logo img {
+    display: block;
+    width: 100%;
+    max-height: 80px;
+    object-fit: contain;
+    object-position: left center;
+}
+
+/* ---------- dividers ---------- */
+
+.footer-divider {
+    border-block-start: 1px solid var(--color-stroke-main-primary);
+    margin-block: var(--dimension-layout-module-gutter-l);
+}
+
+/* ---------- shared heading (static label, not authored) — used by both
+   footer-contact.ts and footer-social-link.ts */
+
+.footer-heading {
+    margin: 0 0 var(--dimension-spacing-general-l);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-bold);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-main-heading);
+    text-transform: uppercase;
+}
+
+/* ---------- newsletter group (wraps the newsletter-form block) ---------- */
+
+.footer-newsletter {
+    width: 100%;
+    min-width: 0;
+}
+
+/* ---------- contact + social group (wraps footer-contact-info + footer-social) ---------- */
+
+.footer-contact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-2xl);
+    min-width: 0;
+}
+
+/* ---------- tablet (768–1199px) ---------- */
 
 @media (width >= 768px) {
-    .footer-item {
-        width: 33.333%;
+    .footer-brand-logo picture {
+        width: min(100%, 128px);
+    }
+
+    /* contact info is wider than social in the Figma tablet frame */
+    .footer-contact {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: var(--dimension-layout-module-gutter-xl);
     }
 }
 
-.footer-item a {
-    color: #fff;
-    font-family: var(--body-font-family);
-    font-size: 16px;
-    font-weight: 300;
-    line-height: 19.2px;
-    letter-spacing: 0.16px;
-    text-decoration: none;
-    overflow-wrap: break-word;
-    transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+/* ---------- desktop (>=1200px) ---------- */
 
-.footer-item a:hover {
-    color: rgb(36 47 58);
-}
-
-@media (width < 768px) {
+@media (width >= 1200px) {
+    /* Non-equal CSS Grid columns (not equal fractions): the Figma desktop frame
+       gives nav columns 1/2 a fixed hug-width, contact a narrower hug-width, and
+       lets newsletter grow widest to fill the row. Named `grid-area`s place items
+       independently of DOM order (see design.md's "display: contents reflow"). */
     .footer-inner {
-        padding: 32px 24px 24px;
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 280px) minmax(0, 280px) minmax(0, 1.3fr);
+        grid-template-areas:
+            'brand brand brand brand'
+            'contact nav1 nav2 newsletter'
+            'divider divider divider divider'
+            'legal legal legal legal';
+        column-gap: var(--dimension-layout-module-gutter-xl);
     }
 
-    .footer-item,
-    .footer-item a {
-        font-size: 15px;
-        letter-spacing: 0;
+    .footer-brand-logo {
+        grid-area: brand;
+        margin-block-end: var(--dimension-layout-module-gutter-l);
+    }
+
+    /* higher specificity than footer-links.css's plain `.footer-nav-columns` (mobile/tablet
+       base rule) so this override always wins regardless of which stylesheet loads last —
+       equal-specificity rules across separate files would otherwise be a load-order coin flip */
+    .footer-inner > .footer-nav-columns {
+        display: contents;
+    }
+
+    .footer-nav-col:nth-child(1) {
+        grid-area: nav1;
+        min-width: 0;
+    }
+
+    .footer-nav-col:nth-child(2) {
+        grid-area: nav2;
+        min-width: 0;
+    }
+
+    .footer-newsletter {
+        grid-area: newsletter;
+    }
+
+    .footer-contact {
+        display: flex;
+        grid-area: contact;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* only the divider before legal + copyright survives at desktop; the row above
+       has no internal dividers in the Figma desktop frame */
+    .footer-divider[data-after='nav'],
+    .footer-divider[data-after='newsletter'] {
+        display: none;
+    }
+
+    .footer-divider[data-after='contact'] {
+        grid-area: divider;
+    }
+
+    .footer-legal {
+        grid-area: legal;
     }
 }

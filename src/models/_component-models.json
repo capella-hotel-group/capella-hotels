@@ -15,6 +15,9 @@
     "...": "./_button.json#/models"
   },
   {
+    "...": "./_link-item.json#/models"
+  },
+  {
     "...": "./_section.json#/models"
   },
   {

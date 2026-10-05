@@ -27,20 +27,30 @@ Parses `window.location.pathname` to compute the path automatically.
 
 | Step     | Rule                                                                                                                                                                            |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Site** | Find the first pathname segment matching `SUPPORTED_SITES`. If not found, default to `global`. ⚠️ **See open question below.**                                                  |
+| **Site** | Find the first pathname segment matching `SUPPORTED_SITES`. If not found, use `DEFAULT_SITE_SEGMENT` (see below).                                                               |
 | **Lang** | The next segment if it matches a key in `LANG_MAP` (alias slug) or a primary in `VALID_LANG_PRIMARIES`. Uses the **raw URL slug** — not normalized (`jp` stays `jp`, not `ja`). |
-| **Path** | `/{site}/{lang}/nav` or `/{site}/{lang}/footer`                                                                                                                                 |
+| **Path** | `/{site}/{lang}/nav` or `/{site}/{lang}/footer`, with empty segments dropped                                                                                                    |
+
+### `DEFAULT_SITE_SEGMENT` toggle
+
+`DEFAULT_SITE_SEGMENT` (`src/app/scripts.ts`) is the site segment used when the URL has no
+recognized site segment. It is currently `''` (empty — no default), because the site does not
+yet have multi-site/multi-language set up: a URL with no site segment resolves to the plain
+root fragment (`/nav`, `/footer`) instead of being prefixed with a site.
+
+Once multi-site/multi-language routing is introduced, flip this one constant back to `'global'`
+to restore the previous behavior (`/global/nav`, `/global/footer`) — both `header.ts` and
+`footer.ts` read the same constant, so they stay in sync automatically.
 
 ### Examples
 
-| URL               | Resolved fragment path                                    |
-| ----------------- | --------------------------------------------------------- |
-| `/global/en/page` | `/global/en/nav`                                          |
-| `/global/ar/page` | `/global/ar/nav`                                          |
-| `/global/jp/page` | `/global/jp/nav` — raw slug, not `/global/ja/nav`         |
-| `/en/page`        | `/global/en/nav` — no site segment → defaults to `global` |
-| `/ar/page`        | `/global/ar/nav` — no site segment → defaults to `global` |
-| `/bangkok/page`   | `/bangkok/nav`                                            |
+| URL               | Resolved fragment path (`DEFAULT_SITE_SEGMENT = ''`) |
+| ----------------- | ---------------------------------------------------- |
+| `/page`           | `/nav` — no site/lang segment → root fragment        |
+| `/en/page`        | `/en/nav` — no site segment, `en` recognized as lang |
+| `/global/en/page` | `/global/en/nav` — explicit site + lang              |
+| `/global/jp/page` | `/global/jp/nav` — raw slug, not `/global/ja/nav`    |
+| `/bangkok/page`   | `/bangkok/nav`                                       |
 
 ### Final fallback
 
@@ -65,25 +75,8 @@ Defined once in `src/app/scripts.ts` (compiled to `scripts/scripts.js` — never
 | Constant               | Purpose                                                                                            |
 | ---------------------- | -------------------------------------------------------------------------------------------------- |
 | `SUPPORTED_SITES`      | Identifies the site segment in the URL (`global`, `bangkok`, `sanya`, `test-pages`)                |
+| `DEFAULT_SITE_SEGMENT` | Site segment used when the URL has no recognized site segment (currently `''` — see toggle above)  |
 | `LANG_MAP`             | Maps alias slugs to BCP 47 tags (`jp → ja`, `zh-cn → zh-CN`)                                       |
 | `VALID_LANG_PRIMARIES` | Set of valid ISO 639-1 language primaries used to distinguish lang codes from market/country codes |
 
 > **Note:** When a new site is added, update `SUPPORTED_SITES` in `src/app/scripts.ts` only — both blocks pick it up automatically.
-
----
-
-## ⚠️ Open Question — Default site when no site segment is found
-
-**Pending confirmation from Srikrishnan.**
-
-When the URL has no recognized site segment (e.g. `/en/page`, `/ar/page`), the current implementation defaults the site to `global`, producing `/global/en/nav`.
-
-**Alternatives under consideration:**
-
-| Behavior                        | Resolved path for `/en/page` |
-| ------------------------------- | ---------------------------- |
-| Default to `global` _(current)_ | `/global/en/nav`             |
-| No default — use lang only      | `/en/nav`                    |
-| No default — use root           | `/nav`                       |
-
-Until confirmed, the code uses `global` as the default. If the correct behavior differs, update `getFragmentBasePath()` in both `src/blocks/header/header.ts` and `src/blocks/footer/footer.ts` (the `site` fallback value on the line: `const site = siteIdx !== -1 ? segments[siteIdx] : 'global'`).

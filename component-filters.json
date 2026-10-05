@@ -2,7 +2,8 @@
   {
     "id": "main",
     "components": [
-      "section"
+      "section",
+      "header-section"
     ]
   },
   {
@@ -21,43 +22,50 @@
       "section-intro",
       "awards-list",
       "turneo-proxy-test",
+      "turneo-experience-detail",
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
       "experience-tiles",
       "destination-introduction",
+      "hotel-architect",
       "interactive-asset",
       "filters-grid",
       "offers-carousel",
       "text-with-cta",
-      "rte"
+      "hero-video",
+      "hero-destination",
+      "rte",
+      "choose-space",
+      "culturist-card",
+      "split-media",
+      "footer",
+      "footer-contact",
+      "footer-social-link",
+      "footer-links",
+      "footer-legal"
     ]
   },
   {
-    "id": "richtext",
+    "id": "header-section",
+    "components": [
+      "text",
+      "image",
+      "button",
+      "hero",
+      "navigation-lists",
+      "link"
+    ]
+  },
+  {
+    "id": "text",
     "rte": {
       "toolbar": {
         "format": [
           "bold",
           "italic",
           "underline",
-          "strike",
-          "code_inline",
-          "text_color"
-        ],
-        "alignment": [
-          "left",
-          "center",
-          "right",
-          "justify"
-        ],
-        "direction": [
-          "rtl",
-          "ltr"
-        ],
-        "indentation": [
-          "indent",
-          "outdent"
+          "strike"
         ],
         "blocks": [
           "paragraph",
@@ -67,8 +75,7 @@
           "h4",
           "h5",
           "h6",
-          "code_block",
-          "blockquote"
+          "code_block"
         ],
         "list": [
           "bullet_list",
@@ -76,10 +83,7 @@
         ],
         "insert": [
           "link",
-          "unlink",
-          "image",
-          "table",
-          "special_characters"
+          "unlink"
         ],
         "sr_script": [
           "superscript",
@@ -87,19 +91,13 @@
         ],
         "editor": [
           "removeformat",
-          "clean_unsupported_tags",
-          "paste_text",
-          "fullscreen",
-          "find_and_replace"
+          "paste_text"
         ],
         "advanced": [
           "classes"
         ],
         "sections": [
           "format",
-          "alignment",
-          "direction",
-          "indentation",
           "blocks",
           "list",
           "insert",
@@ -107,10 +105,15 @@
           "editor",
           "advanced"
         ]
+      },
+      "actions": {
+        "link": {
+          "hideTarget": false
+        }
       }
     },
     "components": [
-      "richtext"
+      "text"
     ]
   },
   {
@@ -123,6 +126,12 @@
     "id": "cards",
     "components": [
       "card"
+    ]
+  },
+  {
+    "id": "choose-space",
+    "components": [
+      "space-option"
     ]
   },
   {
@@ -167,13 +176,50 @@
   {
     "id": "filters-grid",
     "components": [
-      "filters-grid-tab"
+      "experience-tiles-item"
     ]
   },
   {
-    "id": "filters-grid-tab",
+    "id": "footer-legal",
     "components": [
-      "filters-grid-filter"
+      "footer-legal-link"
+    ]
+  },
+  {
+    "id": "footer-links",
+    "components": [
+      "footer-link"
+    ]
+  },
+  {
+    "id": "footer-social-link",
+    "components": [
+      "footer-social-item"
+    ]
+  },
+  {
+    "id": "hero-destination",
+    "components": [
+      "hero-destination-item"
+    ]
+  },
+  {
+    "id": "hero-video",
+    "components": [
+      "hero-video-item"
+    ]
+  },
+  {
+    "id": "hotel-architect",
+    "components": [
+      "hotel-architect-image",
+      "hotel-architect-card"
+    ]
+  },
+  {
+    "id": "navigation-lists",
+    "components": [
+      "navigation-list-item"
     ]
   },
   {
@@ -184,5 +230,19 @@
     "minItems": 1,
     "maxItems": 3,
     "customErrorMsg": "Add between 1 and 3 offer cards."
+  },
+  {
+    "id": "split-media",
+    "components": [
+      "split-media-slide"
+    ],
+    "minItems": 1,
+    "customErrorMsg": "Add at least 1 slide."
+  },
+  {
+    "id": "text-with-cta",
+    "components": [
+      "text-with-cta-signup-form"
+    ]
   }
 ]

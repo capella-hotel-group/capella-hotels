@@ -1,0 +1,2 @@
+/*! v0.1.0 | h6d9e2126 */
+import{moveInstrumentation as e}from"../../scripts/scripts.js";var t=e=>e?.firstElementChild??null;function n(n){let r=[...n.children],i=t(r[0]),a=t(r[1]),o=document.createElement(`p`);o.className=`footer-heading`,o.textContent=i?.textContent?.trim()||`Contact Us`,i&&e(i,o);let s=document.createElement(`div`);a&&(e(a,s),[...a.childNodes].forEach(e=>s.append(e.cloneNode(!0)))),n.className=`footer-contact-info`,n.replaceChildren(o,s)}export{n as default};

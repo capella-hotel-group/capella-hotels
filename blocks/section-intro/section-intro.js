@@ -1,22 +1,2 @@
-/*! v0.1.0 | h82ae374c */
-export default function decorate(block) {
-	const rows = [...block.children];
-	const fieldOf = (name) => block.querySelector(`[data-aue-prop="${name}"]`);
-	const titleField = fieldOf("title");
-	const bodyField = fieldOf("body");
-	const hasLegacyAnchorRow = !titleField && rows.length >= 3;
-	const anchorRow = hasLegacyAnchorRow ? rows[0] : undefined;
-	const titleRow = rows[hasLegacyAnchorRow ? 1 : 0];
-	const bodyRow = rows[hasLegacyAnchorRow ? 2 : 1];
-	const anchorId = fieldOf("id")?.textContent?.trim() || anchorRow?.textContent?.trim();
-	if (anchorId) block.id = anchorId.replace(/^#/, "");
-	const headingText = titleField?.textContent?.trim() || titleRow?.querySelector("div")?.textContent?.trim() || "";
-	const h2 = document.createElement("h2");
-	h2.className = "section-intro-title";
-	h2.textContent = headingText;
-	const narrative = bodyField || bodyRow?.querySelector("div");
-	const textWrapper = document.createElement("div");
-	textWrapper.className = "section-intro-text";
-	if (narrative) textWrapper.append(narrative);
-	block.replaceChildren(h2, textWrapper);
-}
+/*! v0.1.0 | hf87c18c6 */
+function e(e){let t=[...e.children],n=t=>e.querySelector(`[data-aue-prop="${t}"]`),r=n(`title`),i=n(`body`),a=!r&&t.length>=3,o=a?t[0]:void 0,s=t[+!!a],c=t[a?2:1],l=n(`id`)?.textContent?.trim()||o?.textContent?.trim();l&&(e.id=l.replace(/^#/,``));let u=r||s?.querySelector(`div`),d=u?[...u.querySelectorAll(`p`)]:[],f=(d.length?d:[u]).map(e=>e?.textContent?.trim()||``).filter(Boolean),p=document.createElement(`h2`);p.className=`section-intro-title`,f.forEach((e,t)=>{t>0&&p.append(document.createElement(`br`)),p.append(document.createTextNode(e))});let m=i||c?.querySelector(`div`),h=document.createElement(`div`);h.className=`section-intro-text`,m&&h.append(m),e.replaceChildren(p,h)}export{e as default};

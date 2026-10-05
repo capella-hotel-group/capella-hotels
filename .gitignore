@@ -6,6 +6,9 @@ node_modules/*
 # Local-only test content served via `aem up --html-folder drafts`
 drafts/*
 
+# Local-only agent workflow artifacts (specs/plans), never committed
+docs/superpowers/*
+
 helix-importer-ui
 .DS_Store
 *.bak

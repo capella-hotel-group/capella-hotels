@@ -1,39 +1,78 @@
+import { moveInstrumentation } from '@/app/scripts.js';
+
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children];
   const blockId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();
   if (blockId) block.id = blockId;
 
-  // row 0: eyebrow
-  // row 1: title
-  // row 2: description
-  // row 3: desktop image (picture)
-  // row 4: mobile/tablet image (picture)
-  // row 5: cta group (label, link, open in new tab)
-  const eyebrowText = rows[0]?.firstElementChild?.textContent?.trim() || '';
-  const titleText = rows[1]?.firstElementChild?.textContent?.trim() || '';
-  const descriptionEl = rows[2]?.firstElementChild;
-  const pictureEl = rows[3]?.querySelector('picture');
+  block.setAttribute('data-testid', 'text-with-image');
+
+  const getRowText = (row?: Element | null) =>
+    row?.firstElementChild?.textContent?.trim() || row?.textContent?.trim() || '';
+  const getField = (name: string): Element | null => block.querySelector(`[data-aue-prop="${name}"]`);
+  const getFieldText = (name: string): string => getField(name)?.textContent?.trim() || '';
+  const variationText =
+    getFieldText('variation') ||
+    rows
+      .find((row) => {
+        const value = getRowText(row);
+        return value === 'little-stars' || value === 'gift-card';
+      })
+      ?.firstElementChild?.textContent?.trim() ||
+    '';
+
+  const resolvedLayout =
+    block.classList.contains('image-left') ||
+    block.querySelector('[data-aue-prop="classes"]')?.textContent?.trim() === 'image-left'
+      ? 'image-left'
+      : 'image-right';
+  const resolvedVariant = variationText === 'gift-card' ? 'gift-card' : 'little-stars';
+
+  block.classList.remove('image-left', 'image-right', 'little-stars', 'gift-card');
+  block.classList.add(resolvedLayout, resolvedVariant);
+
+  const eyebrowField = getField('eyebrow');
+  const titleField = getField('title');
+  const descriptionField = getField('description');
+  const eyebrowSource = eyebrowField || rows[0]?.firstElementChild || null;
+  const titleSource = titleField || rows[1]?.firstElementChild || null;
+  const titleParagraphs = titleSource ? [...titleSource.querySelectorAll('p')] : [];
+  const titleLines = titleParagraphs.length > 0 ? titleParagraphs : titleSource ? [titleSource] : [];
+  const titleText = titleSource?.textContent?.trim() || '';
+  const eyebrowText = eyebrowSource?.textContent?.trim() || '';
+  const descriptionEl = descriptionField || rows[2]?.firstElementChild || null;
+
+  const pictureRows = rows.filter((row) => row.querySelector('picture'));
+  const pictureEl = getField('image')?.querySelector('picture') || pictureRows[0]?.querySelector('picture');
   const desktopImg = pictureEl?.querySelector('img');
   const altText = desktopImg?.getAttribute('alt') || '';
-  const mobilePictureEl = rows[4]?.querySelector('picture');
+  const mobileField = getField('imageMobile');
+  const mobileAssetRow = mobileField?.closest('div') || pictureRows[1];
+  const mobilePictureEl = mobileField?.querySelector('picture') || mobileAssetRow?.querySelector('picture');
   const mobileImg = mobilePictureEl?.querySelector('img');
   const mobileSource = mobilePictureEl?.querySelector('source');
-  const mobileSrc = mobileSource?.getAttribute('srcset') || mobileImg?.getAttribute('src');
+  const mobileAsset = mobileAssetRow?.querySelector('img, a[href]');
+  const mobileSrc =
+    mobileSource?.getAttribute('srcset') ||
+    mobileImg?.getAttribute('src') ||
+    mobileAsset?.getAttribute('src') ||
+    mobileAsset?.getAttribute('href') ||
+    mobileAssetRow?.textContent?.trim();
   const mobileAltText = mobileImg?.getAttribute('alt') || '';
   const responsiveAltText = mobileAltText || altText;
-  const ctaGroup = rows[5]?.firstElementChild;
-  const ctaLinkEl = ctaGroup?.querySelector('a');
-  const ctaHref = ctaLinkEl?.getAttribute('href') || '';
-  const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
-  const ctaText = ctaTextEl?.textContent?.trim() || '';
-  const openInNewTabEl = [...(ctaGroup?.children || [])].find((element) =>
-    /^(true|false)$/i.test(element.textContent?.trim() ?? ''),
-  );
-  const openInNewTabValue = openInNewTabEl?.textContent?.trim().toLowerCase() || '';
-  const openInNewTab = openInNewTabValue === 'true';
 
-  if (pictureEl) {
-    const responsiveImageQuery = window.matchMedia('(max-width: 1024px)');
+  const ctaGroup =
+    getField('cta_link')?.closest('div') || rows.find((row) => row.querySelector('a'))?.firstElementChild;
+  const ctaLinkEl = ctaGroup?.querySelector('a');
+  const ctaHref = ctaLinkEl?.getAttribute('href') || getFieldText('cta_link');
+  const ctaTextEl = [...(ctaGroup?.children || [])].find((element) => !element.querySelector('a'));
+  const ctaText = ctaTextEl?.textContent?.trim() || getFieldText('cta') || '';
+  const openInNewTab =
+    [...(ctaGroup?.children || [])].some((element) => element.textContent?.trim().toLowerCase() === 'true') ||
+    getFieldText('cta_openInNewTab').toLowerCase() === 'true';
+
+  if (pictureEl && resolvedVariant === 'little-stars') {
+    const responsiveImageQuery = window.matchMedia('(max-width: 767px)');
     const updateAltText = () => {
       if (desktopImg) {
         desktopImg.alt = responsiveImageQuery.matches ? responsiveAltText : altText;
@@ -44,7 +83,7 @@ export default function decorate(block: HTMLElement): void {
     if (mobilePictureEl) {
       if (mobileSrc) {
         const source = document.createElement('source');
-        source.media = '(max-width: 1024px)';
+        source.media = '(max-width: 767px)';
         source.srcset = mobileSrc;
         pictureEl.prepend(source);
       }
@@ -59,12 +98,19 @@ export default function decorate(block: HTMLElement): void {
     const eyebrow = document.createElement('p');
     eyebrow.className = 'eyebrow';
     eyebrow.textContent = eyebrowText;
+    if (eyebrowSource) moveInstrumentation(eyebrowSource, eyebrow);
     textCol.append(eyebrow);
   }
 
   if (titleText) {
     const h3 = document.createElement('h3');
-    h3.textContent = titleText;
+    titleLines
+      .filter((line) => line.textContent?.trim())
+      .forEach((line, index) => {
+        if (index > 0) h3.append(document.createElement('br'));
+        h3.append(...line.childNodes);
+      });
+    if (titleSource) moveInstrumentation(titleSource, h3);
     textCol.append(h3);
   }
 
@@ -72,6 +118,7 @@ export default function decorate(block: HTMLElement): void {
   desc.className = 'description';
 
   if (descriptionEl) {
+    moveInstrumentation(descriptionEl, desc);
     desc.append(...descriptionEl.childNodes);
   }
 
@@ -82,16 +129,67 @@ export default function decorate(block: HTMLElement): void {
     cta.className = 'cta-link';
     cta.href = ctaHref;
     cta.textContent = ctaText;
+    cta.setAttribute('data-testid', 'text-with-image-cta');
     if (openInNewTab) cta.target = '_blank';
     textCol.append(cta);
   }
 
   const imageCol = document.createElement('div');
   imageCol.className = 'image-col';
-  if (mobileSrc) imageCol.classList.add('has-mobile-image');
-  if (pictureEl) imageCol.append(pictureEl);
-  mobilePictureEl?.remove();
 
-  block.innerHTML = '';
-  block.append(textCol, imageCol);
+  if (resolvedVariant === 'gift-card') {
+    const stack = document.createElement('div');
+    stack.className = 'gift-card-stack';
+
+    const giftCardRows: { row: Element; altField: string }[] = [];
+    ['image1', 'image2', 'image3'].forEach((field) => {
+      const row = getField(field)?.closest('div');
+      if (row?.querySelector('picture')) giftCardRows.push({ row, altField: `${field}Alt` });
+    });
+    const layerRows = giftCardRows.length
+      ? giftCardRows
+      : pictureRows.slice(0, 3).map((row, index) => ({ row, altField: `image${index + 1}Alt` }));
+    if (layerRows.length > 0) {
+      stack.classList.add(`gift-card-count-${layerRows.length}`);
+
+      layerRows.forEach(({ row, altField }) => {
+        const layer = document.createElement('div');
+        layer.className = 'gift-card-layer';
+
+        const rowPicture = row.querySelector('picture');
+        const rowImg = rowPicture?.querySelector('img') || row.querySelector('img');
+        const cardAlt = getFieldText(altField) || rowImg?.getAttribute('alt') || '';
+
+        if (rowPicture) {
+          const cardPicture = rowPicture.cloneNode(true) as HTMLPictureElement;
+          const cardImg = cardPicture.querySelector('img');
+          if (cardImg) cardImg.alt = cardAlt;
+          layer.append(cardPicture);
+          moveInstrumentation(rowPicture, cardPicture);
+        }
+
+        stack.append(layer);
+      });
+
+      imageCol.append(stack);
+    }
+  } else if (pictureEl) {
+    imageCol.append(pictureEl);
+  }
+
+  const hasImage = imageCol.hasChildNodes();
+  if (!hasImage) block.classList.add('no-image');
+
+  if (hasImage && ctaHref) {
+    const imageLink = document.createElement('a');
+    imageLink.className = 'image-link';
+    imageLink.href = ctaHref;
+    imageLink.setAttribute('data-testid', 'text-with-image-image-link');
+    if (openInNewTab) imageLink.target = '_blank';
+    imageLink.append(...imageCol.childNodes);
+    imageCol.append(imageLink);
+  }
+
+  block.replaceChildren(textCol);
+  if (hasImage) block.append(imageCol);
 }

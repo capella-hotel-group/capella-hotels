@@ -17,14 +17,14 @@
       }
     },
     {
-      "title": "Destination Introduction Image",
+      "title": "Destination Introduction Media",
       "id": "destination-introduction-image",
       "plugins": {
         "xwalk": {
           "page": {
             "resourceType": "core/franklin/components/block/v1/block/item",
             "template": {
-              "name": "Destination Introduction Image",
+              "name": "Destination Introduction Media",
               "model": "destination-introduction-image"
             }
           }
@@ -36,6 +36,22 @@
     {
       "id": "destination-introduction",
       "fields": [
+        {
+          "component": "text",
+          "name": "id",
+          "label": "Component Anchor ID",
+          "description": "Sets the id attribute on the block, usable as an anchor target.",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "dataTestId",
+          "label": "Data Test ID",
+          "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+          "valueType": "string",
+          "value": ""
+        },
         {
           "component": "text",
           "name": "eyebrow",
@@ -58,11 +74,24 @@
           "value": ""
         },
         {
-          "component": "richtext",
+          "component": "text",
           "name": "footerCta",
-          "label": "Footer CTA",
+          "label": "Footer CTA Label",
           "valueType": "string",
           "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "footerCta_link",
+          "label": "Footer CTA URL",
+          "valueType": "string"
+        },
+        {
+          "component": "boolean",
+          "name": "footerCta_openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
         }
       ]
     },
@@ -71,15 +100,44 @@
       "fields": [
         {
           "component": "reference",
-          "name": "image",
-          "label": "Image",
+          "name": "thumbnail",
+          "label": "Thumbnail",
+          "description": "Still image only. Doubles as the poster when the media is a video.",
           "valueType": "string",
           "multi": false
         },
         {
           "component": "text",
-          "name": "imageAlt",
-          "label": "Asset Alt Text",
+          "name": "thumbnailAlt",
+          "label": "Thumbnail Alt Text",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "select",
+          "name": "media",
+          "label": "Media Type",
+          "valueType": "string",
+          "multi": false,
+          "required": true,
+          "value": "image",
+          "options": [
+            { "name": "Image", "value": "image" },
+            { "name": "Video", "value": "video" }
+          ]
+        },
+        {
+          "component": "reference",
+          "name": "mediaAsset",
+          "label": "Media",
+          "valueType": "string",
+          "multi": false,
+          "required": true
+        },
+        {
+          "component": "text",
+          "name": "mediaAssetAlt",
+          "label": "Media Alt Text",
           "valueType": "string",
           "value": ""
         }
