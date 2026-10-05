@@ -57,18 +57,10 @@
         },
         {
           "component": "boolean",
-          "name": "hasLevel3",
-          "label": "Has Level 3",
+          "name": "mergeColumns",
+          "label": "Merge Columns",
           "valueType": "boolean",
           "value": false
-        },
-        {
-          "component": "number",
-          "name": "mergeCount",
-          "label": "Merge Count",
-          "valueType": "number",
-          "min": 1,
-          "max": 4
         }
       ]
     }

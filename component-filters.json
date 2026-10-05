@@ -28,6 +28,7 @@
       "destination-cards",
       "experience-tiles",
       "destination-introduction",
+      "hotel-architect",
       "interactive-asset",
       "filters-grid",
       "offers-carousel",
@@ -36,6 +37,8 @@
       "hero-destination",
       "rte",
       "choose-space",
+      "culturist-card",
+      "split-media",
       "footer",
       "footer-contact",
       "footer-social-link",
@@ -171,18 +174,6 @@
     ]
   },
   {
-    "id": "filters-grid",
-    "components": [
-      "filters-grid-tab"
-    ]
-  },
-  {
-    "id": "filters-grid-tab",
-    "components": [
-      "filters-grid-filter"
-    ]
-  },
-  {
     "id": "footer-legal",
     "components": [
       "footer-legal-link"
@@ -213,6 +204,13 @@
     ]
   },
   {
+    "id": "hotel-architect",
+    "components": [
+      "hotel-architect-image",
+      "hotel-architect-card"
+    ]
+  },
+  {
     "id": "navigation-lists",
     "components": [
       "navigation-list-item"
@@ -226,5 +224,19 @@
     "minItems": 1,
     "maxItems": 3,
     "customErrorMsg": "Add between 1 and 3 offer cards."
+  },
+  {
+    "id": "split-media",
+    "components": [
+      "split-media-slide"
+    ],
+    "minItems": 1,
+    "customErrorMsg": "Add at least 1 slide."
+  },
+  {
+    "id": "text-with-cta",
+    "components": [
+      "text-with-cta-signup-form"
+    ]
   }
 ]

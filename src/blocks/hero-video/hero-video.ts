@@ -1,7 +1,7 @@
 // src/blocks/hero-video/hero-video.ts
 import { resolveDAMUrl } from '@/utils/env';
 import { emitHeroImpression, emitItemSelect, emitMediaError } from './lib/analytics';
-import { runIntro, skipIntro } from './lib/intro';
+import { runIntro, shouldSkipIntro, skipIntro } from './lib/intro';
 import { MediaManager } from './lib/media-manager';
 import { SelectorUI } from './lib/selector-ui';
 import { initSoftNav } from './lib/soft-nav';
@@ -106,33 +106,48 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
 }
 
 function parseItems(itemRows: HTMLElement[]): HeroVideoItem[] {
-  return itemRows
-    .map((row): HeroVideoItem | null => {
-      const cells = [...row.children] as HTMLElement[];
-      // Model fields → cell indices:
-      //   cells[0] = label, cells[1] = video, cells[2] = poster,
-      //   cells[3] = link, cells[4] = focalDesktop, cells[5] = focalMobile
-      if (cells.length < 2) return null;
+  const cellText = (cell?: Element | null): string => cell?.textContent?.trim() ?? '';
+  const cellHref = (cell?: Element | null): string =>
+    cell?.querySelector<HTMLAnchorElement>('a')?.getAttribute('href')?.trim() ?? '';
+  const cellUrl = (cell?: Element | null): string => {
+    const href = cellHref(cell);
+    if (href) return href;
+    const text = cellText(cell);
+    return /^https?:\/\//i.test(text) || text.startsWith('/') ? text : '';
+  };
+  const looksLikeVideoReference = (value: string): boolean =>
+    /\.(mp4|m4v|mov|ogv|ogg|webm|m3u8)(?:[?#].*)?$/i.test(value);
 
-      const label = cells[0]?.textContent?.trim() ?? '';
+  // Never drop an authored row (see docs/coding-guidelines.md): a freshly-added, still-empty
+  // hero-video-item must still render so it stays visible/selectable on the UE canvas.
+  return itemRows.map((row): HeroVideoItem => {
+    const cells = [...row.children] as HTMLElement[];
+    const label = cellText(cells[0]) || 'New destination';
+    const otherCells = cells.slice(1);
 
-      const videoAnchor = cells[1]?.querySelector<HTMLAnchorElement>('a');
-      const rawVideo = (videoAnchor?.href ?? cells[1]?.textContent?.trim() ?? '').trim();
-      const looksLikeVideoUrl = /^https?:\/\//i.test(rawVideo) || rawVideo.startsWith('/');
-      const videoUrl = looksLikeVideoUrl ? resolveDAMUrl(rawVideo) : '';
+    // Item rows can lose hidden optional cells in delivery HTML, so identify cells by what they
+    // contain instead of fixed offsets. The first cell is always the label; after that we match
+    // the poster by <picture>, the video by a video-like asset URL, then treat the remaining text
+    // cells as the desktop/mobile focal points in authored order.
+    const posterCell = otherCells.find((cell) => cell.querySelector('picture'));
+    const linkedCells = otherCells.filter((cell) => cell !== posterCell && cellUrl(cell));
+    const videoCell = linkedCells.find((cell) => looksLikeVideoReference(cellUrl(cell)));
+    const linkCell = linkedCells.find((cell) => cell !== videoCell);
 
-      const poster = cells[2]?.querySelector('picture') ?? null;
-      const posterUrl = poster?.querySelector<HTMLImageElement>('img')?.src ?? '';
-      const linkAnchor = cells[3]?.querySelector<HTMLAnchorElement>('a');
-      const link = linkAnchor?.href ?? null;
-      const focalDesktop = cells[4]?.textContent?.trim() || 'center';
-      const focalMobile = cells[5]?.textContent?.trim() || 'center';
+    const rawVideo = videoCell ? cellUrl(videoCell) : '';
+    const videoUrl = rawVideo ? resolveDAMUrl(rawVideo) : '';
+    const posterUrl = posterCell?.querySelector<HTMLImageElement>('picture img')?.src ?? '';
+    const linkHref = linkCell ? cellHref(linkCell) : '';
+    const link = linkHref || null;
 
-      if (!label || !videoUrl) return null;
+    const focalCells = otherCells.filter(
+      (cell) => cell !== posterCell && cell !== videoCell && cell !== linkCell && cellText(cell),
+    );
+    const focalDesktop = cellText(focalCells[0]) || 'center';
+    const focalMobile = cellText(focalCells[1]) || 'center';
 
-      return { label, videoUrl, posterUrl, link, focalDesktop, focalMobile, sourceRow: row };
-    })
-    .filter((item): item is HeroVideoItem => item !== null);
+    return { label, videoUrl, posterUrl, link, focalDesktop, focalMobile, sourceRow: row };
+  });
 }
 
 // ── DOM builder ───────────────────────────────────────────────────────────────
@@ -211,6 +226,7 @@ function buildDOM(config: HeroVideoConfig): {
   prefixEl: HTMLElement;
   suffixEl: HTMLElement;
   itemListEl: HTMLUListElement;
+  itemsViewportEl: HTMLElement;
   controlsEl: HTMLElement;
   soundBtn: HTMLButtonElement;
   cursorEl: HTMLElement;
@@ -288,13 +304,16 @@ function buildDOM(config: HeroVideoConfig): {
   suffixEl.textContent = config.suffix;
   suffixEl.setAttribute('aria-hidden', 'true');
 
-  // "See" and the item list share one box so the prefix sits centered above the list; the prefix
-  // is absolutely positioned inside it, so it never shifts the (screen-centered) list.
-  const leadEl = document.createElement('div');
-  leadEl.className = 'hero-video-lead';
-  leadEl.append(prefixEl, itemListEl);
+  // Static (never transformed) viewport around the list — its own vertical center always lines up
+  // with the active item's fixed on-screen position (itemListEl only ever translates within it),
+  // so the mask-image fade in CSS reliably tracks distance-from-active regardless of which item's
+  // row happens to be selected, unlike putting the mask on itemListEl itself.
+  const itemsViewportEl = document.createElement('div');
+  itemsViewportEl.className = 'hero-video-items-viewport';
+  itemsViewportEl.append(itemListEl);
 
-  selectorEl.append(leadEl, suffixEl);
+  // "See" is now a real grid column (see hero-video.css) so it's naturally level with the list.
+  selectorEl.append(prefixEl, itemsViewportEl, suffixEl);
 
   // ── Bottom controls (sound toggle only — mode toggling lives in a sibling block) ──
   const controlsEl = document.createElement('div');
@@ -331,19 +350,13 @@ function buildDOM(config: HeroVideoConfig): {
     prefixEl,
     suffixEl,
     itemListEl,
+    itemsViewportEl,
     controlsEl,
     soundBtn,
     cursorEl,
     destLink,
     expLink,
   };
-}
-
-function shouldSkipIntro(): boolean {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
-  if (document.documentElement.classList.contains('adobe-ue-edit')) return true;
-  if (window.self !== window.top) return true; // inside iframe (UE)
-  return false;
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
@@ -426,7 +439,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     }
   }
 
-  const selectorUI = new SelectorUI(dom.itemListEl);
+  const selectorUI = new SelectorUI(dom.itemListEl, dom.itemsViewportEl);
   selectorUI.renderItems(items, state.activeIndex);
 
   // Recalculate row offsets after fonts load and on resize
@@ -486,7 +499,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       () => {
         // Position list so active item is centered before split starts
         selectorUI.measureRows();
-        selectorUI.positionForItem(state.activeIndex);
+        return selectorUI.positionForItem(state.activeIndex);
       },
       () => {
         // Fade in active item while See/with... are splitting apart

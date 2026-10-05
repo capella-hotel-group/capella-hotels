@@ -1,0 +1,338 @@
+.culturist-card-wrapper,
+.culturist-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.culturist-card {
+    color: #1e2d3b;
+    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+}
+
+.culturist-card-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: #e0d3d1;
+}
+
+.culturist-card-media {
+    width: 100%;
+    aspect-ratio: 240 / 300;
+    overflow: hidden;
+    background: #e0d3d1;
+}
+
+.culturist-card-media picture,
+.culturist-card-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.culturist-card-media img {
+    object-fit: cover;
+}
+
+.culturist-card-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding: 132px 24px 48px;
+    background: #e0d3d1;
+}
+
+.culturist-card-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 32px;
+}
+
+.culturist-card-avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: fit-content;
+    position: absolute;
+    top: -81px;
+    left: 24px;
+}
+
+.culturist-card-avatar {
+    display: block;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.culturist-card-signature {
+    display: block;
+    width: 140px;
+    height: 70px;
+}
+
+.culturist-card-quote {
+    margin: 0;
+    color: #1b364b;
+    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
+    font-size: 20px;
+    line-height: 1.1;
+}
+
+.culturist-card-quote blockquote,
+.culturist-card-quote p,
+.culturist-card-bio p {
+    margin: 0;
+}
+
+.culturist-card-name {
+    margin: 0;
+    color: #1e2d3b;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.culturist-card-bio {
+    margin: 0;
+    color: #1e2d3b;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.culturist-card-name {
+    font-style: italic;
+}
+
+.culturist-card-experience {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-left: 32px;
+}
+
+.culturist-card-eyebrow {
+    margin: 0;
+    color: #1b364b;
+    font-size: 12px;
+    line-height: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    height: 7px;
+    overflow: visible;
+}
+
+.culturist-card-title {
+    max-width: 290px;
+    margin: 0;
+    color: #1b364b;
+    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 28px;
+    text-transform: uppercase;
+}
+
+.culturist-card-gallery {
+    display: flex;
+    gap: 4px;
+    padding: 0;
+    margin: 4px 0 0;
+    width: calc(100% + 24px);
+    overflow-x: auto;
+    list-style: none;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.culturist-card-gallery::-webkit-scrollbar {
+    display: none;
+}
+
+.culturist-card-gallery-item {
+    flex: 0 0 140px;
+    aspect-ratio: 4 / 5;
+    scroll-snap-align: start;
+}
+
+.culturist-card-gallery-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.culturist-card-ctas {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    margin-top: 36px;
+}
+
+.culturist-card-cta-link {
+    display: inline-flex;
+    height: 40px;
+    align-items: center;
+    color: #1b364b;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 16px;
+    text-transform: uppercase;
+    text-underline-offset: 3px;
+}
+
+.culturist-card-cta-link--enquire {
+    position: relative;
+    margin-right: 32px;
+}
+
+.culturist-card-cta-link--enquire::after {
+    position: absolute;
+    top: 10px;
+    right: -16px;
+    height: 20px;
+    border-right: 1px solid currentColor;
+    content: '';
+}
+
+.culturist-card--empty {
+    min-height: 120px;
+}
+
+@media (width >= 768px) {
+    .culturist-card-media {
+        aspect-ratio: 5 / 4;
+    }
+
+    .culturist-card-panel {
+        gap: 64px;
+        min-height: 932px;
+        padding: 64px 48px;
+    }
+
+    .culturist-card-avatar-wrap {
+        top: -124px;
+        right: 40px;
+        left: auto;
+        align-items: center;
+    }
+
+    .culturist-card-profile {
+        flex: 0 0 247px;
+        max-width: 738px;
+        padding: 28px 32px;
+    }
+
+    .culturist-card-eyebrow {
+        height: 9px;
+    }
+
+    .culturist-card-title {
+        max-width: 290px;
+    }
+
+    .culturist-card-experience {
+        flex: 1;
+        min-height: 396px;
+        gap: 16px;
+        padding: 0 32px;
+    }
+
+    .culturist-card-gallery {
+        overflow: visible;
+        scroll-snap-type: none;
+        width: 100%;
+        margin-top: 22px;
+    }
+
+    .culturist-card-gallery-item {
+        flex: 0 0 calc((100% - 8px) / 3);
+        aspect-ratio: 4 / 5;
+        scroll-snap-align: none;
+    }
+
+    .culturist-card-ctas {
+        margin-top: auto;
+    }
+}
+
+@media (width >= 1200px) {
+    .culturist-card-layout {
+        display: grid;
+        grid-template-columns: 50% 50%;
+        min-height: 946px;
+    }
+
+    .culturist-card-media {
+        order: 2;
+        height: 946px;
+        aspect-ratio: auto;
+    }
+
+    .culturist-card-panel {
+        order: 1;
+        gap: 72px;
+        min-height: 946px;
+        padding: 64px 80px;
+    }
+
+    .culturist-card-avatar-wrap {
+        top: 0;
+        right: 0;
+        left: auto;
+    }
+
+    .culturist-card-avatar {
+        width: 160px;
+        height: 160px;
+    }
+
+    .culturist-card-signature {
+        width: 140px;
+        height: 70px;
+    }
+
+    .culturist-card-profile {
+        position: relative;
+        flex: 0 0 323px;
+        max-width: 560px;
+        padding: 0 32px;
+    }
+
+    .culturist-card-quote,
+    .culturist-card-name {
+        max-width: 316px;
+    }
+
+    .culturist-card-bio {
+        max-width: 380px;
+    }
+
+    .culturist-card-experience {
+        flex: 1;
+        min-height: 0;
+        max-width: 560px;
+        gap: 16px;
+        padding-inline: 32px;
+    }
+
+    .culturist-card-gallery {
+        margin-top: 16px;
+    }
+
+    .culturist-card-gallery-item {
+        flex-basis: 160px;
+    }
+
+    .culturist-card-ctas {
+        margin-top: auto;
+    }
+
+    .culturist-card-eyebrow {
+        height: 9px;
+    }
+}

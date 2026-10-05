@@ -336,7 +336,24 @@
     }
 
     .text-with-image .text-col {
+        align-items: center;
         padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
+        text-align: center;
+    }
+
+    .text-with-image .text-col h3 {
+        padding-inline-start: 0;
+        text-indent: 0;
+    }
+
+    .text-with-image .description {
+        width: 100%;
+        padding-inline-start: 0;
+    }
+
+    .text-with-image .cta-link {
+        align-self: center;
+        padding-inline-start: 0;
     }
 
     /* gift-card's image-col is a fixed-height crop window sized per image count (see Figma) -

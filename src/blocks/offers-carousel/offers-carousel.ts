@@ -1,4 +1,5 @@
 import { applyBlockIdentity } from '@/utils/block-identity.js';
+import { isUniversalEditor } from '@/utils/env.js';
 
 const CARD_MODEL = 'offers-carousel-item';
 
@@ -152,7 +153,7 @@ function decorateCard(row: HTMLElement): void {
 }
 
 // mirrors the .is-leaving transition duration in the stylesheet
-const LEAVE_MS = 220;
+const LEAVE_MS = 420;
 
 // gesture tuning: drag distance that counts as a swipe, wheel distance that counts as one step,
 // the idle gap that ends a wheel gesture, and how long a swipe keeps the trailing click quiet
@@ -160,14 +161,17 @@ const SWIPE_THRESHOLD = 40;
 const WHEEL_THRESHOLD = 90;
 const WHEEL_IDLE_MS = 200;
 const CLICK_SWALLOW_MS = 300;
+// gap between two steps of the same move; shorter than LEAVE_MS so the next card is already on
+// its way out while the previous one is still falling
+const STEP_INTERVAL_MS = 290;
 
-// `skip` keeps the card that is currently swiping out on its own state, so the rest of the
-// stack can already step forward while it drops away
-function applyStackState(cards: HTMLElement[], activeIndex: number, skip?: HTMLElement): void {
+// `skip` keeps the cards that are currently swiping out on their own state, so the rest of the
+// stack can already step forward while they drop away
+function applyStackState(cards: HTMLElement[], activeIndex: number, skip: HTMLElement[] = []): void {
   const total = cards.length;
 
   cards.forEach((card, index) => {
-    if (card === skip) return;
+    if (skip.includes(card)) return;
 
     const rank = (index - activeIndex + total) % total;
 
@@ -180,16 +184,67 @@ function applyStackState(cards: HTMLElement[], activeIndex: number, skip?: HTMLE
   });
 }
 
-// places a card in its new slot without animating, then releases it so it rises and fades in
-function playEntry(card: HTMLElement, place: () => void): void {
-  card.classList.add('is-entering');
+// places cards in their new slots without animating, then releases them so they rise and fade in
+function playEntry(entering: HTMLElement[], place: () => void): void {
+  entering.forEach((card) => card.classList.add('is-entering'));
   place();
-  // read back the layout so the new slot is committed before the entry transition starts
-  void card.offsetHeight;
-  requestAnimationFrame(() => card.classList.remove('is-entering'));
+  // read back the layout so the new slots are committed before the entry transition starts
+  void entering[0]?.offsetHeight;
+  requestAnimationFrame(() => entering.forEach((card) => card.classList.remove('is-entering')));
 }
 
-function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
+// while the intro reveal runs the stack ignores every gesture, so a card cannot step forward
+// halfway through being placed
+type Gate = { locked: boolean };
+
+const INTRO_STAGGER_MS = 600;
+// mirrors --card-move-duration under `.offers-carousel-cards.is-intro` in the stylesheet
+const INTRO_DURATION_MS = 1200;
+
+/**
+ * Reveals the stack the first time it reaches the viewport: each card starts below its slot and
+ * rises into place while fading in, the rearmost card leading so the front card lands last.
+ */
+function initIntro(stack: HTMLElement, cards: HTMLElement[], gate: Gate): void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (isUniversalEditor() || !('IntersectionObserver' in window)) return;
+
+  gate.locked = true;
+  stack.classList.add('is-intro');
+  cards.forEach((card) => card.classList.add('is-intro-pending'));
+
+  const play = () => {
+    [...cards].reverse().forEach((card, step) => {
+      card.style.transitionDelay = `${step * INTRO_STAGGER_MS}ms`;
+    });
+    // read back the layout so the offsets and delays are committed before the cards are released
+    void stack.offsetHeight;
+
+    requestAnimationFrame(() => {
+      cards.forEach((card) => card.classList.remove('is-intro-pending'));
+      window.setTimeout(
+        () => {
+          cards.forEach((card) => card.style.removeProperty('transition-delay'));
+          stack.classList.remove('is-intro');
+          gate.locked = false;
+        },
+        (cards.length - 1) * INTRO_STAGGER_MS + INTRO_DURATION_MS,
+      );
+    });
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      play();
+    },
+    { threshold: 0.25 },
+  );
+  observer.observe(stack);
+}
+
+function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): void {
   // the first authored card leads the stack; Figma lists it last only because of paint order
   let activeIndex = 0;
   let swiping = false;
@@ -198,49 +253,85 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   const nextBtn = root.querySelector('.offers-carousel-nav-next');
   const stack = root.querySelector<HTMLElement>('.offers-carousel-cards');
 
-  const update = () => applyStackState(cards, activeIndex);
+  // cards are skipped by the stack layout while they fall, and there can be more than one of them
+  // at a time once a move runs several overlapping steps
+  const falling = new Set<HTMLElement>();
+
+  const update = () => applyStackState(cards, activeIndex, [...falling]);
 
   // reel swipe: the front card slides down out of view, the cards behind push forward, and the
   // card that left reappears at the rear of the stack
-  const goNext = () => {
-    if (swiping || cards.length < 2) return;
-    swiping = true;
-
+  const step = (continuing = false) => {
     const leaving = cards[activeIndex]!;
+    falling.add(leaving);
+    // a card that is still travelling when it starts to leave keeps its speed, otherwise the
+    // eased fall would set off from a standstill and the move stalls at the handover
+    if (continuing) leaving.style.setProperty('--card-leave-easing', 'linear');
     leaving.classList.add('is-leaving');
     activeIndex = (activeIndex + 1) % cards.length;
-    applyStackState(cards, activeIndex, leaving);
+    update();
 
     window.setTimeout(() => {
       leaving.classList.remove('is-leaving');
-      playEntry(leaving, update);
-      swiping = false;
+      leaving.style.removeProperty('--card-leave-easing');
+      falling.delete(leaving);
+      playEntry([leaving], update);
     }, LEAVE_MS);
+  };
+
+  // several steps are started one after another without waiting for the previous one to finish,
+  // so a card that is already falling and a card that is re-entering are both in motion
+  const goNext = (steps = 1) => {
+    if (gate.locked || swiping || cards.length < 2) return;
+    const count = Math.min(Math.max(steps, 1), cards.length - 1);
+    swiping = true;
+
+    // the hops before the last one run at constant speed and end exactly when the next one
+    // starts, so a card that is retargeted mid-flight never eases to a halt at the junction
+    if (count > 1) stack?.classList.add('is-chaining');
+
+    for (let index = 0; index < count; index += 1) {
+      const run = () => {
+        if (index === count - 1) stack?.classList.remove('is-chaining');
+        step(index > 0);
+      };
+      if (index) window.setTimeout(run, index * STEP_INTERVAL_MS);
+      else run();
+    }
+
+    window.setTimeout(
+      () => {
+        swiping = false;
+      },
+      (count - 1) * STEP_INTERVAL_MS + LEAVE_MS,
+    );
   };
 
   // the reverse: the rear card comes up into the front slot while the others step back
   const goPrev = () => {
-    if (swiping || cards.length < 2) return;
+    if (gate.locked || swiping || cards.length < 2) return;
     activeIndex = (activeIndex - 1 + cards.length) % cards.length;
-    playEntry(cards[activeIndex]!, update);
+    playEntry([cards[activeIndex]!], update);
   };
 
-  prevBtn?.addEventListener('click', goPrev);
-  nextBtn?.addEventListener('click', goNext);
+  prevBtn?.addEventListener('click', () => goPrev());
+  nextBtn?.addEventListener('click', () => goNext());
 
   // a swipe that ends on a card is followed by a click, which would advance the stack twice
   let swallowClick = false;
 
   cards.forEach((card, index) => {
     card.addEventListener('focusin', () => {
-      if (swiping) return;
+      if (gate.locked || swiping) return;
       activeIndex = index;
       update();
     });
     card.addEventListener('click', (event) => {
-      if (swallowClick) return;
+      if (swallowClick || gate.locked || swiping) return;
       if ((event.target as Element)?.closest('a')) return;
-      goNext();
+      // only the cards behind the front one step the stack forward, by as many steps as their rank
+      const rank = (index - activeIndex + cards.length) % cards.length;
+      if (rank) goNext(rank);
     });
   });
 
@@ -249,6 +340,7 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   let start: { x: number; y: number } | null = null;
 
   stack?.addEventListener('pointerdown', (event) => {
+    if (gate.locked) return;
     event.stopPropagation();
     start = { x: event.clientX, y: event.clientY };
   });
@@ -289,6 +381,8 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[]): void {
   stack?.addEventListener(
     'wheel',
     (event) => {
+      // during the intro the stack is inert, so the wheel keeps scrolling the page
+      if (gate.locked) return;
       event.preventDefault();
       event.stopPropagation();
 
@@ -367,5 +461,9 @@ export default function decorate(block: HTMLElement): void {
   layout.append(copy, stage);
   block.append(layout);
 
-  if (rendered.length) wireInteraction(layout, rendered);
+  if (!rendered.length) return;
+
+  const gate: Gate = { locked: false };
+  wireInteraction(layout, rendered, gate);
+  initIntro(cards, rendered, gate);
 }

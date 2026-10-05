@@ -1,0 +1,41 @@
+/* footer-links — nav columns; the desktop CSS Grid placement (`display: contents`, named
+   grid-areas) is owned by footer.css since it composes the shared `.footer-inner` grid. */
+.footer-nav-columns {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-layout-module-gutter-l);
+}
+
+.footer-nav-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-layout-module-gutter-l);
+}
+
+.footer-nav-link {
+    margin: 0;
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
+}
+
+.footer-nav-link a {
+    color: var(--color-text-action-default);
+    text-decoration: none;
+}
+
+.footer-nav-link a:hover {
+    text-decoration: underline;
+}
+
+@media (width >= 768px) {
+    .footer-nav-columns {
+        flex-direction: row;
+        gap: var(--dimension-layout-module-gutter-xl);
+    }
+
+    .footer-nav-col {
+        flex: 1 1 0;
+    }
+}
