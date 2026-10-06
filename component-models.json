@@ -2302,7 +2302,7 @@
     ]
   },
   {
-    "id": "section-intro",
+    "id": "section-header",
     "fields": [
       {
         "component": "text",
