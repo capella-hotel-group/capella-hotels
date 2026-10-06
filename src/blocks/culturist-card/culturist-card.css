@@ -96,6 +96,14 @@
     margin: 0;
 }
 
+.culturist-card-quote p:first-child::before {
+    content: '"';
+}
+
+.culturist-card-quote p:last-child::after {
+    content: '"';
+}
+
 .culturist-card-name {
     margin: 0;
     color: var(--culturist-card-copy-color);
@@ -231,12 +239,13 @@
 
     .culturist-card-profile {
         max-width: 738px;
-        padding-top: calc(var(--dimension-layout-card-padding-block) + var(--dimension-spacing-general-3xl) - var(--dimension-spacing-general-s));
+        padding-top: calc(
+            var(--dimension-layout-card-padding-block) + var(--dimension-spacing-general-3xl) -
+                var(--dimension-spacing-general-s)
+        );
     }
 
     .culturist-card-experience {
-        flex: 1;
-        min-height: 396px;
         gap: var(--dimension-spacing-general-m);
         padding: 0 var(--dimension-spacing-general-2xl);
     }
@@ -253,10 +262,6 @@
         --culturist-card-gallery-item-basis: calc((100% - var(--dimension-spacing-general-xs)) / 3);
         aspect-ratio: 4 / 5;
         scroll-snap-align: none;
-    }
-
-    .culturist-card-ctas {
-        margin-top: auto;
     }
 }
 
@@ -312,8 +317,6 @@
     }
 
     .culturist-card-experience {
-        flex: 1;
-        min-height: 0;
         max-width: 560px;
         gap: var(--dimension-spacing-general-m);
         padding-inline: var(--dimension-spacing-general-2xl);
@@ -326,9 +329,4 @@
     .culturist-card-gallery-item {
         --culturist-card-gallery-item-basis: 160px;
     }
-
-    .culturist-card-ctas {
-        margin-top: auto;
-    }
-
 }
