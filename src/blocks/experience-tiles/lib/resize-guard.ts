@@ -10,11 +10,11 @@ interface ResizeGuardOptions {
 // transition. Navigation stays paused until resizing stops and transitions are restored.
 export function suppressTransitionsDuringResize(
   block: HTMLElement,
-  { className = 'split-media-resizing', onStart, onEnd }: ResizeGuardOptions = {},
+  { className = 'experience-tiles-resizing', onStart, onEnd }: ResizeGuardOptions = {},
 ): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let resizing = false;
-  const track = block.querySelector<HTMLElement>('.split-media-track');
+  const track = block.querySelector<HTMLElement>('.experience-tiles-track');
   const measure = (): number => (track ? track.getBoundingClientRect().width : window.innerWidth);
   let lastWidth = measure();
   const handleResize = (): void => {

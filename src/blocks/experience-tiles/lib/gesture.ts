@@ -47,7 +47,7 @@ export function bindGestures(
     cancel();
     if (!(target instanceof Element) || target.closest(touch ? TOUCH_BLOCKING_TARGET : INTERACTIVE_TARGET)) return;
     // Mouse dragging text remains native selection; touch can scroll the same copy region.
-    if (!touch && target.closest('.split-media-overlay')) return;
+    if (!touch && target.closest('.experience-tiles-overlay')) return;
     contact = { id, x, y, lastY: y, lastTime: performance.now(), velocity: 0, target, touch, owned: false };
   };
   const move = (x: number, y: number, event: Event): void => {

@@ -42,7 +42,7 @@ it('steps vertically only on release and suppresses the drag click', () => {
 });
 it('leaves taps, horizontal drags, interactive elements and text selection alone', () => {
   const surface = document.createElement('div');
-  surface.innerHTML = '<a href="#cta">CTA</a><div class="split-media-overlay"><p>Text</p></div>';
+  surface.innerHTML = '<a href="#cta">CTA</a><div class="experience-tiles-overlay"><p>Text</p></div>';
   document.body.append(surface);
   const actions = { begin: jest.fn(() => true), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };
   const binding = bindGestures(surface, actions);

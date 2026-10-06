@@ -7,16 +7,16 @@ function setup(animated = false, reduced = false, count = 3): void {
     .fn()
     .mockReturnValue({ matches: reduced, addEventListener: jest.fn(), removeEventListener: jest.fn() });
   const block = document.createElement('div');
-  block.className = 'split-media';
+  block.className = 'experience-tiles';
   block.tabIndex = 0;
   slides = Array.from({ length: count }, () => {
     const slide = document.createElement('li');
     slide.innerHTML =
-      '<div class="split-media-item"><div class="split-media-overlay"><a href="#cta">CTA</a></div></div>'.repeat(2);
+      '<div class="experience-tiles-item"><div class="experience-tiles-overlay"><a href="#cta">CTA</a></div></div>'.repeat(2);
     if (animated)
-      slide.querySelectorAll<HTMLElement>('.split-media-item, .split-media-overlay').forEach((el) => {
+      slide.querySelectorAll<HTMLElement>('.experience-tiles-item, .experience-tiles-overlay').forEach((el) => {
         el.style.transitionProperty = 'transform';
-        el.style.transitionDuration = el.classList.contains('split-media-overlay') ? '1.5s' : '1.2s';
+        el.style.transitionDuration = el.classList.contains('experience-tiles-overlay') ? '1.5s' : '1.2s';
         el.style.transitionDelay = '0s';
       });
     block.append(slide);
@@ -69,10 +69,10 @@ it('waits for panels AND incoming text and discards input while busy', () => {
   setup(true);
   controller.requestStep(1);
   expect(controller.requestStep(1)).toBe('busy');
-  slides[0].querySelectorAll('.split-media-item').forEach((el) => end(el));
-  slides[1].querySelectorAll('.split-media-item').forEach((el) => end(el));
+  slides[0].querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
+  slides[1].querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
   expect(controller.isBusy).toBe(true);
-  slides[1].querySelectorAll('.split-media-overlay').forEach((el) => end(el));
+  slides[1].querySelectorAll('.experience-tiles-overlay').forEach((el) => end(el));
   expect(controller.isBusy).toBe(false);
   expect(controller.index).toBe(1);
 });
@@ -92,7 +92,7 @@ it('selection interrupts a transition without stale callbacks or queued navigati
   expect(controller.index).toBe(2);
   expect(controller.isBusy).toBe(false);
   expect(jest.getTimerCount()).toBe(0);
-  slides[1].querySelectorAll('.split-media-item').forEach((el) => end(el));
+  slides[1].querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
   controller.select(99);
   expect(controller.index).toBe(2);
 });

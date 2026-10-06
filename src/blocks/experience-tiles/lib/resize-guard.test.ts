@@ -1,11 +1,11 @@
-// src/blocks/split-media/lib/resize-guard.test.ts
+// src/blocks/experience-tiles/lib/resize-guard.test.ts
 import { suppressTransitionsDuringResize } from './resize-guard';
 
 // The guard measures the track, so every fixture needs one plus a stubbed rect: jsdom reports zeros.
 function fixture(width = 1440) {
   const block = document.createElement('div');
   const track = document.createElement('ul');
-  track.className = 'split-media-track';
+  track.className = 'experience-tiles-track';
   block.append(track);
   const size = { width, height: 900 };
   track.getBoundingClientRect = () =>
@@ -30,10 +30,10 @@ describe('suppressTransitionsDuringResize', () => {
     suppressTransitionsDuringResize(block);
 
     resize({ width: 1200 });
-    expect(block.classList.contains('split-media-resizing')).toBe(true);
+    expect(block.classList.contains('experience-tiles-resizing')).toBe(true);
 
     jest.advanceTimersByTime(150);
-    expect(block.classList.contains('split-media-resizing')).toBe(false);
+    expect(block.classList.contains('experience-tiles-resizing')).toBe(false);
   });
 
   it('keeps the class present across repeated resize events until they stop', () => {
@@ -45,10 +45,10 @@ describe('suppressTransitionsDuringResize', () => {
     jest.advanceTimersByTime(100);
     resize({ width: 1100 });
     jest.advanceTimersByTime(100);
-    expect(block.classList.contains('split-media-resizing')).toBe(true);
+    expect(block.classList.contains('experience-tiles-resizing')).toBe(true);
 
     jest.advanceTimersByTime(50);
-    expect(block.classList.contains('split-media-resizing')).toBe(false);
+    expect(block.classList.contains('experience-tiles-resizing')).toBe(false);
   });
 
   it('supports a custom class name', () => {
@@ -63,8 +63,8 @@ describe('suppressTransitionsDuringResize', () => {
   it('notifies the controller after suppressing transitions, and resumes only after the final resize', () => {
     jest.useFakeTimers();
     const { block, resize } = fixture();
-    const onStart = jest.fn(() => expect(block.classList.contains('split-media-resizing')).toBe(true));
-    const onEnd = jest.fn(() => expect(block.classList.contains('split-media-resizing')).toBe(false));
+    const onStart = jest.fn(() => expect(block.classList.contains('experience-tiles-resizing')).toBe(true));
+    const onEnd = jest.fn(() => expect(block.classList.contains('experience-tiles-resizing')).toBe(false));
     const cleanup = suppressTransitionsDuringResize(block, { onStart, onEnd });
     resize({ width: 1200 });
     jest.advanceTimersByTime(100);
@@ -87,7 +87,7 @@ describe('suppressTransitionsDuringResize', () => {
     resize({ width: 1100 });
     jest.advanceTimersByTime(200);
     expect(onEnd).not.toHaveBeenCalled();
-    expect(block.classList.contains('split-media-resizing')).toBe(false);
+    expect(block.classList.contains('experience-tiles-resizing')).toBe(false);
   });
 
   it('ignores a window resize that only changed the dynamic viewport height', () => {
@@ -120,7 +120,7 @@ describe('suppressTransitionsDuringResize', () => {
 
     const block = document.createElement('div');
     const track = document.createElement('ul');
-    track.className = 'split-media-track';
+    track.className = 'experience-tiles-track';
     block.append(track);
     let size = { width: 1440, height: 900 };
     track.getBoundingClientRect = () => ({ ...size, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} });

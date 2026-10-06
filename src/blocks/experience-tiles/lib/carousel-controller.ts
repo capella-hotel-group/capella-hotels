@@ -49,7 +49,7 @@ export class CarouselController {
     this.updateActive(index);
     if (this.reducedMotion.matches || this.editing) return 'changed';
 
-    previous.classList.add('split-media-slide--leaving');
+    previous.classList.add('experience-tiles-slide--leaving');
     const transition: SlideTransition = { previous, outgoingDone: false, incomingDone: false };
     this.transition = transition;
     const complete = (outgoing: boolean, cancelled: boolean): void => {
@@ -65,11 +65,11 @@ export class CarouselController {
       if (transition.outgoingDone && transition.incomingDone) this.finishTransition();
     };
     transition.cancelOutgoing = waitForTransforms(
-      [...previous.querySelectorAll<HTMLElement>('.split-media-item')],
+      [...previous.querySelectorAll<HTMLElement>('.experience-tiles-item')],
       (cancelled) => complete(true, cancelled),
     );
     transition.cancelIncoming = waitForTransforms(
-      [...incoming.querySelectorAll<HTMLElement>('.split-media-item, .split-media-overlay')],
+      [...incoming.querySelectorAll<HTMLElement>('.experience-tiles-item, .experience-tiles-overlay')],
       (cancelled) => complete(false, cancelled),
     );
     return 'changed';
@@ -82,10 +82,10 @@ export class CarouselController {
     // entrance transition is mid-flight — the reveal on first scroll depends on this staying a no-op.
     if (index === this.index && this.transition === null) return;
     this.finishTransition();
-    this.slides.forEach((slide) => slide.classList.add('split-media-slide--settling'));
+    this.slides.forEach((slide) => slide.classList.add('experience-tiles-slide--settling'));
     this.updateActive(index);
     void this.slides[index].offsetHeight;
-    this.slides.forEach((slide) => slide.classList.remove('split-media-slide--settling'));
+    this.slides.forEach((slide) => slide.classList.remove('experience-tiles-slide--settling'));
   }
 
   beginResize(): void {
@@ -109,7 +109,7 @@ export class CarouselController {
   private updateActive(index: number): void {
     const focused = document.activeElement;
     if (!this.editing && index !== this.index && focused && this.slides[this.index]?.contains(focused)) {
-      this.slides[this.index]?.closest<HTMLElement>('.split-media')?.focus({ preventScroll: true });
+      this.slides[this.index]?.closest<HTMLElement>('.experience-tiles')?.focus({ preventScroll: true });
     }
     this.activeIndex = index;
     this.slides.forEach((slide, slideIndex) => {
@@ -121,10 +121,10 @@ export class CarouselController {
 
   private resetSlide(slide?: HTMLElement): void {
     if (!slide) return;
-    slide.classList.add('split-media-slide--settling');
-    slide.classList.remove('split-media-slide--leaving');
+    slide.classList.add('experience-tiles-slide--settling');
+    slide.classList.remove('experience-tiles-slide--leaving');
     void slide.offsetHeight;
-    slide.classList.remove('split-media-slide--settling');
+    slide.classList.remove('experience-tiles-slide--settling');
   }
 
   private finishTransition(): void {

@@ -19,7 +19,7 @@
       "fragment",
       "text-with-image",
       "hero-banner",
-      "section-intro",
+      "section-header",
       "awards-list",
       "turneo-proxy-test",
       "turneo-experience-detail",
@@ -170,8 +170,10 @@
   {
     "id": "experience-tiles",
     "components": [
-      "experience-tiles-item"
-    ]
+      "experience-tiles-slide"
+    ],
+    "minItems": 1,
+    "customErrorMsg": "Add at least 1 slide."
   },
   {
     "id": "footer-legal",

@@ -5,10 +5,10 @@ let cleanups: (() => void)[];
 let y = 0;
 function setup(top = 0, count = 3) {
   const block = document.createElement('div');
-  block.className = 'split-media';
+  block.className = 'experience-tiles';
   block.innerHTML =
-    '<ul class="split-media-track">' +
-    '<li><div class="split-media-overlay"><p>Copy</p></div></li>'.repeat(count) +
+    '<ul class="experience-tiles-track">' +
+    '<li><div class="experience-tiles-overlay"><p>Copy</p></div></li>'.repeat(count) +
     '</ul>';
   document.body.append(block);
   block.getBoundingClientRect = () => ({
@@ -287,7 +287,7 @@ it('consumes wheel input until an animated transition and the burst both finish'
 });
 it('keeps a copy gesture in the copy after reaching the bottom', () => {
   const { block, controller } = setup();
-  const copy = block.querySelector<HTMLElement>('.split-media-overlay')!;
+  const copy = block.querySelector<HTMLElement>('.experience-tiles-overlay')!;
   Object.defineProperties(copy, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
   copy.scrollTop = 380;
   wheel(80, copy);

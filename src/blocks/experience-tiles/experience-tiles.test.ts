@@ -1,4 +1,4 @@
-import decorate from './split-media';
+import decorate from './experience-tiles';
 
 jest.mock(
   '@/app/scripts',
@@ -17,19 +17,19 @@ jest.mock(
 
 function block(config: string[] = [], count = 3): HTMLElement {
   const element = document.createElement('div');
-  element.className = 'split-media';
+  element.className = 'experience-tiles';
   element.innerHTML =
     config.map((value) => `<div><div>${value}</div></div>`).join('') +
     Array.from(
       { length: count },
       (_, i) =>
-        `<div data-aue-model="split-media-slide"><div><img src="left.jpg"></div><div><p>Slide ${i}</p></div><div><img src="right.jpg"></div><div><p>Detail ${i}</p></div><div><a href="#cta">CTA</a></div></div>`,
+        `<div data-aue-model="experience-tiles-slide"><div><img src="left.jpg"></div><div><p>Slide ${i}</p></div><div><img src="right.jpg"></div><div><p>Detail ${i}</p></div><div><a href="#cta">CTA</a></div></div>`,
     ).join('');
   document.body.append(element);
   return element;
 }
 function active(element: HTMLElement): number {
-  return [...element.querySelectorAll('.split-media-slide')].findIndex(
+  return [...element.querySelectorAll('.experience-tiles-slide')].findIndex(
     (slide) => slide.getAttribute('aria-hidden') === 'false',
   );
 }
@@ -49,7 +49,7 @@ function observeIntersection(): (records: { isIntersecting: boolean; intersectio
   } as unknown as typeof IntersectionObserver;
   return (records) => notify(records);
 }
-describe('split-media integration', () => {
+describe('experience-tiles integration', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     Object.defineProperty(document, 'hidden', { configurable: true, value: false });
@@ -71,7 +71,7 @@ describe('split-media integration', () => {
     expect(active(element)).toBe(0);
     expect(element.id).toBe('id');
     expect(element.dataset.testId).toBe('qa');
-    expect(element.dataset.testid).toBe('split-media');
+    expect(element.dataset.testid).toBe('experience-tiles');
     expect(element.querySelector('button')).toBeNull();
     expect(element.hasAttribute('aria-keyshortcuts')).toBe(false);
   });
@@ -100,7 +100,7 @@ describe('split-media integration', () => {
     field.setAttribute('data-aue-prop', 'autoplay');
     decorate(element);
     expect(element.contains(field)).toBe(true);
-    element.querySelector('.split-media-track')!.remove();
+    element.querySelector('.experience-tiles-track')!.remove();
     await Promise.resolve();
     window.dispatchEvent(new Event('resize'));
     expect(jest.getTimerCount()).toBe(0);
@@ -110,28 +110,28 @@ describe('split-media integration', () => {
     decorate(element);
     expect(element.querySelector('button')).toBeNull();
     expect(element.hasAttribute('tabindex')).toBe(false);
-    expect(element.querySelector('.split-media-track')!.classList.contains('split-media-track--scroll')).toBe(false);
+    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
   });
   it('claims the vertical touch axis only where it owns page scrolling', () => {
     const owned = block();
     decorate(owned);
-    expect(owned.querySelector('.split-media-track')!.classList.contains('split-media-track--scroll')).toBe(true);
+    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(true);
 
     document.body.classList.add('adobe-ue-edit');
     const edited = block();
     decorate(edited);
-    expect(edited.querySelector('.split-media-track')!.classList.contains('split-media-track--scroll')).toBe(false);
+    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
     document.body.classList.remove('adobe-ue-edit');
   });
   it('lets the keyboard reach copy that overflows its panel', () => {
     const element = block();
     decorate(element);
-    const [overflowing, fitting] = [...element.querySelectorAll<HTMLElement>('.split-media-overlay')];
+    const [overflowing, fitting] = [...element.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
     Object.defineProperties(overflowing!, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
     Object.defineProperties(fitting!, { scrollHeight: { value: 200 }, clientHeight: { value: 200 } });
 
     // the guard only reacts to a width change, and jsdom reports a zero-sized track
-    const track = element.querySelector<HTMLElement>('.split-media-track')!;
+    const track = element.querySelector<HTMLElement>('.experience-tiles-track')!;
     track.getBoundingClientRect = () =>
       ({ width: 834, height: 900, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} }) as DOMRect;
     window.dispatchEvent(new Event('resize'));
@@ -139,22 +139,22 @@ describe('split-media integration', () => {
 
     expect(overflowing!.tabIndex).toBe(0);
     expect(overflowing!.getAttribute('role')).toBe('group');
-    expect(overflowing!.classList.contains('split-media-overlay--scrollable')).toBe(true);
+    expect(overflowing!.classList.contains('experience-tiles-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
     // a non-overflowing overlay must not become a scroll container, or it takes focus and wheel input
     // the page is better off keeping
-    expect(fitting!.classList.contains('split-media-overlay--scrollable')).toBe(false);
+    expect(fitting!.classList.contains('experience-tiles-overlay--scrollable')).toBe(false);
   });
   it('holds the entrance animation until the block is scrolled into view', () => {
     const element = block();
     const reveal = observeIntersection();
     decorate(element);
 
-    expect(element.classList.contains('split-media-pending')).toBe(true);
+    expect(element.classList.contains('experience-tiles-pending')).toBe(true);
     reveal([{ isIntersecting: false, intersectionRatio: 0 }]);
-    expect(element.classList.contains('split-media-pending')).toBe(true);
+    expect(element.classList.contains('experience-tiles-pending')).toBe(true);
     reveal([{ isIntersecting: true, intersectionRatio: 0.5 }]);
-    expect(element.classList.contains('split-media-pending')).toBe(false);
+    expect(element.classList.contains('experience-tiles-pending')).toBe(false);
   });
   it('releases a block that is already on screen on the very first observation', () => {
     const element = block();
@@ -163,14 +163,14 @@ describe('split-media integration', () => {
 
     // below the 0.5 threshold, so `isIntersecting` is false — but it is visible and must not be held
     reveal([{ isIntersecting: false, intersectionRatio: 0.2 }]);
-    expect(element.classList.contains('split-media-pending')).toBe(false);
+    expect(element.classList.contains('experience-tiles-pending')).toBe(false);
   });
   it('never holds the entrance in the editor or under reduced motion', () => {
     observeIntersection();
     document.body.classList.add('adobe-ue-edit');
     const edited = block();
     decorate(edited);
-    expect(edited.classList.contains('split-media-pending')).toBe(false);
+    expect(edited.classList.contains('experience-tiles-pending')).toBe(false);
     document.body.classList.remove('adobe-ue-edit');
 
     window.matchMedia = jest
@@ -178,27 +178,27 @@ describe('split-media integration', () => {
       .mockReturnValue({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() });
     const reduced = block();
     decorate(reduced);
-    expect(reduced.classList.contains('split-media-pending')).toBe(false);
+    expect(reduced.classList.contains('experience-tiles-pending')).toBe(false);
   });
   it('makes empty authored slides selectable and every UE slide accessible', () => {
     document.body.classList.add('adobe-ue-edit');
     const element = block();
     element.lastElementChild!.replaceChildren();
     decorate(element);
-    expect(element.querySelectorAll('.split-media-slide')).toHaveLength(3);
+    expect(element.querySelectorAll('.experience-tiles-slide')).toHaveLength(3);
     expect(element.querySelector('[inert]')).toBeNull();
-    expect(element.querySelector('.split-media-placeholder')).not.toBeNull();
+    expect(element.querySelector('.experience-tiles-placeholder')).not.toBeNull();
     document.body.classList.remove('adobe-ue-edit');
   });
   it('renders a published richtext description emitted as a second paragraph', () => {
     const element = block([], 1);
-    const content = element.querySelector<HTMLElement>('[data-aue-model="split-media-slide"] > div:nth-child(4)')!;
+    const content = element.querySelector<HTMLElement>('[data-aue-model="experience-tiles-slide"] > div:nth-child(4)')!;
     content.innerHTML = '<p>Nature guide</p><p>Discover the island with Ketut.</p>';
 
     decorate(element);
 
-    expect(element.querySelector('.split-media-item--right .split-media-headline')?.textContent).toBe('Nature guide');
-    expect(element.querySelector('.split-media-description')?.textContent).toBe('Discover the island with Ketut.');
+    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe('Nature guide');
+    expect(element.querySelector('.experience-tiles-description')?.textContent).toBe('Discover the island with Ketut.');
   });
 
   it('preserves every published richtext node after the headline', () => {
@@ -208,7 +208,7 @@ describe('split-media integration', () => {
       '<p>Title</p><p>First</p><p>Second <a href="#details">link</a></p><ul><li>List</li></ul><div><p>Wrapped</p></div>';
     const nodes = [...content.children].slice(1);
     decorate(element);
-    const description = element.querySelector('.split-media-description')!;
+    const description = element.querySelector('.experience-tiles-description')!;
     nodes.forEach((node) => expect(description.contains(node)).toBe(true));
     expect(description.textContent).toBe('FirstSecond linkListWrapped');
   });
@@ -220,7 +220,7 @@ describe('split-media integration', () => {
       '<p data-aue-prop="rightContent_headline">Title</p><div data-aue-prop="rightContent_description"></div>';
     const description = content.lastElementChild!;
     decorate(element);
-    expect(element.querySelector('.split-media-description')).toBe(description);
-    expect(description.closest('.split-media-hidden')).toBeNull();
+    expect(element.querySelector('.experience-tiles-description')).toBe(description);
+    expect(description.closest('.experience-tiles-hidden')).toBeNull();
   });
 });

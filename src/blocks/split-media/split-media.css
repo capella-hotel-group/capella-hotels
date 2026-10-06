@@ -4,13 +4,19 @@
    viewport-height track; only the panels themselves move to animate a transition. */
 
 .split-media {
-    --split-media-panel-duration: 1200ms;
     --split-media-motion-easing: cubic-bezier(0.37, 0, 0.63, 1);
+    --split-media-text-offset: 8px;
+    /* --split-media-panel-duration: 1200ms;
     --split-media-panel-stagger: 100ms;
     --split-media-text-duration: 500ms;
     --split-media-text-delay: 900ms;
-    --split-media-text-exit-duration: 250ms;
-    --split-media-text-offset: 8px;
+    --split-media-text-exit-duration: 250ms; */
+
+    --split-media-panel-duration: 900ms; /* 1200 */
+    --split-media-panel-stagger: 80ms; /* 100 */
+    --split-media-text-duration: 400ms; /* 500 */
+    --split-media-text-delay: 680ms; /* 900 */
+    --split-media-text-exit-duration: 200ms; /* 250 */
 
     position: relative;
     width: 100%;
@@ -28,9 +34,10 @@
     list-style: none;
 }
 
-/* Declared once and never swapped mid-gesture: the block drives vertical movement itself, so the
-   compositor must not commit a page scroll before the first touchmove has been classified.
-   pinch-zoom stays available for WCAG 1.4.4. */
+/* Declared once and never swapped mid-gesture: the block drives every vertical movement itself — the
+   carousel steps, the overlay's own scrolling and, at the first/last slide, the page scroll that
+   carries the reader out of the block. The compositor must not commit a page scroll before the first
+   touchmove has been classified. pinch-zoom stays available for WCAG 1.4.4. */
 .split-media .split-media-track--scroll {
     touch-action: pan-x pinch-zoom;
 }
@@ -70,9 +77,12 @@
     transition: transform var(--split-media-panel-duration) var(--split-media-motion-easing);
 }
 
-/* entrance: both panels rise from below, right starting 100ms after left so the pair reads as
-   sequential rather than simultaneous — replays every time this slide becomes active */
-.split-media .split-media-slide[aria-hidden='false'] .split-media-item {
+/* entrance: both panels rise from below, the right one a stagger behind the left so the pair reads
+   as sequential rather than simultaneous — replays every time this slide becomes active.
+   `--pending` suppresses the whole active state rather than pinning a transform of its own: the
+   resting position differs per breakpoint (desktop parks the left panel above, not below), so
+   letting the base rules apply is the only way to be correct everywhere. */
+.split-media:not(.split-media-pending) .split-media-slide[aria-hidden='false'] .split-media-item {
     transform: translateY(0);
 }
 
@@ -138,14 +148,15 @@
 }
 
 /* Added by JS only while the copy really overflows. A permanent scroll container would swallow page
-   scrolling through overscroll containment whenever the pointer sits over copy that fits. */
+   scrolling through overscroll containment whenever the pointer sits over copy that fits. No
+   `overscroll-behavior` here either: the scrolling itself is JS-driven on both the wheel and touch
+   paths, so containment would only ever fire once the controller has deliberately released the page. */
 .split-media .split-media-overlay--scrollable {
     overflow-y: auto;
-    overscroll-behavior-y: contain;
 }
 
 /* Text starts as the panel approaches its resting position, connecting the two motions. */
-.split-media .split-media-slide[aria-hidden='false'] .split-media-overlay {
+.split-media:not(.split-media-pending) .split-media-slide[aria-hidden='false'] .split-media-overlay {
     opacity: 1;
     transform: translateY(0);
     transition:
@@ -316,24 +327,26 @@
 }
 
 /* Reset/reuse a slide without animating it back across the track. Include text so a
-   cancelled transition can finish at its final opacity/position too. */
-.split-media .split-media-slide.split-media-slide--settling .split-media-item,
-.split-media .split-media-slide.split-media-slide--settling .split-media-overlay {
+   cancelled transition can finish at its final opacity/position too.
+   The `:not()` only matches the specificity the active state gained from the same guard — without
+   it these suppressions silently stop applying to the overlay. Same for the two rules below. */
+.split-media:not(.split-media-pending) .split-media-slide.split-media-slide--settling .split-media-item,
+.split-media:not(.split-media-pending) .split-media-slide.split-media-slide--settling .split-media-overlay {
     transition: none;
 }
 
 /* crossing a breakpoint mid-page-life recomputes each item's enter/exit transform; without this,
    hidden slides would visibly sweep through the frame while the media query switches */
-.split-media.split-media-resizing .split-media-slide .split-media-item,
-.split-media.split-media-resizing .split-media-slide .split-media-overlay {
+.split-media.split-media-resizing:not(.split-media-pending) .split-media-slide .split-media-item,
+.split-media.split-media-resizing:not(.split-media-pending) .split-media-slide .split-media-overlay {
     transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
     /* only suppress the animation, not the transform itself — the transform is what keeps
        inactive slides off-track, so removing it entirely would show every slide at once */
-    .split-media .split-media-slide[aria-hidden] .split-media-item,
-    .split-media .split-media-slide[aria-hidden] .split-media-overlay {
+    .split-media:not(.split-media-pending) .split-media-slide[aria-hidden] .split-media-item,
+    .split-media:not(.split-media-pending) .split-media-slide[aria-hidden] .split-media-overlay {
         transition: none;
     }
 }
@@ -366,10 +379,13 @@
     overflow: visible;
 }
 
+/* Authoring: every slide is laid out at once, so the viewport-height unit is the slide rather than
+   the block. Cap it to prevent layout issues in the Universal Editor. */
 .adobe-ue-edit .split-media .split-media-slide {
     position: relative;
     height: 100vh;
     height: 100dvh;
+    max-height: 1080px;
     pointer-events: auto;
 }
 

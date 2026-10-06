@@ -19,14 +19,27 @@ unchanged.
 ## Navigation
 
 - A shared scroll coordinator owns at most one block at a time. It claims the block as soon
-  as the block covers at least half the viewport and the page is still travelling towards
-  it, then settles it onto the viewport top with a 350ms eased animation (instant under
-  `prefers-reduced-motion`, with a timer fallback because background tabs freeze animation
-  frames). Coverage, not wheel delta, is the trigger: trackpads emit a few pixels per event
+  as the block is within a quarter of a viewport of the alignment point and the page is
+  still travelling towards it, then settles it onto the viewport top with an eased animation
+  whose duration scales with the travel (instant under `prefers-reduced-motion`, with a timer
+  fallback because background tabs freeze animation frames). Distance, not wheel delta, is
+  the trigger: trackpads emit a few pixels per event
   and a delta-sized window would let the block slip past. The direction rule keeps a block
   the user has already left from grabbing the page back.
-- Entering from above selects the first slide, entering from below the last; the entry
-  gesture is consumed to align the block (within 2px) and never also changes slide.
+- Entering from above always selects the first slide: downwards is the reading direction, so
+  the story restarts. Entering from below only selects the last slide on a first encounter —
+  after that the current slide is kept, so a reader who leaves a block half way through and
+  scrolls back up to it is not thrown to the end. Either way the entry gesture is consumed to
+  align the block (within 2px) and never also changes slide.
+- The entrance animation is held back until the block is on screen. Without that it would run
+  at decoration time, far above the fold, and the reader would arrive at a block that is
+  already settled. `split-media-pending` suppresses the active state until an
+  `IntersectionObserver` reports half the block visible; removing it hands over to the same
+  transitions a slide change uses. The class is never added in Universal Editor or under
+  `prefers-reduced-motion`, and anything already on screen at the first observation is
+  released immediately so nothing above the fold is delayed. Do not try to decide this from
+  the block's own geometry at decoration time: sections above it have not been laid out yet
+  and it reports a top of 0.
 - Wheel: vertical-dominant events only, `ctrlKey` and already-handled events ignored.
   `deltaMode` is normalised (line = 16px, page = viewport height). One step needs 40px of
   accumulated delta; a burst ends after 200ms of wheel silence, and after a step every
@@ -38,13 +51,20 @@ unchanged.
   `split-media-track--scroll` so the stylesheet can set `touch-action: pan-x pinch-zoom`
   once, for the whole gesture, instead of swapping it mid-drag. Single-slide blocks and
   Universal Editor keep `touch-action: auto`.
+- Because that `touch-action` also suppresses native vertical panning, a touch gesture the
+  block cannot consume — at the first or last slide, or anywhere the block is not yet
+  aligned — is carried by the block itself: it drags the page 1:1 and runs its own momentum
+  on release, checking every frame whether a block has entered the snap band. A swipe that
+  starts on a link still scrolls; the 6px recognition threshold and the click suppression
+  keep the tap working. Mouse drags never scroll the page.
 - Overflowing copy wins. A gesture that starts in a scrollable overlay stays with that
   overlay for its whole duration — reaching its boundary neither changes slide nor chains
   to the page. An overlay that actually overflows gets `tabindex="0"`, `role="group"` and
-  `split-media-overlay--scrollable`, which is what carries `overflow-y: auto` and
-  `overscroll-behavior-y: contain`. Copy that fits is never a scroll container: a permanent
-  one swallows page scrolling through overscroll containment whenever the pointer sits
-  over it, which freezes the page before the block is even aligned.
+  `split-media-overlay--scrollable`, which is what carries `overflow-y: auto`. There is
+  deliberately no `overscroll-behavior` on it: the scrolling is JS-driven on both the wheel
+  and the touch path, so containment would only ever fire once the coordinator had already
+  released the page, trapping the reader at the bottom of a long copy block. Copy that fits
+  is never a scroll container at all.
 - At the first or last slide only a fresh outward gesture releases the page; inward
   gestures still navigate. There is no loop and no queued destination: input during a
   transition is consumed, not replayed.
@@ -55,35 +75,38 @@ unchanged.
   can never pin the carousel to an edge slide. Chrome keeps animating its wheel fling after
   `preventDefault`, so while a burst is still live the coordinator re-settles the block
   instead of handing the page back; ownership is only released once the wheel goes quiet.
-- The resize guard watches track _width_ only. The track is `100dvh`, so its height also
-  changes every time a mobile URL bar collapses, and reacting to that would cancel gestures
-  and re-align the page mid-scroll. Both breakpoints are width-based.
+- The resize guard watches track _width_ only, on both the `ResizeObserver` and the
+  `window.resize` path. The track is `100dvh`, so its height also changes every time a
+  mobile URL bar collapses — and that fires `resize` just as it fires the observer, so a
+  guard on only one of them would still cancel gestures and re-align the page mid-scroll.
+  Both breakpoints are width-based.
 
 ### Tuning
 
-All five knobs live at the top of `src/blocks/split-media/lib/scroll-controller.ts`. They are
+The knobs live at the top of `src/blocks/split-media/lib/scroll-controller.ts`. They are
 ratios and durations, never per-breakpoint pixel sizes, so one set covers every device.
 
-| Constant                 | Decides                                                  | Lower it                                        | Raise it                                    |
-| ------------------------ | -------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
-| `ALIGN_TOLERANCE` (3px)  | slop that still counts as aligned                        | ownership drops right after snapping            | snap sits visibly off the edge              |
-| `WHEEL_THRESHOLD` (40px) | wheel accumulated per slide step                         | trigger-happy, easy to overshoot                | needs a deliberate flick                    |
-| `WHEEL_IDLE_MS` (200ms)  | silence that ends a burst                                | trackpad inertia leaks through and skips slides | slower to hand the page back at a boundary  |
-| `SETTLE_MS` (400ms)      | ease-out that lands the block, and the x3 fallback timer | abrupt snap                                     | sluggish, the user can out-scroll it        |
-| `SNAP_VISIBILITY` (0.6)  | viewport share the block must cover to be claimed        | grabs the page early, long involuntary jump     | block can sit half on screen and never snap |
+| Constant                                      | Decides                                                       | Lower it                                        | Raise it                                    |
+| --------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------- |
+| `ALIGN_TOLERANCE` (3px)                       | slop that still counts as aligned                             | ownership drops right after snapping            | snap sits visibly off the edge              |
+| `WHEEL_THRESHOLD` (40px)                      | wheel accumulated per slide step                              | trigger-happy, easy to overshoot                | needs a deliberate flick                    |
+| `WHEEL_IDLE_MS` (200ms)                       | silence that ends a burst                                     | trackpad inertia leaks through and skips slides | slower to hand the page back at a boundary  |
+| `SETTLE_MIN_MS` / `SETTLE_MAX_MS` (220/620ms) | bounds of the ease-out that lands the block, scaled by travel | abrupt snap                                     | sluggish, the user can out-scroll it        |
+| `FLING_DECAY` (0.95)                          | survival per 16ms of the touch momentum the block runs itself | stops dead on release                           | glides far past the intended slide          |
+| `SNAP_DISTANCE` (0.25)                        | how far from the alignment point a block may still be claimed | block parks near the top and never snaps        | grabs the page early, long involuntary jump |
 
-`SNAP_VISIBILITY` is the one authors notice. The block is claimed from
-`top <= (1 - value) x viewport`, so 0.6 snaps from 340px on a 850px phone, 478px on a
-1194px tablet and 360px on a 900px desktop — the same feel everywhere because the trigger is
-a share, not a pixel count. It must never be compared against the wheel delta: trackpads emit
-a few pixels per event and the block would slip past unsnapped.
+`SNAP_DISTANCE` is the one authors notice. The block is claimed from
+`|top| <= value x viewport`, so 0.25 snaps once roughly three quarters of a `100dvh` block
+is on screen — the same feel everywhere because the trigger is a share, not a pixel count.
+It must never be compared against the wheel delta: trackpads emit a few pixels per event and
+the block would slip past unsnapped.
 
 `ALIGN_TOLERANCE` is 3px rather than 1px because iOS reports a fractional `100dvh`
-(e.g. 745.5) and browser zoom adds its own rounding. `SETTLE_MS` is paired with
-`SNAP_VISIBILITY`: the settle travels at most `(1 - SNAP_VISIBILITY)` of the viewport, so
-lowering the threshold without raising the duration makes the jump feel thrown.
-`WHEEL_THRESHOLD` and `WHEEL_IDLE_MS` only affect pointer devices — touch runs through the
-drag path, which has its own 40px release threshold in `gesture.ts`.
+(e.g. 745.5) and browser zoom adds its own rounding. The settle duration scales with the
+travel between `SETTLE_MIN_MS` and `SETTLE_MAX_MS` so that a few pixels of correction and a
+near-viewport jump do not share one timing; `SETTLE_MAX_MS` also drives the x3 fallback
+timer. `WHEEL_THRESHOLD` and `WHEEL_IDLE_MS` only affect pointer devices — touch runs
+through the drag path, which has its own 40px release threshold in `gesture.ts`.
 
 ## Controller
 

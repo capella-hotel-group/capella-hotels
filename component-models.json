@@ -868,6 +868,137 @@
     ]
   },
   {
+    "id": "experience-tiles",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": "",
+        "placeholder": "e.g., experience-tiles"
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "value": "",
+        "placeholder": "experience-tiles"
+      }
+    ]
+  },
+  {
+    "id": "experience-tiles-slide",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "leftMedia_image",
+        "label": "Left Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "leftMedia_imageAlt",
+        "label": "Left Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "leftContent_eyebrow",
+        "label": "Left Panel Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "leftContent_headline",
+        "label": "Left Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "rightMedia_image",
+        "label": "Right Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "rightMedia_imageAlt",
+        "label": "Right Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "rightContent_headline",
+        "label": "Right Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "rightContent_description",
+        "label": "Right Panel Description",
+        "description": "Leave empty for a panel that shows only a headline.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "rightCtas_primaryCta",
+        "label": "Right Panel Primary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "rightCtas_primaryCtaText",
+        "label": "Right Panel Primary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "rightCtas_primaryCtaOpenInNewTab",
+        "label": "Right Panel Primary Link Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "aem-content",
+        "name": "rightCtas_secondaryCta",
+        "label": "Right Panel Secondary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "rightCtas_secondaryCtaText",
+        "label": "Right Panel Secondary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "rightCtas_secondaryCtaOpenInNewTab",
+        "label": "Right Panel Secondary Link Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "experience-tiles-item",
     "fields": [
       {
@@ -1237,6 +1368,44 @@
             "value": "clean-white"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "showBrandLogo",
+        "label": "Show Brand Logo",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "reference",
+        "name": "brandLogo",
+        "label": "Brand Logo Image Asset",
+        "valueType": "string",
+        "required": true,
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "showBrandLogo"
+            },
+            true
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "brandLogoAltText",
+        "label": "Brand Logo Alt Text",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "showBrandLogo"
+            },
+            true
+          ]
+        }
       }
     ]
   },
@@ -2133,7 +2302,7 @@
     ]
   },
   {
-    "id": "section-intro",
+    "id": "section-header",
     "fields": [
       {
         "component": "text",

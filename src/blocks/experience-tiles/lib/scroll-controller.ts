@@ -86,7 +86,7 @@ function edge(entry: Entry, direction: Direction): boolean {
   );
 }
 function copyAt(target: EventTarget | null, entry: Entry): HTMLElement | undefined {
-  const copy = target instanceof Element ? target.closest<HTMLElement>('.split-media-overlay') : null;
+  const copy = target instanceof Element ? target.closest<HTMLElement>('.experience-tiles-overlay') : null;
   return copy && entry.block.contains(copy) && copy.scrollHeight > copy.clientHeight + 1 ? copy : undefined;
 }
 function canScroll(copy: HTMLElement, delta: number): boolean {
