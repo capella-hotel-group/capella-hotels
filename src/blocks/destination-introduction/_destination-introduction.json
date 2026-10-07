@@ -140,6 +140,7 @@
           "component": "reference",
           "name": "mediaAsset",
           "label": "Media",
+          "description": "Must match the Media Type above. Videos autoplay muted, so upload a lightweight, compressed file to protect page load speed.",
           "valueType": "string",
           "multi": false,
           "required": true
