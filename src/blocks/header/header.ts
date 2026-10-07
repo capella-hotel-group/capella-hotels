@@ -693,9 +693,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   };
 
   let fragment = navPath ? await loadFragment(navPath) : null;
-  const siblingNavPath = getSiblingNavPath();
-  if (!fragment) fragment = await loadFragment(siblingNavPath);
-  if (!fragment && siblingNavPath !== '/nav') fragment = await loadFragment('/nav');
+  const fallbackPaths = [...new Set([getSiblingNavPath(), `${getFragmentBasePath()}/nav`, '/nav'])];
+  for (const path of fallbackPaths) {
+    if (!fragment) fragment = await loadFragment(path);
+  }
   if (!fragment) {
     hide();
     return;

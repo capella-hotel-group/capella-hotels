@@ -4,7 +4,7 @@
 
 Both blocks honor page metadata first. Their fallback behavior differs:
 
-- The header tries a `nav` fragment beside the current page, then the root `/nav` fragment.
+- The header tries a `nav` fragment beside the current page, then the site/language-derived nav, then root `/nav`.
 - The footer derives a `/footer` path from the current site/language segments.
 
 ---
@@ -26,13 +26,13 @@ Fallbacks are tried when the metadata path is absent or its fragment cannot be l
 
 ### Header
 
-The header removes the last segment of `window.location.pathname` and appends `nav`, then tries root `/nav` if the sibling fragment cannot be loaded. For example:
+The header removes the last segment of `window.location.pathname` and appends `nav`. If that sibling fragment cannot be loaded, it tries the site/language-derived nav path, then root `/nav`. Duplicate paths are only requested once. For example:
 
-| Page URL                                                            | First fallback                                 | Final fallback       |
-| ------------------------------------------------------------------- | ---------------------------------------------- | -------------------- |
-| `/test-pages/culturist-card`                                        | `/test-pages/nav`                              | `/nav`               |
-| `/content/capella-hotels/test-pages/qa/en/destination-introduction` | `/content/capella-hotels/test-pages/qa/en/nav` | `/nav`               |
-| `/page`                                                             | `/nav`                                         | No duplicate request |
+| Page URL                                                            | Sibling fallback                               | Site/language fallback | Final fallback |
+| ------------------------------------------------------------------- | ---------------------------------------------- | ---------------------- | -------------- |
+| `/test-pages/culturist-card`                                        | `/test-pages/nav`                              | `/test-pages/nav`      | `/nav`         |
+| `/content/capella-hotels/test-pages/qa/en/destination-introduction` | `/content/capella-hotels/test-pages/qa/en/nav` | `/test-pages/nav`      | `/nav`         |
+| `/page`                                                             | `/nav`                                         | `/global/nav`          | `/nav`         |
 
 ### Footer
 
