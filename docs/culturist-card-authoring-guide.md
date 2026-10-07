@@ -18,7 +18,8 @@ The Culturist Card combines block-level experience content with profile content 
 
 ## Content Fragment notes
 
+- Use the **Culturist Tab Details** model for the profile Content Fragment.
 - Use a blockquote in the quote rich text to display generated quotation marks. Plain paragraph quote content is shown without generated marks.
 - Add the profile name, description, avatar and alt text, and signature and alt text as appropriate.
-- The gallery renders up to three referenced experience cards with images. It scrolls horizontally on mobile and displays as a row on larger screens.
+- The referenced Content Fragment must contain at least three experience-card references, each with an image. The gallery scrolls horizontally on mobile and displays as a row on larger screens.
 - Details CTA label and destination are read from the Content Fragment and appear when both are authored.
