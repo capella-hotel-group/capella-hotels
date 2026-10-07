@@ -3,10 +3,12 @@ import { resolveDAMUrl } from '@/utils/env.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 
 // Row indices mirror the field order of the `destination-introduction` model
-// (eyebrow, title, body, footerCta), after the leading identity rows. Changing
-// that field list is a contract change and must update these indices in the
-// same commit.
+// (eyebrow, title, body, footerCta, darkOverlay), after the leading identity rows.
+// Changing that field list is a contract change and must update these indices in
+// the same commit.
 const COPY_FIELDS = ['eyebrow', 'title', 'body', 'cta'] as const;
+const OVERLAY_ROW = COPY_FIELDS.length;
+const CONTENT_ROWS = OVERLAY_ROW + 1;
 const IMAGE_MODEL = 'destination-introduction-image';
 // Cell indices mirror the field order of the `destination-introduction-image`
 // model; the `*Alt` fields collapse into the cell of the field they suffix and
@@ -258,7 +260,7 @@ export default function decorate(block: HTMLElement): void {
   const copyRows = applyBlockIdentity(
     block,
     rows.filter((row) => !galleryRows.includes(row)),
-    { contentRows: COPY_FIELDS.length },
+    { contentRows: CONTENT_ROWS },
   );
 
   const header = document.createElement('div');
@@ -278,6 +280,9 @@ export default function decorate(block: HTMLElement): void {
 
   const media = document.createElement('div');
   media.className = 'destination-introduction-media';
+  if (textOf(copyRows[OVERLAY_ROW]?.firstElementChild).toLowerCase() === 'true') {
+    media.classList.add('has-dark-overlay');
+  }
   media.append(track);
 
   const prev = interactive ? buildArrow('prev', 'Previous image') : null;
