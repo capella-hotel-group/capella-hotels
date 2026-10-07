@@ -182,6 +182,7 @@ interface Slide {
   element: HTMLLIElement;
   video: HTMLVideoElement | null;
   thumbnail: Element | null;
+  authoredThumbnail: boolean;
   label: string;
 }
 
@@ -211,6 +212,7 @@ function buildSlide(row: HTMLElement, index: number): Slide {
     // without an authored thumbnail an image slide can still supply one; a video
     // slide cannot, so it falls back to a numbered button
     thumbnail: thumbnail ?? picture,
+    authoredThumbnail: !!thumbnail,
     label: altOf(thumbnailCell) || altOf(mediaCell) || `Show media ${index + 1}`,
   };
 }
@@ -286,7 +288,9 @@ export default function decorate(block: HTMLElement): void {
   const next = interactive ? buildArrow('next', 'Next image') : null;
   if (prev && next) media.append(prev, next);
 
-  const thumbs = interactive ? buildThumbs(slides) : null;
+  // a lone slide has nothing to swap to, but an authored thumbnail is still
+  // content the author asked to see beneath the copy
+  const thumbs = interactive || slides.some((slide) => slide.authoredThumbnail) ? buildThumbs(slides) : null;
 
   // the copy children share a wrapper so desktop can lay them out as one flex
   // column beside the media; below desktop the wrapper is `display: contents`
