@@ -165,7 +165,10 @@
     "id": "destination-introduction",
     "components": [
       "destination-introduction-image"
-    ]
+    ],
+    "minItems": 1,
+    "maxItems": 3,
+    "customErrorMsg": "Add between 1 and 3 media items."
   },
   {
     "id": "experience-tiles",

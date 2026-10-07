@@ -782,6 +782,7 @@
         "name": "title",
         "label": "Title",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -789,6 +790,7 @@
         "name": "body",
         "label": "Body",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -808,6 +810,14 @@
         "component": "boolean",
         "name": "footerCta_openInNewTab",
         "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Enable Dark Image Overlay",
+        "description": "Tints the hero media so overlaid text stays legible.",
         "valueType": "boolean",
         "value": false
       }
@@ -854,6 +864,7 @@
         "component": "reference",
         "name": "mediaAsset",
         "label": "Media",
+        "description": "Max 10 seconds, WebM or MP4. The size of the video should be within 1.5MB & upto 1080 pixels",
         "valueType": "string",
         "multi": false,
         "required": true
@@ -863,6 +874,7 @@
         "name": "mediaAssetAlt",
         "label": "Media Alt Text",
         "valueType": "string",
+        "required": true,
         "value": ""
       }
     ]
