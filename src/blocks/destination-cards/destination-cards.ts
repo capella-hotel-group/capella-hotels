@@ -254,9 +254,9 @@ export default function decorate(block: HTMLElement): HTMLElement {
   carousel.className = 'destination-cards-carousel';
   carousel.append(list);
   block.replaceChildren(intro, carousel);
-  // matches the Figma component variants: 3 cards or fewer stay a static row, more than 3
-  // becomes a carousel with prev/next controls
-  if (cardRows.length > 3) {
+  // matches Figma (node 7806-55532/55592): the 3-card desktop/tablet frames both include the
+  // prev/next slider, so controls render starting at 3 cards, not only when there's overflow
+  if (cardRows.length >= 3) {
     const title = intro.querySelector('.destination-cards-title')?.textContent?.trim() || '';
     setupCarousel(carousel, list, title);
   }
