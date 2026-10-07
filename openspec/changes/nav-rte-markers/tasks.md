@@ -3,10 +3,10 @@
 - [x] 1.1 Add `NavMarker` type and `splitMarker(raw: string)` helper in `src/blocks/header/header.ts` (last `|`-separated token, exact case-insensitive match against `open-in-new-tab` / `open-in-same-tab` / `merge-columns`, else returns the text unchanged); verified by code review (no automated test suite for this block — Jest/`ts-jest` is broken in this repo's current dependency tree, unrelated to this change, and adding test infra was ruled out of scope)
 - [x] 1.2 Add `openInNewTab: boolean` to `NavLink`, `NavLanguage`, `NavCategory`, and `mergeColumns: boolean` to `NavRegion`; verified `npm run build` (`tsc --noEmit`) has no type errors
 
-## 2. Apply markers to CTA, Close label, languages, category link
+## 2. Apply markers to logo link, CTA, languages, category link
 
-- [x] 2.1 In `decorate()`, parse `ctaAnchor`/`closeAnchor` text with `splitMarker`; update `buildCtaZone` to accept `openInNewTab` and set `target="_blank" rel="noopener"` when true; verify the rendered CTA has no visible "|" text and correct `target` via a manual check against `/nav.plain.html`'s `Book | open-in-new-tab`
-- [x] 2.2 Verify the mobile "Close" label renders as exactly "Close" (marker stripped, no `target` applied) against `Close | open-in-same-tab` in the sample content
+- [x] 2.1 In `decorate()`, use the first authored button link for the logo and the last non-Close button link for Book; parse both labels and target markers and apply `target="_blank" rel="noopener"` when marked.
+- [x] 2.2 Ignore authored links labeled `Close`; retain the built-in `CLOSE` menu control.
 - [x] 2.3 Update `readLanguages` to parse each language item with `splitMarker(directText(item))` for both label and `openInNewTab`; update `buildLangZone` to set `target`/`rel` on the dropdown anchor when marked; verify against the sample content's 4 languages (2 marked new-tab, 2 same-tab)
 - [x] 2.4 Update `readCategoryFromList` to parse the top-level category label/marker the same way; apply `openInNewTab` where `buildMenuCategories` builds a plain `<a>` for a link-only category; verified by code review (no top-level category in current sample content uses this path)
 
