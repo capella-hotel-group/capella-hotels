@@ -231,7 +231,7 @@
     }
 
     .culturist-card-avatar-wrap {
-        top: calc(0px - var(--dimension-spacing-general-5xl));
+        top: calc(0px - var(--dimension-spacing-general-6xl));
         right: var(--dimension-spacing-general-3xl);
         left: auto;
         align-items: center;
@@ -268,7 +268,7 @@
 @media (width >= 1200px) {
     .culturist-card-layout {
         display: grid;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: 1fr 1fr;
         min-height: 946px;
     }
 
