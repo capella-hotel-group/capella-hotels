@@ -1,6 +1,12 @@
 import { getMetadata } from '@/app/aem.js';
 import { loadFragment } from '@/blocks/fragment/fragment.js';
-import { SUPPORTED_SITES, DEFAULT_SITE_SEGMENT, LANG_MAP, VALID_LANG_PRIMARIES } from '@/app/scripts.js';
+import {
+  moveInstrumentation,
+  SUPPORTED_SITES,
+  DEFAULT_SITE_SEGMENT,
+  LANG_MAP,
+  VALID_LANG_PRIMARIES,
+} from '@/app/scripts.js';
 
 function getFragmentBasePath(): string {
   const segments = window.location.pathname.split('/').filter(Boolean);
@@ -17,6 +23,33 @@ function getFragmentBasePath(): string {
 function applyBackgroundTheme(block: HTMLElement, themeBlock: Element | null): void {
   const theme = themeBlock?.children[0]?.firstElementChild?.textContent?.trim() || '';
   block.classList.toggle('footer-theme-clean-white', theme === 'clean-white');
+}
+
+function footerField(block: Element, name: string, rowIndex: number): Element | null {
+  const instrumentedField = block.querySelector(`[data-aue-prop="${name}"]`);
+  if (instrumentedField) return instrumentedField;
+  const row = block.children[rowIndex];
+  return row?.lastElementChild || row || null;
+}
+
+function buildBrandLogo(footerBlock: Element | null): HTMLElement | null {
+  if (!footerBlock) return null;
+  const showValue = footerField(footerBlock, 'showBrandLogo', 1)?.textContent?.trim().toLowerCase();
+  if (showValue !== 'true') return null;
+
+  const assetField = footerField(footerBlock, 'brandLogo', 2);
+  const picture = assetField?.querySelector('picture') || (assetField?.matches('picture') ? assetField : null);
+  if (!picture) return null;
+
+  const altText = footerField(footerBlock, 'brandLogoAltText', 3)?.textContent?.trim() || '';
+  const image = picture.querySelector('img');
+  if (image) image.alt = altText;
+
+  const logo = document.createElement('div');
+  logo.className = 'footer-brand-logo';
+  if (assetField) moveInstrumentation(assetField, logo);
+  logo.append(picture);
+  return logo;
 }
 
 /** Wraps whichever of the given (already-decorated) pieces are present under one group class. */
@@ -47,7 +80,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (!fragment) fragment = await loadFragment(`${getFragmentBasePath()}/footer`);
   if (!fragment) return;
 
-  applyBackgroundTheme(block, fragment.querySelector('.footer'));
+  applyBackgroundTheme(block.closest('footer') as HTMLElement, fragment.querySelector('.footer'));
+  const brandLogo = buildBrandLogo(fragment.querySelector('.footer'));
 
   // Each footer-* block decorates itself into the leaf class footer.css expects (see its own
   // .ts file); this only assembles the already-built pieces into the shared layout groups.
@@ -62,6 +96,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const inner = document.createElement('div');
   inner.className = 'footer-inner';
+  if (brandLogo) inner.append(brandLogo);
 
   const groups: Array<{ name: string; element: Element | null }> = [
     { name: 'nav', element: navGroup },

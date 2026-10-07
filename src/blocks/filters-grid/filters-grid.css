@@ -1,0 +1,761 @@
+main .filters-grid {
+    --filters-grid-background: var(--color-surface-general-subtle);
+    --filters-grid-heading: var(--color-text-main-heading);
+    --filters-grid-body: var(--color-text-main-body);
+    --filters-grid-muted: var(--color-text-action-inactive);
+
+    /* Same mis-synced globals hotel-architect.css already works around: the live Figma file
+       resolves these to 40/44/48 and 16/18/18, tokens.css to 36/48/48 and 20/20/22. */
+    --typography-line-height-heading-h1: 40px;
+    --typography-line-height-body-md: 16px;
+
+    position: relative;
+    overflow: hidden;
+    background: var(--filters-grid-background);
+    color: var(--filters-grid-body);
+}
+
+main .filters-grid::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    min-height: 1036px;
+    background: var(--filters-grid-background);
+    content: '';
+    pointer-events: none;
+}
+
+main .filters-grid.filters-grid-theme-terracotta,
+main .filters-grid.filters-grid-theme-brown {
+    --filters-grid-background: #a57f61;
+    --filters-grid-heading: var(--color-text-main-inverse-heading);
+    --filters-grid-body: var(--color-text-main-inverse-body);
+    --filters-grid-muted: var(--color-text-action-inverse-inactive);
+}
+
+main .filters-grid.filters-grid-theme-sage-green {
+    --filters-grid-background: #728078;
+    --filters-grid-heading: var(--color-text-main-inverse-heading);
+    --filters-grid-body: var(--color-text-main-inverse-body);
+    --filters-grid-muted: var(--color-text-action-inverse-inactive);
+}
+
+main .filters-grid.filters-grid-theme-soft-blush {
+    --filters-grid-background: var(--color-surface-general-default);
+}
+
+main .filters-grid.filters-grid-theme-dark-navy-blue {
+    --filters-grid-background: #1b364b;
+    --filters-grid-heading: var(--color-text-main-inverse-heading);
+    --filters-grid-body: var(--color-text-main-inverse-body);
+    --filters-grid-muted: var(--color-text-action-inverse-inactive);
+}
+
+main .filters-grid.filters-grid-theme-light-neutral,
+main .filters-grid.filters-grid-theme-sand {
+    --filters-grid-background: var(--color-surface-general-light);
+}
+
+main .filters-grid .filters-grid-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1440px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 96px 24px 40px;
+}
+
+main .filters-grid .filters-grid-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    text-align: center;
+}
+
+main .filters-grid .filters-grid-eyebrow,
+main .filters-grid .filters-grid-title {
+    margin: 0;
+    color: var(--filters-grid-heading);
+}
+
+/* Figma trims these text boxes to cap height; without it half-leading pushes everything down. */
+main .filters-grid .filters-grid-eyebrow,
+main .filters-grid .filters-grid-card-location {
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-eyebrow);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+    text-box: trim-both cap alphabetic;
+    text-transform: uppercase;
+}
+
+main .filters-grid .filters-grid-title {
+    margin-block: var(--dimension-spacing-eyebrow-to-title) var(--dimension-spacing-heading-to-content);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h1);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h1);
+}
+
+main .filters-grid .filters-grid-title > * {
+    margin: 0;
+}
+
+main .filters-grid .filters-grid-title > * + * {
+    margin-top: 0;
+}
+
+main .filters-grid .filters-grid-layout,
+main .filters-grid .filters-grid-controls,
+main .filters-grid .filters-grid-results {
+    display: flex;
+    flex-direction: column;
+}
+
+main .filters-grid .filters-grid-layout {
+    gap: 40px;
+}
+
+main .filters-grid .filters-grid-controls {
+    position: relative;
+    z-index: 2;
+    align-items: flex-start;
+    gap: 40px;
+    min-width: 0;
+    width: 100%;
+}
+
+main .filters-grid .filters-grid-tabs {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-self: center;
+    justify-content: flex-start;
+    min-height: 40px;
+    width: max-content;
+    gap: 0;
+    isolation: isolate;
+}
+
+main .filters-grid .filters-grid-tab:first-child {
+    padding-left: 0;
+}
+
+main .filters-grid .filters-grid-tab,
+main .filters-grid .filters-grid-filter,
+main .filters-grid .filters-grid-reveal {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
+main .filters-grid .filters-grid-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 4px 20px;
+    color: var(--filters-grid-muted);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    pointer-events: auto;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+main .filters-grid .filters-grid-tab + .filters-grid-tab {
+    border-left: 0;
+}
+
+main .filters-grid .filters-grid-tab + .filters-grid-tab::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 1px;
+    height: 11px;
+    background: var(--color-stroke-main-primary);
+    content: '';
+    transform: translateY(-50%);
+}
+
+main .filters-grid .filters-grid-tab[aria-selected='true'] {
+    color: var(--filters-grid-heading);
+}
+
+main .filters-grid .filters-grid-filters {
+    display: flex;
+    align-self: flex-start;
+    justify-content: flex-start;
+    gap: 40px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    width: 100%;
+    margin-inline-start: 0;
+    /* Figma "Rectangle 3": the scroller is alpha-masked so overflowing filters fade out. */
+    mask-image: linear-gradient(90deg, #000 73%, rgba(0 0 0 / 0%) 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 73%, rgba(0 0 0 / 0%) 100%);
+    text-align: left;
+}
+
+main .filters-grid .filters-grid-filters::-webkit-scrollbar {
+    display: none;
+}
+
+main .filters-grid .filters-grid-filter {
+    flex: 0 0 auto;
+    padding: 0;
+    /* Every filter shares one colour in Figma; the list's hierarchy comes from the mask alone. */
+    color: var(--filters-grid-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h4);
+    line-height: var(--typography-line-height-heading-h4);
+    white-space: nowrap;
+}
+
+main .filters-grid .filters-grid-results {
+    align-items: center;
+    gap: 40px;
+}
+
+main .filters-grid .filters-grid-list {
+    /* Figma right-aligns a trailing incomplete row (node 7806:55768: 5 cards = 3 + 2, the 2
+       sit in the last two columns, not the first two) - grid auto-placement always fills
+       from the start, so this needs flex-wrap + justify-content: flex-end instead. */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: var(--dimension-layout-module-gutter-l);
+    /* Figma's mobile row is 345 wide: 160 + 25 + 160, so the column gap is the remainder. */
+    column-gap: 25px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+main .filters-grid .filters-grid-card-item {
+    flex: 0 0 calc((100% - 25px) / 2);
+    min-width: 0;
+}
+
+main .filters-grid .filters-grid-empty {
+    flex: 1 1 100%;
+    list-style: none;
+    text-align: center;
+}
+
+main .filters-grid .filters-grid-card-action {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: #000;
+    color: var(--color-text-main-inverse-body);
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+}
+
+main .filters-grid .filters-grid-card-action[aria-disabled='true'] {
+    cursor: default;
+}
+
+main .filters-grid .filters-grid-card {
+    position: relative;
+    aspect-ratio: 160 / 195;
+    overflow: hidden;
+}
+
+main .filters-grid .filters-grid-card img,
+main .filters-grid .filters-grid-modal-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+main .filters-grid .filters-grid-card-shade {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
+}
+
+main .filters-grid .filters-grid-card-copy {
+    position: absolute;
+    /* The grid card pins 20px in Figma; only the modal's image-card uses the card padding token. */
+    inset: 20px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-eyebrow-to-title);
+    overflow: hidden;
+}
+
+main .filters-grid .filters-grid-card-location,
+main .filters-grid .filters-grid-card-title {
+    margin: 0;
+    color: var(--color-text-main-inverse-heading);
+}
+
+main .filters-grid .filters-grid-card-title {
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h4);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h4);
+}
+
+main .filters-grid .filters-grid-card-icon {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    transform: translateX(-50%);
+}
+
+/* Figma's icon: 2px strokes with round caps running 5.6 -> 22.4 inside a 28px box. */
+main .filters-grid .filters-grid-card-icon::before,
+main .filters-grid .filters-grid-card-icon::after {
+    position: absolute;
+    top: 13px;
+    left: 5.6px;
+    width: 16.8px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--color-icon-on-action-default);
+    content: '';
+}
+
+main .filters-grid .filters-grid-card-icon::after {
+    transform: rotate(90deg);
+}
+
+main .filters-grid .filters-grid-reveal,
+main .filters-grid .filters-grid-modal-cta {
+    padding: 8px 0;
+    color: var(--filters-grid-heading);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-text-link);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration: underline;
+    text-transform: uppercase;
+}
+
+main .filters-grid :is(button, a):focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 4px;
+}
+
+main .filters-grid .filters-grid-error {
+    padding: 96px 24px;
+    text-align: center;
+}
+
+.filters-grid-modal {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+    padding: 24px;
+    background: rgb(0 0 0 / 40%);
+
+    /* The overlay lives outside `main .filters-grid`, so it needs the same override. */
+    --typography-line-height-body-md: 16px;
+}
+
+.filters-grid-modal[hidden] {
+    display: none;
+}
+
+.filters-grid-modal-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 800px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding: var(--dimension-layout-modal-padding-block) var(--dimension-layout-modal-padding-inline);
+    background: var(--color-surface-general-default);
+}
+
+.filters-grid-modal-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-2xl);
+}
+
+.filters-grid-modal-close {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    right: 0;
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* Figma's icon: 2px strokes with round caps crossing a 28px box. */
+.filters-grid-modal-close::before,
+.filters-grid-modal-close::after {
+    grid-area: 1 / 1;
+    width: 16.8px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--color-text-action-default);
+    content: '';
+}
+
+.filters-grid-modal-close::before {
+    transform: rotate(45deg);
+}
+
+.filters-grid-modal-close::after {
+    transform: rotate(-45deg);
+}
+
+.filters-grid-modal-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+}
+
+.filters-grid-modal-feature,
+.filters-grid-modal-carousel,
+.filters-grid-modal-media {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: #000;
+}
+
+.filters-grid-modal-media {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+}
+
+.filters-grid-modal-feature::after,
+.filters-grid-modal-media::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background: rgb(0 0 0 / 40%);
+    content: '';
+    pointer-events: none;
+}
+
+.filters-grid-modal-feature > img,
+.filters-grid-modal-carousel-viewport img,
+.filters-grid-modal-banner-slider-viewport img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.filters-grid-modal-feature > img[hidden],
+.filters-grid-modal-carousel-viewport img[hidden],
+.filters-grid-modal-banner-slider-viewport img[hidden] {
+    display: none;
+}
+
+.filters-grid-modal-carousel-viewport,
+.filters-grid-modal-banner-slider-viewport {
+    position: absolute;
+    inset: 0;
+}
+
+.filters-grid-modal-banner-slider-viewport img {
+    object-position: center;
+}
+
+.filters-grid-modal-media-copy {
+    position: absolute;
+    z-index: 2;
+    inset: var(--dimension-layout-card-padding-top) var(--dimension-layout-card-padding-inline) auto;
+    color: var(--color-text-main-inverse-heading);
+}
+
+.filters-grid-modal-eyebrow,
+.filters-grid-modal-title,
+.filters-grid-modal-category,
+.filters-grid-modal-description p {
+    margin: 0;
+}
+
+.filters-grid-modal-eyebrow {
+    margin-bottom: var(--dimension-spacing-eyebrow-to-title);
+    font-size: var(--typography-fontsize-body-eyebrow);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+    text-box: trim-both cap alphabetic;
+    text-transform: uppercase;
+}
+
+.filters-grid-modal-title {
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h3);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h3);
+}
+
+.filters-grid-modal-pagination {
+    position: absolute;
+    z-index: 2;
+    bottom: 24px;
+    left: 50%;
+    display: flex;
+    gap: var(--dimension-spacing-general-xs);
+    transform: translateX(-50%);
+}
+
+.filters-grid-modal-pagination button {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-icon-action-opaque-inverse);
+    cursor: pointer;
+}
+
+.filters-grid-modal-pagination button[aria-pressed='true'] {
+    background: var(--color-icon-on-action-default);
+}
+
+.filters-grid-modal-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-l);
+    padding-top: var(--dimension-spacing-general-l);
+    color: var(--color-text-main-body);
+}
+
+.filters-grid-modal-category {
+    font-size: var(--typography-fontsize-body-l);
+    line-height: var(--typography-line-height-body-md);
+    text-box: trim-both cap alphabetic;
+    text-transform: uppercase;
+}
+
+.filters-grid-modal-description {
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    text-box: trim-both cap alphabetic;
+}
+
+.filters-grid-modal-cta {
+    align-self: flex-end;
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-text-link);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration: underline;
+    text-transform: uppercase;
+}
+
+.filters-grid-modal :is(button, a):focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 4px;
+}
+
+body.filters-grid-modal-open {
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    main .filters-grid,
+    .filters-grid-modal {
+        --typography-line-height-heading-h1: 44px;
+        --typography-line-height-body-md: 18px;
+    }
+
+    main .filters-grid .filters-grid-controls {
+        display: contents;
+    }
+
+    main .filters-grid .filters-grid-shell {
+        padding: 112px 48px 40px;
+    }
+
+    main .filters-grid .filters-grid-heading {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    main .filters-grid .filters-grid-title > * + * {
+        margin-left: var(--dimension-spacing-general-2xl);
+    }
+
+    main .filters-grid .filters-grid-layout {
+        display: grid;
+        grid-template-rows: 56px auto;
+        grid-template-columns: 200px minmax(0, 440px);
+        justify-content: space-between;
+        column-gap: 80px;
+        row-gap: 40px;
+    }
+
+    /* Spans both columns until the date picker claims row 1 / column 2. */
+    main .filters-grid .filters-grid-tabs {
+        grid-row: 1;
+        grid-column: 1 / -1;
+        align-self: center;
+        justify-content: flex-start;
+    }
+
+    main .filters-grid .filters-grid-filters {
+        grid-row: 2;
+        grid-column: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        overflow-x: clip;
+        overflow-y: auto;
+        /* Fixed 600px so the mask ramp matches Figma regardless of how many filters exist. */
+        height: 600px;
+        /* Figma's tablet artboard drops the filter list one step below the card grid. */
+        margin-top: var(--dimension-spacing-general-3xl);
+        padding-bottom: 0;
+        mask-image: linear-gradient(180deg, #000 0%, rgba(0 0 0 / 0%) 100%);
+        -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0 0 0 / 0%) 100%);
+    }
+
+    main .filters-grid .filters-grid-results {
+        grid-row: 2;
+        grid-column: 2;
+    }
+
+    main .filters-grid .filters-grid-list {
+        gap: var(--dimension-layout-module-gutter-l);
+    }
+
+    main .filters-grid .filters-grid-card-item {
+        flex-basis: calc((100% - var(--dimension-layout-module-gutter-l)) / 2);
+    }
+
+    main .filters-grid .filters-grid-card {
+        aspect-ratio: 200 / 244;
+    }
+
+    .filters-grid-modal-body {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 204px) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        align-items: start;
+        column-gap: var(--dimension-spacing-general-l);
+        padding-top: 0;
+    }
+
+    .filters-grid-modal-cta {
+        grid-column: 3;
+        align-self: end;
+        justify-self: end;
+    }
+}
+
+@media (min-width: 1200px) {
+    main .filters-grid,
+    .filters-grid-modal {
+        --typography-line-height-heading-h1: 48px;
+    }
+
+    main .filters-grid .filters-grid-shell {
+        padding: 120px 80px 80px;
+    }
+
+    main .filters-grid .filters-grid-layout {
+        grid-template-columns: 304px minmax(0, 760px);
+    }
+
+    /* Desktop lines the filter list back up with the first card row. */
+    main .filters-grid .filters-grid-filters {
+        margin-top: 0;
+    }
+
+    main .filters-grid .filters-grid-list {
+        gap: var(--dimension-spacing-general-5xl);
+    }
+
+    main .filters-grid .filters-grid-card-item {
+        flex-basis: calc((100% - 2 * var(--dimension-spacing-general-5xl)) / 3);
+    }
+
+    .filters-grid-modal {
+        place-items: center end;
+        padding-block: 24px;
+        padding-right: max(24px, calc((100vw - 1280px) / 2));
+        padding-left: 352px;
+    }
+
+    .filters-grid-modal-panel[data-variant='square'] {
+        width: min(100%, 760px);
+        height: min(600px, calc(100vh - 48px));
+    }
+
+    .filters-grid-modal-panel[data-variant='wide'] {
+        width: min(100%, 920px);
+    }
+
+    .filters-grid-modal-panel[data-variant='wide'] .filters-grid-modal-body {
+        grid-template-columns: 120px minmax(0, 1fr) auto;
+    }
+}
+
+/* tokens.css has no >=1920 tier yet, so this block carries Figma's 1920 type scale itself. */
+@media (min-width: 1920px) {
+    main .filters-grid,
+    .filters-grid-modal {
+        --typography-fontsize-heading-h1: 52px;
+        --typography-line-height-heading-h1: 56px;
+        --typography-fontsize-heading-h4: 32px;
+        --typography-line-height-heading-h4: 36px;
+        --typography-line-height-body-eyebrow: 18px;
+        --typography-line-height-body-md: 20px;
+    }
+
+    main .filters-grid .filters-grid-shell {
+        max-width: 1920px;
+        padding: 120px 120px 80px;
+    }
+
+    main .filters-grid .filters-grid-layout {
+        /* No 496px token exists; `justify-content: space-between` (inherited from the 768
+           rule) distributes the shell's remaining width into this one gap, so the column
+           math (304 + listing) always lands on Figma's 496px for this capped 1680px content
+           width, without a magic number. */
+        grid-template-columns: 304px minmax(0, 880px);
+    }
+
+    main .filters-grid .filters-grid-card {
+        aspect-ratio: 240 / 293;
+    }
+}
+
+@media (max-width: 480px) {
+    .filters-grid-modal-gallery {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-grid-modal-body {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    main .filters-grid * {
+        scroll-behavior: auto;
+    }
+}

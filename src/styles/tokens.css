@@ -38,6 +38,7 @@
     /* color / surface */
     --color-surface-page: #ffffff;
     --color-surface-primary-default: #ffffff;
+    --color-surface-general-default: #e0d3d1;
     --color-surface-general-subtle: #f9f6f6;
     --color-surface-general-light: #ece5e3;
     --color-surface-general-opaque: #2627271a;

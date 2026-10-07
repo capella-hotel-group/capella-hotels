@@ -18,7 +18,7 @@
 }
 
 .text-with-image.gift-card {
-    grid-template-columns: 48% 52%;
+    grid-template-columns: 40% 60%;
 }
 
 .text-with-image.no-image {
@@ -123,9 +123,9 @@
 }
 
 /* Image column */
-.text-with-image .image-col {
+/* .text-with-image .image-col {
     overflow: hidden;
-}
+} */
 
 .text-with-image .image-col .image-link {
     display: block;
@@ -145,11 +145,13 @@
     grid-template-columns: 60% 40%;
 }
 
+/* giftcard-container is a fixed-height "window": the card cluster below is a constant-size
+   graphic (same px at every breakpoint, per Figma) simply centered and cropped by this box.
+   Desktop/tablet height is the row height (same for every image count); mobile gets a
+   bespoke height per count since content stacks vertically there (see media queries below). */
 .text-with-image.gift-card .image-col {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 0;
+    position: relative;
+    height: 648px;
 }
 
 .text-with-image .image-col img,
@@ -159,72 +161,85 @@
     height: auto;
 }
 
+/* Fixed px size matching the Figma "giftcard" graphic at desktop - tablet/mobile override
+   their own distinct fixed px sizes below, they are NOT scaled copies of these. */
 .text-with-image .gift-card-stack {
-    position: relative;
-    width: min(100%, 460px);
-    aspect-ratio: 9 / 8;
-    margin: 0 auto;
-    container-type: size;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 522px;
+    height: 466px;
+    transform: translate(-50%, -50%);
+}
+
+.text-with-image .gift-card-stack.gift-card-count-2 {
+    width: 562px;
+    height: 450px;
 }
 
 .text-with-image .gift-card-layer {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 78%;
+    width: 402.9px;
     aspect-ratio: 8 / 5;
-    border-radius: 1.75rem;
+    border-radius: 20px;
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 18px 40px rgba(28, 28, 28, 0.12);
-    /* --gift-card-x/-y are fractions of the STACK, use cqw/cqh (not %, which resolves against this layer's own box) */
-    transform: translate(-50%, -50%) translate(var(--gift-card-x, 0cqw), var(--gift-card-y, 0cqh))
+    box-shadow:
+        0 37px 15px rgba(0, 0, 0, 0.01),
+        0 20px 12px rgba(0, 0, 0, 0.02),
+        0 9px 9px rgba(0, 0, 0, 0.04),
+        0 2px 5px rgba(0, 0, 0, 0.04);
+    /* --gift-card-x/-y are the layer's center offset from the stack's center, in px -
+       derived from the Figma node geometry (left/top % + rotation), constant at every breakpoint */
+    transform: translate(-50%, -50%) translate(var(--gift-card-x, 0px), var(--gift-card-y, 0px))
         rotate(var(--gift-card-rotation, 0deg));
     background: #f5f1ea;
 }
 
-/* Single image: straight, centered, no fan, fills most of the stack */
+/* Single image: straight, centered, no fan */
 .text-with-image .gift-card-stack.gift-card-count-1 .gift-card-layer {
-    width: 92%;
+    width: 511.72px;
     --gift-card-rotation: 0deg;
-    --gift-card-x: 0cqw;
-    --gift-card-y: 0cqh;
+    --gift-card-x: 1.86px;
+    --gift-card-y: -9.55px;
 }
 
 /* Two images: back card low-center, front card raised */
 .text-with-image .gift-card-stack.gift-card-count-2 .gift-card-layer:first-child {
-    --gift-card-rotation: -10deg;
-    --gift-card-x: -7cqw;
-    --gift-card-y: -2cqh;
+    --gift-card-rotation: -9.72deg;
+    --gift-card-x: -41.35px;
+    --gift-card-y: -7.01px;
     z-index: 1;
 }
 
 .text-with-image .gift-card-stack.gift-card-count-2 .gift-card-layer:last-child {
-    --gift-card-rotation: 1deg;
-    --gift-card-x: 10cqw;
-    --gift-card-y: -20cqh;
+    --gift-card-rotation: 1.3deg;
+    --gift-card-x: 55.28px;
+    --gift-card-y: -90.55px;
     z-index: 2;
 }
 
 /* Three images: back card peeks low, middle card raised, front card centered */
 .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:first-child {
-    --gift-card-rotation: -10deg;
-    --gift-card-x: -8cqw;
-    --gift-card-y: 16cqh;
+    --gift-card-rotation: -9.72deg;
+    --gift-card-x: -40.35px;
+    --gift-card-y: 73.99px;
     z-index: 1;
 }
 
 .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:nth-child(2) {
-    --gift-card-rotation: -2deg;
-    --gift-card-x: 0cqw;
-    --gift-card-y: -21cqh;
+    --gift-card-rotation: -1.74deg;
+    --gift-card-x: -2.35px;
+    --gift-card-y: -100.35px;
     z-index: 2;
 }
 
 .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:last-child {
-    --gift-card-rotation: 1deg;
-    --gift-card-x: 11cqw;
-    --gift-card-y: -2cqh;
+    --gift-card-rotation: 1.3deg;
+    --gift-card-x: 56.27px;
+    --gift-card-y: -9.55px;
     z-index: 3;
 }
 
@@ -242,7 +257,8 @@
     .text-with-image.little-stars,
     .text-with-image.image-left,
     .text-with-image.little-stars.image-left,
-    .text-with-image.gift-card {
+    .text-with-image.gift-card,
+    .text-with-image.gift-card.image-left {
         grid-template-columns: 50% 50%;
     }
 
@@ -252,6 +268,59 @@
 
     .text-with-image .text-col {
         padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
+    }
+
+    .text-with-image.gift-card .image-col {
+        height: 521.25px;
+    }
+
+    /* Tablet "giftcard" graphic is its own fixed px size - not a scaled copy of desktop/mobile */
+    .text-with-image .gift-card-stack {
+        width: 347px;
+        height: 309.774px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-2 {
+        width: 374px;
+        height: 299px;
+    }
+
+    .text-with-image .gift-card-layer {
+        width: 267.8px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-1 .gift-card-layer {
+        width: 306.83px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-2 .gift-card-layer:first-child {
+        --gift-card-rotation: -9.72deg;
+        --gift-card-x: -27.29px;
+        --gift-card-y: -4.42px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-2 .gift-card-layer:last-child {
+        --gift-card-rotation: 1.3deg;
+        --gift-card-x: 36.89px;
+        --gift-card-y: -59.96px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:first-child {
+        --gift-card-rotation: -9.72deg;
+        --gift-card-x: -26.82px;
+        --gift-card-y: 49.18px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:nth-child(2) {
+        --gift-card-rotation: -1.74deg;
+        --gift-card-x: -1.57px;
+        --gift-card-y: -66.71px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:last-child {
+        --gift-card-rotation: 1.3deg;
+        --gift-card-x: 37.42px;
+        --gift-card-y: -6.35px;
     }
 }
 
@@ -267,15 +336,34 @@
     }
 
     .text-with-image .text-col {
+        align-items: center;
         padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
+        text-align: center;
     }
 
-    .text-with-image .image-col {
+    .text-with-image .text-col h3 {
+        padding-inline-start: 0;
+        text-indent: 0;
+    }
+
+    .text-with-image .description {
+        width: 100%;
+        padding-inline-start: 0;
+    }
+
+    .text-with-image .cta-link {
+        align-self: center;
+        padding-inline-start: 0;
+    }
+
+    /* gift-card's image-col is a fixed-height crop window sized per image count (see Figma) -
+       it must NOT get the little-stars full-bleed aspect-ratio/object-fit:cover treatment. */
+    .text-with-image:not(.gift-card) .image-col {
         width: 100%;
         aspect-ratio: 4 / 5;
     }
 
-    .text-with-image .image-col img {
+    .text-with-image:not(.gift-card) .image-col img {
         height: 100%;
         object-fit: cover;
     }
@@ -286,41 +374,66 @@
         order: 0;
     }
 
+    .text-with-image.gift-card .image-col:has(.gift-card-count-1) {
+        height: 220px;
+    }
+
+    .text-with-image.gift-card .image-col:has(.gift-card-count-2) {
+        height: 400px;
+    }
+
+    .text-with-image.gift-card .image-col:has(.gift-card-count-3) {
+        height: 491px;
+    }
+
+    /* Mobile "giftcard" graphic is its own fixed px size - not shared with desktop/tablet */
     .text-with-image .gift-card-stack {
-        aspect-ratio: 4 / 5;
+        width: 308px;
+        height: 454.724px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-2 {
+        width: 334px;
+        height: 401px;
     }
 
     .text-with-image .gift-card-layer {
-        width: 92%;
+        width: 272.445px;
+    }
+
+    .text-with-image .gift-card-stack.gift-card-count-1 .gift-card-layer {
+        --gift-card-rotation: 0deg;
+        --gift-card-x: 0px;
+        --gift-card-y: 0px;
     }
 
     .text-with-image .gift-card-stack.gift-card-count-2 .gift-card-layer:first-child {
-        --gift-card-rotation: -12deg;
-        --gift-card-x: -1cqw;
-        --gift-card-y: 10cqh;
+        --gift-card-rotation: -12.32deg;
+        --gift-card-x: -2.76px;
+        --gift-card-y: 39.07px;
     }
 
     .text-with-image .gift-card-stack.gift-card-count-2 .gift-card-layer:last-child {
-        --gift-card-rotation: -6deg;
-        --gift-card-x: 3cqw;
-        --gift-card-y: -25cqh;
+        --gift-card-rotation: -5.96deg;
+        --gift-card-x: 8.62px;
+        --gift-card-y: -99.18px;
     }
 
     .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:first-child {
-        --gift-card-rotation: -12deg;
-        --gift-card-x: -1cqw;
-        --gift-card-y: 25cqh;
+        --gift-card-rotation: -12.32deg;
+        --gift-card-x: -2.75px;
+        --gift-card-y: 114.05px;
     }
 
     .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:nth-child(2) {
-        --gift-card-rotation: 9deg;
-        --gift-card-x: -1cqw;
-        --gift-card-y: -27cqh;
+        --gift-card-rotation: 8.53deg;
+        --gift-card-x: -3.02px;
+        --gift-card-y: -122.96px;
     }
 
     .text-with-image .gift-card-stack.gift-card-count-3 .gift-card-layer:last-child {
-        --gift-card-rotation: -6deg;
-        --gift-card-x: 3cqw;
-        --gift-card-y: -5cqh;
+        --gift-card-rotation: -5.96deg;
+        --gift-card-x: 8.53px;
+        --gift-card-y: -24.26px;
     }
 }
