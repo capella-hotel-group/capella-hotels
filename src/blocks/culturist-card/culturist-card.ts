@@ -145,7 +145,7 @@ async function fetchCFDetails(cfPath: string): Promise<CulturistCardData | null>
             return null;
           }
           const data = await response.json();
-          return data.data?.tabDetailsByPath?.item || null;
+          return data.data?.culturistTabDetailsByPath?.item || null;
         })
         .catch((error) => {
           console.error(`[culturist-card] Failed to fetch CF details for ${cfPath}`, error);
