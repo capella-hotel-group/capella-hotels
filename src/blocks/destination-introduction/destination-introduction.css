@@ -266,7 +266,7 @@
     }
 
     /* sits above the media but below the nav arrows, which the media positions */
-    .destination-introduction-media.has-dark-overlay .destination-introduction-slide::after {
+    .destination-introduction-slide.has-dark-overlay::after {
         content: '';
         position: absolute;
         inset: 0;
