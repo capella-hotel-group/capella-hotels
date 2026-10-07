@@ -404,6 +404,8 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
 
 // A region marked merge-columns joins the immediately following region only when
 // the pair fits in MERGE_ROW_COLUMNS slots. Otherwise both regions render normally.
+const MERGE_ROW_COLUMNS = 4;
+
 function groupRegions(regions: NavRegion[]): NavRegion[][] {
   const groups: NavRegion[][] = [];
   let i = 0;
@@ -424,8 +426,6 @@ function groupRegions(regions: NavRegion[]): NavRegion[][] {
   }
   return groups;
 }
-
-const MERGE_ROW_COLUMNS = 4;
 
 interface MergeSlot {
   label: string;
