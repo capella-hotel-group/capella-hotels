@@ -82,7 +82,8 @@
     height: var(--culturist-card-signature-height);
 }
 
-.culturist-card-quote {
+.culturist-card-quote,
+.culturist-card-quote-content {
     margin: 0;
     color: var(--color-text-main-body);
     font-family: var(--type-font-family-subtitle);
@@ -95,6 +96,7 @@
 
 .culturist-card-quote blockquote,
 .culturist-card-quote p,
+.culturist-card-quote-content p,
 .culturist-card-bio p {
     margin: 0;
 }
@@ -334,6 +336,7 @@
     }
 
     .culturist-card-quote,
+    .culturist-card-quote-content,
     .culturist-card-name {
         max-width: 316px;
     }
