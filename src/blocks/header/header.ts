@@ -73,6 +73,12 @@ function getFragmentBasePath(): string {
   return parts.length ? `/${parts.join('/')}` : '';
 }
 
+function getSiblingNavPath(): string {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  segments.pop();
+  return `/${[...segments, 'nav'].join('/')}`;
+}
+
 // Text of an element excluding any nested <ul>/<ol>, so a label wrapped in a <p>
 // (e.g. <li><p>Label</p><ul>...</ul></li>, produced by the rich text editor) is still read.
 function directText(el: Element): string {
@@ -687,8 +693,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   };
 
   let fragment = navPath ? await loadFragment(navPath) : null;
-  if (!fragment) fragment = await loadFragment(`${getFragmentBasePath()}/nav`);
-  if (!fragment) fragment = await loadFragment('/nav');
+  const fallbackPaths = [...new Set([getSiblingNavPath(), `${getFragmentBasePath()}/nav`, '/nav'])];
+  for (const path of fallbackPaths) {
+    if (!fragment) fragment = await loadFragment(path);
+  }
   if (!fragment) {
     hide();
     return;
