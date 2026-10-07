@@ -85,9 +85,12 @@
 .culturist-card-quote {
     margin: 0;
     color: var(--color-text-main-body);
-    font-family: var(--type-font-family-heading);
+    font-family: var(--type-font-family-subtitle);
     font-size: var(--typography-fontsize-heading-subtitle);
+    font-weight: var(--type-font-weight-subtitle);
+    font-style: normal;
     line-height: var(--typography-line-height-heading-subtitle);
+    letter-spacing: 0;
 }
 
 .culturist-card-quote blockquote,
@@ -105,21 +108,35 @@
 }
 
 .culturist-card-name {
+    display: flex;
+    align-items: center;
     margin: 0;
     color: var(--culturist-card-copy-color);
-    font-size: 10px;
-    line-height: 1.35;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
+    font-style: normal;
+    line-height: var(--typography-line-height-body-sm);
+    letter-spacing: 0;
 }
 
 .culturist-card-bio {
+    display: flex;
+    align-items: center;
     margin: 0;
     color: var(--culturist-card-copy-color);
+    font-family: var(--type-font-family-body);
     font-size: var(--typography-fontsize-body-m);
-    line-height: var(--typography-line-height-body-md);
+    font-weight: var(--type-font-weight-body-reg);
+    font-style: normal;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
-.culturist-card-name {
-    font-style: italic;
+.culturist-card-bio p {
+    width: 100%;
 }
 
 .culturist-card-experience {
@@ -132,9 +149,14 @@
 .culturist-card-eyebrow {
     margin: 0;
     color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-body);
     font-size: var(--typography-fontsize-body-eyebrow);
+    font-weight: var(--type-font-weight-body-reg);
+    font-style: normal;
     line-height: var(--typography-line-height-body-eyebrow);
     letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
     text-transform: uppercase;
     overflow: visible;
 }
@@ -196,7 +218,7 @@
     color: var(--color-text-action-default);
     font-size: var(--typography-fontsize-body-text-link);
     font-weight: var(--type-font-weight-text-link);
-    line-height: var(--typography-line-height-body-md);
+    line-height: var(--typography-fontsize-body-text-link);
     text-transform: uppercase;
     text-underline-offset: 3px;
 }
@@ -245,6 +267,10 @@
         );
     }
 
+    .culturist-card-bio {
+        line-height: 18px;
+    }
+
     .culturist-card-experience {
         gap: var(--dimension-spacing-general-m);
         padding: 0 var(--dimension-spacing-general-2xl);
@@ -287,7 +313,7 @@
 
     .culturist-card-avatar-wrap {
         top: 0;
-        right: calc(0px - var(--dimension-spacing-general-3xl) - var(--dimension-spacing-general-s));
+        right: calc(0px - var(--dimension-spacing-general-2xl));
         left: auto;
     }
 
