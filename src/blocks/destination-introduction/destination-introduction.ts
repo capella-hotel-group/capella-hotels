@@ -3,17 +3,15 @@ import { resolveDAMUrl } from '@/utils/env.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 
 // Row indices mirror the field order of the `destination-introduction` model
-// (eyebrow, title, body, footerCta, darkOverlay), after the leading identity rows.
-// Changing that field list is a contract change and must update these indices in
-// the same commit.
+// (eyebrow, title, body, footerCta), after the leading identity rows. Changing
+// that field list is a contract change and must update these indices in the
+// same commit.
 const COPY_FIELDS = ['eyebrow', 'title', 'body', 'cta'] as const;
-const OVERLAY_ROW = COPY_FIELDS.length;
-const CONTENT_ROWS = OVERLAY_ROW + 1;
 const IMAGE_MODEL = 'destination-introduction-image';
 // Cell indices mirror the field order of the `destination-introduction-image`
 // model; the `*Alt` fields collapse into the cell of the field they suffix and
 // so claim no index of their own.
-const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2 } as const;
+const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2, darkOverlay: 3 } as const;
 const SCROLL_SETTLE_MS = 120;
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
@@ -204,6 +202,8 @@ function buildSlide(row: HTMLElement, index: number): Slide {
   const picture = isVideo ? null : buildPicture(mediaCell);
   const media = video ?? picture;
   if (media) element.append(media);
+  // the tint belongs to the hero media, so the thumbnail clone never inherits it
+  if (textOf(cells[ITEM.darkOverlay]).toLowerCase() === 'true') element.classList.add('has-dark-overlay');
 
   return {
     element,
@@ -260,7 +260,7 @@ export default function decorate(block: HTMLElement): void {
   const copyRows = applyBlockIdentity(
     block,
     rows.filter((row) => !galleryRows.includes(row)),
-    { contentRows: CONTENT_ROWS },
+    { contentRows: COPY_FIELDS.length },
   );
 
   const header = document.createElement('div');
@@ -280,9 +280,6 @@ export default function decorate(block: HTMLElement): void {
 
   const media = document.createElement('div');
   media.className = 'destination-introduction-media';
-  if (textOf(copyRows[OVERLAY_ROW]?.firstElementChild).toLowerCase() === 'true') {
-    media.classList.add('has-dark-overlay');
-  }
   media.append(track);
 
   const prev = interactive ? buildArrow('prev', 'Previous image') : null;

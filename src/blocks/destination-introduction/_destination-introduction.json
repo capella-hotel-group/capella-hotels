@@ -94,14 +94,6 @@
           "label": "Open in new tab",
           "valueType": "boolean",
           "value": false
-        },
-        {
-          "component": "boolean",
-          "name": "darkOverlay",
-          "label": "Enable Dark Image Overlay",
-          "description": "Tints the hero media so overlaid text stays legible.",
-          "valueType": "boolean",
-          "value": false
         }
       ]
     },
@@ -152,6 +144,14 @@
           "valueType": "string",
           "required": true,
           "value": ""
+        },
+        {
+          "component": "boolean",
+          "name": "darkOverlay",
+          "label": "Enable Dark Image Overlay",
+          "description": "Tints this media so overlaid text stays legible. Does not affect the thumbnail.",
+          "valueType": "boolean",
+          "value": false
         }
       ]
     }
