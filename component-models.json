@@ -675,6 +675,7 @@
         "name": "subtitle",
         "label": "Section Description",
         "valueType": "string",
+        "required": true,
         "value": ""
       }
     ]
@@ -687,6 +688,7 @@
         "name": "location",
         "label": "Card Eyebrow",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -694,6 +696,7 @@
         "name": "title",
         "label": "Card Headline",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -709,7 +712,6 @@
         "name": "imageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
-        "required": true,
         "value": ""
       },
       {
@@ -717,6 +719,7 @@
         "name": "ctaName",
         "label": "Card CTA Label",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
