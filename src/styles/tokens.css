@@ -5,21 +5,40 @@
  * without renaming). Don't "fix" without checking Figma first:
  *   - `--component-toogle-*` is Figma's own typo (missing a "g").
  *   - `--typography-line-height-body-sm/-md/-lg` pair with fontsize S/M/L.
- * `--typography-line-height-heading-h1`, `-heading-h2` and `-body-md` were
- * re-resolved with get_variable_defs against nodes 5976:106003 / 5976:105398 /
- * 5976:104314 (the 393/834/1440 "Content-card/offer" frames) and corrected; the
- * earlier values came from a stale export. `-body-sm` and `-body-lg` have NOT
- * been re-verified and may carry the same off-by-one-step error.
+ * 2026-10 resync against a fresh full "03-Responsive" tokens.json export (all
+ * 4 modes), cross-checked via each variable's `$extensions.com.figma.aliasData
+ * .targetVariableName` (identical alias name across modes = identical real
+ * value, even when an older spot-check said otherwise). Fixed real drift:
+ * `--typography-line-height-heading-h1` is 40/44/48 (mobile/tablet/desktop),
+ * not 36/48/48. `--typography-line-height-body-md` is 16/18/18, not 20/20/22.
+ * Both were independently re-verified with get_variable_defs on 2026-10-07
+ * against nodes 8035:20923 (393), 8035:20836 (834) and 8040:30708 (1440); the
+ * bad values came from a sync that read frames which had already been deleted
+ * (5976:106003 / 5976:105398 / 5976:104314).
+ * `--typography-line-height-body-lg` is 20/22/22 (tablet override was missing
+ * entirely). `--dimension-spacing-title-to-content` aliases the exact same
+ * unit as `--dimension-spacing-eyebrow-to-title` at every breakpoint (12/14/14),
+ * not 32/48/56. `--component-toogle-width/-selector-dot/-padding` are IDENTICAL
+ * between tablet and desktop-1440 (72/20/4) - they only grow to 80/24/4 at the
+ * unmodeled 1920 breakpoint, so no desktop override is needed for them anymore.
+ * `-heading-h2` and `-body-sm` have NOT been re-verified and may carry the
+ * same error.
  * Figma artboards are 393/834/1440/1920px; our breakpoints are mobile <=767,
- * tablet 768-1199 (sampled from 834), desktop >=1200 (sampled from 1440).
- * The 1920 export was checked for parity: it matches 1440 everywhere except
- * the type scale and module padding inline-xs/-s/XL, which we don't model
- * since there's no dedicated >=1920 breakpoint yet.
+ * tablet 768-1199 (sampled from 834), desktop 1200-1919 (sampled from 1440) and
+ * desktop-xl >=1920. The >=1920 tier carries only what the "breakpoint=desktop
+ * 1920" artboard confirms (node 6275:24403 in file Q6Euf4Qo9tlveuz4dNWtiJ) plus
+ * the toggle sizes from the full export; `module/padding/inline-xs` and `-XL`
+ * also differ at 1920 but have no verified value yet, so they are not modelled.
  * Font-weight stores the numeric CSS value for Figma's named style; font-family
  * aliases the fallback chains in styles.css.
+ * The 1920 `heading-h4` (32/36), `body-sm` line-height (18) and `module/padding/
+ * block` (80) + `inline-L` (378) come from the text-with-cta module, whose four
+ * breakpoint variants were read with get_variable_defs on 2026-10-08 (CAP-86):
+ * 4214:8607 (393), 6196:22376 (834), 4128:2830 (1440), 6553:74616 / 6275:24687
+ * (1920).
  * `--dimension-spacing-general-*` is confirmed breakpoint-independent (identical
- * across all 4 exports), EXCEPT `--dimension-spacing-general-4xl` which jumps
- * to 145px at desktop (64px mobile/tablet). `--dimension-layout-module-padding-top` mirrors
+ * alias name, e.g. `--dimension-spacing-general-4xl` is `unit/800` = 64px, at
+ * all 4 exports - no exceptions). `--dimension-layout-module-padding-top` mirrors
  * Figma's "module/padding/block-L" (values match exactly).
  */
 :root {
@@ -30,6 +49,8 @@
     --breakpoint-tablet-min: 768px;
     --breakpoint-tablet-max: 1199px;
     --breakpoint-desktop-min: 1200px;
+    --breakpoint-desktop-max: 1919px;
+    --breakpoint-desktop-xl-min: 1920px;
 
     /* multiplier for viewport-proportional spacing; 1px below desktop so
        calc(N * var(--fluid-unit)) equals N pixels there. See the desktop block. */
@@ -44,8 +65,13 @@
     --color-surface-general-opaque: #2627271a;
     --color-surface-action-default: #1b364b;
     --color-surface-action-inverse-default: #ffffff;
+    --color-surface-action-inverse-hover: #efeeef;
+    --color-surface-action-inverse-focused: #dad9da;
+    --color-surface-action-inverse-pressed: #deddde;
+    --color-surface-brand-subtle: #d1d7db;
     --color-surface-component-toggle-inverse-selector-dot: #f7f7f7;
     --color-surface-component-toggle-inverse-fill-default: #ebebeb1a;
+    --color-surface-component-scrollbar-main: #1b364b33;
 
     /* color / text */
     --color-text-main-heading: #1b364b;
@@ -55,6 +81,8 @@
     --color-text-main-disabled: #6e6e6c;
     --color-text-action-default: #1b364b;
     --color-text-action-inactive: #1b364b80;
+    --color-text-action-hover: #183144;
+    --color-text-action-inverse-hover: #f7f7f7;
     --color-text-action-inverse-default: #ffffff;
     --color-text-action-inverse-inactive: #ebebeb80;
     --color-text-on-action-default: #ffffff;
@@ -87,7 +115,7 @@
 
     /* typography / heading scale (mobile default) */
     --typography-fontsize-heading-h1: 36px;
-    --typography-line-height-heading-h1: 36px;
+    --typography-line-height-heading-h1: 40px;
     --typography-fontsize-heading-h2: 28px;
     --typography-line-height-heading-h2: 32px;
     --typography-fontsize-heading-h3: 24px;
@@ -101,7 +129,7 @@
     --typography-fontsize-body-l: 20px;
     --typography-line-height-body-lg: 20px;
     --typography-fontsize-body-m: 16px;
-    --typography-line-height-body-md: 20px;
+    --typography-line-height-body-md: 16px;
     --typography-fontsize-body-s: 12px;
     --typography-line-height-body-sm: 14px;
     --typography-fontsize-body-text-link: 16px;
@@ -137,8 +165,9 @@
     --dimension-spacing-eyebrow-to-title: 12px;
     --dimension-spacing-eyebrow-to-text: 12px;
     /* Figma `dimension/spacing/title-to-content`. A separate variable from
-       `heading-to-content` below - do not merge them. */
-    --dimension-spacing-title-to-content: 32px;
+       `heading-to-content` below - do not merge them (it aliases the same unit
+       as `--dimension-spacing-eyebrow-to-title` at every breakpoint though). */
+    --dimension-spacing-title-to-content: 12px;
     --dimension-spacing-heading-to-content: 32px;
     --dimension-spacing-content-to-bottom-cta: 48px;
     --dimension-spacing-stack-to-stack: 48px;
@@ -217,7 +246,8 @@
     --component-button-corner-standard: 2px;
     --component-button-corner-playbtn: var(--corner-radius-round);
 
-    /* component / input field (mobile default) */
+    /* component / input field (mobile default; corner is breakpoint-independent) */
+    --component-input-field-corner: 0px;
     --component-input-field-height: 40px;
     --component-input-field-padding-inline: 0px;
     --component-input-field-padding-block: 8px;
@@ -238,10 +268,10 @@
     --component-slider-bar-height: 16px;
     --component-slider-corner: var(--corner-radius-round);
 
-    /* component / toggle (mobile default; "toogle" is Figma's own typo); padding accounts for
-       the track's 1px border so the dot is truly centered: (28 - 2*1 - 20) / 2 = 3px */
+    /* component / toggle (mobile default; "toogle" is Figma's own typo); padding
+       is breakpoint-independent (4px, unchanged through tablet and desktop) */
     --component-toogle-selector-dot: 20px;
-    --component-toogle-padding: 3px;
+    --component-toogle-padding: 4px;
     --component-toogle-width: 64px;
     --component-toogle-height: 28px;
     --component-toogle-corner: var(--corner-radius-round);
@@ -252,7 +282,7 @@
     :root {
         /* typography / heading scale (tablet) */
         --typography-fontsize-heading-h1: 40px;
-        --typography-line-height-heading-h1: 48px;
+        --typography-line-height-heading-h1: 44px;
         --typography-fontsize-heading-h2: 36px;
         --typography-line-height-heading-h2: 40px;
         --typography-fontsize-heading-h3: 32px;
@@ -266,7 +296,7 @@
         --typography-fontsize-body-l: 22px;
         --typography-fontsize-body-m: 18px;
         --typography-line-height-body-lg: 22px;
-        --typography-line-height-body-md: 20px;
+        --typography-line-height-body-md: 18px;
         --typography-fontsize-body-s: 14px;
         --typography-line-height-body-sm: 16px;
         --typography-fontsize-body-text-link: 18px;
@@ -275,7 +305,7 @@
 
         --dimension-spacing-eyebrow-to-title: 14px;
         --dimension-spacing-eyebrow-to-text: 16px;
-        --dimension-spacing-title-to-content: 48px;
+        --dimension-spacing-title-to-content: 14px;
         --dimension-spacing-heading-to-content: 40px;
         --dimension-spacing-content-to-bottom-cta: 56px;
         --dimension-spacing-stack-to-stack: 64px;
@@ -315,6 +345,12 @@
         --dimension-layout-modal-padding-block: 32px;
         --dimension-layout-modal-padding-inline: 32px;
 
+        /* dimension / layout (tablet values for Figma's "40%vw"/"60%vw"/"50%vw";
+           unused at mobile, which aliases the full viewport width instead) */
+        --dimension-layout-40vw: 334px;
+        --dimension-layout-60vw: 500px;
+        --dimension-layout-50vw: 417px;
+
         /* component / content card (tablet) */
         --component-content-card-corner: 20px;
 
@@ -325,12 +361,10 @@
         /* component / input field (tablet) */
         --component-input-field-height: 48px;
 
-        /* component / toggle (tablet; padding recomputed so the unchanged 20px dot stays
-           vertically centered in the taller 32px track, accounting for the track's 1px border:
-           (32 - 2*1 - 20) / 2 = 5px) */
+        /* component / toggle (tablet; width/height grow, selector-dot and padding
+           stay the same as mobile and carry through desktop unchanged) */
         --component-toogle-width: 72px;
         --component-toogle-height: 32px;
-        --component-toogle-padding: 5px;
     }
 }
 
@@ -345,18 +379,11 @@
         --typography-line-height-heading-h2: 48px;
         --typography-fontsize-heading-h3: 36px;
 
-        /* typography / body scale (desktop) */
-        --typography-line-height-body-md: 22px;
-
         --dimension-spacing-eyebrow-to-text: 20px;
-        --dimension-spacing-title-to-content: 56px;
         --dimension-spacing-heading-to-content: 48px;
         --dimension-spacing-content-to-bottom-cta: 64px;
         --dimension-spacing-stack-to-stack: 72px;
         --dimension-spacing-gallery-to-preview: 20px;
-
-        /* general spacing scale is breakpoint-independent except this one step */
-        --dimension-spacing-general-4xl: 145px;
 
         /* dimension / viewport (desktop artboard) */
         --dimension-viewport-width: 1440;
@@ -373,10 +400,10 @@
         --dimension-layout-module-padding-inline-l: 296px;
         --dimension-layout-module-padding-xl: 240px;
 
-        /* dimension / layout (Figma "dimension/layout/40%vw" and "60%vw"; only
-           defined for the desktop mode, hence no mobile/tablet default) */
+        /* dimension / layout (desktop values for "40%vw"/"60%vw"/"50%vw") */
         --dimension-layout-40vw: 576px;
         --dimension-layout-60vw: 864px;
+        --dimension-layout-50vw: 720px;
 
         /* dimension / layout / card (desktop) */
         --dimension-layout-card-padding-xl: 48px;
@@ -391,11 +418,8 @@
         --component-button-padding-inline: 32px;
         --component-button-padding-block: 16px;
 
-        /* component / toggle (desktop; must reset padding here or it would inherit tablet's 5px —
-           (32 - 2*1 - 24) / 2 = 3px keeps the larger dot centered, border-adjusted) */
-        --component-toogle-selector-dot: 24px;
-        --component-toogle-width: 80px;
-        --component-toogle-padding: 3px;
+        /* component / toggle: desktop-1440 is identical to tablet (72/32/20/4),
+           so no override here - only the unmodeled 1920 breakpoint grows further. */
 
         /* Desktop spacing scales with the viewport instead of stepping: a value
            written as calc(N * var(--fluid-unit)) renders exactly N Figma pixels
@@ -405,5 +429,46 @@
            Only ever multiply it into padding, margin or gap - feeding it into
            width would reintroduce the usual 100vw overflow. */
         --fluid-unit: calc(100vw / var(--dimension-viewport-width));
+    }
+}
+
+@media (width >= 1920px) {
+    /* desktop-xl breakpoint; values sampled from the 1920px Figma artboard
+       (node 6275:24403, "L/R=yes, breakpoint=desktop 1920", confirmed via
+       get_variable_defs). Everything not listed here is identical to 1440. */
+    :root {
+        /* typography / heading scale (desktop-xl) */
+        --typography-fontsize-heading-h1: 52px;
+        --typography-line-height-heading-h1: 56px;
+        --typography-fontsize-heading-h3: 40px;
+        --typography-line-height-heading-h3: 44px;
+        /* confirmed via filters-grid's own local >=1920 override (same values), which existed
+           precisely because this global token was missing it - see css-tokens.md repo memory */
+        --typography-fontsize-heading-h4: 32px;
+        --typography-line-height-heading-h4: 36px;
+
+        /* typography / body scale (desktop-xl; the font sizes are unchanged) */
+        --typography-line-height-body-eyebrow: 18px;
+        --typography-line-height-body-md: 20px;
+        --typography-line-height-body-sm: 18px;
+
+        /* dimension / viewport (desktop-xl artboard; also rescales --fluid-unit) */
+        --dimension-viewport-width: 1920;
+
+        /* dimension / layout / module (desktop-xl) */
+        --dimension-layout-module-padding-block: 80px;
+        --dimension-layout-module-padding-inline-s: 120px;
+        --dimension-layout-module-padding-inline-l: 378px;
+
+        /* dimension / layout (desktop-xl "40%vw"/"60%vw"; "50%vw" is not on the
+           1920 artboard, but both siblings resolve to an exact share of the
+           viewport there, so it follows the same rule) */
+        --dimension-layout-40vw: 768px;
+        --dimension-layout-60vw: 1152px;
+        --dimension-layout-50vw: 960px;
+
+        /* component / toggle (desktop-xl; padding stays at the global 4px) */
+        --component-toogle-selector-dot: 24px;
+        --component-toogle-width: 80px;
     }
 }

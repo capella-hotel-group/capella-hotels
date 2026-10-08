@@ -6,6 +6,20 @@ shared visual row, and how the header block must interpret it.
 
 ## ADDED Requirements
 
+### Requirement: Header button role selection
+
+The first authored button link in the header bar SHALL provide the logo's accessible
+label, destination, and target marker. If it is absent, the logo SHALL link to the active
+language URL and use the default accessible label. The last authored button link not
+labeled `Close` SHALL provide the Book CTA's label, destination, and target marker.
+Authored links labeled `Close` SHALL be ignored; the menu SHALL use its built-in Close
+control.
+
+#### Scenario: Logo and Book links use their authored values
+
+- **WHEN** the first header button link is authored for the logo and the last non-Close button link is authored for Book
+- **THEN** each rendered link SHALL use its authored label, href, and target marker
+
 ### Requirement: Marker parsing and stripping
 
 Any label, link text, or region heading authored in `/nav` MAY end with a trailing
@@ -31,6 +45,11 @@ the text unchanged (no stripping, no marker applied).
 - **WHEN** the header CTA is authored as `<a href="...">Book | open-in-new-tab</a>`
 - **THEN** the rendered CTA label SHALL be exactly "Book"
 
+#### Scenario: Marker embedded in the logo link
+
+- **WHEN** the logo link is authored as `<a href="/home">Home | open-in-new-tab</a>`
+- **THEN** its accessible label SHALL be exactly "Home", with no visible marker text
+
 #### Scenario: Unrecognized trailing token is not stripped
 
 - **WHEN** an item's text ends with `| some-other-text` that does not match any of the 3 known keywords
@@ -42,9 +61,8 @@ A link whose closest container text carries the `open-in-new-tab` marker SHALL
 render with `target="_blank" rel="noopener"`. A link marked `open-in-same-tab`, or
 with no marker at all, SHALL render with no `target` attribute (default same-tab
 navigation). This applies to the header CTA, every language switcher link, every
-top-level category link, and every menu link. The mobile "Close" label (used only
-as the mobile menu-toggle's text, not a real link) SHALL have its marker stripped
-but SHALL NOT gain a `target` attribute regardless of the marker value.
+top-level category link, every menu link, and the logo link. The menu Close control is
+built in and is not an authored navigation link.
 
 #### Scenario: Language link marked open-in-new-tab
 
@@ -56,17 +74,19 @@ but SHALL NOT gain a `target` attribute regardless of the marker value.
 - **WHEN** a menu link is authored with `| open-in-same-tab`
 - **THEN** the rendered link SHALL have no `target` attribute
 
-#### Scenario: Close label marker is ignored for behavior
+#### Scenario: Authored Close link is ignored
 
-- **WHEN** the mobile close button source is authored as `<a href="...">Close | open-in-same-tab</a>`
-- **THEN** the rendered close button's visible text SHALL be exactly "Close", and it SHALL NOT be rendered as a navigable link with a `target` attribute
+- **WHEN** an authored header button link is labeled `Close`
+- **THEN** it SHALL be ignored when selecting the Book CTA, and the built-in menu Close control SHALL remain in use
 
 ### Requirement: Region merge-columns grouping
 
 A mega-menu region whose label carries the `merge-columns` marker SHALL be
 grouped with the ONE region immediately following it in that category's region
-list (pairwise merge only — no chaining beyond one adjacent region) into a
-shared row. Both regions keep their own visible label. If the region
+list only when flattening the pair produces 4 or fewer column slots (pairwise
+merge only — no chaining beyond one adjacent region). If the pair produces more
+than 4 slots, the marker SHALL be ignored and both regions SHALL render separately
+with all links preserved. Both regions keep their own visible label. If the region
 immediately following an already-merged partner also carries `merge-columns`,
 that marker SHALL be ignored (a region can be consumed as a merge partner at
 most once). If a region marked `merge-columns` is the last region in its
@@ -94,7 +114,7 @@ SHALL NOT cross category boundaries.
 
 ### Requirement: Merged row column layout
 
-A merged pair of regions SHALL render as a row of up to 4 columns: each region
+A merged pair of regions SHALL render as a row of 4 or fewer columns: each region
 contributes one column carrying its own label above its first link; any
 additional links belonging to a region in the pair SHALL occupy the following
 column(s) of the same row without repeating that region's label. A column

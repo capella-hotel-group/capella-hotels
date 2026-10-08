@@ -53,9 +53,9 @@ async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | nul
     }
 
     const data = await response.json();
-    const item = data.data?.tabDetailsByPath?.item || null;
+    const item = data.data?.culturistTabDetailsByPath?.item || null;
     if (!item) {
-      console.error(`[culturist-carousel] No tabDetailsByPath item returned for ${cfPath}`, data);
+      console.error(`[culturist-carousel] No culturistTabDetailsByPath item returned for ${cfPath}`, data);
     }
     return item;
   } catch (error) {

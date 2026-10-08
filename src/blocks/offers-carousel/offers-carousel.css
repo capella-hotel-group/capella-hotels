@@ -1,5 +1,5 @@
-/* Geometry mirrors the Figma "Content-card/offer" frames 5976:106003 (393),
-   5976:105398 (834) and 5976:104314 (1440). */
+/* Geometry mirrors the Figma "Content-card/offer" instance 8040:30708 (1440); the 393 and
+   834 geometry comes from the same component under the mobile/tablet variable modes. */
 
 .offers-carousel {
     width: 100%;
@@ -32,9 +32,10 @@
 .offers-carousel .offers-carousel-eyebrow {
     margin: 0;
     font-family: var(--type-font-family-body);
-    font-size: var(--typography-fontsize-body-m);
+    font-size: var(--typography-fontsize-body-eyebrow);
     font-weight: var(--type-font-weight-body-reg);
-    line-height: var(--typography-line-height-body-md);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
     color: var(--color-text-main-heading);
     text-transform: uppercase;
     text-box-trim: trim-both;
@@ -144,25 +145,27 @@
     object-fit: cover;
 }
 
-/* the eyebrow/title/description frame is laid out with general/m; the card's own general/s
-   gap is not modelled because .offers-carousel-card-body absorbs the free space, which keeps
-   the CTA row pinned to the bottom regardless of the gap value */
+/* Figma nests the eyebrow with the title and the title with the description, so the flat
+   overlay carries the eyebrow-to-title step and the body carries general/xl. The card's own
+   general/s gap is not modelled because .offers-carousel-card-body absorbs the free space,
+   which keeps the CTA row pinned to the bottom regardless of the gap value */
 .offers-carousel .offers-carousel-card-overlay {
     position: absolute;
     inset: var(--dimension-spacing-general-2xl);
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-spacing-general-m);
+    gap: var(--dimension-spacing-eyebrow-to-title);
     color: var(--color-text-main-inverse-heading);
 }
 
 .offers-carousel .offers-carousel-card-eyebrow {
     margin: 0;
     font-family: var(--type-font-family-body);
-    font-size: var(--typography-fontsize-body-m);
+    font-size: var(--typography-fontsize-body-eyebrow);
     font-weight: var(--type-font-weight-body-reg);
-    line-height: var(--typography-line-height-body-md);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
     text-transform: uppercase;
     text-box-trim: trim-both;
     text-box-edge: cap alphabetic;
@@ -173,21 +176,25 @@
     flex: 1;
     flex-direction: column;
     justify-content: center;
-    gap: var(--dimension-spacing-general-m);
+    gap: var(--dimension-spacing-general-xl);
     min-height: 0;
     text-align: center;
 }
 
+/* Figma leaves the title untrimmed but centres the cap-height box inside the line box, which
+   Chrome will not do: GoudyWtcT's natural line box is taller than the line-height, so the
+   glyphs sit flush with the top of the box and leak out from under the card in front. Trim to
+   the cap box and pad the leftover leading back on. 0.667em is GoudyWtcT's cap ratio, measured
+   identical (0.667) at all four type sizes. */
 .offers-carousel .offers-carousel-card-title {
     margin: 0;
     font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h2);
+    font-size: var(--typography-fontsize-heading-h1);
     font-weight: var(--type-font-weight-heading);
-    line-height: var(--typography-line-height-heading-h2);
+    line-height: var(--typography-line-height-heading-h1);
     text-box-trim: trim-both;
     text-box-edge: cap alphabetic;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
+    padding-block: calc((var(--typography-line-height-heading-h1) - 0.667em) / 2);
 }
 
 .offers-carousel .offers-carousel-card-description {
@@ -201,6 +208,8 @@
     font-weight: var(--type-font-weight-body-reg);
     line-height: var(--typography-line-height-body-md);
     color: var(--color-text-main-inverse-body);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .offers-carousel .offers-carousel-card-eyebrow > *,
@@ -225,11 +234,12 @@
     display: none;
 }
 
+/* Figma pins Button/text-standard to component/button/height, which overrides the
+   component's own padding-block; adding that padding renders a 50px box instead of 40 */
 .offers-carousel .offers-carousel-card-cta {
     display: inline-flex;
     align-items: center;
-    min-height: var(--component-button-height);
-    padding-block: var(--component-button-padding-block);
+    height: var(--component-button-height);
     border-radius: var(--component-button-corner-standard);
     font-family: var(--type-font-family-cta);
     font-size: var(--typography-fontsize-body-m);
@@ -443,6 +453,39 @@
         justify-content: flex-start;
         max-width: 400px;
         text-align: left;
+    }
+}
+
+/* Figma "breakpoint=desktop 1920" (node 6275:24403). The columns, both paddings and the
+   type scale already follow the tokens; only the card geometry is authored per artboard.
+   The title-to-description gap steps up to general/2xl here, unlike general/xl at 1440. */
+@media (width >= 1920px) {
+    .offers-carousel .offers-carousel-layout {
+        min-height: 710px;
+    }
+
+    .offers-carousel .offers-carousel-cards {
+        --card-height: 350px;
+    }
+
+    .offers-carousel .offers-carousel-card.is-active,
+    .offers-carousel .offers-carousel-card.is-next-1,
+    .offers-carousel .offers-carousel-card.is-next-2 {
+        width: min(880px, calc(100% - 152px));
+        height: 350px;
+    }
+
+    /* the two steps are uneven in the design (91 then 61), so they are not derived */
+    .offers-carousel .offers-carousel-card.is-next-1 {
+        --card-x: 91px;
+    }
+
+    .offers-carousel .offers-carousel-card.is-next-2 {
+        --card-x: 152px;
+    }
+
+    .offers-carousel .offers-carousel-card-body {
+        gap: var(--dimension-spacing-general-2xl);
     }
 }
 
