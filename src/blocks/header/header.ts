@@ -22,6 +22,7 @@ interface NavLanguage {
 
 interface NavLink {
   label: string;
+  note: string | null;
   href: string;
   openInNewTab: boolean;
   source: Element;
@@ -87,6 +88,17 @@ function directText(el: Element): string {
   return (clone.textContent ?? '').trim();
 }
 
+// Like directText, but also splits off a <sub> element's text (e.g. an opening year
+// authored as "SHENZHEN<sub>(2029)</sub>") so it can render as its own line.
+function directTextWithNote(el: Element): { text: string; note: string | null } {
+  const clone = el.cloneNode(true) as Element;
+  clone.querySelectorAll('ul, ol').forEach((list) => list.remove());
+  const sub = clone.querySelector('sub');
+  const note = sub?.textContent?.trim() || null;
+  sub?.remove();
+  return { text: (clone.textContent ?? '').trim(), note };
+}
+
 function readLanguages(chromeSection: Element): NavLanguage[] {
   const outerItem = chromeSection.querySelector(':scope .default-content-wrapper > ul > li');
   const innerList = outerItem?.querySelector(':scope > ul');
@@ -106,9 +118,11 @@ function readLanguages(chromeSection: Element): NavLanguage[] {
 
 function readLinkItem(item: Element): NavLink {
   const anchor = item.querySelector<HTMLAnchorElement>('a');
-  const { label, marker } = splitMarker(directText(item));
+  const { text, note } = directTextWithNote(item);
+  const { label, marker } = splitMarker(text);
   return {
     label,
+    note,
     href: anchor?.getAttribute('href') ?? '',
     openInNewTab: marker === 'open-in-new-tab',
     source: item,
@@ -396,6 +410,21 @@ function buildMenuToggle(closeLabel: string): HTMLButtonElement {
   return button;
 }
 
+// Renders a link's label, plus an optional secondary note line (e.g. an opening year)
+// below it, matching Figma's two-line city/year layout.
+function appendLinkContent(el: HTMLElement, link: NavLink): void {
+  const label = document.createElement('span');
+  label.className = 'nav-link-label';
+  label.textContent = link.label;
+  el.append(label);
+  if (link.note) {
+    const note = document.createElement('span');
+    note.className = 'nav-link-note';
+    note.textContent = link.note;
+    el.append(note);
+  }
+}
+
 function buildLinkGrid(links: NavLink[]): HTMLUListElement {
   const grid = document.createElement('ul');
   grid.className = 'header-menu-link-grid';
@@ -404,7 +433,7 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
     if (link.href) {
       const anchor = document.createElement('a');
       anchor.href = link.href;
-      anchor.textContent = link.label;
+      appendLinkContent(anchor, link);
       if (link.openInNewTab) {
         anchor.target = '_blank';
         anchor.rel = 'noopener';
@@ -414,7 +443,7 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
     } else {
       const span = document.createElement('span');
       span.className = 'nav-link is-disabled';
-      span.textContent = link.label;
+      appendLinkContent(span, link);
       moveInstrumentation(link.source, span);
       li.append(span);
     }
@@ -491,7 +520,7 @@ function buildMergedCell(slot: MergeSlot): HTMLDivElement {
     if (slot.link.href) {
       const anchor = document.createElement('a');
       anchor.href = slot.link.href;
-      anchor.textContent = slot.link.label;
+      appendLinkContent(anchor, slot.link);
       if (slot.link.openInNewTab) {
         anchor.target = '_blank';
         anchor.rel = 'noopener';
@@ -501,7 +530,7 @@ function buildMergedCell(slot: MergeSlot): HTMLDivElement {
     } else {
       const span = document.createElement('span');
       span.className = 'nav-link is-disabled';
-      span.textContent = slot.link.label;
+      appendLinkContent(span, slot.link);
       moveInstrumentation(slot.link.source, span);
       cell.append(span);
     }

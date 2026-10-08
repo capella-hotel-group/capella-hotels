@@ -87,9 +87,16 @@ header {
     transform: translateY(8px);
 }
 
-/* Morph the hamburger into an X while the menu panel is open */
+/* Morph the hamburger into the Figma close icon (12px cross centred in a 24px box, 1px stroke) */
 .header-menu-toggle[aria-expanded='true'] .header-menu-icon {
     background: transparent;
+}
+
+.header-menu-toggle[aria-expanded='true'] .header-menu-icon::before,
+.header-menu-toggle[aria-expanded='true'] .header-menu-icon::after {
+    left: 2px;
+    width: 12px;
+    border-radius: 1px;
 }
 
 .header-menu-toggle[aria-expanded='true'] .header-menu-icon::before {
@@ -101,14 +108,16 @@ header {
 }
 
 .header-menu-toggle[aria-expanded='true'] {
-    color: #1b364b;
+    gap: 4px;
+    color: var(--site-header-text);
 }
 
 .header-menu-toggle-label {
     display: none;
     font-family: var(--type-font-family-cta, sans-serif);
-    font-size: var(--typography-fontsize-body-s, 14px);
-    line-height: var(--typography-line-height-body-sm, 16px);
+    font-size: var(--typography-fontsize-body-m, 16px);
+    font-weight: var(--type-font-weight-text-link, 300);
+    line-height: var(--typography-line-height-body-md, 16px);
     text-transform: uppercase;
 }
 
@@ -387,10 +396,11 @@ header .header-cta:active {
     justify-content: space-between;
     width: 100%;
     min-height: 56px;
-    color: var(--color-text-action-inactive, rgb(27 54 75 / 50%));
+    color: var(--color-text-main-disabled, #6e6e6c);
     font-family: var(--type-font-family-body, sans-serif);
-    font-size: var(--typography-fontsize-body-m, 16px);
-    line-height: var(--typography-line-height-body-md, 18px);
+    font-size: var(--typography-fontsize-body-l, 20px);
+    font-weight: 300;
+    line-height: var(--typography-line-height-body-md, 16px);
     text-align: start;
     text-transform: uppercase;
     text-decoration: none;
@@ -399,7 +409,11 @@ header .header-cta:active {
 
 .header-menu-category[data-active='true'] .header-menu-category-trigger,
 .header-menu-category-trigger:hover {
-    color: var(--site-header-text);
+    color: var(--color-text-main-heading, #1b364b);
+}
+
+.header-menu-category[data-active='true'] .header-menu-category-trigger {
+    font-weight: var(--type-font-weight-body-reg, 400);
 }
 
 button.header-menu-category-trigger::after {
@@ -428,6 +442,9 @@ button.header-menu-category-trigger::after {
 
 .header-menu-category-content-inner {
     overflow: hidden;
+    /* Matches Figma's gap between the accordion trigger and its opened content:
+       --dimension-layout-module-gutter-s is 16px on mobile, 24px from tablet up. */
+    padding-top: var(--dimension-layout-module-gutter-s, 16px);
     padding-bottom: 24px;
     opacity: 0;
     transform: translateY(-4px);
@@ -454,10 +471,11 @@ button.header-menu-category-trigger::after {
 }
 
 .header-menu-region-label {
-    margin: 0 0 16px;
+    margin: 0 0 24px;
     color: var(--color-text-main-disabled, #6e6e6c);
     font-family: var(--type-font-family-body, sans-serif);
     font-size: var(--typography-fontsize-body-s, 14px);
+    font-weight: var(--type-font-weight-body-reg, 400);
     line-height: var(--typography-line-height-body-sm, 16px);
     text-transform: uppercase;
 }
@@ -482,10 +500,13 @@ button.header-menu-category-trigger::after {
 
 .header-menu-link-grid a,
 .header-menu-merged-cell a {
-    display: block;
-    color: var(--site-header-text);
-    font-family: var(--type-font-family-heading, serif);
-    font-size: var(--typography-fontsize-body-text-link, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-xs, 8px);
+    color: var(--color-text-main-heading, #1b364b);
+    font-family: var(--type-font-family-body, sans-serif);
+    font-size: var(--typography-fontsize-body-l, 20px);
+    font-weight: 300;
     line-height: 24px;
     text-transform: uppercase;
     text-decoration: none;
@@ -499,12 +520,21 @@ button.header-menu-category-trigger::after {
 
 .header-menu-link-grid .nav-link.is-disabled,
 .header-menu-merged-cell .nav-link.is-disabled {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-xs, 8px);
     color: var(--color-text-main-disabled, #6e6e6c);
-    font-family: var(--type-font-family-heading, serif);
-    font-size: var(--typography-fontsize-body-text-link, 16px);
+    font-family: var(--type-font-family-body, sans-serif);
+    font-size: var(--typography-fontsize-body-l, 20px);
+    font-weight: 300;
     line-height: 24px;
     text-transform: uppercase;
+}
+
+.header-menu-link-grid .nav-link-note,
+.header-menu-merged-cell .nav-link-note {
+    font-size: var(--typography-fontsize-body-s, 14px);
+    line-height: var(--typography-line-height-body-sm, 16px);
 }
 
 .header-menu-promo {
@@ -554,14 +584,20 @@ button.header-menu-category-trigger::after {
 }
 
 .header-menu-promo-cta {
-    display: block;
-    margin-top: 18px;
-    color: var(--site-header-text);
-    font-family: var(--type-font-family-body, sans-serif);
-    font-size: var(--typography-fontsize-body-s, 14px);
-    line-height: var(--typography-line-height-body-sm, 16px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    margin-top: 8px;
+    color: var(--color-text-action-default, #1b364b);
+    font-family: var(--type-font-family-cta, sans-serif);
+    font-size: var(--typography-fontsize-body-m, 16px);
+    font-weight: var(--type-font-weight-text-link, 300);
+    line-height: var(--typography-line-height-body-md, 16px);
     text-transform: uppercase;
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-thickness: 0.07em;
+    text-underline-offset: 0.205em;
 }
 
 .header-menu-bottom-lang {
@@ -648,15 +684,17 @@ button.header-menu-category-trigger::after {
     .header-menu-category-trigger {
         align-items: center;
         min-height: auto;
-        padding: 24px 0;
+        padding: 28px 0;
         margin: 0;
         border-bottom: 0;
-        font-size: var(--typography-fontsize-body-m, 18px);
-        line-height: 24px;
     }
 
     .header-menu-category:first-child .header-menu-category-trigger {
         padding-top: 0;
+    }
+
+    .header-menu-category:last-child {
+        border-bottom: 0;
     }
 
     .header-menu-region-label {
@@ -696,6 +734,9 @@ button.header-menu-category-trigger::after {
     }
 
     .header-menu-category-content-inner {
+        /* Desktop's rail content is positioned via .header-menu-category-content's own
+           top offset, not the accordion's open/close gap. */
+        padding-top: 0;
         padding-bottom: 0;
     }
 
