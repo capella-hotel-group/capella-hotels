@@ -11,15 +11,18 @@
  * value, even when an older spot-check said otherwise). Fixed real drift:
  * `--typography-line-height-heading-h1` is 40/44/48 (mobile/tablet/desktop),
  * not 36/48/48. `--typography-line-height-body-md` is 16/18/18, not 20/20/22.
+ * Both were independently re-verified with get_variable_defs on 2026-10-07
+ * against nodes 8035:20923 (393), 8035:20836 (834) and 8040:30708 (1440); the
+ * bad values came from a sync that read frames which had already been deleted
+ * (5976:106003 / 5976:105398 / 5976:104314).
  * `--typography-line-height-body-lg` is 20/22/22 (tablet override was missing
  * entirely). `--dimension-spacing-title-to-content` aliases the exact same
  * unit as `--dimension-spacing-eyebrow-to-title` at every breakpoint (12/14/14),
  * not 32/48/56. `--component-toogle-width/-selector-dot/-padding` are IDENTICAL
  * between tablet and desktop-1440 (72/20/4) - they only grow to 80/24/4 at the
  * unmodeled 1920 breakpoint, so no desktop override is needed for them anymore.
- * `src/blocks/filters-grid/filters-grid.css` and `hotel-architect.css` carry
- * local `--typography-line-height-heading-h1`/`-body-md` overrides that were
- * already working around this same bug - now redundant but left alone here.
+ * `-heading-h2` and `-body-sm` have NOT been re-verified and may carry the
+ * same error.
  * Figma artboards are 393/834/1440/1920px; our breakpoints are mobile <=767,
  * tablet 768-1199 (sampled from 834), desktop >=1200 (sampled from 1440).
  * The 1920 export was checked for parity: it matches 1440 everywhere except

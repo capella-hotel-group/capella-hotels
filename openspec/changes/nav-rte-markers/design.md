@@ -1,8 +1,9 @@
 ## Context
 
 `src/blocks/header/header.ts` reads authored content from the `/nav` fragment
-(chrome section: logo, language list, CTA; menu section: one `<ul>` per top-level
-category, each with nested `<li>` regions) and rebuilds fresh DOM for the header UI
+(chrome section: white/black logo images, logo-link button, language list, Book CTA;
+menu section: one `<ul>` per top-level category, each with nested `<li>` regions) and
+rebuilds fresh DOM for the header UI
 — it never reuses the source elements' text nodes directly, always setting
 `textContent` explicitly from parsed fields. BE now appends `| <marker>` to the
 end of labels/links in this source content (see proposal.md - Why).
@@ -25,7 +26,7 @@ from the Figma reference on label visibility, while everything else
 
 - Single parsing helper reused everywhere a marker can appear, so behavior is
   consistent regardless of whether the marker sits inside an anchor's own text
-  (CTA) or as sibling text after an anchor (language/menu items).
+  (logo link or Book CTA) or as sibling text after an anchor (language/menu items).
 - A merged pair of regions renders as one row with up to `MERGE_ROW_COLUMNS`
   (4) columns: each region keeps its own label above its first link; any
   additional links spill into the following column(s) of the same row without
@@ -45,7 +46,8 @@ from the Figma reference on label visibility, while everything else
 ## Decisions
 
 **Decision 1: Parse markers from the closest container's full `textContent`, not the anchor's.**
-The marker can be either inside the anchor's own text (`<a>Book | open-in-new-tab</a>`)
+The marker can be either inside the anchor's own text (`<a>Logo | open-in-new-tab</a>` or
+`<a>Book | open-in-new-tab</a>`)
 or a sibling text node after the anchor (`<a href="/en">English</a> | open-in-new-tab`).
 Always splitting the enclosing `<li>`/`<p>` (via the existing `directText()` helper,
 which already excludes nested `<ul>`/`<ol>`) on the last `|` handles both shapes
@@ -69,13 +71,14 @@ ignored, preventing 3+ region chains.
   in all following regions until an unmarked one is hit). Rejected — user
   explicitly scoped this to exactly one adjacent region.
 
-**Decision 3 (final): merged pair renders as a shared row of labeled slots, both labels visible.**
+**Decision 3 (final): merge a pair only when it fits in four slots; both labels remain visible.**
 `groupRegions()` returns groups of 1 or 2 regions. A group of 1 renders exactly
 as today (`.header-menu-region` + `.header-menu-link-grid`, untouched). A group
-of 2 is flattened into slots (`flattenMergeSlots`): each region contributes one
-label+first-link slot, then one link-only slot per remaining link; slots are
-chunked into rows of `MERGE_ROW_COLUMNS = 4` (`buildMergedRows`/`buildMergedCell`,
-rendered as `.header-menu-merged-row > .header-menu-merged-cell`). A
+of 2 is formed only if `flattenMergeSlots([region, next])` yields at most
+`MERGE_ROW_COLUMNS = 4` slots. If it exceeds 4, the marker is ignored and the
+regions render separately with all links preserved. The merged slots are rendered
+in a shared row (`buildMergedRows`/`buildMergedCell`, `.header-menu-merged-row >
+.header-menu-merged-cell`). A
 link-only cell still renders an empty (non-breaking-space) label paragraph —
 not just an omitted one — because a fully empty `<p>` collapses to zero height
 and breaks link-row alignment across cells; the invisible placeholder reserves
