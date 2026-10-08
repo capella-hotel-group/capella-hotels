@@ -357,7 +357,6 @@ function createModal() {
   closeButton.className = 'filters-grid-modal-close';
   closeButton.dataset.testid = 'filters-grid-modal-close';
   closeButton.setAttribute('aria-label', 'Close details');
-  closeButton.textContent = '×';
   panel.append(closeButton);
   overlay.append(panel);
 
@@ -522,7 +521,9 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
 
   const shell = document.createElement('div');
   shell.className = 'filters-grid-shell';
-  const heading = document.createElement('header');
+  // Not a <header>: header.css declares an unscoped `header { position: absolute }` that would
+  // pull this out of the shell's padding box and break alignment with the tabs and filters.
+  const heading = document.createElement('div');
   heading.className = 'filters-grid-heading';
   appendText(heading, 'p', 'filters-grid-eyebrow', config.eyebrow);
   appendRichTitle(heading, config.titleHtml);

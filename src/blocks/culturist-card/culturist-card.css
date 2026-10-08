@@ -7,22 +7,28 @@
 }
 
 .culturist-card {
-    color: #1e2d3b;
-    font-family: var(--body-font-family, 'Calibre', Arial, sans-serif);
+    --culturist-card-surface-color: var(--color-surface-general-default);
+    --culturist-card-copy-color: var(--color-text-main-body);
+    --culturist-card-avatar-size: 160px;
+    --culturist-card-signature-width: 140px;
+    --culturist-card-signature-height: 70px;
+    --culturist-card-gallery-item-basis: 41.5%;
+    color: var(--culturist-card-copy-color);
+    font-family: var(--type-font-family-body);
 }
 
 .culturist-card-layout {
     display: flex;
     flex-direction: column;
     width: 100%;
-    background: rgb(236 229 227);
+    background: var(--culturist-card-surface-color);
 }
 
 .culturist-card-media {
     width: 100%;
-    aspect-ratio: 320 / 260;
+    aspect-ratio: 240 / 300;
     overflow: hidden;
-    background: rgb(236 229 227);
+    background: var(--culturist-card-surface-color);
 }
 
 .culturist-card-media picture,
@@ -37,96 +43,146 @@
 }
 
 .culturist-card-panel {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 28px;
-    padding: 28px 20px 34px;
-    background: rgb(236 229 227);
+    gap: var(--dimension-spacing-general-2xl);
+    padding: 132px var(--dimension-spacing-general-xl) var(--dimension-spacing-stack-to-stack);
+    background: var(--culturist-card-surface-color);
 }
 
 .culturist-card-profile {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--dimension-spacing-general-s);
+    padding: var(--dimension-layout-card-padding-block) var(--dimension-spacing-general-2xl);
 }
 
 .culturist-card-avatar-wrap {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     width: fit-content;
+    position: absolute;
+    top: -81px;
+    left: var(--dimension-spacing-general-xl);
 }
 
 .culturist-card-avatar {
     display: block;
-    width: 74px;
-    height: 74px;
-    border-radius: 50%;
+    width: var(--culturist-card-avatar-size);
+    height: var(--culturist-card-avatar-size);
+    border-radius: var(--corner-radius-round);
     object-fit: cover;
 }
 
 .culturist-card-signature {
     display: block;
-    width: 92px;
-    height: auto;
-    margin-top: 10px;
+    width: var(--culturist-card-signature-width);
+    height: var(--culturist-card-signature-height);
 }
 
-.culturist-card-quote {
+.culturist-card-quote,
+.culturist-card-quote-content {
     margin: 0;
-    color: #1b364b;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-size: 18px;
-    line-height: 1.08;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-subtitle);
+    font-size: var(--typography-fontsize-heading-subtitle);
+    font-weight: var(--type-font-weight-subtitle);
+    font-style: normal;
+    line-height: var(--typography-line-height-heading-subtitle);
+    letter-spacing: 0;
 }
 
 .culturist-card-quote blockquote,
 .culturist-card-quote p,
+.culturist-card-quote-content p,
 .culturist-card-bio p {
     margin: 0;
 }
 
-.culturist-card-name,
-.culturist-card-bio {
-    margin: 0;
-    color: #1e2d3b;
-    font-size: 10px;
-    line-height: 1.35;
+.culturist-card-quote p:first-child::before {
+    content: '"';
+}
+
+.culturist-card-quote p:last-child::after {
+    content: '"';
 }
 
 .culturist-card-name {
-    font-style: italic;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    color: var(--culturist-card-copy-color);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
+    font-style: normal;
+    line-height: var(--typography-line-height-body-sm);
+    letter-spacing: 0;
+}
+
+.culturist-card-bio {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    color: var(--culturist-card-copy-color);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    font-style: normal;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+}
+
+.culturist-card-bio p {
+    width: 100%;
 }
 
 .culturist-card-experience {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--dimension-spacing-general-s);
+    padding-left: var(--dimension-spacing-general-2xl);
 }
 
 .culturist-card-eyebrow {
     margin: 0;
-    color: #1b364b;
-    font-size: 10px;
-    line-height: 1.2;
+    color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-eyebrow);
+    font-weight: var(--type-font-weight-body-reg);
+    font-style: normal;
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
     text-transform: uppercase;
+    overflow: visible;
 }
 
 .culturist-card-title {
     margin: 0;
-    color: #1b364b;
-    font-family: var(--heading-font-family, 'Goudy Regular', Georgia, serif);
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 1;
+    color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h3);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h3);
     text-transform: uppercase;
+}
+
+.culturist-card-title p + p {
+    margin-left: calc(0px - var(--dimension-spacing-general-2xl));
 }
 
 .culturist-card-gallery {
     display: flex;
-    gap: 4px;
+    gap: var(--dimension-spacing-general-2xs);
     padding: 0;
-    margin: 0;
+    margin: var(--dimension-spacing-general-2xs) 0 0;
+    width: calc(100% + var(--dimension-spacing-general-xl));
     overflow-x: auto;
     list-style: none;
     scroll-snap-type: x mandatory;
@@ -138,8 +194,8 @@
 }
 
 .culturist-card-gallery-item {
-    flex: 0 0 58%;
-    aspect-ratio: 1 / 1;
+    flex: 0 0 var(--culturist-card-gallery-item-basis);
+    aspect-ratio: 4 / 5;
     scroll-snap-align: start;
 }
 
@@ -152,77 +208,87 @@
 
 .culturist-card-ctas {
     display: flex;
-    gap: 14px;
+    gap: var(--dimension-spacing-general-min);
     align-items: center;
-    margin-top: 18px;
+    margin-top: 36px;
 }
 
 .culturist-card-cta-link {
-    color: #1b364b;
-    font-size: 10px;
-    line-height: 1.2;
+    display: inline-flex;
+    height: var(--component-button-height);
+    align-items: center;
+    color: var(--color-text-action-default);
+    font-size: var(--typography-fontsize-body-text-link);
+    font-weight: var(--type-font-weight-text-link);
+    line-height: var(--typography-fontsize-body-text-link);
     text-transform: uppercase;
     text-underline-offset: 3px;
 }
 
+.culturist-card-cta-link--enquire {
+    position: relative;
+    margin-right: var(--dimension-spacing-general-2xl);
+}
+
+.culturist-card-cta-link--enquire::after {
+    position: absolute;
+    top: 10px;
+    right: calc(0px - var(--dimension-spacing-general-m));
+    height: var(--dimension-spacing-general-l);
+    border-right: var(--stroke-weight-s) solid currentColor;
+    content: '';
+}
+
 .culturist-card--empty {
-    min-height: 120px;
+    min-height: var(--dimension-spacing-general-6xl);
 }
 
 @media (width >= 768px) {
     .culturist-card-media {
-        aspect-ratio: 724 / 425;
+        aspect-ratio: 5 / 4;
     }
 
     .culturist-card-panel {
-        position: relative;
-        gap: 38px;
-        padding: 54px 112px 64px 42px;
+        gap: var(--dimension-spacing-general-xl);
+        min-height: 932px;
+        padding: var(--dimension-spacing-general-4xl) var(--dimension-layout-module-padding-inline-s);
     }
 
     .culturist-card-avatar-wrap {
-        position: absolute;
-        top: -40px;
-        right: 42px;
+        top: calc(0px - var(--dimension-spacing-general-6xl));
+        right: var(--dimension-spacing-general-3xl);
+        left: auto;
         align-items: center;
     }
 
-    .culturist-card-avatar {
-        width: 90px;
-        height: 90px;
-    }
-
-    .culturist-card-signature {
-        width: 108px;
-    }
-
     .culturist-card-profile {
-        max-width: 410px;
+        max-width: 738px;
+        padding-top: calc(
+            var(--dimension-layout-card-padding-block) + var(--dimension-spacing-general-3xl) -
+                var(--dimension-spacing-general-s)
+        );
     }
 
-    .culturist-card-quote {
-        font-size: 20px;
+    .culturist-card-bio {
+        line-height: 18px;
     }
 
-    .culturist-card-name,
-    .culturist-card-bio,
-    .culturist-card-eyebrow,
-    .culturist-card-cta-link {
-        font-size: 11px;
-    }
-
-    .culturist-card-title {
-        max-width: 420px;
-        font-size: 28px;
+    .culturist-card-experience {
+        gap: var(--dimension-spacing-general-m);
+        padding: 0 var(--dimension-spacing-general-2xl);
     }
 
     .culturist-card-gallery {
+        max-width: none;
         overflow: visible;
         scroll-snap-type: none;
+        width: 100%;
+        margin-top: 22px;
     }
 
     .culturist-card-gallery-item {
-        flex: 0 1 112px;
+        --culturist-card-gallery-item-basis: calc((100% - var(--dimension-spacing-general-xs)) / 3);
+        aspect-ratio: 4 / 5;
         scroll-snap-align: none;
     }
 }
@@ -230,38 +296,66 @@
 @media (width >= 1200px) {
     .culturist-card-layout {
         display: grid;
-        grid-template-columns: 50% 50%;
-        min-height: 720px;
+        grid-template-columns: 1fr 1fr;
+        min-height: 946px;
     }
 
     .culturist-card-media {
         order: 2;
-        height: 720px;
+        height: 946px;
         aspect-ratio: auto;
     }
 
     .culturist-card-panel {
         order: 1;
-        justify-content: center;
-        gap: 42px;
-        min-height: 720px;
-        padding: 54px 96px;
+        gap: var(--dimension-spacing-stack-to-stack);
+        min-height: 946px;
+        padding: var(--dimension-layout-module-padding-block) var(--dimension-spacing-general-5xl);
     }
 
     .culturist-card-avatar-wrap {
-        top: 50px;
-        right: 88px;
+        top: 0;
+        right: calc(0px - var(--dimension-spacing-general-2xl));
+        left: auto;
+    }
+
+    .culturist-card-avatar {
+        width: var(--culturist-card-avatar-size);
+        height: var(--culturist-card-avatar-size);
+    }
+
+    .culturist-card-signature {
+        width: var(--culturist-card-signature-width);
+        height: var(--culturist-card-signature-height);
     }
 
     .culturist-card-profile {
-        max-width: 360px;
+        position: relative;
+        max-width: 560px;
+        padding: 0 var(--dimension-spacing-general-2xl);
+    }
+
+    .culturist-card-quote,
+    .culturist-card-quote-content,
+    .culturist-card-name {
+        max-width: 316px;
+    }
+
+    .culturist-card-bio {
+        max-width: 380px;
     }
 
     .culturist-card-experience {
-        max-width: 420px;
+        max-width: 560px;
+        gap: var(--dimension-spacing-general-m);
+        padding-inline: var(--dimension-spacing-general-2xl);
+    }
+
+    .culturist-card-gallery {
+        margin-top: var(--dimension-spacing-general-m);
     }
 
     .culturist-card-gallery-item {
-        flex-basis: 120px;
+        --culturist-card-gallery-item-basis: 160px;
     }
 }

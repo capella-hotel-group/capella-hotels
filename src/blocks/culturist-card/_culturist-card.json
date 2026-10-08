@@ -51,8 +51,7 @@
           "component": "richtext",
           "name": "experienceTitle",
           "label": "Experience Section Title",
-          "valueType": "string",
-          "required": true
+          "valueType": "string"
         },
         {
           "component": "text",

@@ -2,7 +2,10 @@
 
 ## Overview
 
-Both `header.js` and `footer.js` use the same two-option mechanism to resolve the nav/footer fragment path.
+Both blocks honor page metadata first. Their fallback behavior differs:
+
+- The header tries a `nav` fragment beside the current page, then the site/language-derived nav, then root `/nav`.
+- The footer derives a `/footer` path from the current site/language segments.
 
 ---
 
@@ -17,11 +20,23 @@ If the meta value is present, it is used directly as the path for `loadFragment(
 
 ---
 
-## Option 2 — URL fallback
+## Fallbacks
 
-Activated when the meta tag is absent **or** when `loadFragment(metadataPath)` returns `null`.
+Fallbacks are tried when the metadata path is absent or its fragment cannot be loaded.
 
-Parses `window.location.pathname` to compute the path automatically.
+### Header
+
+The header removes the last segment of `window.location.pathname` and appends `nav`. If that sibling fragment cannot be loaded, it tries the site/language-derived nav path, then root `/nav`. Duplicate paths are only requested once. For example:
+
+| Page URL                                                            | Sibling fallback                               | Site/language fallback | Final fallback |
+| ------------------------------------------------------------------- | ---------------------------------------------- | ---------------------- | -------------- |
+| `/test-pages/culturist-card`                                        | `/test-pages/nav`                              | `/test-pages/nav`      | `/nav`         |
+| `/content/capella-hotels/test-pages/qa/en/destination-introduction` | `/content/capella-hotels/test-pages/qa/en/nav` | `/test-pages/nav`      | `/nav`         |
+| `/page`                                                             | `/nav`                                         | `/global/nav`          | `/nav`         |
+
+### Footer
+
+The footer parses `window.location.pathname` to compute a site/language-specific path.
 
 ### Logic
 
@@ -29,32 +44,25 @@ Parses `window.location.pathname` to compute the path automatically.
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Site** | Find the first pathname segment matching `SUPPORTED_SITES`. If not found, use `DEFAULT_SITE_SEGMENT` (see below).                                                               |
 | **Lang** | The next segment if it matches a key in `LANG_MAP` (alias slug) or a primary in `VALID_LANG_PRIMARIES`. Uses the **raw URL slug** — not normalized (`jp` stays `jp`, not `ja`). |
-| **Path** | `/{site}/{lang}/nav` or `/{site}/{lang}/footer`, with empty segments dropped                                                                                                    |
+| **Path** | `/{site}/{lang}/footer`, with empty segments dropped                                                                                                                            |
 
 ### `DEFAULT_SITE_SEGMENT` toggle
 
-`DEFAULT_SITE_SEGMENT` (`src/app/scripts.ts`) is the site segment used when the URL has no
-recognized site segment. It is currently `''` (empty — no default), because the site does not
-yet have multi-site/multi-language set up: a URL with no site segment resolves to the plain
-root fragment (`/nav`, `/footer`) instead of being prefixed with a site.
-
-Once multi-site/multi-language routing is introduced, flip this one constant back to `'global'`
-to restore the previous behavior (`/global/nav`, `/global/footer`) — both `header.ts` and
-`footer.ts` read the same constant, so they stay in sync automatically.
+`DEFAULT_SITE_SEGMENT` (`src/app/scripts.ts`) is currently `'global'`. It is used by the footer fallback and the header's language-switcher home-link fallback when the URL has no recognized site segment. It does not affect the header's sibling-nav fallback.
 
 ### Examples
 
-| URL               | Resolved fragment path (`DEFAULT_SITE_SEGMENT = ''`) |
-| ----------------- | ---------------------------------------------------- |
-| `/page`           | `/nav` — no site/lang segment → root fragment        |
-| `/en/page`        | `/en/nav` — no site segment, `en` recognized as lang |
-| `/global/en/page` | `/global/en/nav` — explicit site + lang              |
-| `/global/jp/page` | `/global/jp/nav` — raw slug, not `/global/ja/nav`    |
-| `/bangkok/page`   | `/bangkok/nav`                                       |
+| URL               | Resolved footer path (`DEFAULT_SITE_SEGMENT = 'global'`) |
+| ----------------- | -------------------------------------------------------- |
+| `/page`           | `/global/footer`                                         |
+| `/en/page`        | `/global/en/footer`                                      |
+| `/global/en/page` | `/global/en/footer`                                      |
+| `/global/jp/page` | `/global/jp/footer` — raw slug, not `/global/ja/footer`  |
+| `/bangkok/page`   | `/bangkok/footer`                                        |
 
 ### Final fallback
 
-If both Option 1 and Option 2 fail:
+If metadata and the block's fallback paths fail:
 
 - **Header**: hides entirely (`display: none`)
 - **Footer**: returns silently, nothing is rendered
@@ -70,7 +78,7 @@ If both Option 1 and Option 2 fail:
 
 ## Shared constants
 
-Defined once in `src/app/scripts.ts` (compiled to `scripts/scripts.js` — never hand-edit the generated file) and exported for both blocks to import:
+Defined in `src/app/scripts.ts` (compiled to `scripts/scripts.js` — never hand-edit the generated file):
 
 | Constant               | Purpose                                                                                            |
 | ---------------------- | -------------------------------------------------------------------------------------------------- |
@@ -79,4 +87,4 @@ Defined once in `src/app/scripts.ts` (compiled to `scripts/scripts.js` — never
 | `LANG_MAP`             | Maps alias slugs to BCP 47 tags (`jp → ja`, `zh-cn → zh-CN`)                                       |
 | `VALID_LANG_PRIMARIES` | Set of valid ISO 639-1 language primaries used to distinguish lang codes from market/country codes |
 
-> **Note:** When a new site is added, update `SUPPORTED_SITES` in `src/app/scripts.ts` only — both blocks pick it up automatically.
+> **Note:** When a new site is added, update `SUPPORTED_SITES` in `src/app/scripts.ts`; the footer and header language-switcher fallback use it.

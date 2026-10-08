@@ -19,7 +19,7 @@
       "fragment",
       "text-with-image",
       "hero-banner",
-      "section-intro",
+      "section-header",
       "awards-list",
       "turneo-proxy-test",
       "turneo-experience-detail",
@@ -55,65 +55,6 @@
       "hero",
       "navigation-lists",
       "link"
-    ]
-  },
-  {
-    "id": "text",
-    "rte": {
-      "toolbar": {
-        "format": [
-          "bold",
-          "italic",
-          "underline",
-          "strike"
-        ],
-        "blocks": [
-          "paragraph",
-          "h1",
-          "h2",
-          "h3",
-          "h4",
-          "h5",
-          "h6",
-          "code_block"
-        ],
-        "list": [
-          "bullet_list",
-          "ordered_list"
-        ],
-        "insert": [
-          "link",
-          "unlink"
-        ],
-        "sr_script": [
-          "superscript",
-          "subscript"
-        ],
-        "editor": [
-          "removeformat",
-          "paste_text"
-        ],
-        "advanced": [
-          "classes"
-        ],
-        "sections": [
-          "format",
-          "blocks",
-          "list",
-          "insert",
-          "sr_script",
-          "editor",
-          "advanced"
-        ]
-      },
-      "actions": {
-        "link": {
-          "hideTarget": false
-        }
-      }
-    },
-    "components": [
-      "text"
     ]
   },
   {
@@ -165,13 +106,18 @@
     "id": "destination-introduction",
     "components": [
       "destination-introduction-image"
-    ]
+    ],
+    "minItems": 1,
+    "maxItems": 3,
+    "customErrorMsg": "Add between 1 and 3 media items."
   },
   {
     "id": "experience-tiles",
     "components": [
-      "experience-tiles-item"
-    ]
+      "experience-tiles-slide"
+    ],
+    "minItems": 1,
+    "customErrorMsg": "Add at least 1 slide."
   },
   {
     "id": "footer-legal",
