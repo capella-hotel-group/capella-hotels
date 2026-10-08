@@ -428,6 +428,8 @@
         /* typography / heading scale (desktop-xl) */
         --typography-fontsize-heading-h1: 52px;
         --typography-line-height-heading-h1: 56px;
+        --typography-fontsize-heading-h3: 40px;
+        --typography-line-height-heading-h3: 44px;
 
         /* typography / body scale (desktop-xl; the font sizes are unchanged) */
         --typography-line-height-body-eyebrow: 18px;
