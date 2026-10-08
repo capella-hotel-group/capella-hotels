@@ -47,7 +47,7 @@
     color: #000;
     font-family: var(--heading-font-family);
     font-size: var(--typography-fontsize-heading-h3);
-    font-weight: 400;
+    font-weight: var(--type-font-weight-heading);
     line-height: var(--typography-line-height-heading-h3);
 }
 
@@ -57,8 +57,9 @@
     max-width: 100%;
     margin: 0;
     color: var(--color-text-main-body);
-    font-family: var(--body-font-family);
+    font-family: var(--type-font-family-subtitle);
     font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-subtitle);
     line-height: var(--typography-line-height-body-md);
     text-align: center;
 }
@@ -174,8 +175,9 @@
     width: 100%;
     margin: var(--dimension-spacing-general-l) 0 0;
     color: var(--color-text-main-body);
-    font-family: var(--body-font-family);
+    font-family: var(--type-font-family-subtitle);
     font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-subtitle);
     line-height: var(--typography-line-height-body-md);
     text-align: center;
     text-transform: uppercase;
