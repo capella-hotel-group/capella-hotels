@@ -181,14 +181,20 @@
     text-align: center;
 }
 
-/* no text-box-trim here, unlike the eyebrow and the description: Figma leaves the card title
-   on the font's own leading */
+/* Figma leaves the title untrimmed but centres the cap-height box inside the line box, which
+   Chrome will not do: GoudyWtcT's natural line box is taller than the line-height, so the
+   glyphs sit flush with the top of the box and leak out from under the card in front. Trim to
+   the cap box and pad the leftover leading back on. 0.667em is GoudyWtcT's cap ratio, measured
+   identical (0.667) at all four type sizes. */
 .offers-carousel .offers-carousel-card-title {
     margin: 0;
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h1);
     font-weight: var(--type-font-weight-heading);
     line-height: var(--typography-line-height-heading-h1);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    padding-block: calc((var(--typography-line-height-heading-h1) - 0.667em) / 2);
 }
 
 .offers-carousel .offers-carousel-card-description {
@@ -202,6 +208,8 @@
     font-weight: var(--type-font-weight-body-reg);
     line-height: var(--typography-line-height-body-md);
     color: var(--color-text-main-inverse-body);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .offers-carousel .offers-carousel-card-eyebrow > *,
@@ -445,6 +453,39 @@
         justify-content: flex-start;
         max-width: 400px;
         text-align: left;
+    }
+}
+
+/* Figma "breakpoint=desktop 1920" (node 6275:24403). The columns, both paddings and the
+   type scale already follow the tokens; only the card geometry is authored per artboard.
+   The title-to-description gap steps up to general/2xl here, unlike general/xl at 1440. */
+@media (width >= 1920px) {
+    .offers-carousel .offers-carousel-layout {
+        min-height: 710px;
+    }
+
+    .offers-carousel .offers-carousel-cards {
+        --card-height: 350px;
+    }
+
+    .offers-carousel .offers-carousel-card.is-active,
+    .offers-carousel .offers-carousel-card.is-next-1,
+    .offers-carousel .offers-carousel-card.is-next-2 {
+        width: min(880px, calc(100% - 152px));
+        height: 350px;
+    }
+
+    /* the two steps are uneven in the design (91 then 61), so they are not derived */
+    .offers-carousel .offers-carousel-card.is-next-1 {
+        --card-x: 91px;
+    }
+
+    .offers-carousel .offers-carousel-card.is-next-2 {
+        --card-x: 152px;
+    }
+
+    .offers-carousel .offers-carousel-card-body {
+        gap: var(--dimension-spacing-general-2xl);
     }
 }
 
