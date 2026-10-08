@@ -133,7 +133,8 @@
     position: absolute;
     inset: 20px;
     display: grid;
-    grid-template-rows: auto 1fr;
+    /* fixed (not auto) eyebrow row so the title doesn't shift when the eyebrow is empty */
+    grid-template-rows: var(--typography-line-height-body-eyebrow) 1fr;
     place-items: center;
     text-align: center;
     color: #fff;
@@ -141,6 +142,8 @@
 }
 
 .destination-cards .destination-cards-location {
+    /* explicit row: stays put even when the title is empty (no sibling to anchor against) */
+    grid-row: 1;
     margin: 0;
     font-family: var(--type-font-family-body);
     font-size: var(--typography-fontsize-body-eyebrow);
@@ -151,6 +154,8 @@
 }
 
 .destination-cards .destination-cards-card-title {
+    /* explicit row: stays put even when the eyebrow is empty (no sibling to anchor against) */
+    grid-row: 2;
     margin: 0;
     padding: 0;
     background: transparent;

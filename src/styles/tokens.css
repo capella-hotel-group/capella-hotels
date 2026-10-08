@@ -24,10 +24,11 @@
  * `-heading-h2` and `-body-sm` have NOT been re-verified and may carry the
  * same error.
  * Figma artboards are 393/834/1440/1920px; our breakpoints are mobile <=767,
- * tablet 768-1199 (sampled from 834), desktop >=1200 (sampled from 1440).
- * The 1920 export was checked for parity: it matches 1440 everywhere except
- * the type scale, module padding inline-xs/-s/XL, and `--component-toogle-*`
- * (see above), which we don't model since there's no dedicated >=1920 breakpoint yet.
+ * tablet 768-1199 (sampled from 834), desktop 1200-1919 (sampled from 1440) and
+ * desktop-xl >=1920. The >=1920 tier carries only what the "breakpoint=desktop
+ * 1920" artboard confirms (node 6275:24403 in file Q6Euf4Qo9tlveuz4dNWtiJ) plus
+ * the toggle sizes from the full export; `module/padding/inline-xs` and `-XL`
+ * also differ at 1920 but have no verified value yet, so they are not modelled.
  * Font-weight stores the numeric CSS value for Figma's named style; font-family
  * aliases the fallback chains in styles.css.
  * `--dimension-spacing-general-*` is confirmed breakpoint-independent (identical
@@ -43,6 +44,8 @@
     --breakpoint-tablet-min: 768px;
     --breakpoint-tablet-max: 1199px;
     --breakpoint-desktop-min: 1200px;
+    --breakpoint-desktop-max: 1919px;
+    --breakpoint-desktop-xl-min: 1920px;
 
     /* multiplier for viewport-proportional spacing; 1px below desktop so
        calc(N * var(--fluid-unit)) equals N pixels there. See the desktop block. */
@@ -421,5 +424,37 @@
            Only ever multiply it into padding, margin or gap - feeding it into
            width would reintroduce the usual 100vw overflow. */
         --fluid-unit: calc(100vw / var(--dimension-viewport-width));
+    }
+}
+
+@media (width >= 1920px) {
+    /* desktop-xl breakpoint; values sampled from the 1920px Figma artboard
+       (node 6275:24403, "L/R=yes, breakpoint=desktop 1920", confirmed via
+       get_variable_defs). Everything not listed here is identical to 1440. */
+    :root {
+        /* typography / heading scale (desktop-xl) */
+        --typography-fontsize-heading-h1: 52px;
+        --typography-line-height-heading-h1: 56px;
+
+        /* typography / body scale (desktop-xl; the font sizes are unchanged) */
+        --typography-line-height-body-eyebrow: 18px;
+        --typography-line-height-body-md: 20px;
+
+        /* dimension / viewport (desktop-xl artboard; also rescales --fluid-unit) */
+        --dimension-viewport-width: 1920;
+
+        /* dimension / layout / module (desktop-xl) */
+        --dimension-layout-module-padding-inline-s: 120px;
+
+        /* dimension / layout (desktop-xl "40%vw"/"60%vw"; "50%vw" is not on the
+           1920 artboard, but both siblings resolve to an exact share of the
+           viewport there, so it follows the same rule) */
+        --dimension-layout-40vw: 768px;
+        --dimension-layout-60vw: 1152px;
+        --dimension-layout-50vw: 960px;
+
+        /* component / toggle (desktop-xl; padding stays at the global 4px) */
+        --component-toogle-selector-dot: 24px;
+        --component-toogle-width: 80px;
     }
 }
