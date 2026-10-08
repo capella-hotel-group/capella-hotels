@@ -60,8 +60,13 @@
     --color-surface-general-opaque: #2627271a;
     --color-surface-action-default: #1b364b;
     --color-surface-action-inverse-default: #ffffff;
+    --color-surface-action-inverse-hover: #efeeef;
+    --color-surface-action-inverse-focused: #dad9da;
+    --color-surface-action-inverse-pressed: #deddde;
+    --color-surface-brand-subtle: #d1d7db;
     --color-surface-component-toggle-inverse-selector-dot: #f7f7f7;
     --color-surface-component-toggle-inverse-fill-default: #ebebeb1a;
+    --color-surface-component-scrollbar-main: #1b364b33;
 
     /* color / text */
     --color-text-main-heading: #1b364b;
@@ -71,6 +76,8 @@
     --color-text-main-disabled: #6e6e6c;
     --color-text-action-default: #1b364b;
     --color-text-action-inactive: #1b364b80;
+    --color-text-action-hover: #183144;
+    --color-text-action-inverse-hover: #f7f7f7;
     --color-text-action-inverse-default: #ffffff;
     --color-text-action-inverse-inactive: #ebebeb80;
     --color-text-on-action-default: #ffffff;
