@@ -437,6 +437,10 @@
         --typography-line-height-heading-h1: 56px;
         --typography-fontsize-heading-h3: 40px;
         --typography-line-height-heading-h3: 44px;
+        /* confirmed via filters-grid's own local >=1920 override (same values), which existed
+           precisely because this global token was missing it - see css-tokens.md repo memory */
+        --typography-fontsize-heading-h4: 32px;
+        --typography-line-height-heading-h4: 36px;
 
         /* typography / body scale (desktop-xl; the font sizes are unchanged) */
         --typography-line-height-body-eyebrow: 18px;
