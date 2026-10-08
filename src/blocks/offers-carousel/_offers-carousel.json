@@ -122,8 +122,13 @@
           "component": "text",
           "name": "ctas_primaryCtaText",
           "label": "Primary CTA Label",
+          "description": "Required once a URL is set. Without a label the button is not rendered on the page.",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true,
+          "condition": {
+            "!!": { "var": "ctas_primaryCta" }
+          }
         },
         {
           "component": "boolean",
@@ -142,8 +147,13 @@
           "component": "text",
           "name": "ctas_secondaryCtaText",
           "label": "Secondary CTA Label",
+          "description": "Required once a URL is set. Without a label the button is not rendered on the page.",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true,
+          "condition": {
+            "!!": { "var": "ctas_secondaryCta" }
+          }
         },
         {
           "component": "boolean",
