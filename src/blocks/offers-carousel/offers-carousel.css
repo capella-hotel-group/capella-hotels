@@ -181,16 +181,14 @@
     text-align: center;
 }
 
+/* no text-box-trim here, unlike the eyebrow and the description: Figma leaves the card title
+   on the font's own leading */
 .offers-carousel .offers-carousel-card-title {
     margin: 0;
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h1);
     font-weight: var(--type-font-weight-heading);
     line-height: var(--typography-line-height-heading-h1);
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
-    padding-top: 0.1em;
-    padding-bottom: 0.1em;
 }
 
 .offers-carousel .offers-carousel-card-description {
