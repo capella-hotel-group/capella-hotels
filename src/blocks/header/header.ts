@@ -302,11 +302,12 @@ function buildLogo(
   darkSrc: string,
   darkAlt: string,
   href: string,
+  label: string,
 ): HTMLAnchorElement {
   const logo = document.createElement('a');
   logo.className = 'header-logo';
   logo.href = href;
-  logo.setAttribute('aria-label', 'Capella Hotels - Home');
+  logo.setAttribute('aria-label', label || 'Capella Hotels - Home');
 
   if (pictureSrc) {
     const img = document.createElement('img');
@@ -401,9 +402,10 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
   return grid;
 }
 
-// A region marked merge-columns joins the row of the ONE region immediately after it
-// (pairwise only, no chaining). A consumed partner's own marker is ignored, and a
-// marker on the last region in a category is a no-op (see design.md Decision 2).
+// A region marked merge-columns joins the immediately following region only when
+// the pair fits in MERGE_ROW_COLUMNS slots. Otherwise both regions render normally.
+const MERGE_ROW_COLUMNS = 4;
+
 function groupRegions(regions: NavRegion[]): NavRegion[][] {
   const groups: NavRegion[][] = [];
   let i = 0;
@@ -411,7 +413,7 @@ function groupRegions(regions: NavRegion[]): NavRegion[][] {
     const region = regions[i];
     if (!region) break;
     const next = regions[i + 1];
-    if (region.mergeColumns && next) {
+    if (region.mergeColumns && next && flattenMergeSlots([region, next]).length <= MERGE_ROW_COLUMNS) {
       groups.push([region, next]);
       i += 2;
     } else {
@@ -424,8 +426,6 @@ function groupRegions(regions: NavRegion[]): NavRegion[][] {
   }
   return groups;
 }
-
-const MERGE_ROW_COLUMNS = 4;
 
 interface MergeSlot {
   label: string;
@@ -719,10 +719,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const [logoImg, logoImgDark] = chromeSection.querySelectorAll('picture img');
   const chromeLinks = [...chromeSection.querySelectorAll<HTMLAnchorElement>('.default-content-wrapper > p > a')];
-  const ctaAnchor = chromeLinks[0];
-  const closeAnchor = chromeLinks[1];
+  const logoLinkAnchor = chromeLinks[0];
+  const { label: logoLinkLabel, marker: logoLinkMarker } = splitMarker(logoLinkAnchor?.textContent ?? '');
+  const ctaAnchor = chromeLinks
+    .slice(1)
+    .filter((anchor) => splitMarker(anchor.textContent ?? '').label.toLowerCase() !== 'close')
+    .at(-1);
   const { label: ctaLabel, marker: ctaMarker } = splitMarker(ctaAnchor?.textContent ?? '');
-  const closeMenuLabel = splitMarker(closeAnchor?.textContent ?? '').label || 'CLOSE';
+  const closeMenuLabel = 'CLOSE';
   const activeLang = getActiveLang(languages);
 
   const logo = buildLogo(
@@ -730,8 +734,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     logoImg?.getAttribute('alt') ?? '',
     logoImgDark?.getAttribute('src') ?? '',
     logoImgDark?.getAttribute('alt') ?? '',
-    activeLang.href,
+    logoLinkAnchor?.getAttribute('href') || activeLang.href,
+    logoLinkLabel,
   );
+  if (logoLinkAnchor) moveInstrumentation(logoLinkAnchor, logo);
+  if (logoLinkMarker === 'open-in-new-tab') {
+    logo.target = '_blank';
+    logo.rel = 'noopener';
+  }
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
   const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');
