@@ -31,6 +31,11 @@
  * also differ at 1920 but have no verified value yet, so they are not modelled.
  * Font-weight stores the numeric CSS value for Figma's named style; font-family
  * aliases the fallback chains in styles.css.
+ * The 1920 `heading-h4` (32/36), `body-sm` line-height (18) and `module/padding/
+ * block` (80) + `inline-L` (378) come from the text-with-cta module, whose four
+ * breakpoint variants were read with get_variable_defs on 2026-10-08 (CAP-86):
+ * 4214:8607 (393), 6196:22376 (834), 4128:2830 (1440), 6553:74616 / 6275:24687
+ * (1920).
  * `--dimension-spacing-general-*` is confirmed breakpoint-independent (identical
  * alias name, e.g. `--dimension-spacing-general-4xl` is `unit/800` = 64px, at
  * all 4 exports - no exceptions). `--dimension-layout-module-padding-top` mirrors
@@ -445,12 +450,15 @@
         /* typography / body scale (desktop-xl; the font sizes are unchanged) */
         --typography-line-height-body-eyebrow: 18px;
         --typography-line-height-body-md: 20px;
+        --typography-line-height-body-sm: 18px;
 
         /* dimension / viewport (desktop-xl artboard; also rescales --fluid-unit) */
         --dimension-viewport-width: 1920;
 
         /* dimension / layout / module (desktop-xl) */
+        --dimension-layout-module-padding-block: 80px;
         --dimension-layout-module-padding-inline-s: 120px;
+        --dimension-layout-module-padding-inline-l: 378px;
 
         /* dimension / layout (desktop-xl "40%vw"/"60%vw"; "50%vw" is not on the
            1920 artboard, but both siblings resolve to an exact share of the
