@@ -42,21 +42,23 @@
     }
 }
 
-/* Desktop 1024px+ spec: left/right panels split evenly */
+/* Desktop 1200-1919px spec: profile-concept is a fixed 720px (not a fluid 50%) -
+   confirmed via get_metadata, same fixed-per-tier pattern as the 1920 override below */
 @media (width >= 1200px) {
     .culturist-carousel-grid {
-        grid-template-columns: 50% 50%;
-    }
-}
-
-@media (width >= 1200px) {
-    .culturist-carousel-grid {
-        grid-template-columns: 50% minmax(0, 1fr);
+        grid-template-columns: 720px minmax(0, 1fr);
         --culturist-carousel-avatar-size: 160px;
     }
 
     .culturist-carousel-info-col {
         justify-content: center;
+    }
+}
+
+/* Desktop-xl (1920) spec: avatar grows back to the tablet/1920 "2XL" size (160px only applies 1200-1919) */
+@media (width >= 1920px) {
+    .culturist-carousel-grid {
+        --culturist-carousel-avatar-size: 240px;
     }
 }
 
@@ -158,6 +160,21 @@
     text-underline-offset: auto;
     text-underline-position: from-font;
     padding-left: var(--dimension-spacing-general-4xl);
+}
+
+/* Figma desktop spec: the heading lines stretch full-width (text stays left-aligned)
+   but the destination dropdown hugs its own content and right-aligns flush with
+   the heading lines' right edge, via align-items:flex-end on the column - no
+   left-padding push like the mobile/tablet variant. */
+@media (width >= 1200px) {
+    .culturist-carousel-destination-wrapper {
+        width: auto;
+        align-self: flex-end;
+    }
+
+    .culturist-carousel-destination-label {
+        padding-left: 0;
+    }
 }
 
 .culturist-carousel-destination-btn:hover {
@@ -624,19 +641,23 @@
     }
 }
 
-/* First card shows in full, second card peeks partially as a scroll affordance */
+/* First card shows in full, second card peeks partially as a scroll affordance.
+   Figma fixes these to literal px (200 mobile / 360 tablet), not a % of the
+   viewport - matches the desktop tier's existing fixed-px pattern below. */
 .culturist-carousel-carousel-card {
     position: relative;
-    flex: 0 0 52.5%;
+    flex: 0 0 200px;
+    /* mobile's carousel-col keeps a min-height floor (no explicit height), so a
+       stretched cross-size would otherwise inflate width past 200px via aspect-ratio */
+    align-self: flex-start;
     aspect-ratio: 0.8180555556;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
 
-/* Below 1024px: two cards near-evenly split, with a sliver of the 3rd peeking */
 @media (width >= 768px) and (width < 1200px) {
     .culturist-carousel-carousel-card {
-        flex: 0 0 45%;
+        flex: 0 0 360px;
     }
 }
 
@@ -678,35 +699,24 @@
     transition: transform 0.3s ease;
 }
 
-/* Dark scrim over the bottom half of the image for title legibility */
+/* Flat scrim over the whole image for title legibility (Figma: flat rgba(0,0,0,0.2) over the entire card) */
 .culturist-carousel-carousel-card::after {
     content: '';
     position: absolute;
-    inset: 50% 0 0;
-    background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
     pointer-events: none;
     z-index: 2;
-    /* transition: inset 0.3s ease, background 0.3s ease; */
 }
 
 @media (hover: hover) {
     .culturist-carousel-card-content:hover .culturist-carousel-card-slot-img {
         transform: scale(1.05);
     }
-
-    .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:hover)::after {
-        inset: 0;
-        background: rgb(0 0 0 / 20%);
-    }
 }
 
 .culturist-carousel-card-content:active .culturist-carousel-card-slot-img {
     transform: scale(1.05);
-}
-
-.culturist-carousel-carousel-card:has(.culturist-carousel-card-content:active)::after {
-    inset: 0;
-    background: rgb(0 0 0 / 20%);
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -798,6 +808,9 @@
 
 @media (width >= 1200px) {
     .culturist-carousel-card-title {
+        top: var(--dimension-layout-card-padding-xl);
+        left: var(--dimension-layout-card-padding-2xl);
+        right: var(--dimension-layout-card-padding-2xl);
         font-size: var(--typography-fontsize-heading-h1);
         line-height: var(--typography-line-height-heading-h1); /* 100% */
     }
@@ -960,7 +973,7 @@ body.culturist-carousel-modal-open {
 
 @media (width >= 1200px) {
     .culturist-carousel-grid {
-        grid-template-columns: 50% minmax(0, 1fr);
+        grid-template-columns: 720px minmax(0, 1fr);
     }
 
     .culturist-carousel-info-col {
@@ -983,5 +996,13 @@ body.culturist-carousel-modal-open {
 
     .culturist-carousel-carousel-next {
         right: 20px;
+    }
+}
+
+/* profile-concept is a fixed 768px (40vw) at 1920, not half the viewport - without this the
+   title-block's right-aligned dropdown gets an exaggerated gap past the 50%-wide math above */
+@media (width >= 1920px) {
+    .culturist-carousel-grid {
+        grid-template-columns: var(--dimension-layout-40vw) minmax(0, var(--dimension-layout-60vw));
     }
 }

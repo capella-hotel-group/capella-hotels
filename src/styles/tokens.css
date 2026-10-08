@@ -446,6 +446,9 @@
            precisely because this global token was missing it - see css-tokens.md repo memory */
         --typography-fontsize-heading-h4: 32px;
         --typography-line-height-heading-h4: 36px;
+        /* confirmed via get_variable_defs on node 6275:21379 (culturist-carousel quote) */
+        --typography-fontsize-heading-subtitle: 28px;
+        --typography-line-height-heading-subtitle: 32px;
 
         /* typography / body scale (desktop-xl; the font sizes are unchanged) */
         --typography-line-height-body-eyebrow: 18px;
