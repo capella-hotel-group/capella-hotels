@@ -4,6 +4,7 @@ import { isUniversalEditor } from '@/utils/env.js';
 
 const BLOCK = 'text-with-cta';
 const ITEM_MODEL = 'text-with-cta-signup-form';
+const MOTION_MS = 320;
 
 /** Field index inside a sign-up form item row — one cell per model field. */
 const FIELD = {
@@ -134,25 +135,57 @@ function buildRow(modifier: string, fields: HTMLElement[]): HTMLElement {
 }
 
 function wireDisclosure(trigger: HTMLButtonElement, form: HTMLFormElement, panel: HTMLElement): void {
-  const setExpanded = (expanded: boolean): void => {
+  let running: Animation | null = null;
+
+  /**
+   * Swaps the state first, then animates the panel between the height it had and
+   * the height it ends up with, so the surrounding layout is never resized in one
+   * step and the collapsed/expanded heights stay whatever the content needs.
+   */
+  const setExpanded = (expanded: boolean, animate: boolean): void => {
+    const from = panel.getBoundingClientRect().height;
+
     trigger.setAttribute('aria-expanded', String(expanded));
-    form.hidden = !expanded;
     panel.classList.toggle('is-expanded', expanded);
+    form.hidden = !expanded;
+
+    running?.cancel();
+    running = null;
+    if (!animate) return;
+
+    const to = panel.getBoundingClientRect().height;
+    if (from === to) return;
+
+    panel.style.overflow = 'hidden';
+    running = panel.animate(
+      { height: [`${from}px`, `${to}px`] },
+      { duration: MOTION_MS, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+    );
+    form.animate({ opacity: expanded ? [0, 1] : [1, 0] }, { duration: MOTION_MS, easing: 'ease' });
+
+    running.finished
+      .then(() => {
+        panel.style.overflow = '';
+        running = null;
+      })
+      .catch(() => {});
   };
 
+  const animates = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   trigger.addEventListener('click', () => {
-    setExpanded(trigger.getAttribute('aria-expanded') !== 'true');
-    if (!form.hidden) form.querySelector<HTMLElement>('select, input')?.focus();
+    setExpanded(trigger.getAttribute('aria-expanded') !== 'true', animates());
+    if (!form.hidden) form.querySelector<HTMLElement>('select, input')?.focus({ preventScroll: true });
   });
 
   form.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    setExpanded(false);
+    setExpanded(false, animates());
     trigger.focus();
   });
 
   // The authoring iframe has no way to click through to the expanded state.
-  setExpanded(isUniversalEditor());
+  setExpanded(isUniversalEditor(), false);
 }
 
 function buildSignupForm(row: Element): HTMLElement {

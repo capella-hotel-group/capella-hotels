@@ -213,6 +213,7 @@
     font-size: var(--typography-fontsize-body-s);
     font-weight: var(--type-font-weight-body-reg);
     line-height: var(--typography-line-height-body-sm);
+    transition: border-color 0.2s ease;
 }
 
 .text-with-cta .text-with-cta-field-control::placeholder {
@@ -220,9 +221,11 @@
     opacity: 1;
 }
 
-.text-with-cta .text-with-cta-field-control:focus-visible {
-    outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
-    outline-offset: 2px;
+/* the field is an underline, so focus recolours that rule instead of drawing a box */
+.text-with-cta .text-with-cta-field-control:focus-visible,
+.text-with-cta .text-with-cta-field-control:focus {
+    outline: none;
+    border-block-end-color: var(--color-stroke-action-default);
 }
 
 .text-with-cta .text-with-cta-field-control:user-invalid {
