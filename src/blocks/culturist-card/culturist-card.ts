@@ -145,7 +145,7 @@ async function fetchCFDetails(cfPath: string): Promise<CulturistCardData | null>
             return null;
           }
           const data = await response.json();
-          return data.data?.tabDetailsByPath?.item || null;
+          return data.data?.culturistTabDetailsByPath?.item || null;
         })
         .catch((error) => {
           console.error(`[culturist-card] Failed to fetch CF details for ${cfPath}`, error);
@@ -180,7 +180,7 @@ function buildQuote(cfData: CulturistCardData): HTMLElement | null {
   if (!html) return null;
   const isQuote = containsBlockquote(html);
   const quote = document.createElement(isQuote ? 'blockquote' : 'div');
-  quote.className = 'culturist-card-quote';
+  quote.className = isQuote ? 'culturist-card-quote' : 'culturist-card-quote-content';
   quote.innerHTML = isQuote ? html : removePlainQuoteMarks(html);
   return quote;
 }
@@ -226,7 +226,11 @@ function buildGallery(cfData: CulturistCardData): HTMLUListElement | null {
   gallery.className = 'culturist-card-gallery';
   cards.forEach((card) => {
     const imagePath = getReferencePath(card.image);
-    const image = createImage(resolveAssetUrl(imagePath), card.imagealt || card.title || '', 'culturist-card-gallery-image');
+    const image = createImage(
+      resolveAssetUrl(imagePath),
+      card.imagealt || card.title || '',
+      'culturist-card-gallery-image',
+    );
     if (!image) return;
 
     const item = document.createElement('li');
@@ -281,7 +285,11 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   avatarWrap.className = 'culturist-card-avatar-wrap';
 
   const avatarPath = getReferencePath(cfData.image);
-  const avatar = createImage(resolveAssetUrl(avatarPath), cfData.imageAltText || cfData.name || 'Culturist', 'culturist-card-avatar');
+  const avatar = createImage(
+    resolveAssetUrl(avatarPath),
+    cfData.imageAltText || cfData.name || 'Culturist',
+    'culturist-card-avatar',
+  );
   if (avatar) avatarWrap.append(avatar);
 
   const signaturePath = getReferencePath(cfData.signatureImage);

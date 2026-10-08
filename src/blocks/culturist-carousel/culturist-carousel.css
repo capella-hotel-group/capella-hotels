@@ -99,8 +99,15 @@
     display: flex;
     flex-direction: column;
     gap: var(--dimension-spacing-general-2xs);
-    padding: var(--dimension-layout-module-padding-block, 48px) var(--dimension-layout-card-padding-inline, 20px)
-        var(--dimension-layout-module-padding-block-s, 40px) var(--dimension-layout-card-padding-inline, 20px);
+    padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-card-padding-inline)
+        var(--dimension-layout-module-padding-block-s) var(--dimension-layout-card-padding-inline);
+}
+
+/* Tablet: Figma switches the inline padding to the module token, not the card one */
+@media (width >= 768px) {
+    .culturist-carousel-title-block {
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+    }
 }
 
 /* Desktop only: no padding on the title block */
@@ -180,11 +187,13 @@
     position: absolute;
     top: calc(100% + var(--dimension-spacing-general-m));
     left: 0;
-    width: min(319px, calc(100vw - var(--dimension-spacing-general-2xl)));
+
+    /* content column (220/240/263px) + card padding on both sides, per breakpoint */
+    width: min(260px, calc(100vw - var(--dimension-spacing-general-2xl)));
     height: auto;
     box-sizing: border-box;
     z-index: 10;
-    background: var(--color-surface-general-subtle);
+    background: var(--color-surface-page);
     box-shadow:
         0 145px 41px 0 rgba(0, 0, 0, 0),
         0 93px 37px 0 rgba(0, 0, 0, 0.01),
@@ -211,9 +220,27 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(180deg, transparent 40%, var(--color-surface-general-subtle) 100%);
+    background: linear-gradient(180deg, transparent 40%, var(--color-surface-page) 100%);
     pointer-events: none;
     z-index: 1;
+}
+
+@media (width >= 768px) {
+    .culturist-carousel-destination-dropdown {
+        width: min(296px, calc(100vw - var(--dimension-spacing-general-2xl)));
+    }
+}
+
+/* Desktop dropdown is wider and sits on a subtle tinted surface instead of pure white */
+@media (width >= 1200px) {
+    .culturist-carousel-destination-dropdown {
+        width: min(319px, calc(100vw - var(--dimension-spacing-general-2xl)));
+        background: var(--color-surface-general-subtle);
+    }
+
+    .culturist-carousel-destination-dropdown::after {
+        background: linear-gradient(180deg, transparent 40%, var(--color-surface-general-subtle) 100%);
+    }
 }
 
 .culturist-carousel-destination-dropdown.is-open {
@@ -284,7 +311,13 @@
 }
 
 .culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
-    margin-bottom: var(--dimension-spacing-general-l);
+    margin-bottom: var(--dimension-spacing-general-s);
+}
+
+@media (width >= 1200px) {
+    .culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
+        margin-bottom: var(--dimension-spacing-general-l);
+    }
 }
 
 .culturist-carousel-destination-option[aria-selected='true'] {
@@ -467,21 +500,10 @@
         align-items: flex-start;
     }
 
-    .culturist-carousel-signature {
-        width: 90px;
-        height: auto;
-    }
-
     .culturist-carousel-content-col {
         order: 1;
         gap: 10px;
         padding-top: var(--dimension-spacing-general-2xs);
-    }
-
-    .culturist-carousel-quote,
-    .culturist-carousel-quote-content {
-        font-size: 18px;
-        line-height: 1.3;
     }
 
     .culturist-carousel-cta {
@@ -493,7 +515,7 @@
 /* Sub-1024 overrides: split background, overlapping avatar, right-aligned dropdown */
 @media (width < 1200px) {
     .culturist-carousel-grid {
-        --culturist-carousel-tablet-inline-inset: 32px;
+        --culturist-carousel-tablet-inline-inset: 24px;
     }
 
     .culturist-carousel-info-col {
@@ -534,9 +556,20 @@
         /* shifts up by exactly half its own height, for an even 50/50 straddle */
         transform: translateY(-50%);
     }
+}
 
+/* Mobile only: Figma's smaller signature variant (tablet/desktop share the 140x70 base size) */
+@media (width < 768px) {
     .culturist-carousel-signature {
-        width: 160px;
+        width: 100px;
+        height: 50px;
+    }
+}
+
+/* Tablet-only: the shared inline inset steps up from 24px (mobile) to 48px */
+@media (width >= 768px) and (width < 1200px) {
+    .culturist-carousel-grid {
+        --culturist-carousel-tablet-inline-inset: 48px;
     }
 }
 
@@ -576,6 +609,7 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
+    gap: 4px;
 }
 
 .culturist-carousel-carousel-track::-webkit-scrollbar {
@@ -593,22 +627,16 @@
 /* First card shows in full, second card peeks partially as a scroll affordance */
 .culturist-carousel-carousel-card {
     position: relative;
-    flex: 0 0 100%;
+    flex: 0 0 52.5%;
     aspect-ratio: 0.8180555556;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
 
-@media (width >= 768px) {
-    .culturist-carousel-carousel-card {
-        flex: 0 0 80%;
-    }
-}
-
-/* Below 1024px: two cards evenly split, filling the row with no peek */
+/* Below 1024px: two cards near-evenly split, with a sliver of the 3rd peeking */
 @media (width >= 768px) and (width < 1200px) {
     .culturist-carousel-carousel-card {
-        flex: 0 0 49.5%;
+        flex: 0 0 45%;
     }
 }
 
@@ -780,24 +808,12 @@
     /* Inset lives on the non-scrolling column so it stays put while the track scrolls */
     .culturist-carousel-carousel-col {
         background-color: var(--color-surface-general-light);
-        padding: 0 0 32px var(--culturist-carousel-tablet-inline-inset);
-    }
-
-    .culturist-carousel-carousel-card {
-        flex: 0 0 45%;
+        padding: 0 0 48px var(--culturist-carousel-tablet-inline-inset);
     }
 
     .culturist-carousel-carousel-prev,
     .culturist-carousel-carousel-next {
         display: none;
-    }
-}
-
-/* Mobile-only fine tuning */
-@media (width < 768px) {
-    /* Show 2 cards in view: first full, second ~90% visible */
-    .culturist-carousel-carousel-card {
-        flex: 0 0 52.5%;
     }
 }
 
