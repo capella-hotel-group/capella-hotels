@@ -5,11 +5,12 @@
  * without renaming). Don't "fix" without checking Figma first:
  *   - `--component-toogle-*` is Figma's own typo (missing a "g").
  *   - `--typography-line-height-body-sm/-md/-lg` pair with fontsize S/M/L.
- * `--typography-line-height-heading-h1`, `-heading-h2` and `-body-md` were
- * re-resolved with get_variable_defs against nodes 5976:106003 / 5976:105398 /
- * 5976:104314 (the 393/834/1440 "Content-card/offer" frames) and corrected; the
- * earlier values came from a stale export. `-body-sm` and `-body-lg` have NOT
- * been re-verified and may carry the same off-by-one-step error.
+ * `--typography-line-height-heading-h1` and `-body-md` were re-verified with
+ * get_variable_defs on 2026-10-07 against nodes 8035:20923 (393), 8035:20836
+ * (834) and 8040:30708 (1440). An earlier sync read them off frames that had
+ * already been deleted (5976:106003 / 5976:105398 / 5976:104314) and regressed
+ * both. `-heading-h2`, `-body-sm` and `-body-lg` have NOT been re-verified and
+ * may carry the same error.
  * Figma artboards are 393/834/1440/1920px; our breakpoints are mobile <=767,
  * tablet 768-1199 (sampled from 834), desktop >=1200 (sampled from 1440).
  * The 1920 export was checked for parity: it matches 1440 everywhere except
@@ -87,7 +88,7 @@
 
     /* typography / heading scale (mobile default) */
     --typography-fontsize-heading-h1: 36px;
-    --typography-line-height-heading-h1: 36px;
+    --typography-line-height-heading-h1: 40px;
     --typography-fontsize-heading-h2: 28px;
     --typography-line-height-heading-h2: 32px;
     --typography-fontsize-heading-h3: 24px;
@@ -101,7 +102,7 @@
     --typography-fontsize-body-l: 20px;
     --typography-line-height-body-lg: 20px;
     --typography-fontsize-body-m: 16px;
-    --typography-line-height-body-md: 20px;
+    --typography-line-height-body-md: 16px;
     --typography-fontsize-body-s: 12px;
     --typography-line-height-body-sm: 14px;
     --typography-fontsize-body-text-link: 16px;
@@ -252,7 +253,7 @@
     :root {
         /* typography / heading scale (tablet) */
         --typography-fontsize-heading-h1: 40px;
-        --typography-line-height-heading-h1: 48px;
+        --typography-line-height-heading-h1: 44px;
         --typography-fontsize-heading-h2: 36px;
         --typography-line-height-heading-h2: 40px;
         --typography-fontsize-heading-h3: 32px;
@@ -266,7 +267,7 @@
         --typography-fontsize-body-l: 22px;
         --typography-fontsize-body-m: 18px;
         --typography-line-height-body-lg: 22px;
-        --typography-line-height-body-md: 20px;
+        --typography-line-height-body-md: 18px;
         --typography-fontsize-body-s: 14px;
         --typography-line-height-body-sm: 16px;
         --typography-fontsize-body-text-link: 18px;
@@ -344,9 +345,6 @@
         --typography-fontsize-heading-h2: 40px;
         --typography-line-height-heading-h2: 48px;
         --typography-fontsize-heading-h3: 36px;
-
-        /* typography / body scale (desktop) */
-        --typography-line-height-body-md: 22px;
 
         --dimension-spacing-eyebrow-to-text: 20px;
         --dimension-spacing-title-to-content: 56px;
