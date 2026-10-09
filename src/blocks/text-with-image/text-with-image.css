@@ -193,9 +193,19 @@
         0 2px 5px rgba(0, 0, 0, 0.04);
     /* --gift-card-x/-y are the layer's center offset from the stack's center, in px -
        derived from the Figma node geometry (left/top % + rotation), constant at every breakpoint */
+    /* scale() must stay last so the hover zoom does not skew the fan rotation */
     transform: translate(-50%, -50%) translate(var(--gift-card-x, 0px), var(--gift-card-y, 0px))
-        rotate(var(--gift-card-rotation, 0deg));
+        rotate(var(--gift-card-rotation, 0deg)) scale(var(--gift-card-hover-scale, 1));
+    transform-origin: center;
     background: #f5f1ea;
+
+    --gift-card-hover-scale: 1;
+
+    @media (prefers-reduced-motion: no-preference) {
+        transition:
+            transform 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+            box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+    }
 }
 
 /* Single image: straight, centered, no fan */
@@ -241,6 +251,33 @@
     --gift-card-x: 56.27px;
     --gift-card-y: -9.55px;
     z-index: 3;
+}
+
+/* Paint order can never be interpolated, so z-index is owned by the sticky .is-raised class the
+   block script sets on pointerover: the card stays on top after the pointer leaves and only gives
+   it up when another card is picked. Changing it on :hover instead would re-stack the card halfway
+   through the scale-down and read as a visible jump. Needs 5 classes to outweigh the per-count
+   z-index rules above, and must stay after them in source order. */
+.text-with-image.gift-card .gift-card-stack .gift-card-layer.is-raised {
+    z-index: 10;
+}
+
+/* Scale only (no translate) so the card grows around the pointer and cannot flicker out of hover. */
+.text-with-image.gift-card .gift-card-stack .gift-card-layer:hover,
+.text-with-image.gift-card .gift-card-stack .gift-card-layer:active {
+    box-shadow:
+        0 48px 32px rgba(0, 0, 0, 0.06),
+        0 24px 18px rgba(0, 0, 0, 0.05),
+        0 12px 10px rgba(0, 0, 0, 0.06),
+        0 4px 6px rgba(0, 0, 0, 0.06);
+
+    --gift-card-hover-scale: 1.04;
+
+    @media (prefers-reduced-motion: no-preference) {
+        transition:
+            transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
 }
 
 .text-with-image .gift-card-layer picture,
