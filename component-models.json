@@ -1191,7 +1191,8 @@
       {
         "component": "aem-content",
         "name": "cfRootPath",
-        "label": "Content Fragment Root Path",
+        "label": "Content Fragment's Root Path",
+        "description": "Select a Content Fragment folder or path prefix. Only matching published cards are requested; a blank path requests all cards.",
         "valueType": "string",
         "required": true
       },
