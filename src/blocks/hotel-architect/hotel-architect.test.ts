@@ -27,11 +27,20 @@ const COPY_ROWS = [
   '<div><div><p>Learn more</p><p><a href="/story">/story</a></p><p>true</p></div></div>',
 ].join('');
 
-function imageRow(index: number, overlay: 'true' | 'false', model = false, thumbnail = ''): string {
+function imageRow(index: number, overlay: 'true' | 'false', model = false, legacyThumbnail = ''): string {
   const attribute = model ? ' data-aue-model="hotel-architect-image"' : '';
-  // an empty reference keeps its cell, an empty text field drops it
-  const thumbnailCell = thumbnail ? `<div><picture><img src="${thumbnail}" alt="Thumb ${index}"></picture></div>` : '';
+  const thumbnailCell = legacyThumbnail
+    ? `<div><picture><img src="${legacyThumbnail}" alt="Legacy thumb ${index}"></picture></div>`
+    : '';
   return `<div${attribute}><div><picture><img src="img${index}.jpg" alt="Image ${index}"></picture></div>${thumbnailCell}<div>${overlay}</div></div>`;
+}
+
+function thumbnailsRow(count: number): string {
+  const pictures = Array.from(
+    { length: count },
+    (_value, index) => `<picture><img src="thumb${index + 1}.jpg" alt="Thumbnail ${index + 1}"></picture>`,
+  ).join('');
+  return `<div><div>${pictures}</div></div>`;
 }
 
 function cardRow(model = false, name = 'Andre Fu'): string {
@@ -79,7 +88,8 @@ describe('hotel-architect', () => {
     expect(slides).toHaveLength(2);
     expect(slides[0]!.classList.contains('hotel-architect-slide-no-overlay')).toBe(false);
     expect(slides[1]!.classList.contains('hotel-architect-slide-no-overlay')).toBe(true);
-    expect(block.querySelectorAll('.hotel-architect-thumb')).toHaveLength(2);
+    expect(block.querySelector('.hotel-architect-thumbs')).toBeNull();
+    expect(block.querySelector('.hotel-architect-dot')?.getAttribute('aria-label')).toBe('Image 1');
 
     const card = block.querySelector('.hotel-architect-card');
     expect(card?.querySelector('.hotel-architect-card-name')?.textContent).toBe('Andre Fu');
@@ -108,15 +118,56 @@ describe('hotel-architect', () => {
     expect(card.querySelector('.hotel-architect-card-photo img')?.getAttribute('src')).toBe('fu.jpg');
   });
 
-  it('falls back to the image when no thumbnail is authored', () => {
-    const block = build(COPY_ROWS + imageRow(1, 'true', false, 'thumb1.jpg') + imageRow(2, 'true'));
+  it('renders up to three static thumbnails independently of the primary carousel', () => {
+    const block = build(COPY_ROWS + thumbnailsRow(4) + imageRow(1, 'true') + imageRow(2, 'true'));
+    decorate(block);
+
+    const thumbs = block.querySelectorAll<HTMLElement>('.hotel-architect-thumb');
+    expect(thumbs).toHaveLength(3);
+    expect(block.querySelector('.hotel-architect-thumbs button')).toBeNull();
+    expect([...block.querySelectorAll('.hotel-architect-thumb img')].map((img) => img.getAttribute('alt'))).toEqual([
+      'Thumbnail 1',
+      'Thumbnail 2',
+      'Thumbnail 3',
+    ]);
+
+    thumbs[1]!.click();
+    expect(block.querySelector('.hotel-architect-slide.is-selected img')?.getAttribute('src')).toBe('img1.jpg');
+  });
+
+  it('renders thumbnails with a single primary image and reads grouped sibling alt text', () => {
+    const block = build(
+      COPY_ROWS +
+        '<div><div><p><picture><img src="thumb.jpg"></picture></p><p>Pool terrace</p></div></div>' +
+        imageRow(1, 'true'),
+    );
 
     decorate(block);
 
-    const thumbs = block.querySelectorAll<HTMLImageElement>('.hotel-architect-thumb img');
-    expect(thumbs[0]!.getAttribute('src')).toBe('thumb1.jpg');
-    expect(thumbs[1]!.getAttribute('src')).toBe('img2.jpg');
-    // the slides keep their own image either way
+    expect(block.querySelector('.hotel-architect-nav')).toBeNull();
+    expect(block.querySelector('.hotel-architect-thumb img')?.getAttribute('alt')).toBe('Pool terrace');
+  });
+
+  it('keeps copy rows aligned when the thumbnail group is empty', () => {
+    const block = build(COPY_ROWS + '<div><div></div></div>' + imageRow(1, 'true'));
+
+    decorate(block);
+
+    expect(block.id).toBe('the-architect');
+    expect(block.querySelector('.hotel-architect-eyebrow')?.textContent).toBe('THE RESORT');
+    expect([...block.querySelectorAll('.hotel-architect-cta a')].map((cta) => cta.textContent)).toEqual([
+      'Book your stay',
+      'Learn more',
+    ]);
+    expect(block.querySelector('.hotel-architect-thumbs')).toBeNull();
+  });
+
+  it('ignores retired per-slide thumbnails', () => {
+    const block = build(COPY_ROWS + imageRow(1, 'true', false, 'legacy.jpg') + imageRow(2, 'true'));
+
+    decorate(block);
+
+    expect(block.querySelector('.hotel-architect-thumbs')).toBeNull();
     expect(
       [...block.querySelectorAll<HTMLImageElement>('.hotel-architect-slide img')].map((img) => img.getAttribute('src')),
     ).toEqual(['img1.jpg', 'img2.jpg']);
@@ -138,10 +189,8 @@ describe('hotel-architect', () => {
     click('.hotel-architect-nav-prev');
     click('.hotel-architect-nav-prev');
     expect(selected()).toBe(2);
-    click('.hotel-architect-thumb[data-index="0"]');
+    click('.hotel-architect-dot[data-index="0"]');
     expect(selected()).toBe(0);
-    click('.hotel-architect-dot[data-index="2"]');
-    expect(selected()).toBe(2);
   });
 
   it('drops the controls for a single image', () => {

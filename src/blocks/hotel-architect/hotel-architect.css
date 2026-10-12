@@ -162,11 +162,6 @@
         padding: 0;
         list-style: none;
 
-        > li {
-            flex: 1 1 0;
-            min-width: 0;
-        }
-
         @media (width >= 1200px) {
             order: 3;
             margin-block-start: var(--dimension-layout-module-gutter-m);
@@ -174,13 +169,11 @@
     }
 
     .hotel-architect-thumb {
-        display: block;
-        width: 100%;
+        /* keeps each image at one third of the row when fewer than three are authored */
+        flex: 0 0 calc((100% - (2 * var(--dimension-layout-carousel-item-gap-s))) / 3);
+        min-width: 0;
         aspect-ratio: 4 / 5;
-        padding: 0;
-        border: 0;
         background-color: #000;
-        cursor: pointer;
     }
 
     /* ---------- media ---------- */
