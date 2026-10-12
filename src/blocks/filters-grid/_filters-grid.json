@@ -56,21 +56,16 @@
           "valueType": "string"
         },
         {
-          "component": "text",
+          "component": "richtext",
           "name": "title",
           "label": "Title",
           "valueType": "string"
         },
         {
-          "component": "text",
-          "name": "titleContinuation",
-          "label": "Title Second Line",
-          "valueType": "string"
-        },
-        {
           "component": "aem-content",
           "name": "cfRootPath",
-          "label": "Content Fragment Root Path",
+          "label": "Content Fragment's Root Path",
+          "description": "Select a Content Fragment folder or path prefix. Only matching published cards are requested; a blank path requests all cards.",
           "valueType": "string",
           "required": true
         },

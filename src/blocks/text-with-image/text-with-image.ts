@@ -71,7 +71,10 @@ export default function decorate(block: HTMLElement): void {
     [...(ctaGroup?.children || [])].some((element) => element.textContent?.trim().toLowerCase() === 'true') ||
     getFieldText('cta_openInNewTab').toLowerCase() === 'true';
 
-  if (pictureEl && resolvedVariant === 'little-stars') {
+  // gift-card has no image/imageMobile fields, so pictureEl/mobileAssetRow fall back to
+  // pictureRows[0]/[1] — the gift-card layer pictures themselves. Mutating pictureEl here
+  // would corrupt the first gift-card layer's image with the second layer's mobile source.
+  if (pictureEl && resolvedVariant !== 'gift-card') {
     const responsiveImageQuery = window.matchMedia('(max-width: 767px)');
     const updateAltText = () => {
       if (desktopImg) {
@@ -169,6 +172,13 @@ export default function decorate(block: HTMLElement): void {
         }
 
         stack.append(layer);
+      });
+
+      stack.addEventListener('pointerover', (event) => {
+        const layer = (event.target as Element | null)?.closest?.('.gift-card-layer');
+        if (!layer || !stack.contains(layer) || layer.classList.contains('is-raised')) return;
+        stack.querySelector('.gift-card-layer.is-raised')?.classList.remove('is-raised');
+        layer.classList.add('is-raised');
       });
 
       imageCol.append(stack);

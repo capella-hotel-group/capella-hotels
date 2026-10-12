@@ -263,7 +263,7 @@
         "name": "description",
         "valueType": "string",
         "label": "Section Description",
-        "required": true
+        "required": false
       },
       {
         "component": "text",
@@ -297,7 +297,20 @@
         "valueType": "string",
         "name": "description",
         "label": "Award Text",
-        "required": true
+        "required": false
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "link",
+        "label": "Award Item URL"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in new tab",
+        "value": false
       }
     ]
   },
@@ -523,6 +536,71 @@
     ]
   },
   {
+    "id": "culturist-card",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "cfReference",
+        "label": "Culturist Content Fragment",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "primaryImage",
+        "label": "Primary Media Asset",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "primaryImageAlt",
+        "label": "Primary Media Alt Text",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "experienceEyebrow",
+        "label": "Experience Subtitle Eyebrow",
+        "valueType": "string"
+      },
+      {
+        "component": "richtext",
+        "name": "experienceTitle",
+        "label": "Experience Section Title",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "enquireLabel",
+        "label": "Enquire CTA Label",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "enquireLink",
+        "label": "Enquire CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "enquireOpenInNewTab",
+        "label": "Enquire Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Block ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., culturist-card"
+      }
+    ]
+  },
+  {
     "id": "culturist-carousel",
     "fields": [
       {
@@ -596,6 +674,7 @@
         "name": "subtitle",
         "label": "Section Description",
         "valueType": "string",
+        "required": true,
         "value": ""
       }
     ]
@@ -608,6 +687,7 @@
         "name": "location",
         "label": "Card Eyebrow",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -615,6 +695,7 @@
         "name": "title",
         "label": "Card Headline",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -630,7 +711,6 @@
         "name": "imageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
-        "required": true,
         "value": ""
       },
       {
@@ -638,6 +718,7 @@
         "name": "ctaName",
         "label": "Card CTA Label",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -703,6 +784,7 @@
         "name": "title",
         "label": "Title",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -710,6 +792,7 @@
         "name": "body",
         "label": "Body",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -775,6 +858,7 @@
         "component": "reference",
         "name": "mediaAsset",
         "label": "Media",
+        "description": "Max 10 seconds, WebM or MP4. The size of the video should be within 1.5MB & upto 1080 pixels",
         "valueType": "string",
         "multi": false,
         "required": true
@@ -784,7 +868,147 @@
         "name": "mediaAssetAlt",
         "label": "Media Alt Text",
         "valueType": "string",
+        "required": true,
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Enable Dark Image Overlay",
+        "description": "Tints this media so overlaid text stays legible. Does not affect the thumbnail.",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "experience-tiles",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": "",
+        "placeholder": "e.g., experience-tiles"
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "value": "",
+        "placeholder": "experience-tiles"
+      }
+    ]
+  },
+  {
+    "id": "experience-tiles-slide",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "leftMedia_image",
+        "label": "Left Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "leftMedia_imageAlt",
+        "label": "Left Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "leftContent_eyebrow",
+        "label": "Left Panel Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "leftContent_headline",
+        "label": "Left Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "name": "rightMedia_image",
+        "label": "Right Panel Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "rightMedia_imageAlt",
+        "label": "Right Panel Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "rightContent_headline",
+        "label": "Right Panel Headline",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "rightContent_description",
+        "label": "Right Panel Description",
+        "description": "Leave empty for a panel that shows only a headline.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "rightCtas_primaryCta",
+        "label": "Right Panel Primary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "rightCtas_primaryCtaText",
+        "label": "Right Panel Primary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "rightCtas_primaryCtaOpenInNewTab",
+        "label": "Right Panel Primary Link Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "aem-content",
+        "name": "rightCtas_secondaryCta",
+        "label": "Right Panel Secondary Link URL",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "rightCtas_secondaryCtaText",
+        "label": "Right Panel Secondary Link Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "rightCtas_secondaryCtaOpenInNewTab",
+        "label": "Right Panel Secondary Link Open in new tab",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -959,21 +1183,16 @@
         "valueType": "string"
       },
       {
-        "component": "text",
+        "component": "richtext",
         "name": "title",
         "label": "Title",
         "valueType": "string"
       },
       {
-        "component": "text",
-        "name": "titleContinuation",
-        "label": "Title Second Line",
-        "valueType": "string"
-      },
-      {
         "component": "aem-content",
         "name": "cfRootPath",
-        "label": "Content Fragment Root Path",
+        "label": "Content Fragment's Root Path",
+        "description": "Select a Content Fragment folder or path prefix. Only matching published cards are requested; a blank path requests all cards.",
         "valueType": "string",
         "required": true
       },
@@ -1164,6 +1383,44 @@
             "value": "clean-white"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "showBrandLogo",
+        "label": "Show Brand Logo",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "reference",
+        "name": "brandLogo",
+        "label": "Brand Logo Image Asset",
+        "valueType": "string",
+        "required": true,
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "showBrandLogo"
+            },
+            true
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "brandLogoAltText",
+        "label": "Brand Logo Alt Text",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "showBrandLogo"
+            },
+            true
+          ]
+        }
       }
     ]
   },
@@ -2014,8 +2271,15 @@
         "component": "text",
         "name": "ctas_primaryCtaText",
         "label": "Primary CTA Label",
+        "description": "Required once a URL is set. Without a label the button is not rendered on the page.",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "ctas_primaryCta"
+          }
+        }
       },
       {
         "component": "boolean",
@@ -2034,8 +2298,15 @@
         "component": "text",
         "name": "ctas_secondaryCtaText",
         "label": "Secondary CTA Label",
+        "description": "Required once a URL is set. Without a label the button is not rendered on the page.",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "ctas_secondaryCta"
+          }
+        }
       },
       {
         "component": "boolean",
@@ -2060,7 +2331,7 @@
     ]
   },
   {
-    "id": "section-intro",
+    "id": "section-header",
     "fields": [
       {
         "component": "text",
@@ -2108,34 +2379,6 @@
         "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
         "value": "",
         "placeholder": "split-media"
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "autoplay",
-        "label": "Autoplay",
-        "value": true
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "autoplayInterval",
-        "label": "Autoplay Interval (seconds)",
-        "value": "6"
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "showDots",
-        "label": "Show Dots",
-        "value": true
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "showControls",
-        "label": "Show Previous/Next Controls",
-        "value": true
       }
     ]
   },

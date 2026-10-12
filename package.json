@@ -21,6 +21,7 @@
     "aem:up": "aem up --no-open",
     "build": "tsc --noEmit && npm run build:runtime && npm run build:editor",
     "build:editor": "vite build --config vite.config-editor.ts",
+    "build:editor:watch": "vite build --watch --config vite.config-editor.ts",
     "build:json": "npm-run-all -p build:json:models build:json:definitions build:json:filters",
     "build:json:definitions": "merge-json-cli -i \"src/models/_component-definition.json\" -o \"component-definition.json\"",
     "build:json:filters": "merge-json-cli -i \"src/models/_component-filters.json\" -o \"component-filters.json\"",
@@ -32,7 +33,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky",
-    "start": "npm-run-all -p tsc:watch build:runtime:watch aem:up",
+    "start": "npm-run-all -p tsc:watch build:runtime:watch build:editor:watch aem:up",
     "tsc:watch": "tsc --watch --noEmit",
     "test": "jest"
   },

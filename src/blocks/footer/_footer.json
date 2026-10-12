@@ -32,6 +32,34 @@
             { "name": "Light Sand / Beige", "value": "light-sand" },
             { "name": "Clean White", "value": "clean-white" }
           ]
+        },
+        {
+          "component": "boolean",
+          "name": "showBrandLogo",
+          "label": "Show Brand Logo",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
+          "component": "reference",
+          "name": "brandLogo",
+          "label": "Brand Logo Image Asset",
+          "valueType": "string",
+          "required": true,
+          "multi": false,
+          "condition": {
+            "===": [{ "var": "showBrandLogo" }, true]
+          }
+        },
+        {
+          "component": "text",
+          "name": "brandLogoAltText",
+          "label": "Brand Logo Alt Text",
+          "valueType": "string",
+          "required": true,
+          "condition": {
+            "===": [{ "var": "showBrandLogo" }, true]
+          }
         }
       ]
     }

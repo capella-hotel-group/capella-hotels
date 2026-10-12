@@ -11,7 +11,7 @@ const IMAGE_MODEL = 'destination-introduction-image';
 // Cell indices mirror the field order of the `destination-introduction-image`
 // model; the `*Alt` fields collapse into the cell of the field they suffix and
 // so claim no index of their own.
-const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2 } as const;
+const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2, darkOverlay: 3 } as const;
 const SCROLL_SETTLE_MS = 120;
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
@@ -182,6 +182,7 @@ interface Slide {
   element: HTMLLIElement;
   video: HTMLVideoElement | null;
   thumbnail: Element | null;
+  authoredThumbnail: boolean;
   label: string;
 }
 
@@ -202,6 +203,8 @@ function buildSlide(row: HTMLElement, index: number): Slide {
   const picture = isVideo ? null : buildPicture(mediaCell);
   const media = video ?? picture;
   if (media) element.append(media);
+  // the tint belongs to the hero media, so the thumbnail clone never inherits it
+  if (textOf(cells[ITEM.darkOverlay]).toLowerCase() === 'true') element.classList.add('has-dark-overlay');
 
   return {
     element,
@@ -209,6 +212,7 @@ function buildSlide(row: HTMLElement, index: number): Slide {
     // without an authored thumbnail an image slide can still supply one; a video
     // slide cannot, so it falls back to a numbered button
     thumbnail: thumbnail ?? picture,
+    authoredThumbnail: !!thumbnail,
     label: altOf(thumbnailCell) || altOf(mediaCell) || `Show media ${index + 1}`,
   };
 }
@@ -284,7 +288,9 @@ export default function decorate(block: HTMLElement): void {
   const next = interactive ? buildArrow('next', 'Next image') : null;
   if (prev && next) media.append(prev, next);
 
-  const thumbs = interactive ? buildThumbs(slides) : null;
+  // a lone slide has nothing to swap to, but an authored thumbnail is still
+  // content the author asked to see beneath the copy
+  const thumbs = interactive || slides.some((slide) => slide.authoredThumbnail) ? buildThumbs(slides) : null;
 
   // the copy children share a wrapper so desktop can lay them out as one flex
   // column beside the media; below desktop the wrapper is `display: contents`

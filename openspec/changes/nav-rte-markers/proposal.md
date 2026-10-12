@@ -20,18 +20,21 @@ does not match the current `src/blocks/header/header.ts` implementation (categor
 ## What Changes
 
 - Parse a trailing `| <marker>` from the last `|`-separated segment of the relevant
-  text (CTA "Book" label, mobile "Close" label, each language link, each menu link,
+  text (logo-link label, CTA "Book" label, each language link, each menu link,
   each region label, each top-level category link). Unrecognized trailing text is
   left as part of the label (only the 3 known keywords are treated as markers).
+- Use the first authored header button link for the logo and the last non-Close
+  button link for Book. The logo's accessible label, destination, and target come
+  from its authored link; the menu Close control remains built in.
 - Apply `target="_blank" rel="noopener"` to any link marked `open-in-new-tab`;
-  `open-in-same-tab` (or no marker) leaves the default (no `target` attribute). The
-  mobile "Close" label only has its marker stripped — it isn't a real link, so no
-  tab-target behavior applies there.
+  `open-in-same-tab` (or no marker) leaves the default (no `target` attribute). This
+  applies to the logo link, Book CTA, language links, and menu links. The menu Close
+  control is built in and is not an authored navigation link.
 - Implement `merge-columns`: a region marked `merge-columns` groups with the one
-  region immediately after it (pairwise only, no chaining) into a shared row of
-  up to 4 columns — both regions' labels stay visible, each above its own first
-  link; extra links spill into the following column(s) without repeating a
-  label. This is a deliberate, user-confirmed divergence from the Figma
+  region immediately after it (pairwise only, no chaining) when the combined pair
+  produces 4 or fewer columns. If it exceeds 4, ignore the marker and render the
+  regions separately with all links preserved. Both regions' labels stay visible.
+  This is a deliberate, user-confirmed divergence from the Figma
   reference, which shows the merged-in region's label disappearing entirely
   (see design.md Context). A marked region with no following region is a
   no-op (renders normally, `console.warn`).
@@ -47,7 +50,7 @@ does not match the current `src/blocks/header/header.ts` implementation (categor
 
 - `header-nav-markers`: parsing and stripping the `|`-separated marker convention
   from `/nav` content; applying `open-in-new-tab`/`open-in-same-tab` tab-target
-  behavior to CTA/language/menu links; grouping `merge-columns`-marked regions
+  behavior to logo/CTA/language/menu links; grouping `merge-columns`-marked regions
   onto a shared, fixed-4-column row with the adjacent region, both labels
   visible.
 
@@ -62,7 +65,7 @@ does not match the current `src/blocks/header/header.ts` implementation (categor
   `NavLanguage`/`NavRegion`/`NavCategory` interfaces, `groupRegions()` +
   `flattenMergeSlots()`/`chunk()`/`buildMergedCell()`/`buildMergedRows()` for
   the shared-row layout, `target`/`rel` handling in
-  `buildCtaZone`/`buildLangZone`/`buildLinkGrid`.
+  `buildLogo`/`buildCtaZone`/`buildLangZone`/`buildLinkGrid`.
 - `src/blocks/header/header.css`: new `.header-menu-merged-row`/`-cell` rules
   and shared `.header-menu-block` spacing class; `.header-menu-link-grid`
   switches from fluid `auto-fit` to a fixed 4-column grid at the `>=1200px`

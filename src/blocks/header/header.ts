@@ -22,6 +22,7 @@ interface NavLanguage {
 
 interface NavLink {
   label: string;
+  note: string | null;
   href: string;
   openInNewTab: boolean;
   source: Element;
@@ -73,12 +74,29 @@ function getFragmentBasePath(): string {
   return parts.length ? `/${parts.join('/')}` : '';
 }
 
+function getSiblingNavPath(): string {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  segments.pop();
+  return `/${[...segments, 'nav'].join('/')}`;
+}
+
 // Text of an element excluding any nested <ul>/<ol>, so a label wrapped in a <p>
 // (e.g. <li><p>Label</p><ul>...</ul></li>, produced by the rich text editor) is still read.
 function directText(el: Element): string {
   const clone = el.cloneNode(true) as Element;
   clone.querySelectorAll('ul, ol').forEach((list) => list.remove());
   return (clone.textContent ?? '').trim();
+}
+
+// Like directText, but also splits off a <sub> element's text (e.g. an opening year
+// authored as "SHENZHEN<sub>(2029)</sub>") so it can render as its own line.
+function directTextWithNote(el: Element): { text: string; note: string | null } {
+  const clone = el.cloneNode(true) as Element;
+  clone.querySelectorAll('ul, ol').forEach((list) => list.remove());
+  const sub = clone.querySelector('sub');
+  const note = sub?.textContent?.trim() || null;
+  sub?.remove();
+  return { text: (clone.textContent ?? '').trim(), note };
 }
 
 function readLanguages(chromeSection: Element): NavLanguage[] {
@@ -100,9 +118,11 @@ function readLanguages(chromeSection: Element): NavLanguage[] {
 
 function readLinkItem(item: Element): NavLink {
   const anchor = item.querySelector<HTMLAnchorElement>('a');
-  const { label, marker } = splitMarker(directText(item));
+  const { text, note } = directTextWithNote(item);
+  const { label, marker } = splitMarker(text);
   return {
     label,
+    note,
     href: anchor?.getAttribute('href') ?? '',
     openInNewTab: marker === 'open-in-new-tab',
     source: item,
@@ -220,12 +240,19 @@ function closeLangDropdown(trigger: HTMLElement, dropdown: HTMLElement): void {
   dropdown.classList.remove('is-open');
 }
 
+let langZoneCount = 0;
+
 function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivElement {
+  langZoneCount += 1;
+  const dropdownId = `header-lang-dropdown-${langZoneCount}`;
+
   const trigger = document.createElement('button');
   trigger.className = 'header-lang-trigger';
   trigger.type = 'button';
   trigger.setAttribute('aria-expanded', 'false');
-  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-haspopup', 'true');
+  trigger.setAttribute('aria-controls', dropdownId);
+  trigger.dataset.testid = 'header-lang-trigger';
 
   const label = document.createElement('span');
   label.className = 'header-lang-label';
@@ -239,30 +266,23 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
 
   const dropdown = document.createElement('ul');
   dropdown.className = 'header-lang-dropdown';
-  dropdown.setAttribute('role', 'listbox');
+  dropdown.id = dropdownId;
 
   languages.forEach((lang) => {
     const item = document.createElement('li');
-    item.setAttribute('role', 'option');
-    item.setAttribute('tabindex', '0');
-    if (lang.shortLabel === activeLabel) item.setAttribute('aria-selected', 'true');
     moveInstrumentation(lang.source, item);
 
     const anchor = document.createElement('a');
     anchor.href = lang.href;
-    anchor.textContent = lang.shortLabel;
+    anchor.textContent = lang.label;
+    anchor.dataset.testid = 'header-lang-option';
+    if (lang.shortLabel === activeLabel) anchor.setAttribute('aria-current', 'true');
     if (lang.openInNewTab) {
       anchor.target = '_blank';
       anchor.rel = 'noopener';
     }
+    anchor.addEventListener('click', () => closeLangDropdown(trigger, dropdown));
     item.append(anchor);
-
-    item.addEventListener('click', () => {
-      label.textContent = lang.shortLabel;
-      dropdown.querySelectorAll('li').forEach((li) => li.removeAttribute('aria-selected'));
-      item.setAttribute('aria-selected', 'true');
-      closeLangDropdown(trigger, dropdown);
-    });
 
     dropdown.append(item);
   });
@@ -271,18 +291,38 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
   zone.className = 'header-lang';
   zone.append(trigger, dropdown);
 
-  trigger.addEventListener('click', (event) => {
-    event.stopPropagation();
-    if (trigger.getAttribute('aria-expanded') === 'true') closeLangDropdown(trigger, dropdown);
-    else {
-      dropdown.classList.add('is-open');
-      trigger.setAttribute('aria-expanded', 'true');
-    }
+  const isOpen = () => trigger.getAttribute('aria-expanded') === 'true';
+  const options = () => [...dropdown.querySelectorAll<HTMLAnchorElement>('a')];
+  const openDropdown = () => {
+    dropdown.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+  };
+
+  trigger.addEventListener('click', () => {
+    if (isOpen()) closeLangDropdown(trigger, dropdown);
+    else openDropdown();
   });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeLangDropdown(trigger, dropdown);
+  zone.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isOpen()) {
+      closeLangDropdown(trigger, dropdown);
+      trigger.focus();
+      return;
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    if (!isOpen()) openDropdown();
+    const items = options();
+    const current = items.indexOf(document.activeElement as HTMLAnchorElement);
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    const next = current === -1 ? (step === 1 ? 0 : items.length - 1) : (current + step + items.length) % items.length;
+    items[next]?.focus();
   });
+
+  zone.addEventListener('focusout', (event) => {
+    if (event.relatedTarget && !zone.contains(event.relatedTarget as Node)) closeLangDropdown(trigger, dropdown);
+  });
+
   document.addEventListener('click', (event) => {
     if (!zone.contains(event.target as Node)) closeLangDropdown(trigger, dropdown);
   });
@@ -296,11 +336,12 @@ function buildLogo(
   darkSrc: string,
   darkAlt: string,
   href: string,
+  label: string,
 ): HTMLAnchorElement {
   const logo = document.createElement('a');
   logo.className = 'header-logo';
   logo.href = href;
-  logo.setAttribute('aria-label', 'Capella Hotels - Home');
+  logo.setAttribute('aria-label', label || 'Capella Hotels - Home');
 
   if (pictureSrc) {
     const img = document.createElement('img');
@@ -339,6 +380,7 @@ function buildCtaZone(label: string, href: string, openInNewTab: boolean): HTMLA
   if (!label || !href) return null;
   const cta = document.createElement('a');
   cta.className = 'header-cta';
+  cta.dataset.testid = 'header-cta';
   cta.href = href;
   cta.textContent = label;
   if (openInNewTab) {
@@ -368,6 +410,21 @@ function buildMenuToggle(closeLabel: string): HTMLButtonElement {
   return button;
 }
 
+// Renders a link's label, plus an optional secondary note line (e.g. an opening year)
+// below it, matching Figma's two-line city/year layout.
+function appendLinkContent(el: HTMLElement, link: NavLink): void {
+  const label = document.createElement('span');
+  label.className = 'nav-link-label';
+  label.textContent = link.label;
+  el.append(label);
+  if (link.note) {
+    const note = document.createElement('span');
+    note.className = 'nav-link-note';
+    note.textContent = link.note;
+    el.append(note);
+  }
+}
+
 function buildLinkGrid(links: NavLink[]): HTMLUListElement {
   const grid = document.createElement('ul');
   grid.className = 'header-menu-link-grid';
@@ -376,7 +433,7 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
     if (link.href) {
       const anchor = document.createElement('a');
       anchor.href = link.href;
-      anchor.textContent = link.label;
+      appendLinkContent(anchor, link);
       if (link.openInNewTab) {
         anchor.target = '_blank';
         anchor.rel = 'noopener';
@@ -386,7 +443,7 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
     } else {
       const span = document.createElement('span');
       span.className = 'nav-link is-disabled';
-      span.textContent = link.label;
+      appendLinkContent(span, link);
       moveInstrumentation(link.source, span);
       li.append(span);
     }
@@ -395,9 +452,10 @@ function buildLinkGrid(links: NavLink[]): HTMLUListElement {
   return grid;
 }
 
-// A region marked merge-columns joins the row of the ONE region immediately after it
-// (pairwise only, no chaining). A consumed partner's own marker is ignored, and a
-// marker on the last region in a category is a no-op (see design.md Decision 2).
+// A region marked merge-columns joins the immediately following region only when
+// the pair fits in MERGE_ROW_COLUMNS slots. Otherwise both regions render normally.
+const MERGE_ROW_COLUMNS = 4;
+
 function groupRegions(regions: NavRegion[]): NavRegion[][] {
   const groups: NavRegion[][] = [];
   let i = 0;
@@ -405,7 +463,7 @@ function groupRegions(regions: NavRegion[]): NavRegion[][] {
     const region = regions[i];
     if (!region) break;
     const next = regions[i + 1];
-    if (region.mergeColumns && next) {
+    if (region.mergeColumns && next && flattenMergeSlots([region, next]).length <= MERGE_ROW_COLUMNS) {
       groups.push([region, next]);
       i += 2;
     } else {
@@ -418,8 +476,6 @@ function groupRegions(regions: NavRegion[]): NavRegion[][] {
   }
   return groups;
 }
-
-const MERGE_ROW_COLUMNS = 4;
 
 interface MergeSlot {
   label: string;
@@ -464,7 +520,7 @@ function buildMergedCell(slot: MergeSlot): HTMLDivElement {
     if (slot.link.href) {
       const anchor = document.createElement('a');
       anchor.href = slot.link.href;
-      anchor.textContent = slot.link.label;
+      appendLinkContent(anchor, slot.link);
       if (slot.link.openInNewTab) {
         anchor.target = '_blank';
         anchor.rel = 'noopener';
@@ -474,7 +530,7 @@ function buildMergedCell(slot: MergeSlot): HTMLDivElement {
     } else {
       const span = document.createElement('span');
       span.className = 'nav-link is-disabled';
-      span.textContent = slot.link.label;
+      appendLinkContent(span, slot.link);
       moveInstrumentation(slot.link.source, span);
       cell.append(span);
     }
@@ -687,8 +743,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   };
 
   let fragment = navPath ? await loadFragment(navPath) : null;
-  if (!fragment) fragment = await loadFragment(`${getFragmentBasePath()}/nav`);
-  if (!fragment) fragment = await loadFragment('/nav');
+  const fallbackPaths = [...new Set([getSiblingNavPath(), `${getFragmentBasePath()}/nav`, '/nav'])];
+  for (const path of fallbackPaths) {
+    if (!fragment) fragment = await loadFragment(path);
+  }
   if (!fragment) {
     hide();
     return;
@@ -711,10 +769,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const [logoImg, logoImgDark] = chromeSection.querySelectorAll('picture img');
   const chromeLinks = [...chromeSection.querySelectorAll<HTMLAnchorElement>('.default-content-wrapper > p > a')];
-  const ctaAnchor = chromeLinks[0];
-  const closeAnchor = chromeLinks[1];
+  const logoLinkAnchor = chromeLinks[0];
+  const { label: logoLinkLabel, marker: logoLinkMarker } = splitMarker(logoLinkAnchor?.textContent ?? '');
+  const ctaAnchor = chromeLinks
+    .slice(1)
+    .filter((anchor) => splitMarker(anchor.textContent ?? '').label.toLowerCase() !== 'close')
+    .at(-1);
   const { label: ctaLabel, marker: ctaMarker } = splitMarker(ctaAnchor?.textContent ?? '');
-  const closeMenuLabel = splitMarker(closeAnchor?.textContent ?? '').label || 'CLOSE';
+  const closeMenuLabel = 'CLOSE';
   const activeLang = getActiveLang(languages);
 
   const logo = buildLogo(
@@ -722,8 +784,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     logoImg?.getAttribute('alt') ?? '',
     logoImgDark?.getAttribute('src') ?? '',
     logoImgDark?.getAttribute('alt') ?? '',
-    activeLang.href,
+    logoLinkAnchor?.getAttribute('href') || activeLang.href,
+    logoLinkLabel,
   );
+  if (logoLinkAnchor) moveInstrumentation(logoLinkAnchor, logo);
+  if (logoLinkMarker === 'open-in-new-tab') {
+    logo.target = '_blank';
+    logo.rel = 'noopener';
+  }
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
   const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');

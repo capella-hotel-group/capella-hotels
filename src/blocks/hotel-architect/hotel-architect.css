@@ -10,21 +10,7 @@
     background-color: var(--color-surface-general-subtle);
     color: var(--color-text-main-body);
 
-    /* These two resolve differently in the live Figma file (40/44/48 and 16/18/18)
-       than in tokens.css (36/48/48 and 20/20/22), which was synced from frames that
-       no longer exist. Scoped to the block so the design is matched without moving
-       the globals under every other block; the globals need their own audit. */
-    --typography-line-height-heading-h1: 40px;
-    --typography-line-height-body-md: 16px;
-
-    @media (width >= 768px) {
-        --typography-line-height-heading-h1: 44px;
-        --typography-line-height-body-md: 18px;
-    }
-
     @media (width >= 1200px) {
-        --typography-line-height-heading-h1: 48px;
-
         flex-direction: row;
         align-items: center;
         /* room for the architect card, which hangs below the media */

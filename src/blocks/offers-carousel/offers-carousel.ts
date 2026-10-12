@@ -72,13 +72,23 @@ function splitOnLineBreaks(container: Element): void {
   });
 }
 
+// AEM turns a url authored without a label into <a href="X">X</a>, so an anchor whose text is
+// just its own url means the author never set a label
+function hasLabel(anchor: HTMLAnchorElement): boolean {
+  const text = anchor.textContent?.trim();
+  if (!text) return false;
+  return text !== anchor.getAttribute('href')?.trim() && text !== anchor.href;
+}
+
 // each CTA is authored as url + label (collapsed into one anchor) followed by an open-in-new-tab boolean
 function decorateCtas(cell: HTMLElement): void {
   cell.classList.add('offers-carousel-card-ctas');
 
   const authored = [...cell.children] as HTMLElement[];
 
-  [...cell.querySelectorAll<HTMLAnchorElement>('a')].forEach((anchor, index) => {
+  // label-less anchors are left inside their paragraph, which the last step hides, so the
+  // editor still sees the authored value instead of the page showing a raw url
+  [...cell.querySelectorAll<HTMLAnchorElement>('a')].filter(hasLabel).forEach((anchor, index) => {
     anchor.classList.add('offers-carousel-card-cta');
     // pair by position, since a CTA whose url is empty renders as plain text with no anchor
     const wrapper = authored.findIndex((element) => element === anchor || element.contains(anchor));
