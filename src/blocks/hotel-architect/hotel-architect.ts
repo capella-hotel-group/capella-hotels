@@ -5,6 +5,8 @@ import { applyBlockIdentity } from '@/utils/block-identity';
 // leading identity rows. Changing that field list is a contract change and must
 // update these indices in the same commit.
 const COPY_FIELDS = ['eyebrow', 'title', 'body', 'primaryCta', 'secondaryCta'] as const;
+const IDENTITY_ROW_COUNT = 2;
+const MAX_THUMBNAILS = 3;
 
 const IMAGE_MODEL = 'hotel-architect-image';
 const CARD_MODEL = 'hotel-architect-card';
@@ -43,10 +45,9 @@ function itemModelOf(row: HTMLElement): string | null {
   if (model) return model === IMAGE_MODEL || model === CARD_MODEL ? model : null;
 
   const cells = cellsOf(row);
-  if (!cells.length) return null;
-
-  // none of this block's own fields is an asset, so a lone picture is a gallery item
-  if (cells.length === 1) return cells[0]!.querySelector('picture, img') ? IMAGE_MODEL : null;
+  // a single cell is a block field, including the thumbnail group; gallery items
+  // also carry their overlay flag cell
+  if (cells.length < 2) return null;
 
   const isGalleryCell = (cell: Element): boolean =>
     !!cell.querySelector('picture, img') || ['', 'true', 'false'].includes(textOf(cell).toLowerCase());
@@ -62,6 +63,13 @@ function altOf(cell?: Element | null): string {
     (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a'),
   );
   return textOf(sibling);
+}
+
+function siblingAltOf(picture: Element, cell: Element): string {
+  let node = picture;
+  while (node.parentElement && node.parentElement !== cell) node = node.parentElement;
+  const next = node.nextElementSibling;
+  return next && !next.matches('a, picture, img') && !next.querySelector('a, picture, img') ? textOf(next) : '';
 }
 
 function buildPicture(cell: Element | null | undefined): HTMLElement | null {
@@ -182,17 +190,13 @@ function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElemen
 
 interface Slide {
   element: HTMLLIElement;
-  picture: HTMLElement | null;
-  thumbnail: HTMLElement | null;
   label: string;
 }
 
 function buildSlide(row: HTMLElement, index: number): Slide {
   const cells = cellsOf(row);
-  // both assets arrive as pictures, so they are told apart by order rather than
-  // by index, which would shift whenever a cell is dropped
-  const assetCells = cells.filter((cell) => cell.querySelector('picture'));
-  const [imageCell, thumbnailCell] = assetCells.length ? assetCells : [cells[0] ?? row];
+  // older items may still carry a retired thumbnail picture after the image
+  const imageCell = cells.find((cell) => cell.querySelector('picture')) ?? cells[0] ?? row;
   const flagCell = cells.find((cell) => ['true', 'false'].includes(textOf(cell).toLowerCase()));
 
   const element = document.createElement('li');
@@ -205,45 +209,47 @@ function buildSlide(row: HTMLElement, index: number): Slide {
 
   return {
     element,
-    picture,
-    thumbnail: buildPicture(thumbnailCell),
-    label: altOf(imageCell) || altOf(thumbnailCell) || `Show image ${index + 1}`,
+    // the picture has already left its cell, so its alt is the reliable label
+    label: picture?.querySelector('img')?.getAttribute('alt') || `Show image ${index + 1}`,
   };
 }
 
-function buildThumbs(slides: Slide[]): HTMLUListElement {
+/**
+ * Builds the static supporting gallery from the grouped thumbnail fields. These
+ * images are content, not carousel controls, so they keep their authored alt text.
+ */
+function buildThumbs(row: HTMLElement | null): HTMLUListElement | null {
+  const cell = row?.firstElementChild;
+  const pictures = [...(cell?.querySelectorAll<HTMLElement>('picture') ?? [])].slice(0, MAX_THUMBNAILS);
+  if (!cell || !pictures.length) return null;
+
   const list = document.createElement('ul');
   list.className = 'hotel-architect-thumbs';
+  moveInstrumentation(cell, list);
 
-  slides.forEach((slide, index) => {
+  pictures.forEach((picture) => {
+    const img = picture.querySelector('img');
+    if (img && !img.getAttribute('alt')) img.setAttribute('alt', siblingAltOf(picture, cell));
+
     const item = document.createElement('li');
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'hotel-architect-thumb';
-    button.dataset.index = String(index);
-    button.dataset.testid = 'hotel-architect-thumb';
-    button.setAttribute('aria-label', slide.label);
-
-    // an authored thumbnail is used as-is; without one the slide's own image
-    // stands in, and its copy must shed the item's data-aue-* attributes or the
-    // editor lists every gallery item twice in the content tree
-    let thumbnail = slide.thumbnail;
-    if (!thumbnail && slide.picture) {
-      thumbnail = slide.picture.cloneNode(true) as HTMLElement;
-      [thumbnail, ...thumbnail.querySelectorAll('*')].forEach((element) => moveInstrumentation(element, null));
-    }
-
-    if (thumbnail) {
-      // the button is already labelled, so the thumbnail is decorative here
-      thumbnail.querySelector('img')?.setAttribute('alt', '');
-      button.append(thumbnail);
-    }
-
-    item.append(button);
+    item.className = 'hotel-architect-thumb';
+    item.append(picture);
     list.append(item);
   });
 
   return list;
+}
+
+/**
+ * The thumbnail group is the last block field. Content created before it existed
+ * emits no row, so only take the tail row when it has an image or the row count
+ * proves that the field is present.
+ */
+function takeThumbnailsRow(rows: HTMLElement[]): HTMLElement | null {
+  const last = rows[rows.length - 1];
+  if (!last) return null;
+  if (!last.querySelector('picture') && rows.length <= IDENTITY_ROW_COUNT + COPY_FIELDS.length) return null;
+  return rows.pop() ?? null;
 }
 
 function buildDots(slides: Slide[]): HTMLOListElement {
@@ -323,11 +329,9 @@ export default function decorate(block: HTMLElement): void {
   const models = new Map(rows.map((row) => [row, itemModelOf(row)]));
   const imageRows = rows.filter((row) => models.get(row) === IMAGE_MODEL);
   const cardRows = rows.filter((row) => models.get(row) === CARD_MODEL);
-  const copyRows = applyBlockIdentity(
-    block,
-    rows.filter((row) => !models.get(row)),
-    { contentRows: COPY_FIELDS.length },
-  );
+  const blockRows = rows.filter((row) => !models.get(row));
+  const thumbnailsRow = takeThumbnailsRow(blockRows);
+  const copyRows = applyBlockIdentity(block, blockRows, { contentRows: COPY_FIELDS.length });
 
   const header = document.createElement('div');
   header.className = 'hotel-architect-header';
@@ -365,7 +369,7 @@ export default function decorate(block: HTMLElement): void {
   const prev = interactive ? buildArrow('prev', 'Previous image') : null;
   const next = interactive ? buildArrow('next', 'Next image') : null;
   const dots = interactive ? buildDots(slides) : null;
-  const thumbs = interactive ? buildThumbs(slides) : null;
+  const thumbs = buildThumbs(thumbnailsRow);
 
   const frame = document.createElement('div');
   frame.className = 'hotel-architect-frame';
@@ -401,7 +405,6 @@ export default function decorate(block: HTMLElement): void {
 
   if (!slides.length) return;
 
-  const thumbButtons = [...(thumbs?.querySelectorAll<HTMLElement>('.hotel-architect-thumb') ?? [])];
   const dotButtons = [...(dots?.querySelectorAll<HTMLElement>('.hotel-architect-dot') ?? [])];
   let selected = -1;
 
@@ -412,7 +415,7 @@ export default function decorate(block: HTMLElement): void {
     selected = target;
 
     slides.forEach((slide, i) => slide.element.classList.toggle('is-selected', i === selected));
-    [...thumbButtons, ...dotButtons].forEach((button) => {
+    dotButtons.forEach((button) => {
       const active = Number(button.dataset.index) === selected;
       if (active) button.setAttribute('aria-current', 'true');
       else button.removeAttribute('aria-current');
@@ -422,12 +425,10 @@ export default function decorate(block: HTMLElement): void {
   prev?.addEventListener('click', () => select(selected - 1));
   next?.addEventListener('click', () => select(selected + 1));
 
-  [thumbs, dots].forEach((list) =>
-    list?.addEventListener('click', (event) => {
-      const button = (event.target as HTMLElement).closest<HTMLElement>('button[data-index]');
-      if (button) select(Number(button.dataset.index));
-    }),
-  );
+  dots?.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLElement>('button[data-index]');
+    if (button) select(Number(button.dataset.index));
+  });
 
   select(0);
 }
