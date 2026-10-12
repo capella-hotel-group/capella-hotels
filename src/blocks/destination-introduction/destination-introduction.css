@@ -115,43 +115,6 @@
         }
     }
 
-    .destination-introduction-cta {
-        order: 4;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--dimension-spacing-general-m);
-        margin-block-start: var(--dimension-spacing-general-l);
-        padding-inline: calc(var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl));
-
-        a {
-            display: inline-flex;
-            align-items: center;
-            min-height: var(--component-button-height);
-            padding-block: var(--component-button-padding-block);
-            border: 0;
-            border-radius: var(--component-button-corner-standard);
-            font-family: var(--type-font-family-cta);
-            font-size: var(--typography-fontsize-body-m);
-            font-weight: var(--type-font-weight-text-link);
-            line-height: var(--typography-line-height-body-md);
-            color: var(--color-text-action-default);
-            text-transform: uppercase;
-            text-decoration: underline;
-            background: none;
-            text-decoration-line: underline;
-            text-decoration-style: solid;
-            text-decoration-skip-ink: auto;
-            text-decoration-thickness: 7%; /* 1.26px */
-            text-underline-offset: 20.5%; /* 3.69px */
-        }
-
-        @media (width >= 1200px) {
-            /* Figma has no CTA in the desktop composition */
-            display: none;
-        }
-    }
-
     /* ---------- media ---------- */
 
     .destination-introduction-media {
@@ -274,6 +237,12 @@
         pointer-events: none;
     }
 
+    .destination-introduction-slide-clone {
+        @media (width >= 1200px) {
+            display: none;
+        }
+    }
+
     .destination-introduction-nav {
         position: absolute;
         top: 50%;
@@ -339,56 +308,5 @@
         border: 0;
         background-color: #000;
         cursor: pointer;
-    }
-
-    /* ---------- editor-only overflow note ---------- */
-
-    @media (width >= 1200px) {
-        &:has(> .destination-introduction-overflow) {
-            flex-wrap: wrap;
-        }
-    }
-
-    .destination-introduction-overflow {
-        box-sizing: border-box;
-        order: 99;
-        flex: 0 0 calc(100% - (2 * var(--dimension-layout-module-padding-inline-s)));
-        margin-block-start: var(--dimension-spacing-general-l);
-        margin-inline: var(--dimension-layout-module-padding-inline-s);
-        padding: var(--dimension-spacing-general-m);
-        border: 1px dashed currentcolor;
-        background-color: #fff6db;
-        color: #3d3000;
-        font-family: var(--type-font-family-body);
-        font-size: var(--typography-fontsize-body-m);
-        line-height: var(--typography-line-height-body-md);
-
-        > p {
-            margin: 0;
-        }
-
-        > ol {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--dimension-spacing-general-m);
-            margin: 0;
-            margin-block-start: var(--dimension-spacing-general-s);
-            padding: 0;
-            list-style: none;
-        }
-
-        li {
-            display: flex;
-            align-items: center;
-            gap: var(--dimension-spacing-general-s);
-        }
-
-        picture,
-        img {
-            display: block;
-            width: 56px;
-            height: 56px;
-            object-fit: cover;
-        }
     }
 }
