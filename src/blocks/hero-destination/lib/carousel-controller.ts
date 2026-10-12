@@ -3,6 +3,9 @@
 // chosen transition effect, so this class stays agnostic of how slides/dots were built.
 import type { EffectController } from './effects/types';
 
+/** Autoplay stays stopped while any reason is held, so one source resuming can't override another. */
+export type CarouselPauseReason = 'hover' | 'focus' | 'visibility' | 'user';
+
 export interface CarouselControllerOptions {
   track: HTMLElement;
   slides: HTMLElement[];
@@ -24,7 +27,9 @@ export class CarouselController {
   private readonly loop: boolean;
   private readonly canAutoplay: boolean;
   private readonly effect: EffectController;
+  private readonly pauseReasons = new Set<CarouselPauseReason>();
   private activeIndex = 0;
+  private finished = false;
   private timerId: ReturnType<typeof setInterval> | null = null;
 
   constructor({ track, slides, mediaEls, dots, intervalSeconds, autoplay, loop, effect }: CarouselControllerOptions) {
@@ -36,6 +41,15 @@ export class CarouselController {
     this.loop = loop;
     this.effect = effect;
     this.canAutoplay = autoplay && slides.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /** Whether there is auto-moving content at all (and therefore anything worth offering to pause). */
+  get autoplayEnabled(): boolean {
+    return this.canAutoplay;
+  }
+
+  get userPaused(): boolean {
+    return this.pauseReasons.has('user');
   }
 
   /** Activates the first slide and starts autoplay (if eligible); wires tab-visibility handling. */
@@ -68,9 +82,19 @@ export class CarouselController {
     this.goTo((this.activeIndex - 1 + total) % total);
   }
 
+  pause(reason: CarouselPauseReason): void {
+    this.pauseReasons.add(reason);
+    this.stop();
+  }
+
+  resume(reason: CarouselPauseReason): void {
+    this.pauseReasons.delete(reason);
+    this.start();
+  }
+
   private handleVisibilityChange = (): void => {
-    if (document.hidden) this.stop();
-    else this.start();
+    if (document.hidden) this.pause('visibility');
+    else this.resume('visibility');
   };
 
   private setActive(index: number): void {
@@ -88,7 +112,7 @@ export class CarouselController {
   }
 
   private start(): void {
-    if (!this.canAutoplay) return;
+    if (!this.canAutoplay || this.finished || this.pauseReasons.size > 0) return;
     this.stop();
     this.timerId = setInterval(() => this.tick(), this.intervalMs);
   }
@@ -97,6 +121,7 @@ export class CarouselController {
   private tick(): void {
     const isLastSlide = this.activeIndex === this.slides.length - 1;
     if (isLastSlide && !this.loop) {
+      this.finished = true;
       this.stop();
       return;
     }
