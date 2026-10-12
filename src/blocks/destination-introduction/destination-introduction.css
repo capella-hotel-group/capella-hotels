@@ -1,5 +1,6 @@
 /* destination-introduction
-   Figma: desktop 6047:27004 (1440), tablet 6048:28574 (834), mobile 6048:30195 (393).
+   Figma: desktop 6260:29620 (1440), desktop 6275:21935 (1920), tablet 6260:29624 (834),
+   mobile 6260:29628 (393).
    Source order follows the block's model field order so the Universal Editor lists
    the gallery items last in the content tree; `order` restores the reading order.
    Everything nests under the block class, so no rule can leak to another block. */
@@ -54,12 +55,16 @@
     .destination-introduction-eyebrow {
         padding-inline-start: var(--dimension-spacing-general-2xl);
         margin-block-end: var(--dimension-spacing-eyebrow-to-title);
+        /* Figma text style body/eyebrow */
         font-family: var(--type-font-family-body);
-        font-size: var(--typography-fontsize-body-m);
+        font-size: var(--typography-fontsize-body-eyebrow);
         font-weight: var(--type-font-weight-body-reg);
-        line-height: var(--typography-line-height-body-md);
+        line-height: var(--typography-line-height-body-eyebrow);
+        letter-spacing: var(--typography-letter-spacing-body-eyebrow);
         color: var(--color-text-main-heading);
         text-transform: uppercase;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
     }
 
     .destination-introduction-title {
