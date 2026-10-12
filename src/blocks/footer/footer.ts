@@ -22,7 +22,9 @@ function getFragmentBasePath(): string {
 
 function applyBackgroundTheme(block: HTMLElement, themeBlock: Element | null): void {
   const theme = themeBlock?.children[0]?.firstElementChild?.textContent?.trim() || '';
-  block.classList.toggle('footer-theme-clean-white', theme === 'clean-white');
+  const isGlobalEn = getFragmentBasePath() === '/global/en';
+  block.classList.toggle('footer-theme-global-en', isGlobalEn);
+  block.classList.toggle('footer-theme-clean-white', !isGlobalEn && theme === 'clean-white');
 }
 
 function footerField(block: Element, name: string, rowIndex: number): Element | null {

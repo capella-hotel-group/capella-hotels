@@ -27,18 +27,19 @@ footer.footer-theme-clean-white {
     display: flex;
     align-items: flex-start;
     width: 100%;
-    margin-block-end: var(--dimension-layout-module-gutter-l);
+    margin-block-end: 40px;
 }
 
 .footer-brand-logo picture {
     display: block;
-    width: min(100%, 112px);
+    width: min(100%, 100px);
+    aspect-ratio: 16 / 9;
 }
 
 .footer-brand-logo img {
     display: block;
     width: 100%;
-    max-height: 80px;
+    height: 100%;
     object-fit: contain;
     object-position: left center;
 }
@@ -48,6 +49,25 @@ footer.footer-theme-clean-white {
 .footer-divider {
     border-block-start: 1px solid var(--color-stroke-main-primary);
     margin-block: var(--dimension-layout-module-gutter-l);
+}
+
+@media (width <= 767px) {
+    .footer-divider[data-after='nav'] {
+        margin-block-end: 31px;
+    }
+
+    .footer-divider[data-after='newsletter'] {
+        margin-block: 40px 39px;
+    }
+
+    .footer-divider[data-after='contact'] {
+        margin-block-start: 38px;
+        margin-block-end: 39px;
+    }
+}
+
+.footer-divider[data-after='contact'] {
+    margin-block-end: 39px;
 }
 
 /* ---------- shared heading (static label, not authored) — used by both
@@ -83,7 +103,7 @@ footer.footer-theme-clean-white {
 
 @media (width >= 768px) {
     .footer-brand-logo picture {
-        width: min(100%, 128px);
+        width: min(100%, 120px);
     }
 
     /* contact info is wider than social in the Figma tablet frame */
@@ -94,22 +114,40 @@ footer.footer-theme-clean-white {
     }
 }
 
+@media (width >= 768px) and (width < 1200px) {
+    .footer-divider[data-after='nav'] {
+        margin-block-end: 39px;
+    }
+
+    .footer-divider[data-after='newsletter'] {
+        margin-block-end: 39px;
+    }
+
+    .footer-divider[data-after='contact'] {
+        margin-block-start: 42px;
+    }
+}
+
 /* ---------- desktop (>=1200px) ---------- */
 
 @media (width >= 1200px) {
+    .footer-brand-logo picture {
+        width: min(100%, 100px);
+    }
+
     /* Non-equal CSS Grid columns (not equal fractions): the Figma desktop frame
        gives nav columns 1/2 a fixed hug-width, contact a narrower hug-width, and
        lets newsletter grow widest to fill the row. Named `grid-area`s place items
        independently of DOM order (see design.md's "display: contents reflow"). */
     .footer-inner {
         display: grid;
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 280px) minmax(0, 280px) minmax(0, 1.3fr);
+        grid-template-columns: minmax(0, 0.56658fr) 280px 280px minmax(0, 1fr);
         grid-template-areas:
             'brand brand brand brand'
             'contact nav1 nav2 newsletter'
             'divider divider divider divider'
             'legal legal legal legal';
-        column-gap: var(--dimension-layout-module-gutter-xl);
+        column-gap: 40px;
     }
 
     .footer-brand-logo {
@@ -158,5 +196,25 @@ footer.footer-theme-clean-white {
 
     .footer-legal {
         grid-area: legal;
+    }
+}
+
+@media (width >= 1920px) {
+    .footer-inner {
+        grid-template-columns: 136px 340px 280px 280px 383px;
+        grid-template-areas:
+            'brand contact nav1 nav2 newsletter'
+            'divider divider divider divider divider'
+            'legal legal legal legal legal';
+        column-gap: 0;
+        justify-content: space-between;
+    }
+
+    .footer-brand-logo {
+        margin-block-end: 0;
+    }
+
+    .footer-brand-logo picture {
+        width: min(100%, 136px);
     }
 }

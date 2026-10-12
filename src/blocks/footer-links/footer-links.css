@@ -3,13 +3,14 @@
 .footer-nav-columns {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-layout-module-gutter-l);
+    gap: 26px;
+    width: min(100%, 280px);
 }
 
 .footer-nav-col {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-layout-module-gutter-l);
+    gap: 26px;
 }
 
 .footer-nav-link {
@@ -29,13 +30,42 @@
     text-decoration: underline;
 }
 
+footer.footer-theme-global-en .footer-nav-col:nth-child(2) .footer-nav-link:nth-child(4) {
+    display: none;
+}
+
+body.adobe-ue-edit footer.footer-theme-global-en .footer-nav-col:nth-child(2) .footer-nav-link:nth-child(4) {
+    display: block;
+}
+
+@media (width <= 767px) {
+    .footer-nav-columns {
+        margin-block-end: -6px;
+    }
+}
+
 @media (width >= 768px) {
     .footer-nav-columns {
+        width: 100%;
         flex-direction: row;
-        gap: var(--dimension-layout-module-gutter-xl);
+        justify-content: space-between;
+        gap: 0;
     }
 
     .footer-nav-col {
-        flex: 1 1 0;
+        flex: 0 0 280px;
+        gap: 33px;
+    }
+}
+
+@media (width >= 768px) and (width < 1200px) {
+    .footer-nav-columns {
+        margin-block-end: -7px;
+    }
+}
+
+@media (width >= 1920px) {
+    .footer-nav-col {
+        gap: 31px;
     }
 }
