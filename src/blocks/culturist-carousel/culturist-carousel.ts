@@ -1,6 +1,9 @@
 import { moveInstrumentation } from '@/app/scripts.js';
 import { getPublishBaseUrl } from '@/utils/env.js';
 
+// Keeps combobox/option ids unique when several blocks share a page.
+let blockInstanceCount = 0;
+
 function resolveAssetUrl(damPath?: string | null): string | null {
   if (!damPath) return null;
   if (damPath.startsWith('http')) return damPath;
@@ -21,10 +24,6 @@ function applyLinkTarget(anchor: HTMLAnchorElement, openInNewTab?: boolean): voi
   if (!openInNewTab) return;
   anchor.target = '_blank';
   anchor.rel = 'noopener noreferrer';
-}
-
-function isPopupEnabled(value: unknown): boolean {
-  return value === true || value === 'true' || value === 1 || value === '1';
 }
 
 function containsBlockquote(html: string): boolean {
@@ -148,86 +147,14 @@ async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<v
   slot.append(contentCol);
 }
 
-function buildCardModal(root: HTMLElement): { openModal: (card: Record<string, any>) => void } {
-  const modal = document.createElement('div');
-  modal.className = 'culturist-carousel-card-modal';
-  modal.setAttribute('aria-hidden', 'true');
-
-  const panel = document.createElement('div');
-  panel.className = 'culturist-carousel-card-modal-panel';
-  panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-modal', 'true');
-
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button';
-  closeBtn.className = 'culturist-carousel-card-modal-close';
-  closeBtn.setAttribute('aria-label', 'Close popup');
-
-  const image = document.createElement('img');
-  image.className = 'culturist-carousel-card-modal-image';
-
-  const title = document.createElement('p');
-  title.className = 'culturist-carousel-card-modal-title';
-
-  const closeModal = () => {
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('culturist-carousel-modal-open');
-  };
-
-  closeBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', (event) => {
-    if (event.target === modal) closeModal();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
-  });
-
-  panel.append(closeBtn, image, title);
-  modal.append(panel);
-  root.append(modal);
-
-  const openModal = (card: Record<string, any>) => {
-    const { _path: cardImgPath } = card.image || {};
-    // Nothing to show a popup for; keep the modal closed instead of an empty white box.
-    if (!cardImgPath && !card.title) return;
-
-    image.hidden = !cardImgPath;
-    if (cardImgPath) {
-      image.src = resolveAssetUrl(cardImgPath) ?? '';
-      image.alt = card.imagealt || card.title || '';
-    }
-    title.hidden = !card.title;
-    title.textContent = card.title || '';
-    panel.classList.toggle('culturist-carousel-card-modal-panel--no-image', !cardImgPath);
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('culturist-carousel-modal-open');
-  };
-
-  return { openModal };
-}
-
-function buildCarouselCard(
-  card: Record<string, any>,
-  openCardModal: (card: Record<string, any>) => void,
-): HTMLLIElement {
+function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'culturist-carousel-carousel-card';
 
   const cardHref = resolveLinkHref(card.cardLink, card.cardExternalLink);
-  const openAsPopup = isPopupEnabled(card.openAsPopup);
-  let cardContent: HTMLElement;
-  if (openAsPopup) {
-    const popupButton = document.createElement('button');
-    popupButton.type = 'button';
-    popupButton.addEventListener('click', () => openCardModal(card));
-    cardContent = popupButton;
-  } else {
-    cardContent = cardHref ? document.createElement('a') : document.createElement('div');
-  }
+  const cardContent: HTMLElement = cardHref ? document.createElement('a') : document.createElement('div');
   cardContent.className = 'culturist-carousel-card-content';
-  if (!openAsPopup && cardHref && cardContent instanceof HTMLAnchorElement) {
+  if (cardContent instanceof HTMLAnchorElement && cardHref) {
     cardContent.href = cardHref;
     applyLinkTarget(cardContent, card.openInNewTab ?? false);
   }
@@ -251,11 +178,7 @@ function buildCarouselCard(
   return slide;
 }
 
-async function renderGalleryCarousel(
-  carouselCol: HTMLElement,
-  cfPath: string,
-  openCardModal: (card: Record<string, any>) => void,
-): Promise<void> {
+async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): Promise<void> {
   const track = carouselCol.querySelector<HTMLElement>('.culturist-carousel-carousel-track');
   const prevBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-prev');
   const nextBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-next');
@@ -275,7 +198,7 @@ async function renderGalleryCarousel(
   carouselCol.classList.remove('culturist-carousel-carousel--empty');
   cards.forEach((card) => {
     try {
-      track.append(buildCarouselCard(card, openCardModal));
+      track.append(buildCarouselCard(card));
     } catch (error) {
       console.error('[culturist-carousel] Skipping malformed card', card, error);
     }
@@ -414,6 +337,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (!itemRows.length) return;
 
   const hasMultipleDestinations = itemRows.length > 1;
+  const instanceId = (blockInstanceCount += 1);
+  const destinationListId = `culturist-carousel-destination-list-${instanceId}`;
+  const destinationOptionId = (index: number) => `culturist-carousel-destination-option-${instanceId}-${index}`;
 
   const wrapper = document.createElement('div');
   wrapper.className = 'culturist-carousel-grid';
@@ -441,8 +367,15 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const destinationBtn = document.createElement('button');
   destinationBtn.className = 'culturist-carousel-destination-btn';
   destinationBtn.setAttribute('type', 'button');
-  destinationBtn.setAttribute('aria-haspopup', 'listbox');
-  destinationBtn.setAttribute('aria-expanded', 'false');
+  if (hasMultipleDestinations) {
+    destinationBtn.setAttribute('role', 'combobox');
+    destinationBtn.setAttribute('aria-haspopup', 'listbox');
+    destinationBtn.setAttribute('aria-controls', destinationListId);
+    destinationBtn.setAttribute('aria-expanded', 'false');
+    destinationBtn.setAttribute('aria-label', 'Select destination');
+  } else {
+    destinationBtn.disabled = true;
+  }
 
   const destinationLabel = document.createElement('span');
   destinationLabel.className = 'culturist-carousel-destination-label';
@@ -456,7 +389,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const destinationList = document.createElement('ul');
   destinationList.className = 'culturist-carousel-destination-list';
+  destinationList.id = destinationListId;
   destinationList.setAttribute('role', 'listbox');
+
+  const destinationOptions: HTMLLIElement[] = [];
 
   const destinationScrollbar = document.createElement('div');
   destinationScrollbar.className = 'culturist-carousel-destination-scrollbar';
@@ -501,8 +437,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   carouselNextBtn.setAttribute('aria-label', 'Next cards');
   carouselCol.append(carouselNextBtn);
 
-  const cardModal = buildCardModal(wrapper);
-
   let currentTabIndex = 0;
   let selectTabGeneration = 0;
 
@@ -534,7 +468,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     if (generation !== selectTabGeneration) return;
 
     await renderCulturistInfo(infoSlot, cfRef);
-    await renderGalleryCarousel(carouselCol, cfRef, cardModal.openModal);
+    await renderGalleryCarousel(carouselCol, cfRef);
     if (generation !== selectTabGeneration) return;
 
     infoSlot.classList.remove('is-fading');
@@ -543,11 +477,32 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   updateDestinationBtn();
 
+  // Highlight while the listbox is open; stays separate from currentTabIndex so arrow keys
+  // never trigger a destination fetch - only Enter/Space/Tab commit the highlight.
+  let activeIndex = 0;
+  let closeTimer: number | undefined;
+  // `hidden` only flips after the 200ms fade-out, so it can't be used to test open-ness.
+  let isListOpen = false;
+
+  const setActiveIndex = (index: number) => {
+    activeIndex = Math.max(0, Math.min(index, destinationOptions.length - 1));
+    destinationOptions.forEach((option, optionIndex) => {
+      option.classList.toggle('is-active', optionIndex === activeIndex);
+    });
+    const activeOption = destinationOptions[activeIndex];
+    if (!activeOption) return;
+    destinationBtn.setAttribute('aria-activedescendant', activeOption.id);
+    activeOption.scrollIntoView({ block: 'nearest' });
+  };
+
   const closeDestinationList = () => {
-    if (destinationDropdown.hidden) return;
+    if (!isListOpen) return;
+    isListOpen = false;
     destinationDropdown.classList.remove('is-open');
     destinationBtn.setAttribute('aria-expanded', 'false');
-    window.setTimeout(() => {
+    destinationBtn.removeAttribute('aria-activedescendant');
+    destinationOptions.forEach((option) => option.classList.remove('is-active'));
+    closeTimer = window.setTimeout(() => {
       destinationDropdown.hidden = true;
     }, 200);
   };
@@ -562,12 +517,24 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   };
 
   const openDestinationList = () => {
+    if (isListOpen) return;
+    isListOpen = true;
+    // Without this, a close that is still inside its 200ms fade-out would hide the reopened list.
+    window.clearTimeout(closeTimer);
     destinationDropdown.hidden = false;
     destinationBtn.setAttribute('aria-expanded', 'true');
+    setActiveIndex(currentTabIndex);
     requestAnimationFrame(() => {
       destinationDropdown.classList.add('is-open');
       updateDestinationScrollbar();
     });
+  };
+
+  const commitActiveOption = () => {
+    closeDestinationList();
+    if (activeIndex !== currentTabIndex) {
+      void selectTab(activeIndex);
+    }
   };
 
   itemRows.forEach((row, index) => {
@@ -575,21 +542,23 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const tabNameText = tabCells[0] ? tabCells[0].textContent?.trim() : `Destination ${index + 1}`;
 
     const listItem = document.createElement('li');
+    listItem.className = 'culturist-carousel-destination-option';
+    listItem.id = destinationOptionId(index);
     listItem.setAttribute('role', 'option');
+    listItem.setAttribute('aria-selected', 'false');
     moveInstrumentation(row, listItem);
+    listItem.textContent = tabNameText || `Destination ${index + 1}`;
 
-    const optionBtn = document.createElement('button');
-    optionBtn.type = 'button';
-    optionBtn.className = 'culturist-carousel-destination-option';
-    optionBtn.textContent = tabNameText || `Destination ${index + 1}`;
-    optionBtn.addEventListener('click', async () => {
+    listItem.addEventListener('click', async () => {
+      setActiveIndex(index);
       closeDestinationList();
+      destinationBtn.focus();
       if (index !== currentTabIndex) {
         await selectTab(index);
       }
     });
 
-    listItem.append(optionBtn);
+    destinationOptions.push(listItem);
     destinationList.append(listItem);
   });
 
@@ -599,10 +568,57 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   destinationBtn.addEventListener('click', () => {
     if (!hasMultipleDestinations) return;
-    if (destinationDropdown.hidden) {
-      openDestinationList();
-    } else {
+    if (isListOpen) {
       closeDestinationList();
+    } else {
+      openDestinationList();
+    }
+  });
+
+  destinationBtn.addEventListener('keydown', (event) => {
+    if (!hasMultipleDestinations) return;
+
+    if (!isListOpen) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' ', 'Spacebar'].includes(event.key)) {
+        event.preventDefault();
+        openDestinationList();
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        setActiveIndex(activeIndex + 1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        setActiveIndex(activeIndex - 1);
+        break;
+      case 'Home':
+        event.preventDefault();
+        setActiveIndex(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        setActiveIndex(destinationOptions.length - 1);
+        break;
+      case 'Enter':
+      case ' ':
+      case 'Spacebar':
+        event.preventDefault();
+        commitActiveOption();
+        break;
+      case 'Tab':
+        // No preventDefault: the APG select-only combobox commits the highlight, then lets focus move on.
+        commitActiveOption();
+        break;
+      case 'Escape':
+        event.preventDefault();
+        closeDestinationList();
+        break;
+      default:
+        break;
     }
   });
 
@@ -612,8 +628,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     }
   });
 
+  // Escape from anywhere else on the page; the trigger's own handler marks its Escape as handled.
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && !event.defaultPrevented) {
       closeDestinationList();
     }
   });
@@ -640,7 +657,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
   if (initialCfRef) {
     await renderCulturistInfo(infoSlot, initialCfRef);
-    await renderGalleryCarousel(carouselCol, initialCfRef, cardModal.openModal);
+    await renderGalleryCarousel(carouselCol, initialCfRef);
   }
 
   moveInstrumentation(block, wrapper);
