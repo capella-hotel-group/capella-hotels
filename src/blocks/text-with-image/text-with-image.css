@@ -1,6 +1,6 @@
 .text-with-image-container {
-    background: var(--color-surface-general-subtle);
-    padding: 40px 0;
+    background: var(--color-surface-general-light);
+    padding: 0;
 }
 
 .text-with-image {
@@ -9,7 +9,7 @@
     gap: 0;
     align-items: center;
     max-width: 1440px;
-    margin: 0 auto 120px;
+    margin: 0 auto;
     padding: 0;
 }
 
@@ -70,6 +70,8 @@
     margin-top: var(--dimension-spacing-heading-to-content);
 }
 
+/* The Figma "subtitle" style carries no text-box trim (unlike the eyebrow above),
+   so the full line box is kept - trimming it here would pull the CTA up by ~8px. */
 .text-with-image .description h4 {
     font-family: var(--type-font-family-subtitle);
     font-weight: var(--type-font-weight-subtitle);
@@ -78,8 +80,6 @@
     margin: 0;
     letter-spacing: 0;
     line-height: var(--typography-line-height-heading-subtitle);
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
 }
 
 .text-with-image .description p {
@@ -90,20 +90,22 @@
     font-size: var(--typography-fontsize-heading-subtitle);
     margin: 0;
     letter-spacing: 0;
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
 }
 
 .text-with-image .description p:empty {
     display: none;
 }
 
+/* Figma wraps the link in a fixed 40px-tall `Button/text-standard` box that is centred on
+   the label, which is what puts the label 32px + (40 - line-height) / 2 below the copy. */
 .text-with-image .cta-link {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
     align-self: flex-start;
     margin-top: var(--dimension-spacing-vertical-module-to-text);
     font-size: var(--typography-fontsize-body-m);
-    line-height: 18px;
+    line-height: var(--typography-line-height-body-md);
     font-family: var(--type-font-family-cta);
     font-weight: var(--type-font-weight-text-link);
     text-transform: uppercase;
@@ -288,8 +290,10 @@
     object-fit: cover;
 }
 
-/* Tablet */
-@media (width <=1024px) {
+/* Tablet. Boundary is 1200px, not 1024px, so the layout switches on the same tier as the
+   design tokens (tokens.css: tablet >= 768, desktop >= 1200) - at 1025-1199px the desktop
+   40/60 split would otherwise be paired with tablet padding and h1 sizes. */
+@media (width < 1200px) {
     .text-with-image,
     .text-with-image.little-stars,
     .text-with-image.image-left,
@@ -362,7 +366,7 @@
 }
 
 /* Mobile */
-@media (width <=767px) {
+@media (width < 768px) {
     .text-with-image,
     .text-with-image.little-stars,
     .text-with-image.image-left,
@@ -372,25 +376,10 @@
         grid-template-columns: 1fr;
     }
 
-    .text-with-image .text-col {
-        align-items: center;
-        padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-module-padding-inline-s);
-        text-align: center;
-    }
-
-    .text-with-image .text-col h3 {
-        padding-inline-start: 0;
-        text-indent: 0;
-    }
-
-    .text-with-image .description {
-        width: 100%;
-        padding-inline-start: 0;
-    }
-
-    .text-with-image .cta-link {
-        align-self: center;
-        padding-inline-start: 0;
+    /* Only the mobile gift-card frame wraps the stacked text + cards in its own block padding;
+       the desktop/tablet frames sit flush against the module edges. */
+    .text-with-image.gift-card {
+        padding-block: var(--dimension-layout-module-padding-block);
     }
 
     /* gift-card's image-col is a fixed-height crop window sized per image count (see Figma) -
