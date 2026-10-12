@@ -74,26 +74,6 @@
           "valueType": "string",
           "required": true,
           "value": ""
-        },
-        {
-          "component": "text",
-          "name": "footerCta",
-          "label": "Footer CTA Label",
-          "valueType": "string",
-          "value": ""
-        },
-        {
-          "component": "aem-content",
-          "name": "footerCta_link",
-          "label": "Footer CTA URL",
-          "valueType": "string"
-        },
-        {
-          "component": "boolean",
-          "name": "footerCta_openInNewTab",
-          "label": "Open in new tab",
-          "valueType": "boolean",
-          "value": false
         }
       ]
     },
@@ -124,8 +104,14 @@
           "required": true,
           "value": "image",
           "options": [
-            { "name": "Image", "value": "image" },
-            { "name": "Video", "value": "video" }
+            {
+              "name": "Image",
+              "value": "image"
+            },
+            {
+              "name": "Video",
+              "value": "video"
+            }
           ]
         },
         {
