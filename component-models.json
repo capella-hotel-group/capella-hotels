@@ -794,26 +794,31 @@
         "valueType": "string",
         "required": true,
         "value": ""
-      },
+      }
+    ]
+  },
+  {
+    "id": "destination-introduction-image",
+    "fields": [
       {
         "component": "reference",
-        "name": "media1_thumbnail",
-        "label": "Media 1 Thumbnail",
-        "description": "Optional for images. Used as the poster when the media is a video.",
+        "name": "thumbnail",
+        "label": "Thumbnail",
+        "description": "Still image only. Doubles as the poster when the media is a video.",
         "valueType": "string",
         "multi": false
       },
       {
         "component": "text",
-        "name": "media1_thumbnailAlt",
-        "label": "Media 1 Thumbnail Alt Text",
+        "name": "thumbnailAlt",
+        "label": "Thumbnail Alt Text",
         "valueType": "string",
         "value": ""
       },
       {
         "component": "select",
-        "name": "media1_format",
-        "label": "Media 1 Type",
+        "name": "media",
+        "label": "Media Type",
         "valueType": "string",
         "multi": false,
         "required": true,
@@ -831,143 +836,25 @@
       },
       {
         "component": "reference",
-        "name": "media1_asset",
-        "label": "Media 1",
-        "description": "Images or videos. Videos must be WebM or MP4, max 10 seconds, within 1.5MB and up to 1080 pixels.",
+        "name": "mediaAsset",
+        "label": "Media",
+        "description": "Max 10 seconds, WebM or MP4. The size of the video should be within 1.5MB & upto 1080 pixels",
         "valueType": "string",
         "multi": false,
         "required": true
       },
       {
         "component": "text",
-        "name": "media1_assetAlt",
-        "label": "Media 1 Alt Text",
+        "name": "mediaAssetAlt",
+        "label": "Media Alt Text",
         "valueType": "string",
         "required": true,
         "value": ""
       },
       {
         "component": "boolean",
-        "name": "media1_darkOverlay",
-        "label": "Media 1 Dark Image Overlay",
-        "description": "Tints this media so overlaid text stays legible. Does not affect the thumbnail.",
-        "valueType": "boolean",
-        "value": false
-      },
-      {
-        "component": "reference",
-        "name": "media2_thumbnail",
-        "label": "Media 2 Thumbnail",
-        "description": "Optional for images. Used as the poster when the media is a video.",
-        "valueType": "string",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "media2_thumbnailAlt",
-        "label": "Media 2 Thumbnail Alt Text",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "select",
-        "name": "media2_format",
-        "label": "Media 2 Type",
-        "valueType": "string",
-        "multi": false,
-        "required": true,
-        "value": "image",
-        "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
-        ]
-      },
-      {
-        "component": "reference",
-        "name": "media2_asset",
-        "label": "Media 2",
-        "description": "Images or videos. Videos must be WebM or MP4, max 10 seconds, within 1.5MB and up to 1080 pixels.",
-        "valueType": "string",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "media2_assetAlt",
-        "label": "Media 2 Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "boolean",
-        "name": "media2_darkOverlay",
-        "label": "Media 2 Dark Image Overlay",
-        "description": "Tints this media so overlaid text stays legible. Does not affect the thumbnail.",
-        "valueType": "boolean",
-        "value": false
-      },
-      {
-        "component": "reference",
-        "name": "media3_thumbnail",
-        "label": "Media 3 Thumbnail",
-        "description": "Optional for images. Used as the poster when the media is a video.",
-        "valueType": "string",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "media3_thumbnailAlt",
-        "label": "Media 3 Thumbnail Alt Text",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "select",
-        "name": "media3_format",
-        "label": "Media 3 Type",
-        "valueType": "string",
-        "multi": false,
-        "required": true,
-        "value": "image",
-        "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
-        ]
-      },
-      {
-        "component": "reference",
-        "name": "media3_asset",
-        "label": "Media 3",
-        "description": "Images or videos. Videos must be WebM or MP4, max 10 seconds, within 1.5MB and up to 1080 pixels.",
-        "valueType": "string",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "media3_assetAlt",
-        "label": "Media 3 Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "boolean",
-        "name": "media3_darkOverlay",
-        "label": "Media 3 Dark Image Overlay",
+        "name": "darkOverlay",
+        "label": "Enable Dark Image Overlay",
         "description": "Tints this media so overlaid text stays legible. Does not affect the thumbnail.",
         "valueType": "boolean",
         "value": false

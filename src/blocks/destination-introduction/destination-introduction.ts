@@ -3,17 +3,15 @@ import { resolveDAMUrl } from '@/utils/env';
 import { applyBlockIdentity } from '@/utils/block-identity';
 
 // Row indices mirror the field order of the `destination-introduction` model
-// (eyebrow, title, body), after the leading identity rows. The three media groups
-// follow these copy fields. Changing that field list is a contract change and must
-// update these indices in the same commit.
+// (eyebrow, title, body), after the leading identity rows. Changing that field
+// list is a contract change and must update these indices in the same commit.
 const COPY_FIELDS = ['eyebrow', 'title', 'body'] as const;
-const IDENTITY_ROW_COUNT = 2;
-const MEDIA_GROUP_COUNT = 3;
-const MEDIA_FORMATS = ['image', 'video'];
-const LEGACY_ITEM_MODEL = 'destination-introduction-image';
-// Cell indices mirror the retired `destination-introduction-image` item model,
-// still read so pages authored before the media groups keep rendering.
-const LEGACY_ITEM = { thumbnail: 0, media: 1, mediaAsset: 2, darkOverlay: 3 } as const;
+const IMAGE_MODEL = 'destination-introduction-image';
+// Cell indices mirror the field order of the `destination-introduction-image`
+// model; the `*Alt` fields collapse into the cell of the field they suffix and
+// so claim no index of their own.
+const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2, darkOverlay: 3 } as const;
+const MAX_MEDIA_ITEMS = 3;
 const SCROLL_SETTLE_MS = 120;
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
@@ -31,45 +29,16 @@ function hasContent(cell: Element | null): cell is Element {
   return !!cell && (cell.textContent?.trim() !== '' || !!cell.querySelector('picture, img, a'));
 }
 
-function hasAsset(element: Element): boolean {
-  return element.matches('picture, img, a') || !!element.querySelector('picture, img, a');
-}
-
-function isFormat(element: Element): boolean {
-  return MEDIA_FORMATS.includes(textOf(element).toLowerCase()) && !hasAsset(element);
-}
-
 function isFlag(element: Element): boolean {
   return ['true', 'false'].includes(textOf(element).toLowerCase());
 }
 
-// Retired item rows carry their model in the editor. Published item rows have
-// several cells, where every block-level field, media groups included, has one.
-function isLegacyItemRow(row: HTMLElement): boolean {
-  if (row.dataset.aueModel) return row.dataset.aueModel === LEGACY_ITEM_MODEL;
-  return row.children.length > 1;
-}
-
-function isMediaGroupRow(row: HTMLElement): boolean {
-  const cells = [...row.children];
-  if (cells.length !== 1) return false;
-  return !!cells[0]!.querySelector('picture') || [...cells[0]!.children].some(isFormat);
-}
-
-/**
- * The media groups are the last block fields. A group that was never edited may
- * emit an empty row or no row at all, so trailing rows are taken back to the copy
- * fields while an empty row inside the copy range is left as an unset copy field.
- */
-function takeMediaRows(rows: HTMLElement[]): HTMLElement[] {
-  const taken: HTMLElement[] = [];
-  while (taken.length < MEDIA_GROUP_COUNT && rows.length > COPY_FIELDS.length) {
-    const last = rows[rows.length - 1]!;
-    const media = isMediaGroupRow(last);
-    if (!media && (hasContent(last) || rows.length <= IDENTITY_ROW_COUNT + COPY_FIELDS.length)) break;
-    taken.unshift(rows.pop()!);
-  }
-  return taken.filter(isMediaGroupRow);
+// In the editor every gallery row carries the item model. Outside it a gallery row
+// is either multi-cell — every block-level field emits a single cell — or the single
+// image cell that items authored before the media fields existed still emit.
+function isGalleryRow(row: HTMLElement): boolean {
+  if (row.dataset.aueModel) return row.dataset.aueModel === IMAGE_MODEL;
+  return row.children.length > 1 || !!row.querySelector('picture, img');
 }
 
 function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElement {
@@ -182,14 +151,6 @@ function buildVideo(cell: Element | null | undefined, poster: string): HTMLVideo
   return video;
 }
 
-interface MediaSource {
-  thumbnailCell: Element | null;
-  assetCell: Element | null;
-  isVideo: boolean;
-  darkOverlay: boolean;
-  instrumentation: HTMLElement | null;
-}
-
 interface Slide {
   element: HTMLLIElement;
   video: HTMLVideoElement | null;
@@ -198,70 +159,25 @@ interface Slide {
   label: string;
 }
 
-function wrapFields(...elements: (Element | null | undefined)[]): Element | null {
-  const fields = elements.filter((element): element is Element => !!element);
-  if (!fields.length) return null;
-  const wrapper = document.createElement('div');
-  wrapper.append(...fields);
-  return wrapper;
-}
-
-function altSiblingOf(element: Element | undefined): Element | null {
-  const sibling = element?.nextElementSibling;
-  return sibling && !hasAsset(sibling) && !isFormat(sibling) && !isFlag(sibling) ? sibling : null;
-}
-
-/**
- * Reads one element group. The format separates the thumbnail from the media,
- * which are both pictures, regardless of whether the optional thumbnail exists.
- */
-function readMediaGroup(row: HTMLElement): MediaSource {
-  const children = [...(row.firstElementChild?.children ?? [])];
-  const formatIndex = children.findIndex(isFormat);
-  const before = formatIndex >= 0 ? children.slice(0, formatIndex) : [];
-  const after = formatIndex >= 0 ? children.slice(formatIndex + 1) : children;
-  const leadingAssets = before.filter(hasAsset);
-  const trailingAssets = after.filter(hasAsset);
-  if (formatIndex < 0 && trailingAssets.length > 1) leadingAssets.push(trailingAssets.shift()!);
-
-  const thumbnail = leadingAssets[0];
-  const asset = trailingAssets[0];
-  const thumbnailAlt = altSiblingOf(thumbnail);
-  const assetAlt = altSiblingOf(asset);
-
-  return {
-    thumbnailCell: wrapFields(thumbnail, thumbnailAlt),
-    assetCell: wrapFields(asset, assetAlt),
-    isVideo: formatIndex >= 0 && textOf(children[formatIndex]).toLowerCase() === 'video',
-    darkOverlay: after.some((element) => textOf(element).toLowerCase() === 'true'),
-    instrumentation: null,
-  };
-}
-
-function readLegacyItem(row: HTMLElement): MediaSource {
+function buildSlide(row: HTMLElement, index: number): Slide {
   const cells = [...row.children];
-  return {
-    thumbnailCell: cells[LEGACY_ITEM.thumbnail] ?? null,
-    assetCell: cells[LEGACY_ITEM.mediaAsset] ?? null,
-    isVideo: textOf(cells[LEGACY_ITEM.media]).toLowerCase() === 'video',
-    darkOverlay: textOf(cells[LEGACY_ITEM.darkOverlay]).toLowerCase() === 'true',
-    instrumentation: row,
-  };
-}
-
-function buildSlide(source: MediaSource, index: number): Slide {
   const element = document.createElement('li');
   element.className = 'destination-introduction-slide';
-  if (source.instrumentation) moveInstrumentation(source.instrumentation, element);
+  moveInstrumentation(row, element);
 
-  const thumbnail = source.thumbnailCell?.querySelector('picture') ?? null;
+  const thumbnailCell = cells[ITEM.thumbnail];
+  const thumbnail = thumbnailCell?.querySelector('picture') ?? null;
+  // items authored before the media fields existed carry one image cell, which
+  // stands in for both the thumbnail and the media
+  const mediaCell = cells.length > 1 ? cells[ITEM.mediaAsset] : thumbnailCell;
+  const isVideo = textOf(cells[ITEM.media]).toLowerCase() === 'video';
   const poster = thumbnail?.querySelector('img')?.getAttribute('src') || '';
-  const video = source.isVideo ? buildVideo(source.assetCell, poster) : null;
-  const picture = source.isVideo ? null : buildPicture(source.assetCell);
+  const video = isVideo ? buildVideo(mediaCell, poster) : null;
+  const picture = isVideo ? null : buildPicture(mediaCell);
   const media = video ?? picture;
   if (media) element.append(media);
   // the tint belongs to the hero media, so the thumbnail clone never inherits it
-  if (source.darkOverlay) element.classList.add('has-dark-overlay');
+  if (textOf(cells[ITEM.darkOverlay]).toLowerCase() === 'true') element.classList.add('has-dark-overlay');
 
   return {
     element,
@@ -270,9 +186,9 @@ function buildSlide(source: MediaSource, index: number): Slide {
     // slide cannot, so it falls back to a numbered button
     thumbnail: thumbnail ?? picture,
     authoredThumbnail: !!thumbnail,
-    // the media has already left its source, so read the label from the built element
+    // the media has already left its cell, so read the label from the built element
     label:
-      altOf(source.thumbnailCell) ||
+      altOf(thumbnailCell) ||
       picture?.querySelector('img')?.getAttribute('alt') ||
       video?.getAttribute('aria-label') ||
       `Show media ${index + 1}`,
@@ -335,13 +251,12 @@ function buildThumbs(slides: Slide[]): HTMLUListElement {
  */
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
-  const legacyRows = rows.filter(isLegacyItemRow);
-  const blockRows = rows.filter((row) => !legacyRows.includes(row));
-  const mediaRows = takeMediaRows(blockRows);
+  const galleryRows = rows.filter(isGalleryRow);
+  // DOM order is the authored order, so these are the first three items
+  const visibleGalleryRows = galleryRows.slice(0, MAX_MEDIA_ITEMS);
+  const blockRows = rows.filter((row) => !galleryRows.includes(row));
   if (isRetiredCtaRow(blockRows[blockRows.length - 1])) blockRows.pop();
   const copyRows = applyBlockIdentity(block, blockRows, { contentRows: COPY_FIELDS.length });
-  const groupSources = mediaRows.map(readMediaGroup).filter((source) => source.assetCell || source.thumbnailCell);
-  const sources = (groupSources.length ? groupSources : legacyRows.map(readLegacyItem)).slice(0, MEDIA_GROUP_COUNT);
 
   const header = document.createElement('div');
   header.className = 'destination-introduction-header';
@@ -353,7 +268,7 @@ export default function decorate(block: HTMLElement): void {
 
   const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
 
-  const slides = sources.map(buildSlide);
+  const slides = visibleGalleryRows.map(buildSlide);
   const track = buildTrack(slides);
   const interactive = slides.length > 1;
 

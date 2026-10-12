@@ -24,21 +24,24 @@ const COPY_ROWS = [
   '<div><div><p>Body copy</p></div></div>',
 ].join('');
 const RETIRED_CTA_ROW = '<div><div><p>Discover</p><p><a href="/discover">/discover</a></p><p>false</p></div></div>';
+const REAL_SLIDES = '.destination-introduction-slide:not(.destination-introduction-slide-clone)';
 
 function picture(src: string, alt = ''): string {
   return `<picture><img src="${src}" alt="${alt}"></picture>`;
 }
 
-function mediaGroup(index: number, options: { thumbnail?: boolean; video?: boolean; overlay?: boolean } = {}): string {
-  const thumbnail = options.thumbnail ? `<p>${picture(`thumb${index}.jpg`, `Thumb ${index}`)}</p>` : '';
-  const asset = options.video
-    ? `<p><a href="/content/dam/video${index}.mp4">/content/dam/video${index}.mp4</a></p><p>Video ${index}</p>`
-    : `<p>${picture(`media${index}.jpg`, `Media ${index}`)}</p>`;
-  return `<div><div>${thumbnail}<p>${options.video ? 'video' : 'image'}</p>${asset}<p>${options.overlay ? 'true' : 'false'}</p></div></div>`;
+function mediaItem(index: number, options: { editor?: boolean; video?: boolean; overlay?: boolean } = {}): string {
+  const attributes = options.editor
+    ? ` data-aue-resource="urn:item-${index}" data-aue-model="destination-introduction-image" data-aue-type="component"`
+    : '';
+  const media = options.video
+    ? `<a href="/content/dam/video${index}.mp4">/content/dam/video${index}.mp4</a><p>Video ${index}</p>`
+    : picture(`media${index}.jpg`, `Media ${index}`);
+  return `<div${attributes}><div>${picture(`thumb${index}.jpg`, `Thumb ${index}`)}</div><div>${options.video ? 'video' : 'image'}</div><div>${media}</div><div>${options.overlay ? 'true' : 'false'}</div></div>`;
 }
 
-function legacyItem(index: number): string {
-  return `<div data-aue-resource="urn:item-${index}" data-aue-model="destination-introduction-image"><div>${picture(`legacy-thumb${index}.jpg`, `Legacy thumb ${index}`)}</div><div>image</div><div>${picture(`legacy${index}.jpg`, `Legacy ${index}`)}</div><div>false</div></div>`;
+function items(count: number, editor = false): string {
+  return Array.from({ length: count }, (_value, index) => mediaItem(index + 1, { editor })).join('');
 }
 
 function build(rows: string): HTMLElement {
@@ -49,7 +52,9 @@ function build(rows: string): HTMLElement {
   return block;
 }
 
-const REAL_SLIDES = '.destination-introduction-slide:not(.destination-introduction-slide-clone)';
+function realSlideImages(block: HTMLElement): (string | null)[] {
+  return [...block.querySelectorAll(`${REAL_SLIDES} img`)].map((img) => img.getAttribute('src'));
+}
 
 function selectedSlide(block: HTMLElement): number {
   return [...block.querySelectorAll(REAL_SLIDES)].findIndex((slide) => slide.classList.contains('is-selected'));
@@ -79,43 +84,45 @@ describe('destination-introduction', () => {
     document.body.textContent = '';
   });
 
-  it('renders the three grouped media fields in order', () => {
-    const block = build(
-      COPY_ROWS +
-        mediaGroup(1, { thumbnail: true, overlay: true }) +
-        mediaGroup(2, { thumbnail: true, video: true }) +
-        mediaGroup(3),
-    );
+  it('renders image, video and overlay items', () => {
+    const block = build(COPY_ROWS + mediaItem(1, { overlay: true }) + mediaItem(2, { video: true }) + mediaItem(3));
 
     decorate(block);
 
     expect(block.id).toBe('destination-intro');
-    expect(block.querySelector('.destination-introduction-cta')).toBeNull();
     const slides = block.querySelectorAll<HTMLElement>(REAL_SLIDES);
     expect(slides).toHaveLength(3);
-    expect(slides[0]!.querySelector('img')?.getAttribute('src')).toBe('media1.jpg');
     expect(slides[0]!.classList.contains('has-dark-overlay')).toBe(true);
     expect(slides[1]!.querySelector('video source')?.getAttribute('src')).toBe('/content/dam/video2.mp4');
     expect(slides[1]!.querySelector('video')?.getAttribute('poster')).toBe('thumb2.jpg');
     expect(slides[1]!.querySelector('video')?.getAttribute('aria-label')).toBe('Video 2');
-    expect(slides[2]!.querySelector('img')?.getAttribute('src')).toBe('media3.jpg');
-    expect(
-      [...block.querySelectorAll('.destination-introduction-thumb')].map((thumb) => thumb.getAttribute('aria-label')),
-    ).toEqual(['Thumb 1', 'Thumb 2', 'Media 3']);
   });
 
-  it('keeps copy aligned when later media groups have not emitted rows', () => {
-    const block = build(COPY_ROWS + mediaGroup(1));
+  it.each([
+    ['published content', false],
+    ['editor content', true],
+  ])('renders only the first three items from %s', (_label, editor) => {
+    const block = build(COPY_ROWS + items(5, editor));
 
     decorate(block);
 
-    expect(block.querySelector('.destination-introduction-eyebrow')?.textContent).toBe('THE DESTINATION');
-    expect(block.querySelector('.destination-introduction-body')?.textContent).toBe('Body copy');
-    expect(block.querySelectorAll(REAL_SLIDES)).toHaveLength(1);
+    expect(realSlideImages(block)).toEqual(['media1.jpg', 'media2.jpg', 'media3.jpg']);
+    expect(
+      [...block.querySelectorAll('.destination-introduction-thumb')].map((thumb) => thumb.getAttribute('aria-label')),
+    ).toEqual(['Thumb 1', 'Thumb 2', 'Thumb 3']);
+    expect(block.querySelector('.destination-introduction-overflow')).toBeNull();
+    expect(block.textContent).not.toContain('Media 4');
+    if (editor) {
+      expect([...block.querySelectorAll<HTMLElement>(REAL_SLIDES)].map((slide) => slide.dataset.aueResource)).toEqual([
+        'urn:item-1',
+        'urn:item-2',
+        'urn:item-3',
+      ]);
+    }
   });
 
   it('ignores a retired footer CTA in previously published markup', () => {
-    const block = build(COPY_ROWS + RETIRED_CTA_ROW + legacyItem(1));
+    const block = build(COPY_ROWS + RETIRED_CTA_ROW + items(1));
 
     decorate(block);
 
@@ -125,23 +132,8 @@ describe('destination-introduction', () => {
     expect(block.querySelector('a[href="/discover"]')).toBeNull();
   });
 
-  it('keeps rendering retired media items until the block is re-authored', () => {
-    const block = build(COPY_ROWS + legacyItem(1) + legacyItem(2) + legacyItem(3) + legacyItem(4));
-
-    decorate(block);
-
-    const slides = block.querySelectorAll<HTMLElement>(REAL_SLIDES);
-    expect(slides).toHaveLength(3);
-    expect(slides[0]!.dataset.aueResource).toBe('urn:item-1');
-    expect([...block.querySelectorAll(`${REAL_SLIDES} img`)].map((img) => img.getAttribute('src'))).toEqual([
-      'legacy1.jpg',
-      'legacy2.jpg',
-      'legacy3.jpg',
-    ]);
-  });
-
-  it('adds inert clones around the slides for a continuous mobile loop', () => {
-    const block = build(COPY_ROWS + mediaGroup(1) + mediaGroup(2) + mediaGroup(3));
+  it('adds inert clones around the first three items for a continuous mobile loop', () => {
+    const block = build(COPY_ROWS + items(5));
 
     decorate(block);
 
@@ -149,21 +141,28 @@ describe('destination-introduction', () => {
     expect(block.querySelectorAll('.destination-introduction-slide')).toHaveLength(9);
     expect(clones).toHaveLength(6);
     expect(clones.every((clone) => clone.getAttribute('aria-hidden') === 'true' && clone.inert)).toBe(true);
-    expect(clones.some((clone) => clone.matches('[data-aue-resource], .is-selected'))).toBe(false);
+    expect(clones.map((clone) => clone.querySelector('img')?.getAttribute('src'))).toEqual([
+      'media1.jpg',
+      'media2.jpg',
+      'media3.jpg',
+      'media1.jpg',
+      'media2.jpg',
+      'media3.jpg',
+    ]);
   });
 
   it('moves through clones and settles on the matching real slide', () => {
     jest.useFakeTimers();
-    const block = build(COPY_ROWS + mediaGroup(1) + mediaGroup(2) + mediaGroup(3));
+    const block = build(COPY_ROWS + items(3));
     decorate(block);
 
     const track = block.querySelector<HTMLElement>('.destination-introduction-track')!;
-    const items = [...track.children] as HTMLElement[];
+    const trackItems = [...track.children] as HTMLElement[];
     let scrollLeft = 900;
     Object.defineProperty(track, 'clientWidth', { configurable: true, value: 300 });
     Object.defineProperty(track, 'scrollWidth', { configurable: true, value: 2700 });
     Object.defineProperty(track, 'scrollLeft', { configurable: true, get: () => scrollLeft });
-    items.forEach((item, index) => Object.defineProperty(item, 'offsetLeft', { value: index * 300 }));
+    trackItems.forEach((item, index) => Object.defineProperty(item, 'offsetLeft', { value: index * 300 }));
     const scrollTo = jest.fn(({ left }: ScrollToOptions) => {
       scrollLeft = Number(left);
     });
@@ -189,7 +188,7 @@ describe('destination-introduction', () => {
 
   it('keeps only authored slides in the editor', () => {
     document.body.classList.add('adobe-ue-edit');
-    const block = build(COPY_ROWS + mediaGroup(1) + mediaGroup(2) + mediaGroup(3));
+    const block = build(COPY_ROWS + items(3, true));
 
     decorate(block);
 
@@ -198,7 +197,7 @@ describe('destination-introduction', () => {
   });
 
   it('lets desktop thumbnails select a slide', () => {
-    const block = build(COPY_ROWS + mediaGroup(1) + mediaGroup(2) + mediaGroup(3));
+    const block = build(COPY_ROWS + items(3));
     decorate(block);
 
     block.querySelector<HTMLElement>('.destination-introduction-thumb[data-index="2"]')!.click();
