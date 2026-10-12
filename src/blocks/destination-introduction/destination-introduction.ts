@@ -1,6 +1,6 @@
-import { moveInstrumentation } from '@/app/scripts.js';
-import { resolveDAMUrl } from '@/utils/env.js';
-import { applyBlockIdentity } from '@/utils/block-identity.js';
+import { moveInstrumentation } from '@/app/scripts';
+import { resolveDAMUrl } from '@/utils/env';
+import { applyBlockIdentity } from '@/utils/block-identity';
 
 // Row indices mirror the field order of the `destination-introduction` model
 // (eyebrow, title, body, footerCta), after the leading identity rows. Changing
@@ -12,6 +12,7 @@ const IMAGE_MODEL = 'destination-introduction-image';
 // model; the `*Alt` fields collapse into the cell of the field they suffix and
 // so claim no index of their own.
 const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2, darkOverlay: 3 } as const;
+const MAX_MEDIA_ITEMS = 3;
 const SCROLL_SETTLE_MS = 120;
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
@@ -254,11 +255,50 @@ function buildThumbs(slides: Slide[]): HTMLUListElement {
 }
 
 /**
+ * xwalk cannot cap child items, so extra media never reaches the page. In the
+ * editor the rows stay listed and selectable, so the author can remove them.
+ */
+function buildOverflowNote(rows: HTMLElement[]): HTMLElement | null {
+  const editorRows = rows.filter((row) => row.hasAttribute('data-aue-resource'));
+  if (!editorRows.length) return null;
+
+  const note = document.createElement('div');
+  note.className = 'destination-introduction-overflow';
+  note.setAttribute('role', 'note');
+
+  const message = document.createElement('p');
+  message.textContent = `Only the first ${MAX_MEDIA_ITEMS} media items are shown on the live page. Remove the extra items below.`;
+  note.append(message);
+
+  const list = document.createElement('ol');
+  list.start = MAX_MEDIA_ITEMS + 1;
+  editorRows.forEach((row, index) => {
+    const item = document.createElement('li');
+    moveInstrumentation(row, item);
+
+    const picture = row.querySelector('picture');
+    if (picture) {
+      picture.querySelector('img')?.setAttribute('alt', '');
+      item.append(picture);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = `Media ${MAX_MEDIA_ITEMS + index + 1}: hidden on the live page`;
+    item.append(label);
+    list.append(item);
+  });
+  note.append(list);
+
+  return note;
+}
+
+/**
  * @param block The block element
  */
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
   const galleryRows = rows.filter(isGalleryRow);
+  const visibleGalleryRows = galleryRows.slice(0, MAX_MEDIA_ITEMS);
   const copyRows = applyBlockIdentity(
     block,
     rows.filter((row) => !galleryRows.includes(row)),
@@ -276,7 +316,7 @@ export default function decorate(block: HTMLElement): void {
   const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
   const cta = buildCta(copyRows[3], COPY_FIELDS[3]);
 
-  const slides = galleryRows.map(buildSlide);
+  const slides = visibleGalleryRows.map(buildSlide);
   const track = buildTrack(slides);
   const interactive = slides.length > 1;
 
@@ -305,6 +345,8 @@ export default function decorate(block: HTMLElement): void {
   block.append(copy);
   // appended even when empty so the editor still offers the gallery container
   block.append(media);
+  const overflowNote = buildOverflowNote(galleryRows.slice(MAX_MEDIA_ITEMS));
+  if (overflowNote) block.append(overflowNote);
 
   if (!slides.length) return;
 
