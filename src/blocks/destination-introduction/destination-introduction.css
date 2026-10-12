@@ -340,4 +340,55 @@
         background-color: #000;
         cursor: pointer;
     }
+
+    /* ---------- editor-only overflow note ---------- */
+
+    @media (width >= 1200px) {
+        &:has(> .destination-introduction-overflow) {
+            flex-wrap: wrap;
+        }
+    }
+
+    .destination-introduction-overflow {
+        box-sizing: border-box;
+        order: 99;
+        flex: 0 0 calc(100% - (2 * var(--dimension-layout-module-padding-inline-s)));
+        margin-block-start: var(--dimension-spacing-general-l);
+        margin-inline: var(--dimension-layout-module-padding-inline-s);
+        padding: var(--dimension-spacing-general-m);
+        border: 1px dashed currentcolor;
+        background-color: #fff6db;
+        color: #3d3000;
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        line-height: var(--typography-line-height-body-md);
+
+        > p {
+            margin: 0;
+        }
+
+        > ol {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--dimension-spacing-general-m);
+            margin: 0;
+            margin-block-start: var(--dimension-spacing-general-s);
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: var(--dimension-spacing-general-s);
+        }
+
+        picture,
+        img {
+            display: block;
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+        }
+    }
 }
