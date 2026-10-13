@@ -16,8 +16,10 @@ indices:
         value: attribute(el, "content")
 
   offers:
-    target: /offers/query-index.json
+    target: /offers/que-in.json
     source: /bangkok/en/offers
+    include:
+      - '/bangkok/en/offers/**'
     properties:
       title:
         select: head > meta[property="og:title"], head > title
