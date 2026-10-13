@@ -133,7 +133,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const inner = document.createElement('div');
   inner.className = 'footer-inner';
-  if (brandLogo) inner.append(brandLogo);
+  if (brandLogo) {
+    inner.classList.add('footer-inner-has-logo');
+    inner.append(brandLogo);
+  }
 
   const groups: Array<{ name: string; element: Element | null }> = [
     { name: 'nav', element: navGroup },

@@ -1,0 +1,2 @@
+/*! v0.1.0 | h5bf48f20 */
+function e(e,t){if(!e)return document.createElement(`span`);let n=document.createElement(`a`);return n.href=e,t&&(n.target=`_blank`,n.rel=`noopener noreferrer`),n}function t(){let e=document.createElement(`span`);return e.className=`footer-sr-only`,e.textContent=` (opens in a new tab)`,e}function n(n,r,i){let a=e(r,i);return a.textContent=n,r&&i&&a.append(t()),a}export{n,t as r,e as t};
