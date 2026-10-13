@@ -17,9 +17,7 @@ indices:
 
   offers:
     target: /offers/query-index.json
-    source: /
-    include:
-      - '/**/offers/**'
+    source: /bangkok/en/offers
     properties:
       title:
         select: head > meta[property="og:title"], head > title
