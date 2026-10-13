@@ -17,9 +17,9 @@ indices:
 
   offers:
     target: /offers/query-index.json
-    source: /content/capella-hotels
+    source: /
     include:
-      - '/content/capella-hotels/**/offers/**'
+      - '/**/offers/**'
     properties:
       title:
         select: head > meta[property="og:title"], head > title
