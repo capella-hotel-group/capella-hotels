@@ -1,3 +1,15 @@
 main .navigation-lists ul {
     padding-inline-start: 2.5rem;
 }
+
+.navigation-lists-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

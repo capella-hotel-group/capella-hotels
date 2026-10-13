@@ -9,6 +9,7 @@ import {
 } from '@/utils/link.js';
 
 const CONTAINER_FIELD_COUNT = 4;
+const NEW_TAB_LABEL = 'opens in a new tab';
 const ITEM_MODELS = new Set(['link-item', 'navigation-list-item']);
 
 function isItemRow(row: Element): boolean {
@@ -57,6 +58,12 @@ export default function decorate(block: HTMLElement): void {
 
   const list = document.createElement('ul');
   list.append(titleItem);
+  list.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]').forEach((anchor) => {
+    const hint = document.createElement('span');
+    hint.className = 'navigation-lists-sr-only';
+    hint.textContent = ` (${NEW_TAB_LABEL})`;
+    anchor.append(hint);
+  });
 
   block.classList.toggle('merge-columns', isEnabled(mergeColumns));
   block.dataset.testid = 'navigation-lists';
