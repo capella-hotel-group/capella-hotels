@@ -126,4 +126,53 @@ describe('hero-destination pause mechanism', () => {
     jest.advanceTimersByTime(5000);
     expect(activeIndex(block)).toBe(1);
   });
+
+  it('pairs every dot with its slide panel and names it after the heading', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+    const dots = [...block.querySelectorAll<HTMLButtonElement>('.hero-destination-dot')];
+    const slides = [...block.querySelectorAll<HTMLElement>('.hero-destination-slide')];
+
+    dots.forEach((dot, index) => {
+      expect(slides[index].getAttribute('role')).toBe('tabpanel');
+      expect(dot.getAttribute('aria-controls')).toBe(slides[index].id);
+      expect(slides[index].getAttribute('aria-labelledby')).toBe(dot.id);
+      expect(dot.getAttribute('aria-label')).toBe(`Slide ${index}`);
+    });
+
+    expect(dots.map((dot) => dot.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
+    expect(dots.map((dot) => dot.tabIndex)).toEqual([0, -1, -1]);
+    expect(slides.map((slide) => slide.getAttribute('tabindex'))).toEqual(['0', null, null]);
+  });
+
+  it('moves selection and focus with arrow keys, wrapping at the ends', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+    const dots = [...block.querySelectorAll<HTMLButtonElement>('.hero-destination-dot')];
+
+    dots[0].focus();
+    dots[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(activeIndex(block)).toBe(1);
+    expect(document.activeElement).toBe(dots[1]);
+
+    dots[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    expect(activeIndex(block)).toBe(0);
+
+    dots[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    expect(activeIndex(block)).toBe(2);
+  });
+
+  it('silences the live region while auto-rotating and reopens it once paused', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+    const track = block.querySelector('.hero-destination-track')!;
+
+    expect(track.getAttribute('aria-live')).toBe('off');
+
+    block.dispatchEvent(pointer('pointerenter', 'mouse'));
+    expect(track.getAttribute('aria-live')).toBe('polite');
+
+    block.dispatchEvent(pointer('pointerleave', 'mouse'));
+    expect(track.getAttribute('aria-live')).toBe('off');
+  });
 });

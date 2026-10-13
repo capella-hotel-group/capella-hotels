@@ -135,6 +135,30 @@
     text-decoration: none;
 }
 
+/* The stack is absolutely positioned, so a plain block wrapper collapses to 0px tall and the
+   focus ring renders as an invisible line above the cards. Give the link the stack's centred
+   box instead, so the ring frames the actual fan. */
+.text-with-image.gift-card .image-col .image-link {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    transform: translate(-50%, -50%);
+}
+
+.text-with-image.gift-card .image-col .image-link .gift-card-stack {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+}
+
+.text-with-image .image-col .image-link:focus-visible {
+    outline: 2px solid var(--color-text-action-default);
+    outline-offset: 8px;
+    border-radius: 24px;
+}
+
 .text-with-image.image-left .image-col,
 .text-with-image.little-stars.image-left .image-col,
 .text-with-image.gift-card.image-left .image-col {
@@ -264,9 +288,11 @@
     z-index: 10;
 }
 
-/* Scale only (no translate) so the card grows around the pointer and cannot flicker out of hover. */
+/* Scale only (no translate) so the card grows around the pointer and cannot flicker out of hover.
+   Keyboard focus lands on the whole fan, so the front card stands in for the hovered one. */
 .text-with-image.gift-card .gift-card-stack .gift-card-layer:hover,
-.text-with-image.gift-card .gift-card-stack .gift-card-layer:active {
+.text-with-image.gift-card .gift-card-stack .gift-card-layer:active,
+.text-with-image.gift-card .image-link:focus-visible .gift-card-layer:last-child {
     box-shadow:
         0 48px 32px rgba(0, 0, 0, 0.06),
         0 24px 18px rgba(0, 0, 0, 0.05),
