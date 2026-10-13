@@ -34,6 +34,50 @@
         "name": "footer",
         "multi": false,
         "label": "Footer"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cardEyebrow",
+        "label": "Card Eyebrow"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta1Label",
+        "label": "CTA 1 Label"
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "cta1Link",
+        "label": "CTA 1 Link"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "cta1OpenInNewTab",
+        "label": "CTA 1 Open in New Tab",
+        "value": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta2Label",
+        "label": "CTA 2 Label"
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "cta2Link",
+        "label": "CTA 2 Link"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "cta2OpenInNewTab",
+        "label": "CTA 2 Open in New Tab",
+        "value": false
       }
     ]
   },

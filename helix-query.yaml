@@ -14,3 +14,37 @@ indices:
       robots:
         select: head > meta[name="robots"]
         value: attribute(el, "content")
+
+  offers:
+    target: /offers/query-index.json
+    source: /content/capella-hotels
+    include:
+      - '/content/capella-hotels/**/offers/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"], head > title
+        value: attribute(el, 'content')
+      description:
+        select: head > meta[property="og:description"], head > meta[name="description"]
+        value: attribute(el, 'content')      
+      cardEyebrow:
+        select: head > meta[name="cardEyebrow"]
+        value: attribute(el, 'content')
+      cta1Label:
+        select: head > meta[name="cta1Label"]
+        value: attribute(el, 'content')
+      cta1Link:
+        select: head > meta[name="cta1Link"]
+        value: attribute(el, 'content')
+      cta1OpenInNewTab:
+        select: head > meta[name="cta1OpenInNewTab"]
+        value: attribute(el, 'content')
+      cta2Label:
+        select: head > meta[name="cta2Label"]
+        value: attribute(el, 'content')
+      cta2Link:
+        select: head > meta[name="cta2Link"]
+        value: attribute(el, 'content')
+      cta2OpenInNewTab:
+        select: head > meta[name="cta2OpenInNewTab"]
+        value: attribute(el, 'content')
