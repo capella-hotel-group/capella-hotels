@@ -13,21 +13,13 @@ interface Reference {
   _publishUrl?: string | null;
 }
 
-interface CarouselSlide {
-  _path?: string;
-  image?: Reference | null;
-  altText?: string | null;
-}
-
 interface ModalDetails {
-  modalTitle?: string | null;
   modalDescription?: { html?: string | null } | null;
-  modalLocationEyebrow?: string[] | null;
-  categoryTag?: string[] | null;
   modalImageAspectRatioVariant?: string | null;
   modalFeatureImageAsset?: Reference | null;
   modalFeatureImageAssetAltText?: string | null;
-  carouselSlides?: CarouselSlide[] | null;
+  carouselImages?: Array<Reference | null> | null;
+  carouselImagesAltText?: Array<string | null> | null;
   modalCtaUrlType?: string | null;
   modalCtaLabel?: string | null;
   modalCtaUrlInternal?: Reference | null;
@@ -115,7 +107,7 @@ export function cardMatchesFilter(
 ): boolean {
   if (!tag) return true;
   const values = mode === 'destination' ? card.cardLocationTag : card.associatedFilterTags;
-  return Boolean(values?.some((value) => value.trim() === tag));
+  return Boolean(values?.some((value) => normalizeTagId(value) === normalizeTagId(tag)));
 }
 
 export function tagIsWithinRoot(tag: string, rootTag: string): boolean {
@@ -177,7 +169,8 @@ export function resolvePickerPath(value: string, baseUrl: string): string {
 function rowHref(row: Element | undefined, name: string): string {
   if (!row) return '';
   const field = row.querySelector(`[data-aue-prop="${name}"]`) || row.firstElementChild || row;
-  const value = field.querySelector('a')?.getAttribute('href') || textOf(field);
+  const anchor = field.matches('a[href]') ? field : field.querySelector('a[href]');
+  const value = anchor?.getAttribute('href') || textOf(field);
   return resolvePickerPath(value, window.location.origin);
 }
 
@@ -376,24 +369,26 @@ function createModal() {
     if (event.key === 'Escape' && !overlay.hidden) close();
   });
 
-  const open = (details: ModalDetails) => {
+  const open = (card: FilterGridCard, selectedFilterLabel: string) => {
+    const details = card.modalDetails;
+    if (!details) return;
     const content = document.createElement('div');
     content.className = 'filters-grid-modal-content';
     const variant = normalizeChoice(details.modalImageAspectRatioVariant) === 'wide' ? 'wide' : 'square';
     panel.dataset.variant = variant;
-    overlay.setAttribute('aria-label', details.modalTitle || 'Experience details');
+    overlay.setAttribute('aria-label', card.cardHeadline || 'Experience details');
 
     const feature = createImage(
       details.modalFeatureImageAsset,
-      details.modalFeatureImageAssetAltText || details.modalTitle || '',
+      details.modalFeatureImageAssetAltText || card.cardHeadline || '',
     );
-    const carouselImages = (details.carouselSlides || [])
-      .map((slide) => createImage(slide.image, slide.altText || ''))
+    const carouselImages = (details.carouselImages || [])
+      .map((image, index) => createImage(image, details.carouselImagesAltText?.[index] || ''))
       .filter((image): image is HTMLImageElement => Boolean(image));
     const mediaCopy = document.createElement('div');
     mediaCopy.className = 'filters-grid-modal-media-copy';
-    appendText(mediaCopy, 'p', 'filters-grid-modal-eyebrow', labelFromTag(details.modalLocationEyebrow?.[0]));
-    appendText(mediaCopy, 'h2', 'filters-grid-modal-title', details.modalTitle);
+    appendText(mediaCopy, 'p', 'filters-grid-modal-eyebrow', labelFromTag(card.cardLocationTag?.[0]));
+    appendText(mediaCopy, 'h2', 'filters-grid-modal-title', card.cardHeadline);
 
     if (variant === 'square') {
       const gallery = document.createElement('div');
@@ -420,7 +415,7 @@ function createModal() {
 
     const body = document.createElement('div');
     body.className = 'filters-grid-modal-body';
-    appendText(body, 'p', 'filters-grid-modal-category', labelFromTag(details.categoryTag?.[0]));
+    appendText(body, 'p', 'filters-grid-modal-category', selectedFilterLabel);
     if (details.modalDescription?.html) {
       const description = document.createElement('div');
       description.className = 'filters-grid-modal-description';
@@ -450,7 +445,11 @@ function createModal() {
   return { open };
 }
 
-function createCard(card: FilterGridCard, openModal: (details: ModalDetails) => void): HTMLElement {
+function createCard(
+  card: FilterGridCard,
+  openModal: (card: FilterGridCard, selectedFilterLabel: string) => void,
+  selectedFilterLabel: string,
+): HTMLElement {
   const isPopup = normalizeChoice(card.cardClickActionBehavior) === 'popup' && card.modalDetails;
   const href = resolveCardHref(card);
   const action = isPopup ? document.createElement('button') : document.createElement('a');
@@ -459,7 +458,7 @@ function createCard(card: FilterGridCard, openModal: (details: ModalDetails) => 
   if (action instanceof HTMLButtonElement) {
     action.type = 'button';
     action.setAttribute('aria-haspopup', 'dialog');
-    action.addEventListener('click', () => openModal(card.modalDetails as ModalDetails));
+    action.addEventListener('click', () => openModal(card, selectedFilterLabel));
   } else {
     action.href = href || '#';
     if (!href) action.setAttribute('aria-disabled', 'true');
@@ -491,28 +490,19 @@ function createCard(card: FilterGridCard, openModal: (details: ModalDetails) => 
 }
 
 function deriveModes(cards: FilterGridCard[], settings: ModeSetting[]): AuthoredMode[] {
-  const build = ({ key, label, rootTag }: ModeSetting, values: string[]) => ({
-    key,
-    label,
-    filters: [...new Set(values)]
+  return settings.map(({ key, label, rootTag }) => {
+    const values = cards.flatMap(
+      (card) => (key === 'experience' ? card.associatedFilterTags : card.cardLocationTag) || [],
+    );
+    const filters = [...new Set(values.map(normalizeTagId))]
       .filter((tag) => !rootTag || tagIsWithinRoot(tag, rootTag))
       .sort()
-      .map((tag) => ({ label: labelFromTag(tag), tag })),
+      .map((tag) => ({ tag, label: labelFromTag(tag) }));
+    return { key, label, filters };
   });
-  return [
-    build(
-      settings[0] as ModeSetting,
-      cards.flatMap((card) => card.associatedFilterTags || []),
-    ),
-    build(
-      settings[1] as ModeSetting,
-      cards.flatMap((card) => card.cardLocationTag || []),
-    ),
-  ];
 }
 
-function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]): void {
-  const modes = deriveModes(cards, config.modeSettings);
+function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
   let activeMode = modes.some(({ key }) => key === config.defaultMode)
     ? config.defaultMode
     : modes[0]?.key || 'experience';
@@ -551,8 +541,10 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const modal = createModal();
 
   const updateCards = () => {
-    const filtered = cards.filter((card) => cardMatchesFilter(card, activeMode, activeTag));
-    const items = filtered.slice(0, visibleCount).map((card) => createCard(card, modal.open));
+    const filtered = activeTag ? cards.filter((card) => cardMatchesFilter(card, activeMode, activeTag)) : [];
+    const selectedFilterLabel =
+      modes.find(({ key }) => key === activeMode)?.filters.find(({ tag }) => tag === activeTag)?.label || '';
+    const items = filtered.slice(0, visibleCount).map((card) => createCard(card, modal.open, selectedFilterLabel));
     if (!items.length) {
       const empty = document.createElement('li');
       empty.className = 'filters-grid-empty';
@@ -657,12 +649,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   try {
     const config = parseConfig(block);
     const cards = await fetchCards(config.cfRootPath);
-    render(block, config, cards);
+    const modes = deriveModes(cards, config.modeSettings);
+    render(block, config, cards, modes);
   } catch (error) {
     console.error('[filters-grid] Failed to load card content', error);
     const message = document.createElement('p');
     message.className = 'filters-grid-error';
-    message.textContent = 'Unable to load experiences.';
+    message.setAttribute('role', 'alert');
+    message.textContent = error instanceof Error ? error.message : 'Unable to load experiences and filter tags.';
     block.replaceChildren(message);
   } finally {
     block.removeAttribute('aria-busy');

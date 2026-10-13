@@ -2,10 +2,43 @@
 // Rows (authored): 0=autoplay, 1=autoplayInterval, 2=loop, 3=transitionEffect, 4=simulateTouch
 // (config), 5..n=items (see lib/parse.ts for the item field layout)
 import { CarouselController } from './lib/carousel-controller';
-import { buildDotNav, buildSlide } from './lib/dom-builder';
+import { buildDotNav, buildPlayToggle, buildSlide } from './lib/dom-builder';
 import { resolveEffect } from './lib/effects';
 import { parseCarouselConfig, parseItems } from './lib/parse';
 import { initSwipe } from './lib/swipe';
+
+let instanceCount = 0;
+
+/** Background videos loop indefinitely, so the pause control has to stop them too, not just the rotation. */
+function setVideosPlaying(block: HTMLElement, playing: boolean): void {
+  block.querySelectorAll('video').forEach((video) => {
+    if (!playing) {
+      video.pause();
+      return;
+    }
+    if (video.closest('.hero-destination-slide')?.getAttribute('aria-hidden') !== 'false') return;
+    video.play()?.catch(() => {});
+  });
+}
+
+/** APG tabs keyboard support for the dot tablist: arrows move and select, Home/End jump. */
+function initTabKeys(nav: HTMLElement, dots: HTMLButtonElement[], select: (index: number) => void): void {
+  nav.addEventListener('keydown', (event) => {
+    const current = dots.indexOf(document.activeElement as HTMLButtonElement);
+    if (current < 0) return;
+    const rtl = getComputedStyle(nav).direction === 'rtl';
+    let next: number;
+    if (event.key === 'ArrowRight') next = current + (rtl ? -1 : 1);
+    else if (event.key === 'ArrowLeft') next = current - (rtl ? -1 : 1);
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = dots.length - 1;
+    else return;
+    event.preventDefault();
+    const target = (next + dots.length) % dots.length;
+    select(target);
+    dots[target]?.focus();
+  });
+}
 
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
@@ -17,21 +50,22 @@ export default function decorate(block: HTMLElement): void {
   if (items.length === 0) return;
 
   block.innerHTML = '';
+  instanceCount += 1;
+  const idPrefix = `hero-destination-${instanceCount}`;
 
   const track = document.createElement('ul');
   track.className = 'hero-destination-track';
-  items.forEach((item, index) => track.append(buildSlide(item, index)));
+  // The li elements become tabpanels, so the list semantics have to go.
+  track.setAttribute('role', 'presentation');
+  track.setAttribute('aria-live', 'off');
+  items.forEach((item, index) => track.append(buildSlide(item, index, idPrefix)));
 
-  const overlay = document.createElement('div');
-  overlay.className = 'hero-destination-overlay';
-  overlay.setAttribute('aria-hidden', 'true');
-
-  block.append(track, overlay);
+  block.append(track);
 
   const slides = [...track.children] as HTMLElement[];
   const mediaEls = slides.map((slide) => slide.querySelector('.hero-destination-media') as HTMLElement);
-  const dotCount = items.length > 1 ? items.length : 0;
-  const { nav, dots } = buildDotNav(dotCount);
+  const headings = items.length > 1 ? items.map((item) => item.heading) : [];
+  const { nav, dots } = buildDotNav(headings, idPrefix);
 
   const carousel = new CarouselController({
     track,
@@ -44,7 +78,10 @@ export default function decorate(block: HTMLElement): void {
     effect: resolveEffect(transitionEffect),
   });
   dots.forEach((dot, index) => dot.addEventListener('click', () => carousel.goTo(index)));
-  if (dotCount > 0) block.append(nav);
+  if (dots.length > 0) {
+    initTabKeys(nav, dots, (index) => carousel.goTo(index));
+    block.append(nav);
+  }
 
   if (simulateTouch) {
     track.classList.add('hero-destination-track--swipeable');
@@ -52,4 +89,34 @@ export default function decorate(block: HTMLElement): void {
   }
 
   carousel.init();
+
+  if (!carousel.autoplayEnabled) return;
+
+  const toggle = buildPlayToggle();
+  toggle.addEventListener('click', () => {
+    const paused = !carousel.userPaused;
+    if (paused) carousel.pause('user');
+    else carousel.resume('user');
+    toggle.dataset.state = paused ? 'paused' : 'playing';
+    toggle.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
+    setVideosPlaying(block, !paused);
+  });
+  block.append(toggle);
+
+  // Touch taps emulate mouseenter and never fire a matching leave, which would freeze autoplay
+  // permanently, so only real mice take part in hover pausing.
+  block.addEventListener('pointerenter', (event) => {
+    if (event.pointerType === 'mouse') carousel.pause('hover');
+  });
+  block.addEventListener('pointerleave', (event) => {
+    if (event.pointerType === 'mouse') carousel.resume('hover');
+  });
+  block.addEventListener('focusin', (event) => {
+    // The toggle is exempt: focusing it must not add a pause reason that outlives a Play click.
+    if (event.target === toggle) carousel.resume('focus');
+    else carousel.pause('focus');
+  });
+  block.addEventListener('focusout', (event) => {
+    if (!block.contains(event.relatedTarget as Node | null)) carousel.resume('focus');
+  });
 }

@@ -42,21 +42,23 @@
     }
 }
 
-/* Desktop 1024px+ spec: left/right panels split evenly */
+/* Desktop 1200-1919px spec: profile-concept is a fixed 720px (not a fluid 50%) -
+   confirmed via get_metadata, same fixed-per-tier pattern as the 1920 override below */
 @media (width >= 1200px) {
     .culturist-carousel-grid {
-        grid-template-columns: 50% 50%;
-    }
-}
-
-@media (width >= 1200px) {
-    .culturist-carousel-grid {
-        grid-template-columns: 50% minmax(0, 1fr);
+        grid-template-columns: 720px minmax(0, 1fr);
         --culturist-carousel-avatar-size: 160px;
     }
 
     .culturist-carousel-info-col {
         justify-content: center;
+    }
+}
+
+/* Desktop-xl (1920) spec: avatar grows back to the tablet/1920 "2XL" size (160px only applies 1200-1919) */
+@media (width >= 1920px) {
+    .culturist-carousel-grid {
+        --culturist-carousel-avatar-size: 240px;
     }
 }
 
@@ -99,8 +101,15 @@
     display: flex;
     flex-direction: column;
     gap: var(--dimension-spacing-general-2xs);
-    padding: var(--dimension-layout-module-padding-block, 48px) var(--dimension-layout-card-padding-inline, 20px)
-        var(--dimension-layout-module-padding-block-s, 40px) var(--dimension-layout-card-padding-inline, 20px);
+    padding: var(--dimension-layout-module-padding-block) var(--dimension-layout-card-padding-inline)
+        var(--dimension-layout-module-padding-block-s) var(--dimension-layout-card-padding-inline);
+}
+
+/* Tablet: Figma switches the inline padding to the module token, not the card one */
+@media (width >= 768px) {
+    .culturist-carousel-title-block {
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
+    }
 }
 
 /* Desktop only: no padding on the title block */
@@ -153,8 +162,28 @@
     padding-left: var(--dimension-spacing-general-4xl);
 }
 
+/* Figma desktop spec: the heading lines stretch full-width (text stays left-aligned)
+   but the destination dropdown hugs its own content and right-aligns flush with
+   the heading lines' right edge, via align-items:flex-end on the column - no
+   left-padding push like the mobile/tablet variant. */
+@media (width >= 1200px) {
+    .culturist-carousel-destination-wrapper {
+        width: auto;
+        align-self: flex-end;
+    }
+
+    .culturist-carousel-destination-label {
+        padding-left: 0;
+    }
+}
+
 .culturist-carousel-destination-btn:hover {
     opacity: 0.7;
+}
+
+.culturist-carousel-destination-btn:focus-visible {
+    outline: var(--stroke-weight-m, 2px) solid var(--color-text-action-default);
+    outline-offset: 4px;
 }
 
 .culturist-carousel-destination-arrow {
@@ -180,11 +209,13 @@
     position: absolute;
     top: calc(100% + var(--dimension-spacing-general-m));
     left: 0;
-    width: min(319px, calc(100vw - var(--dimension-spacing-general-2xl)));
+
+    /* content column (220/240/263px) + card padding on both sides, per breakpoint */
+    width: min(260px, calc(100vw - var(--dimension-spacing-general-2xl)));
     height: auto;
     box-sizing: border-box;
     z-index: 10;
-    background: var(--color-surface-general-subtle);
+    background: var(--color-surface-page);
     box-shadow:
         0 145px 41px 0 rgba(0, 0, 0, 0),
         0 93px 37px 0 rgba(0, 0, 0, 0.01),
@@ -211,9 +242,27 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(180deg, transparent 40%, var(--color-surface-general-subtle) 100%);
+    background: linear-gradient(180deg, transparent 40%, var(--color-surface-page) 100%);
     pointer-events: none;
     z-index: 1;
+}
+
+@media (width >= 768px) {
+    .culturist-carousel-destination-dropdown {
+        width: min(296px, calc(100vw - var(--dimension-spacing-general-2xl)));
+    }
+}
+
+/* Desktop dropdown is wider and sits on a subtle tinted surface instead of pure white */
+@media (width >= 1200px) {
+    .culturist-carousel-destination-dropdown {
+        width: min(319px, calc(100vw - var(--dimension-spacing-general-2xl)));
+        background: var(--color-surface-general-subtle);
+    }
+
+    .culturist-carousel-destination-dropdown::after {
+        background: linear-gradient(180deg, transparent 40%, var(--color-surface-general-subtle) 100%);
+    }
 }
 
 .culturist-carousel-destination-dropdown.is-open {
@@ -284,15 +333,23 @@
 }
 
 .culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
-    margin-bottom: var(--dimension-spacing-general-l);
+    margin-bottom: var(--dimension-spacing-general-s);
+}
+
+@media (width >= 1200px) {
+    .culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
+        margin-bottom: var(--dimension-spacing-general-l);
+    }
 }
 
 .culturist-carousel-destination-option[aria-selected='true'] {
     color: var(--color-text-action-default);
 }
 
+/* Focus never lands on an option - it stays on the combobox and points here via
+   aria-activedescendant - so the keyboard highlight needs its own class. */
 .culturist-carousel-destination-option:hover,
-.culturist-carousel-destination-option:focus-visible {
+.culturist-carousel-destination-option.is-active {
     color: var(--color-text-action-default);
 }
 
@@ -467,21 +524,10 @@
         align-items: flex-start;
     }
 
-    .culturist-carousel-signature {
-        width: 90px;
-        height: auto;
-    }
-
     .culturist-carousel-content-col {
         order: 1;
         gap: 10px;
         padding-top: var(--dimension-spacing-general-2xs);
-    }
-
-    .culturist-carousel-quote,
-    .culturist-carousel-quote-content {
-        font-size: 18px;
-        line-height: 1.3;
     }
 
     .culturist-carousel-cta {
@@ -493,7 +539,7 @@
 /* Sub-1024 overrides: split background, overlapping avatar, right-aligned dropdown */
 @media (width < 1200px) {
     .culturist-carousel-grid {
-        --culturist-carousel-tablet-inline-inset: 32px;
+        --culturist-carousel-tablet-inline-inset: 24px;
     }
 
     .culturist-carousel-info-col {
@@ -534,9 +580,20 @@
         /* shifts up by exactly half its own height, for an even 50/50 straddle */
         transform: translateY(-50%);
     }
+}
 
+/* Mobile only: Figma's smaller signature variant (tablet/desktop share the 140x70 base size) */
+@media (width < 768px) {
     .culturist-carousel-signature {
-        width: 160px;
+        width: 100px;
+        height: 50px;
+    }
+}
+
+/* Tablet-only: the shared inline inset steps up from 24px (mobile) to 48px */
+@media (width >= 768px) and (width < 1200px) {
+    .culturist-carousel-grid {
+        --culturist-carousel-tablet-inline-inset: 48px;
     }
 }
 
@@ -576,6 +633,7 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
+    gap: 4px;
 }
 
 .culturist-carousel-carousel-track::-webkit-scrollbar {
@@ -590,25 +648,23 @@
     }
 }
 
-/* First card shows in full, second card peeks partially as a scroll affordance */
+/* First card shows in full, second card peeks partially as a scroll affordance.
+   Figma fixes these to literal px (200 mobile / 360 tablet), not a % of the
+   viewport - matches the desktop tier's existing fixed-px pattern below. */
 .culturist-carousel-carousel-card {
     position: relative;
-    flex: 0 0 100%;
+    flex: 0 0 200px;
+    /* mobile's carousel-col keeps a min-height floor (no explicit height), so a
+       stretched cross-size would otherwise inflate width past 200px via aspect-ratio */
+    align-self: flex-start;
     aspect-ratio: 0.8180555556;
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }
 
-@media (width >= 768px) {
-    .culturist-carousel-carousel-card {
-        flex: 0 0 80%;
-    }
-}
-
-/* Below 1024px: two cards evenly split, filling the row with no peek */
 @media (width >= 768px) and (width < 1200px) {
     .culturist-carousel-carousel-card {
-        flex: 0 0 49.5%;
+        flex: 0 0 360px;
     }
 }
 
@@ -650,35 +706,24 @@
     transition: transform 0.3s ease;
 }
 
-/* Dark scrim over the bottom half of the image for title legibility */
+/* Flat scrim over the whole image for title legibility (Figma: flat rgba(0,0,0,0.2) over the entire card) */
 .culturist-carousel-carousel-card::after {
     content: '';
     position: absolute;
-    inset: 50% 0 0;
-    background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 55%));
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
     pointer-events: none;
     z-index: 2;
-    /* transition: inset 0.3s ease, background 0.3s ease; */
 }
 
 @media (hover: hover) {
     .culturist-carousel-card-content:hover .culturist-carousel-card-slot-img {
         transform: scale(1.05);
     }
-
-    .culturist-carousel-carousel-card:has(.culturist-carousel-card-content:hover)::after {
-        inset: 0;
-        background: rgb(0 0 0 / 20%);
-    }
 }
 
 .culturist-carousel-card-content:active .culturist-carousel-card-slot-img {
     transform: scale(1.05);
-}
-
-.culturist-carousel-carousel-card:has(.culturist-carousel-card-content:active)::after {
-    inset: 0;
-    background: rgb(0 0 0 / 20%);
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -770,6 +815,9 @@
 
 @media (width >= 1200px) {
     .culturist-carousel-card-title {
+        top: var(--dimension-layout-card-padding-xl);
+        left: var(--dimension-layout-card-padding-2xl);
+        right: var(--dimension-layout-card-padding-2xl);
         font-size: var(--typography-fontsize-heading-h1);
         line-height: var(--typography-line-height-heading-h1); /* 100% */
     }
@@ -780,11 +828,7 @@
     /* Inset lives on the non-scrolling column so it stays put while the track scrolls */
     .culturist-carousel-carousel-col {
         background-color: var(--color-surface-general-light);
-        padding: 0 0 32px var(--culturist-carousel-tablet-inline-inset);
-    }
-
-    .culturist-carousel-carousel-card {
-        flex: 0 0 45%;
+        padding: 0 0 48px var(--culturist-carousel-tablet-inline-inset);
     }
 
     .culturist-carousel-carousel-prev,
@@ -793,158 +837,9 @@
     }
 }
 
-/* Mobile-only fine tuning */
-@media (width < 768px) {
-    /* Show 2 cards in view: first full, second ~90% visible */
-    .culturist-carousel-carousel-card {
-        flex: 0 0 52.5%;
-    }
-}
-
-.culturist-carousel-card-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgb(0 0 0 / 65%);
-    padding: var(--dimension-spacing-general-m);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition:
-        opacity 0.2s ease,
-        visibility 0s linear 0.2s;
-}
-
-.culturist-carousel-card-modal.is-open {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transition: opacity 0.2s ease;
-}
-
-@media (width >= 1200px) {
-    .culturist-carousel-card-modal {
-        padding: var(--dimension-spacing-general-xl);
-    }
-}
-
-.culturist-carousel-card-modal-panel {
-    position: relative;
-    width: min(100%, 26rem);
-    max-height: min(85vh, 34rem);
-    overflow: auto;
-    background: var(--color-surface-primary-default);
-    border-radius: var(--corner-radius-xs);
-    box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
-    transform: scale(0.96) translateY(8px);
-    transition: transform 0.2s ease;
-}
-
-.culturist-carousel-card-modal.is-open .culturist-carousel-card-modal-panel {
-    transform: scale(1) translateY(0);
-}
-
-@media (width >= 768px) and (width < 1200px) {
-    .culturist-carousel-card-modal-panel {
-        width: min(100%, 32rem);
-        max-height: min(80vh, 40rem);
-    }
-}
-
-@media (width >= 1200px) {
-    .culturist-carousel-card-modal-panel {
-        width: min(100%, 38rem);
-        max-height: min(80vh, 46rem);
-    }
-}
-
-/* No scrollbar-width/scrollbar-color here: they switch Chrome to the native bar and re-add the arrows */
-.culturist-carousel-card-modal-panel::-webkit-scrollbar {
-    width: 10px;
-}
-
-/* Drop the stepper arrows, keep the track and thumb */
-.culturist-carousel-card-modal-panel::-webkit-scrollbar-button {
-    display: none;
-    width: 0;
-    height: 0;
-}
-
-.culturist-carousel-card-modal-panel::-webkit-scrollbar-track {
-    background: rgb(0 0 0 / 12%);
-}
-
-.culturist-carousel-card-modal-panel::-webkit-scrollbar-thumb {
-    background: rgb(27 54 75 / 70%);
-    border-radius: 999px;
-}
-
-.culturist-carousel-card-modal-panel::-webkit-scrollbar-thumb:hover {
-    background: rgb(27 54 75 / 90%);
-}
-
-.culturist-carousel-card-modal-close {
-    position: absolute;
-    top: var(--dimension-spacing-general-xs);
-    right: var(--dimension-spacing-general-xs);
-    z-index: 1;
-    width: 2rem;
-    height: 2rem;
-    border: 0;
-    border-radius: var(--corner-radius-round);
-    background: rgb(255 255 255 / 85%);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.culturist-carousel-card-modal-close:hover,
-.culturist-carousel-card-modal-close:focus-visible {
-    background: rgb(255 255 255 / 100%);
-}
-
-.culturist-carousel-card-modal-close::before {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 100%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M1 1L13 13M13 1L1 13' stroke='%231B364B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-.culturist-carousel-card-modal-image {
-    display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-}
-
-.culturist-carousel-card-modal-title {
-    margin: 0;
-    padding: var(--dimension-spacing-general-m) var(--dimension-spacing-general-l);
-    font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h4);
-    line-height: var(--typography-line-height-heading-h4);
-    color: var(--color-text-main-heading);
-    overflow-wrap: break-word;
-}
-
-/* No image means the title is the first thing in the panel; clear the floating close button */
-.culturist-carousel-card-modal-panel--no-image .culturist-carousel-card-modal-title {
-    padding-top: calc(2rem + var(--dimension-spacing-general-l));
-}
-
-body.culturist-carousel-modal-open {
-    overflow: hidden;
-}
-
 @media (width >= 1200px) {
     .culturist-carousel-grid {
-        grid-template-columns: 50% minmax(0, 1fr);
+        grid-template-columns: 720px minmax(0, 1fr);
     }
 
     .culturist-carousel-info-col {
@@ -967,5 +862,13 @@ body.culturist-carousel-modal-open {
 
     .culturist-carousel-carousel-next {
         right: 20px;
+    }
+}
+
+/* profile-concept is a fixed 768px (40vw) at 1920, not half the viewport - without this the
+   title-block's right-aligned dropdown gets an exaggerated gap past the 50%-wide math above */
+@media (width >= 1920px) {
+    .culturist-carousel-grid {
+        grid-template-columns: var(--dimension-layout-40vw) minmax(0, var(--dimension-layout-60vw));
     }
 }

@@ -718,6 +718,7 @@
         "name": "subtitle",
         "label": "Section Description",
         "valueType": "string",
+        "required": true,
         "value": ""
       }
     ]
@@ -730,6 +731,7 @@
         "name": "location",
         "label": "Card Eyebrow",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -737,6 +739,7 @@
         "name": "title",
         "label": "Card Headline",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -752,7 +755,6 @@
         "name": "imageAlt",
         "label": "Asset Alt Text",
         "valueType": "string",
-        "required": true,
         "value": ""
       },
       {
@@ -760,6 +762,7 @@
         "name": "ctaName",
         "label": "Card CTA Label",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -825,6 +828,7 @@
         "name": "title",
         "label": "Title",
         "valueType": "string",
+        "required": true,
         "value": ""
       },
       {
@@ -832,27 +836,8 @@
         "name": "body",
         "label": "Body",
         "valueType": "string",
+        "required": true,
         "value": ""
-      },
-      {
-        "component": "text",
-        "name": "footerCta",
-        "label": "Footer CTA Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "name": "footerCta_link",
-        "label": "Footer CTA URL",
-        "valueType": "string"
-      },
-      {
-        "component": "boolean",
-        "name": "footerCta_openInNewTab",
-        "label": "Open in new tab",
-        "valueType": "boolean",
-        "value": false
       }
     ]
   },
@@ -897,6 +882,7 @@
         "component": "reference",
         "name": "mediaAsset",
         "label": "Media",
+        "description": "Max 10 seconds, WebM or MP4. The size of the video should be within 1.5MB & upto 1080 pixels",
         "valueType": "string",
         "multi": false,
         "required": true
@@ -906,7 +892,16 @@
         "name": "mediaAssetAlt",
         "label": "Media Alt Text",
         "valueType": "string",
+        "required": true,
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Enable Dark Image Overlay",
+        "description": "Tints this media so overlaid text stays legible. Does not affect the thumbnail.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -1220,7 +1215,8 @@
       {
         "component": "aem-content",
         "name": "cfRootPath",
-        "label": "Content Fragment Root Path",
+        "label": "Content Fragment's Root Path",
+        "description": "Select a Content Fragment folder or path prefix. Only matching published cards are requested; a blank path requests all cards.",
         "valueType": "string",
         "required": true
       },
@@ -1899,14 +1895,16 @@
         "label": "Title",
         "description": "One paragraph per line. The second line is indented, as in the design.",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "richtext",
         "name": "body",
         "label": "Description",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
@@ -1947,6 +1945,69 @@
         "label": "Open in new tab",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "reference",
+        "name": "thumbnails_image1",
+        "label": "Gallery Thumbnail 1",
+        "description": "Optional static supporting image. Thumbnails do not control the primary media carousel.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnails_image1Alt",
+        "label": "Gallery Thumbnail 1 Alt Text",
+        "valueType": "string",
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "thumbnails_image1"
+          }
+        }
+      },
+      {
+        "component": "reference",
+        "name": "thumbnails_image2",
+        "label": "Gallery Thumbnail 2",
+        "description": "Optional static supporting image.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnails_image2Alt",
+        "label": "Gallery Thumbnail 2 Alt Text",
+        "valueType": "string",
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "thumbnails_image2"
+          }
+        }
+      },
+      {
+        "component": "reference",
+        "name": "thumbnails_image3",
+        "label": "Gallery Thumbnail 3",
+        "description": "Optional static supporting image.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnails_image3Alt",
+        "label": "Gallery Thumbnail 3 Alt Text",
+        "valueType": "string",
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "thumbnails_image3"
+          }
+        }
       }
     ]
   },
@@ -1966,22 +2027,8 @@
         "name": "imageAlt",
         "label": "Image Alt Text",
         "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "name": "thumbnail",
-        "label": "Thumbnail",
-        "description": "Optional. The image itself is used when this is empty.",
-        "valueType": "string",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "thumbnailAlt",
-        "label": "Thumbnail Alt Text",
-        "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "boolean",
@@ -2001,41 +2048,47 @@
         "name": "photo",
         "label": "Portrait",
         "valueType": "string",
-        "multi": false
+        "multi": false,
+        "required": true
       },
       {
         "component": "text",
         "name": "photoAlt",
         "label": "Portrait Alt Text",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "name": "personName",
         "label": "Name",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "name": "role",
         "label": "Role",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "name": "cta",
         "label": "CTA Label",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "aem-content",
         "name": "cta_link",
         "label": "CTA URL",
-        "valueType": "string"
+        "valueType": "string",
+        "required": true
       },
       {
         "component": "boolean",
@@ -2299,8 +2352,15 @@
         "component": "text",
         "name": "ctas_primaryCtaText",
         "label": "Primary CTA Label",
+        "description": "Required once a URL is set. Without a label the button is not rendered on the page.",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "ctas_primaryCta"
+          }
+        }
       },
       {
         "component": "boolean",
@@ -2319,8 +2379,15 @@
         "component": "text",
         "name": "ctas_secondaryCtaText",
         "label": "Secondary CTA Label",
+        "description": "Required once a URL is set. Without a label the button is not rendered on the page.",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "ctas_secondaryCta"
+          }
+        }
       },
       {
         "component": "boolean",

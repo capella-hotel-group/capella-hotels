@@ -80,14 +80,16 @@
           "label": "Title",
           "description": "One paragraph per line. The second line is indented, as in the design.",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "richtext",
           "name": "body",
           "label": "Description",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
@@ -128,6 +130,63 @@
           "label": "Open in new tab",
           "valueType": "boolean",
           "value": false
+        },
+        {
+          "component": "reference",
+          "name": "thumbnails_image1",
+          "label": "Gallery Thumbnail 1",
+          "description": "Optional static supporting image. Thumbnails do not control the primary media carousel.",
+          "valueType": "string",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "name": "thumbnails_image1Alt",
+          "label": "Gallery Thumbnail 1 Alt Text",
+          "valueType": "string",
+          "value": "",
+          "required": true,
+          "condition": {
+            "!!": { "var": "thumbnails_image1" }
+          }
+        },
+        {
+          "component": "reference",
+          "name": "thumbnails_image2",
+          "label": "Gallery Thumbnail 2",
+          "description": "Optional static supporting image.",
+          "valueType": "string",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "name": "thumbnails_image2Alt",
+          "label": "Gallery Thumbnail 2 Alt Text",
+          "valueType": "string",
+          "value": "",
+          "required": true,
+          "condition": {
+            "!!": { "var": "thumbnails_image2" }
+          }
+        },
+        {
+          "component": "reference",
+          "name": "thumbnails_image3",
+          "label": "Gallery Thumbnail 3",
+          "description": "Optional static supporting image.",
+          "valueType": "string",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "name": "thumbnails_image3Alt",
+          "label": "Gallery Thumbnail 3 Alt Text",
+          "valueType": "string",
+          "value": "",
+          "required": true,
+          "condition": {
+            "!!": { "var": "thumbnails_image3" }
+          }
         }
       ]
     },
@@ -147,22 +206,8 @@
           "name": "imageAlt",
           "label": "Image Alt Text",
           "valueType": "string",
-          "value": ""
-        },
-        {
-          "component": "reference",
-          "name": "thumbnail",
-          "label": "Thumbnail",
-          "description": "Optional. The image itself is used when this is empty.",
-          "valueType": "string",
-          "multi": false
-        },
-        {
-          "component": "text",
-          "name": "thumbnailAlt",
-          "label": "Thumbnail Alt Text",
-          "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "boolean",
@@ -182,41 +227,47 @@
           "name": "photo",
           "label": "Portrait",
           "valueType": "string",
-          "multi": false
+          "multi": false,
+          "required": true
         },
         {
           "component": "text",
           "name": "photoAlt",
           "label": "Portrait Alt Text",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "name": "personName",
           "label": "Name",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "name": "role",
           "label": "Role",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "name": "cta",
           "label": "CTA Label",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "aem-content",
           "name": "cta_link",
           "label": "CTA URL",
-          "valueType": "string"
+          "valueType": "string",
+          "required": true
         },
         {
           "component": "boolean",
