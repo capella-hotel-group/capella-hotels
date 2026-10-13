@@ -194,6 +194,8 @@ export default function decorate(block: HTMLElement): void {
     const imageLink = document.createElement('a');
     imageLink.className = 'image-link';
     imageLink.href = ctaHref;
+    // Otherwise the name is every card's alt text concatenated; its purpose is the CTA's.
+    if (ctaText) imageLink.setAttribute('aria-label', ctaText);
     imageLink.setAttribute('data-testid', 'text-with-image-image-link');
     if (openInNewTab) imageLink.target = '_blank';
     imageLink.append(...imageCol.childNodes);
