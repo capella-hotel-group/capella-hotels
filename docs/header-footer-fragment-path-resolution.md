@@ -7,6 +7,13 @@ Both blocks honor page metadata first. Their fallback behavior differs:
 - The header tries a `nav` fragment beside the current page, then the site/language-derived nav, then root `/nav`.
 - The footer derives a `/footer` path from the current site/language segments.
 
+When a `nav`, `header`, or `footer` page is opened inside Universal Editor,
+the page runtime skips loading both site-wide fragments and hides the empty
+header/footer landmarks. The authored content in `main` continues to decorate
+normally, without a duplicate fragment above or below it. This also applies to
+AEM author URLs ending in `.html`. Other pages in UE and standalone preview/live
+pages keep the normal header/footer loading behavior.
+
 ---
 
 ## Option 1 — Metadata (happy path)

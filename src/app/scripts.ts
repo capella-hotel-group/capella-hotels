@@ -10,6 +10,7 @@ import {
   loadSections,
   loadCSS,
 } from './aem.js';
+import { isUniversalEditor } from '@/utils/env';
 
 /**
  * Moves all the attributes from a given elmenet to another given element.
@@ -230,8 +231,16 @@ async function loadEager(doc: Document): Promise<void> {
  * @param {Element} doc The container element
  */
 async function loadLazy(doc: Document): Promise<void> {
+  // UE fragment pages already contain the authored header/footer content in main.
+  // Skip site-wide chrome before fetching it to prevent duplicates and flashing;
+  // regular UE pages and standalone preview/live pages keep their chrome.
+  const isFragmentAuthoring =
+    isUniversalEditor() && /\/(?:nav|header|footer)(?:\.html)?\/?$/.test(window.location.pathname);
   const header = doc.querySelector<HTMLElement>('header');
-  if (header) loadHeader(header);
+  if (header) {
+    if (isFragmentAuthoring) header.hidden = true;
+    else loadHeader(header);
+  }
 
   const main = doc.querySelector('main');
   if (main) await loadSections(main);
@@ -241,7 +250,10 @@ async function loadLazy(doc: Document): Promise<void> {
   if (hash && element) element.scrollIntoView();
 
   const footer = doc.querySelector<HTMLElement>('footer');
-  if (footer) loadFooter(footer);
+  if (footer) {
+    if (isFragmentAuthoring) footer.hidden = true;
+    else loadFooter(footer);
+  }
 
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
