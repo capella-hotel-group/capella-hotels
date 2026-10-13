@@ -24,10 +24,6 @@
     height: 32px;
 }
 
-.footer-social-list .icon img {
-    transform: scale(1.2);
-}
-
 @media (width >= 768px) {
     .footer-social {
         min-width: 0;

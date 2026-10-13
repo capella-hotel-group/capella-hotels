@@ -340,8 +340,8 @@ body.newsletter-modal-open {
 .newsletter-inline-chevron {
     position: absolute;
     inset-inline-end: 0;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
 }
 
