@@ -30,14 +30,21 @@ function picture(src: string, alt = ''): string {
   return `<picture><img src="${src}" alt="${alt}"></picture>`;
 }
 
-function mediaItem(index: number, options: { editor?: boolean; video?: boolean; overlay?: boolean } = {}): string {
+function mediaItem(
+  index: number,
+  options: { editor?: boolean; video?: boolean; overlay?: boolean; thumbAlt?: boolean; mediaAlt?: boolean } = {},
+): string {
   const attributes = options.editor
     ? ` data-aue-resource="urn:item-${index}" data-aue-model="destination-introduction-image" data-aue-type="component"`
     : '';
+  const mediaAlt = options.mediaAlt === false ? '' : `${options.video ? 'Video' : 'Media'} ${index}`;
+  // field collapse renders a non-image reference as a link whose text is the alt, or the path without one
+  const videoPath = `/content/dam/video${index}.mp4`;
   const media = options.video
-    ? `<a href="/content/dam/video${index}.mp4">/content/dam/video${index}.mp4</a><p>Video ${index}</p>`
-    : picture(`media${index}.jpg`, `Media ${index}`);
-  return `<div${attributes}><div>${picture(`thumb${index}.jpg`, `Thumb ${index}`)}</div><div>${options.video ? 'video' : 'image'}</div><div>${media}</div><div>${options.overlay ? 'true' : 'false'}</div></div>`;
+    ? `<a href="${videoPath}">${mediaAlt || videoPath}</a>`
+    : picture(`media${index}.jpg`, mediaAlt);
+  const thumb = picture(`thumb${index}.jpg`, options.thumbAlt === false ? '' : `Thumb ${index}`);
+  return `<div${attributes}><div>${thumb}</div><div>${options.video ? 'video' : 'image'}</div><div>${media}</div><div>${options.overlay ? 'true' : 'false'}</div></div>`;
 }
 
 function items(count: number, editor = false): string {
@@ -98,6 +105,25 @@ describe('destination-introduction', () => {
     expect(slides[1]!.querySelector('video')?.getAttribute('aria-label')).toBe('Video 2');
   });
 
+  it('labels a thumbnail without its own alt with the media alt', () => {
+    const block = build(
+      COPY_ROWS +
+        mediaItem(1, { video: true, thumbAlt: false }) +
+        mediaItem(2, { thumbAlt: false }) +
+        mediaItem(3, { video: true, thumbAlt: false, mediaAlt: false }),
+    );
+
+    decorate(block);
+
+    expect(
+      [...block.querySelectorAll('.destination-introduction-thumb')].map((thumb) => thumb.getAttribute('aria-label')),
+    ).toEqual(['Video 1', 'Media 2', 'Show media 3']);
+    const videos = block.querySelectorAll(`${REAL_SLIDES} video`);
+    expect(videos[0]?.getAttribute('aria-label')).toBe('Video 1');
+    // without an authored alt the link text is the asset path, which is no description
+    expect(videos[1]?.hasAttribute('aria-label')).toBe(false);
+  });
+
   it.each([
     ['published content', false],
     ['editor content', true],
@@ -130,6 +156,39 @@ describe('destination-introduction', () => {
     expect(block.querySelector('.destination-introduction-eyebrow')?.textContent).toBe('THE DESTINATION');
     expect(block.querySelector('.destination-introduction-body')?.textContent).toBe('Body copy');
     expect(block.querySelector('a[href="/discover"]')).toBeNull();
+  });
+
+  it.each([
+    ['separate paragraphs', '<p>UNVEIL JUNGLE</p><p>BETWEEN</p><p>SKY AND <em>SEA</em></p>'],
+    ['soft line breaks', '<p>UNVEIL JUNGLE<br>BETWEEN<br>SKY AND <em>SEA</em></p>'],
+  ])('renders a title written as %s as an h2 heading with one span per line', (_label, title) => {
+    const rows = COPY_ROWS.replace('<p>TITLE</p>', title);
+    const block = build(rows.replace('<div><div><p>', '<div><div data-aue-prop="title"><p>') + items(1));
+
+    decorate(block);
+
+    const heading = block.querySelector('.destination-introduction-title');
+    expect(heading?.tagName).toBe('H2');
+    expect(heading?.querySelector('p')).toBeNull();
+    expect([...(heading?.children ?? [])].map((line) => [line.tagName, line.textContent])).toEqual([
+      ['SPAN', 'UNVEIL JUNGLE'],
+      ['SPAN', 'BETWEEN'],
+      ['SPAN', 'SKY AND SEA'],
+    ]);
+    expect(heading?.querySelector('em')?.textContent).toBe('SEA');
+    expect(heading?.textContent?.replace(/\s+/g, ' ').trim()).toBe('UNVEIL JUNGLE BETWEEN SKY AND SEA');
+    expect(heading?.getAttribute('data-aue-prop')).toBe('title');
+  });
+
+  it('keeps a title the author already formatted as a heading', () => {
+    const block = build(COPY_ROWS.replace('<p>TITLE</p>', '<h3>TITLE</h3>') + items(1));
+
+    decorate(block);
+
+    const title = block.querySelector('.destination-introduction-title');
+    expect(title?.tagName).toBe('DIV');
+    expect(title?.querySelectorAll('h2, h3')).toHaveLength(1);
+    expect(title?.querySelector('h3')?.textContent).toBe('TITLE');
   });
 
   it('adds inert clones around the first three items for a continuous mobile loop', () => {
