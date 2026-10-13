@@ -85,6 +85,7 @@ export class CarouselController {
   pause(reason: CarouselPauseReason): void {
     this.pauseReasons.add(reason);
     this.stop();
+    this.syncLiveRegion();
   }
 
   resume(reason: CarouselPauseReason): void {
@@ -98,23 +99,38 @@ export class CarouselController {
   };
 
   private setActive(index: number): void {
-    this.slides[this.activeIndex]?.setAttribute('aria-hidden', 'true');
-    this.dots[this.activeIndex]?.classList.remove('is-active');
-    this.dots[this.activeIndex]?.removeAttribute('aria-selected');
+    const previousSlide = this.slides[this.activeIndex];
+    const previousDot = this.dots[this.activeIndex];
+    previousSlide?.setAttribute('aria-hidden', 'true');
+    previousSlide?.removeAttribute('tabindex');
+    previousDot?.classList.remove('is-active');
+    previousDot?.setAttribute('aria-selected', 'false');
+    if (previousDot) previousDot.tabIndex = -1;
 
     this.activeIndex = index;
 
-    this.slides[this.activeIndex]?.setAttribute('aria-hidden', 'false');
-    this.dots[this.activeIndex]?.classList.add('is-active');
-    this.dots[this.activeIndex]?.setAttribute('aria-selected', 'true');
+    const activeSlide = this.slides[this.activeIndex];
+    const activeDot = this.dots[this.activeIndex];
+    activeSlide?.setAttribute('aria-hidden', 'false');
+    activeSlide?.setAttribute('tabindex', '0');
+    activeDot?.classList.add('is-active');
+    activeDot?.setAttribute('aria-selected', 'true');
+    if (activeDot) activeDot.tabIndex = 0;
 
     this.effect.render(this.track, this.mediaEls, this.activeIndex);
   }
 
   private start(): void {
-    if (!this.canAutoplay || this.finished || this.pauseReasons.size > 0) return;
-    this.stop();
-    this.timerId = setInterval(() => this.tick(), this.intervalMs);
+    if (this.canAutoplay && !this.finished && this.pauseReasons.size === 0) {
+      this.stop();
+      this.timerId = setInterval(() => this.tick(), this.intervalMs);
+    }
+    this.syncLiveRegion();
+  }
+
+  /** Auto-rotation must stay silent; once stopped, slide changes are user-driven so announce them. */
+  private syncLiveRegion(): void {
+    this.track.setAttribute('aria-live', this.timerId === null ? 'polite' : 'off');
   }
 
   /** Advances to the next slide; when loop is disabled, stops autoplay after the last slide. */
@@ -123,6 +139,7 @@ export class CarouselController {
     if (isLastSlide && !this.loop) {
       this.finished = true;
       this.stop();
+      this.syncLiveRegion();
       return;
     }
     this.setActive((this.activeIndex + 1) % this.slides.length);

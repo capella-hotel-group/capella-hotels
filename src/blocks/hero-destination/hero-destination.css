@@ -57,6 +57,12 @@
     pointer-events: none;
 }
 
+/* The active panel is focusable because it holds no focusable content of its own. */
+.hero-destination-slide:focus-visible {
+    outline: 2px solid var(--color-icon-on-action-default);
+    outline-offset: -4px;
+}
+
 .hero-destination-media {
     position: absolute;
     inset: 0;
@@ -81,7 +87,9 @@
 }
 
 /* Figma's Overlay layer sits above the background image but below the Content frame, so the
-   scrim belongs to the media and fades in and out with its slide. */
+   scrim belongs to the media and fades in and out with its slide. Kept at Figma's 40% by
+   design decision: that measures 2.85:1 against white large-scale text over a fully white
+   frame, short of SC 1.4.3's 3:1 — 45% would be the compliant minimum. */
 .hero-destination-media::after {
     content: '';
     position: absolute;
