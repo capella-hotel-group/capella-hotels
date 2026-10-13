@@ -109,26 +109,53 @@ function splitOnLineBreaks(container: Element): void {
   });
 }
 
-/** Alt text collapses into the cell of the field it suffixes, arriving as a sibling of the asset. */
-function altOf(cell?: Element | null): string {
-  const authored = cell?.querySelector('img')?.getAttribute('alt');
-  if (authored) return authored;
-  // a video cell holds only its link, whose text is the asset URL and not a description
-  const sibling = [...(cell?.children || [])].find(
-    (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a'),
-  );
-  return textOf(sibling);
+/**
+ * Promotes the title wrapper to an `<h2>` so assistive tech announces it as a heading.
+ * A heading only accepts phrasing content, so each authored line becomes a `<span>`.
+ * A title the author already formatted as a heading keeps its own element.
+ */
+function asHeading(title: HTMLElement): HTMLElement {
+  if (title.querySelector('h1, h2, h3, h4, h5, h6')) return title;
+
+  const heading = document.createElement('h2');
+  heading.className = title.className;
+  moveInstrumentation(title, heading);
+  [...title.childNodes].forEach((node) => {
+    if (node instanceof HTMLElement && node.matches('p, div')) {
+      const line = document.createElement('span');
+      line.append(...node.childNodes);
+      // block spans render no whitespace between them, but the accessible name needs it
+      if (heading.lastElementChild) heading.append(' ');
+      heading.append(line);
+    } else {
+      heading.append(node);
+    }
+  });
+  return heading;
 }
 
-function buildPicture(cell: Element | null | undefined): HTMLElement | null {
+/**
+ * Field collapse folds a `{field}Alt` value into the asset it suffixes: an image
+ * reference carries it as the `<img>` alt, any other asset reference (a video) as the
+ * text of its link, which falls back to the asset path when no alt was authored.
+ */
+function altOf(cell?: Element | null): string {
+  const imageAlt = cell?.querySelector('img')?.getAttribute('alt')?.trim();
+  if (imageAlt) return imageAlt;
+  const link = cell?.querySelector('a');
+  const linkText = textOf(link);
+  return linkText && linkText !== link?.getAttribute('href') && !/^(\/|https?:)/.test(linkText) ? linkText : '';
+}
+
+function buildPicture(cell: Element | null | undefined, alt: string): HTMLElement | null {
   const picture = cell?.querySelector('picture');
   if (!picture) return null;
   const img = picture.querySelector('img');
-  if (img && !img.getAttribute('alt')) img.setAttribute('alt', altOf(cell));
+  if (img && !img.getAttribute('alt')) img.setAttribute('alt', alt);
   return picture;
 }
 
-function buildVideo(cell: Element | null | undefined, poster: string): HTMLVideoElement | null {
+function buildVideo(cell: Element | null | undefined, poster: string, alt: string): HTMLVideoElement | null {
   const href = cell?.querySelector('a')?.getAttribute('href');
   if (!href) return null;
 
@@ -141,8 +168,7 @@ function buildVideo(cell: Element | null | undefined, poster: string): HTMLVideo
   video.playsInline = true;
   video.preload = 'none';
   if (poster) video.poster = poster;
-  const description = altOf(cell);
-  if (description) video.setAttribute('aria-label', description);
+  if (alt) video.setAttribute('aria-label', alt);
 
   const source = document.createElement('source');
   source.src = resolveDAMUrl(href);
@@ -172,8 +198,11 @@ function buildSlide(row: HTMLElement, index: number): Slide {
   const mediaCell = cells.length > 1 ? cells[ITEM.mediaAsset] : thumbnailCell;
   const isVideo = textOf(cells[ITEM.media]).toLowerCase() === 'video';
   const poster = thumbnail?.querySelector('img')?.getAttribute('src') || '';
-  const video = isVideo ? buildVideo(mediaCell, poster) : null;
-  const picture = isVideo ? null : buildPicture(mediaCell);
+  // read both alts while the assets are still in their cells
+  const thumbnailAlt = altOf(thumbnailCell);
+  const mediaAlt = altOf(mediaCell);
+  const video = isVideo ? buildVideo(mediaCell, poster, mediaAlt) : null;
+  const picture = isVideo ? null : buildPicture(mediaCell, mediaAlt);
   const media = video ?? picture;
   if (media) element.append(media);
   // the tint belongs to the hero media, so the thumbnail clone never inherits it
@@ -186,12 +215,8 @@ function buildSlide(row: HTMLElement, index: number): Slide {
     // slide cannot, so it falls back to a numbered button
     thumbnail: thumbnail ?? picture,
     authoredThumbnail: !!thumbnail,
-    // the media has already left its cell, so read the label from the built element
-    label:
-      altOf(thumbnailCell) ||
-      picture?.querySelector('img')?.getAttribute('alt') ||
-      video?.getAttribute('aria-label') ||
-      `Show media ${index + 1}`,
+    // a thumbnail without its own alt describes the media it opens
+    label: thumbnailAlt || mediaAlt || `Show media ${index + 1}`,
   };
 }
 
@@ -261,8 +286,9 @@ export default function decorate(block: HTMLElement): void {
   const header = document.createElement('div');
   header.className = 'destination-introduction-header';
   const eyebrow = buildCopy(copyRows[0], COPY_FIELDS[0]);
-  const title = buildCopy(copyRows[1], COPY_FIELDS[1]);
-  if (title) splitOnLineBreaks(title);
+  const titleCopy = buildCopy(copyRows[1], COPY_FIELDS[1]);
+  if (titleCopy) splitOnLineBreaks(titleCopy);
+  const title = titleCopy ? asHeading(titleCopy) : null;
   if (eyebrow) header.append(eyebrow);
   if (title) header.append(title);
 

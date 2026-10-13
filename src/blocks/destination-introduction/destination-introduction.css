@@ -68,6 +68,7 @@
     }
 
     .destination-introduction-title {
+        margin: 0;
         font-family: var(--type-font-family-heading);
         font-size: var(--typography-fontsize-heading-h1);
         font-weight: var(--type-font-weight-heading);
@@ -78,6 +79,7 @@
         text-box-edge: cap alphabetic;
 
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
