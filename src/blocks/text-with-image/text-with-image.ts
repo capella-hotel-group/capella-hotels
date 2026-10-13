@@ -174,6 +174,13 @@ export default function decorate(block: HTMLElement): void {
         stack.append(layer);
       });
 
+      stack.addEventListener('pointerover', (event) => {
+        const layer = (event.target as Element | null)?.closest?.('.gift-card-layer');
+        if (!layer || !stack.contains(layer) || layer.classList.contains('is-raised')) return;
+        stack.querySelector('.gift-card-layer.is-raised')?.classList.remove('is-raised');
+        layer.classList.add('is-raised');
+      });
+
       imageCol.append(stack);
     }
   } else if (pictureEl) {

@@ -39,3 +39,22 @@ export function buildDotNav(count: number): { nav: HTMLDivElement; dots: HTMLBut
 
   return { nav, dots };
 }
+
+/**
+ * Pause/play control required by WCAG 2.2 SC 2.2.2. Must be a sibling of the dot nav, never a
+ * child: that nav is a `role="tablist"`, which may only contain tabs.
+ */
+export function buildPlayToggle(): HTMLButtonElement {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'hero-destination-toggle';
+  toggle.dataset.state = 'playing';
+  toggle.setAttribute('aria-label', 'Pause slideshow');
+
+  const icon = document.createElement('span');
+  icon.className = 'hero-destination-toggle-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  toggle.append(icon);
+
+  return toggle;
+}

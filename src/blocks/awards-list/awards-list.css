@@ -21,15 +21,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--dimension-layout-module-gutter-l);
+    /* --dimension-layout-module-gutter-2xl already steps 48/64/64 (mobile/tablet/desktop) */
+    gap: var(--dimension-layout-module-gutter-2xl);
     max-width: 1440px;
     width: 100%;
-}
-
-@media (width >= 768px) {
-    .awards-list-content {
-        gap: var(--dimension-layout-module-gutter-2xl);
-    }
 }
 
 .awards-list-header {

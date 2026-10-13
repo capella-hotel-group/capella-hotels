@@ -142,7 +142,7 @@ At mobile the slider SHALL be full width with no side inset, so that the followi
 
 Text and spacing SHALL be expressed using the project's design token custom properties rather than literal values wherever a matching token exists, so that the block follows the responsive token scale automatically.
 
-The eyebrow SHALL use the body font at the body M size and MD line height. The title SHALL use the heading font at the H1 size and line height. The body copy SHALL use the subtitle font at the subtitle size and line height. Headings and eyebrow SHALL use the main heading text colour and body copy the main body text colour. The block background SHALL use the subtle general surface colour.
+The eyebrow SHALL use the Figma `body/eyebrow` text style: the body font with the eyebrow size, line height and letter spacing tokens, trimmed to the cap height. The title SHALL use the heading font at the H1 size and line height. The body copy SHALL use the subtitle font at the subtitle size and line height. Headings and eyebrow SHALL use the main heading text colour and body copy the main body text colour. The block background SHALL use the subtle general surface colour.
 
 #### Scenario: Title follows the responsive scale
 
