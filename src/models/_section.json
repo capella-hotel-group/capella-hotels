@@ -161,7 +161,8 @@
         "footer-social-link",
         "footer-links",
         "footer-legal",
-        "content-listing"
+          "content-listing",
+          "page-listing"
       ]
     },
     {
