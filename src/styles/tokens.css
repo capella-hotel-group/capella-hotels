@@ -467,6 +467,9 @@
         --dimension-layout-module-padding-inline-s: 120px;
         --dimension-layout-module-padding-inline-l: 378px;
 
+        /* dimension / layout / carousel (desktop-xl) */
+        --dimension-layout-carousel-item-gap-xl: 48px;
+
         /* dimension / layout (desktop-xl "40%vw"/"60%vw"; "50%vw" is not on the
            1920 artboard, but both siblings resolve to an exact share of the
            viewport there, so it follows the same rule) */
