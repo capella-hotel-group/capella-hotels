@@ -113,6 +113,17 @@
             mask-image: linear-gradient(to right, #000 calc(100% - 65px), transparent);
         }
 
+        /* a mouse can drag the bar sideways once the tabs overflow */
+        &.is-scrollable {
+            cursor: grab;
+            user-select: none;
+        }
+
+        &.is-dragging,
+        &.is-dragging .hotel-architect-tab {
+            cursor: grabbing;
+        }
+
         @media (width >= 1200px) {
             margin-inline-end: var(--dimension-layout-module-padding-inline-xs);
         }
@@ -467,6 +478,10 @@
         padding-block: var(--dimension-layout-card-padding-block);
         padding-inline: var(--dimension-layout-card-padding-inline);
         background-color: var(--color-surface-general-light);
+
+        &[hidden] {
+            display: none;
+        }
     }
 
     .hotel-architect-card-photo {

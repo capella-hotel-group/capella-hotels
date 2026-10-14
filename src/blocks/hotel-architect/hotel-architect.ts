@@ -219,14 +219,20 @@ function buildHeader(
 
 /**
  * Builds the static supporting gallery. These images are content, not carousel
- * controls, so they keep their authored alt text and never change the slide.
+ * controls, so they keep their authored alt text and never change the slide. A
+ * multifield has no item limit in the editor, so entries past the third are kept
+ * but hidden: they stay in the content tree, where the author can remove them.
  */
 function buildThumbs(cell: Element | null | undefined): HTMLUListElement | null {
-  const entries = multifieldEntries(cell).slice(0, MAX_THUMBNAILS);
+  const entries = multifieldEntries(cell);
   if (!entries.length) return null;
 
   const list = buildList(cell, 'hotel-architect-thumbs');
-  entries.forEach((entry) => list.append(buildEntry(entry, 'hotel-architect-thumb').item));
+  entries.forEach((entry, index) => {
+    const { item } = buildEntry(entry, 'hotel-architect-thumb');
+    item.hidden = index >= MAX_THUMBNAILS;
+    list.append(item);
+  });
   return list;
 }
 
@@ -490,12 +496,67 @@ function buildTab(label: string, index: number, blockId: string): HTMLButtonElem
 /** Fades the tab bar's trailing edge while more tabs are scrolled out of view. */
 function trackOverflow(tablist: HTMLElement): void {
   const sync = (): void => {
-    const remaining = tablist.scrollWidth - tablist.clientWidth - Math.abs(tablist.scrollLeft);
+    const overflow = tablist.scrollWidth - tablist.clientWidth;
+    const remaining = overflow - Math.abs(tablist.scrollLeft);
     // +1 absorbs the sub-pixel difference these report at fractional widths
+    tablist.classList.toggle('is-scrollable', overflow > 1);
     tablist.classList.toggle('has-more', remaining > 1);
   };
   tablist.addEventListener('scroll', sync, { passive: true });
   new ResizeObserver(sync).observe(tablist);
+}
+
+/**
+ * Lets a mouse drag the overflowing tab bar sideways, as touch and trackpads already
+ * can. A press only becomes a drag past a few pixels, so a plain click still selects
+ * its tab, and the click that ends a drag is swallowed so it does not.
+ */
+function enableDragScroll(tablist: HTMLElement): void {
+  const THRESHOLD = 5;
+  let pointerId: number | null = null;
+  let startX = 0;
+  let startScroll = 0;
+  let dragged = false;
+
+  tablist.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0 || !tablist.classList.contains('is-scrollable')) return;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startScroll = tablist.scrollLeft;
+    dragged = false;
+  });
+
+  tablist.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== pointerId) return;
+    const distance = event.clientX - startX;
+    if (!dragged && Math.abs(distance) < THRESHOLD) return;
+    if (!dragged) {
+      dragged = true;
+      tablist.setPointerCapture?.(event.pointerId);
+      tablist.classList.add('is-dragging');
+    }
+    tablist.scrollLeft = startScroll - distance;
+  });
+
+  const end = (event: PointerEvent): void => {
+    if (event.pointerId !== pointerId) return;
+    pointerId = null;
+    tablist.classList.remove('is-dragging');
+    if (tablist.hasPointerCapture?.(event.pointerId)) tablist.releasePointerCapture(event.pointerId);
+  };
+  tablist.addEventListener('pointerup', end);
+  tablist.addEventListener('pointercancel', end);
+
+  tablist.addEventListener(
+    'click',
+    (event) => {
+      if (!dragged) return;
+      dragged = false;
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    true,
+  );
 }
 
 /**
@@ -546,9 +607,14 @@ export default function decorate(block: HTMLElement): void {
   if (cardRows.length) {
     const cards = document.createElement('div');
     cards.className = 'hotel-architect-cards';
-    cardRows.forEach((row) => cards.append(buildCard(row)));
-    // the tabbed variation has no architect card; it stays in the DOM (hidden) so
-    // the editor still lists it and the author can remove it
+    // the design has one architect card: extra card items, and every card in the
+    // tabbed variation, stay in the DOM hidden so the editor still lists them and
+    // the author can remove them
+    cardRows.forEach((row, index) => {
+      const card = buildCard(row);
+      card.hidden = index > 0;
+      cards.append(card);
+    });
     cards.hidden = tabbed;
     block.classList.toggle('hotel-architect-has-card', !tabbed);
     block.append(cards);
@@ -589,6 +655,7 @@ export default function decorate(block: HTMLElement): void {
   });
 
   trackOverflow(tablist);
+  enableDragScroll(tablist);
 
   // selecting a ritual in the editor rail, or editing its copy inline, should
   // reveal the matching tab
