@@ -1,5 +1,6 @@
 /* hotel-architect
    Figma: desktop 8035:20745 (1440), tablet 8035:20836 (834), mobile 8035:20923 (393).
+   Ritual tabs variation (CAP-78): desktop 8057:21165, tablet 8040:24975, mobile 8144:33949.
    Source order follows the block's model field order so the Universal Editor lists
    the gallery images and the architect card last in the content tree; `order`
    restores the reading order. Everything nests under the block class, so no rule
@@ -42,6 +43,69 @@
 
     .hotel-architect-header {
         order: 1;
+    }
+
+    /* ---------- rituals ---------- */
+
+    /* without the architect card nothing overlaps the copy, so it takes the
+       module padding the ritual frames draw at every breakpoint */
+    &.hotel-architect-rituals .hotel-architect-copy {
+        padding-block-start: var(--dimension-layout-module-padding-block);
+    }
+
+    .hotel-architect-panel {
+        /* the copy's own reading order (`order` below) applies inside each ritual */
+        display: flex;
+        flex-direction: column;
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    /* Figma "→ Location listing": Button/choice tabs inset like the eyebrow, with
+       a 65px fade over the trailing edge while more tabs are out of view */
+    .hotel-architect-tabs {
+        display: flex;
+        gap: var(--dimension-layout-module-gutter-l);
+        margin-block-end: var(--dimension-spacing-heading-to-content);
+        padding-block: 10px;
+        padding-inline: var(--dimension-spacing-general-2xl);
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scroll-padding-inline: var(--dimension-spacing-general-2xl);
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        &.has-more {
+            mask-image: linear-gradient(to right, #000 calc(100% - 65px), transparent);
+        }
+    }
+
+    .hotel-architect-tab {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        /* Figma fixes Button/choice at 40px, which overrides its padding-block */
+        height: var(--component-button-height);
+        padding: 0;
+        border: 0;
+        border-radius: var(--component-button-corner-standard);
+        background: none;
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-md);
+        color: var(--color-text-action-inactive);
+        white-space: nowrap;
+        cursor: pointer;
+
+        &[aria-selected='true'] {
+            color: var(--color-text-action-default);
+        }
     }
 
     .hotel-architect-eyebrow {

@@ -654,6 +654,21 @@
           }
         },
         {
+          "title": "Hotel Architect Ritual",
+          "id": "hotel-architect-ritual",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block/item",
+                "template": {
+                  "name": "Hotel Architect Ritual",
+                  "model": "hotel-architect-ritual"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Interactive Asset",
           "id": "interactive-asset",
           "plugins": {
