@@ -152,9 +152,8 @@
   {
     "id": "hotel-architect",
     "components": [
-      "hotel-architect-image",
-      "hotel-architect-card",
-      "hotel-architect-ritual"
+      "hotel-architect-ritual",
+      "hotel-architect-card"
     ]
   },
   {
