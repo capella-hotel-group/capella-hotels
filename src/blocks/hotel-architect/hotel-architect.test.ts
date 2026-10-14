@@ -135,21 +135,34 @@ describe('hotel-architect with a single ritual', () => {
     );
   });
 
-  it('renders up to three static thumbnails independently of the primary carousel', () => {
-    const block = build(IDENTITY_ROWS + ritualRow('Resort', { thumbnails: 4 }));
+  it('shows up to three static thumbnails independently of the primary carousel', () => {
+    const block = build(IDENTITY_ROWS + ritualRow('Resort', { thumbnails: 4, model: true }));
     decorate(block);
 
-    const thumbs = block.querySelectorAll<HTMLElement>('.hotel-architect-thumb');
-    expect(thumbs).toHaveLength(3);
+    const thumbs = [...block.querySelectorAll<HTMLElement>('.hotel-architect-thumb')];
+    // the extra entry stays in the editor's content tree, just not on the page
+    expect(thumbs.map((thumb) => thumb.hidden)).toEqual([false, false, false, true]);
+    expect(thumbs[3]!.dataset.aueResource).toBe('urn:Resort-thumb/item3');
     expect(block.querySelector('.hotel-architect-thumbs button')).toBeNull();
-    expect([...block.querySelectorAll('.hotel-architect-thumb img')].map((img) => img.getAttribute('alt'))).toEqual([
+    expect(thumbs.map((thumb) => thumb.querySelector('img')?.getAttribute('alt'))).toEqual([
       'Resort-thumb 1',
       'Resort-thumb 2',
       'Resort-thumb 3',
+      'Resort-thumb 4',
     ]);
 
     thumbs[1]!.click();
     expect(block.querySelector('.hotel-architect-slide.is-selected img')?.getAttribute('alt')).toBe('Resort 1');
+  });
+
+  it('shows only the first architect card', () => {
+    const block = build(IDENTITY_ROWS + ritualRow('Resort') + cardRow(true) + cardRow(true, 'Second architect'));
+
+    decorate(block);
+
+    const cards = [...block.querySelectorAll<HTMLElement>('.hotel-architect-card')];
+    expect(cards.map((card) => card.hidden)).toEqual([false, true]);
+    expect(cards[1]!.dataset.aueModel).toBe('hotel-architect-card');
   });
 
   it('steps and wraps through the gallery', () => {
@@ -278,6 +291,46 @@ describe('hotel-architect with ritual tabs', () => {
     expect(selected()).toBe('Three');
     press('Home');
     expect(selected()).toBe('One');
+  });
+
+  it('scrolls the overflowing tab bar with a mouse drag without selecting a tab', () => {
+    const block = build(IDENTITY_ROWS + ritualRow('One') + ritualRow('Two') + ritualRow('Three'));
+    decorate(block);
+
+    const tablist = block.querySelector<HTMLElement>('[role="tablist"]')!;
+    const tabs = block.querySelectorAll<HTMLElement>('[role="tab"]');
+    tablist.classList.add('is-scrollable');
+    tablist.scrollLeft = 100;
+    const pointer = (target: Element, type: string, clientX: number): void => {
+      const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, button: 0 });
+      Object.assign(event, { pointerId: 1, pointerType: 'mouse' });
+      target.dispatchEvent(event);
+    };
+
+    pointer(tabs[1]!, 'pointerdown', 200);
+    pointer(tabs[1]!, 'pointermove', 140);
+    expect(tablist.scrollLeft).toBe(160);
+    expect(tablist.classList.contains('is-dragging')).toBe(true);
+    pointer(tabs[1]!, 'pointerup', 140);
+    tabs[1]!.click();
+
+    expect(tablist.classList.contains('is-dragging')).toBe(false);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('One');
+
+    // a press that barely moves is still a click
+    pointer(tabs[2]!, 'pointerdown', 50);
+    pointer(tabs[2]!, 'pointermove', 52);
+    pointer(tabs[2]!, 'pointerup', 52);
+    tabs[2]!.click();
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Three');
+  });
+
+  it('hides every architect card in the tabbed variation', () => {
+    const block = build(IDENTITY_ROWS + ritualRow('One') + ritualRow('Two') + cardRow() + cardRow());
+
+    decorate(block);
+
+    expect(block.querySelector<HTMLElement>('.hotel-architect-cards')?.hidden).toBe(true);
   });
 
   it('gives a ritual just added in the editor a placeholder tab', () => {

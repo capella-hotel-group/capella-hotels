@@ -1924,7 +1924,7 @@
         "component": "container",
         "name": "thumbnails",
         "label": "Gallery Thumbnails",
-        "description": "Up to three static supporting images shown with the copy. They do not control the primary carousel.",
+        "description": "Static supporting images shown with the copy; only the first three are displayed. They do not control the primary carousel.",
         "multi": true,
         "fields": [
           {
