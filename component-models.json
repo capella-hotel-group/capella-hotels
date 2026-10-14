@@ -78,36 +78,6 @@
         "name": "cta2OpenInNewTab",
         "label": "CTA 2 Open in New Tab",
         "value": false
-      },
-      {
-        "component": "container",
-        "name": "images",
-        "multi": true,
-        "fields": [
-          {
-            "component": "reference",
-            "name": "image"
-          },
-          {
-            "component": "text",
-            "name": "imageAlt"
-          }
-        ]
-      },
-      {
-        "component": "container",
-        "name": "ctas",
-        "multi": true,
-        "fields": [
-          {
-            "component": "aem-content",
-            "name": "link"
-          },
-          {
-            "component": "text",
-            "name": "linkText"
-          }
-        ]
       }
     ]
   },
@@ -606,6 +576,163 @@
         "name": "rows",
         "value": "",
         "label": "Rows"
+      }
+    ]
+  },
+  {
+    "id": "content-listing",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute for QA automation. Leave empty to omit it.",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Card Eyebrow",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Card Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "textarea",
+        "name": "description",
+        "label": "Card Description",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "textarea",
+        "name": "highlights",
+        "label": "Highlights",
+        "description": "Optional short feature line, such as private pool or private terrace.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail1Label",
+        "label": "Detail 1 Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail1Value",
+        "label": "Detail 1 Value",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail2Label",
+        "label": "Detail 2 Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail2Value",
+        "label": "Detail 2 Value",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail3Label",
+        "label": "Detail 3 Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail3Value",
+        "label": "Detail 3 Value",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail4Label",
+        "label": "Detail 4 Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "detail4Value",
+        "label": "Detail 4 Value",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "container",
+        "name": "images",
+        "label": "Images",
+        "multi": true,
+        "fields": [
+          {
+            "component": "reference",
+            "name": "image",
+            "label": "Image",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "imageAlt",
+            "label": "Alt Text",
+            "valueType": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "component": "container",
+        "name": "ctas",
+        "label": "CTAs",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "label",
+            "label": "CTA Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "CTA Link",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
       }
     ]
   },
