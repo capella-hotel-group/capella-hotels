@@ -78,6 +78,36 @@
         "name": "cta2OpenInNewTab",
         "label": "CTA 2 Open in New Tab",
         "value": false
+      },
+      {
+        "component": "container",
+        "name": "images",
+        "multi": true,
+        "fields": [
+          {
+            "component": "reference",
+            "name": "image"
+          },
+          {
+            "component": "text",
+            "name": "imageAlt"
+          }
+        ]
+      },
+      {
+        "component": "container",
+        "name": "ctas",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-content",
+            "name": "link"
+          },
+          {
+            "component": "text",
+            "name": "linkText"
+          }
+        ]
       }
     ]
   },
