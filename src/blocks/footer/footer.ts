@@ -128,7 +128,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const legalGroup = fragment.querySelector('.footer-legal');
   const newsletterBlock = fragment.querySelector('.newsletter-form');
 
-  const contactGroup = buildGroup('footer-contact', [contactInfo, social]);
+  const contactGroup = buildGroup('footer-contact', [contactInfo]);
   const newsletterGroup = buildGroup('footer-newsletter', [newsletterBlock]);
 
   const inner = document.createElement('div');
@@ -139,9 +139,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   }
 
   const groups: Array<{ name: string; element: Element | null }> = [
+    { name: 'contact', element: contactGroup },
     { name: 'nav', element: navGroup },
     { name: 'newsletter', element: newsletterGroup },
-    { name: 'contact', element: contactGroup },
+    { name: 'social', element: social },
     { name: 'legal', element: legalGroup },
   ];
 

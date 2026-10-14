@@ -247,3 +247,143 @@ footer.footer-theme-clean-white {
     clip-path: inset(50%);
     white-space: nowrap;
 }
+
+@media (width <= 767px) {
+    .footer-inner > .footer-nav-columns {
+        order: 1;
+    }
+
+    .footer-inner > .footer-divider[data-after='nav'] {
+        order: 2;
+    }
+
+    .footer-inner > .footer-newsletter {
+        order: 3;
+    }
+
+    .footer-inner > .footer-divider[data-after='newsletter'] {
+        order: 4;
+    }
+
+    .footer-inner > .footer-contact {
+        order: 5;
+    }
+
+    .footer-inner > .footer-divider[data-after='contact'] {
+        display: none;
+    }
+
+    .footer-inner > .footer-social {
+        order: 6;
+        margin-block-start: calc(var(--dimension-spacing-general-2xl) - 7px);
+    }
+
+    .footer-inner > .footer-divider[data-after='social'] {
+        order: 7;
+        margin-block: 38px 39px;
+    }
+
+    .footer-inner > .footer-legal {
+        order: 8;
+    }
+}
+
+@media (width >= 768px) and (width < 1200px) {
+    .footer-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        grid-template-areas:
+            'brand brand'
+            'nav nav'
+            'divider-nav divider-nav'
+            'newsletter newsletter'
+            'divider-newsletter divider-newsletter'
+            'contact social'
+            'divider-social divider-social'
+            'legal legal';
+    }
+
+    .footer-inner > .footer-brand-logo {
+        grid-area: brand;
+    }
+
+    .footer-inner > .footer-contact {
+        display: block;
+        grid-area: contact;
+    }
+
+    .footer-inner > .footer-nav-columns {
+        grid-area: nav;
+    }
+
+    .footer-inner > .footer-divider[data-after='nav'] {
+        grid-area: divider-nav;
+    }
+
+    .footer-inner > .footer-newsletter {
+        grid-area: newsletter;
+    }
+
+    .footer-inner > .footer-divider[data-after='newsletter'] {
+        grid-area: divider-newsletter;
+    }
+
+    .footer-inner > .footer-social {
+        grid-area: social;
+    }
+
+    .footer-inner > .footer-divider[data-after='contact'] {
+        display: none;
+    }
+
+    .footer-inner > .footer-divider[data-after='social'] {
+        grid-area: divider-social;
+        margin-block: 38px 39px;
+    }
+
+    .footer-inner > .footer-legal {
+        grid-area: legal;
+    }
+}
+
+@media (width >= 1200px) {
+    .footer-inner {
+        grid-template-areas:
+            'brand brand brand brand'
+            'contact nav1 nav2 newsletter'
+            'social . . .'
+            'divider divider divider divider'
+            'legal legal legal legal';
+    }
+
+    .footer-inner > .footer-social {
+        grid-area: social;
+        margin-block-start: calc(var(--dimension-spacing-general-3xl) - 7px);
+    }
+
+    .footer-inner > .footer-divider[data-after='contact'] {
+        display: none;
+    }
+
+    .footer-inner > .footer-divider[data-after='social'] {
+        grid-area: divider;
+    }
+}
+
+@media (width >= 1920px) {
+    .footer-inner {
+        grid-template-areas:
+            'contact nav1 nav2 newsletter'
+            'social . . .'
+            'divider divider divider divider'
+            'legal legal legal legal';
+    }
+
+    .footer-inner.footer-inner-has-logo {
+        grid-template-areas:
+            'brand contact nav1 nav2 newsletter'
+            'brand social . . .'
+            'divider divider divider divider divider'
+            'legal legal legal legal legal';
+    }
+}
