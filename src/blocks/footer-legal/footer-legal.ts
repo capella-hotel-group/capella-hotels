@@ -1,4 +1,7 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createTextLink } from '@/utils/footer-link.js';
+
+const LIST_LABEL = 'Legal links';
 
 const cellOf = (row?: Element | null) => row?.firstElementChild ?? null;
 
@@ -29,14 +32,7 @@ function parseItemRow(row: Element): LinkEntry | null {
 function buildListItem(entry: LinkEntry): HTMLLIElement {
   const item = document.createElement('li');
   moveInstrumentation(entry.row, item);
-  const anchor = document.createElement('a');
-  anchor.href = entry.href || '#';
-  anchor.textContent = entry.label || entry.href;
-  if (entry.openInNewTab) {
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-  }
-  item.append(anchor);
+  item.append(createTextLink(entry.label || entry.href, entry.href, entry.openInNewTab));
   return item;
 }
 
@@ -57,6 +53,7 @@ export default function decorate(block: HTMLElement): void {
   if (entries.length) {
     const list = document.createElement('ul');
     list.className = 'footer-legal-list';
+    list.setAttribute('aria-label', LIST_LABEL);
     entries.forEach((entry) => list.append(buildListItem(entry)));
     children.push(list);
   }

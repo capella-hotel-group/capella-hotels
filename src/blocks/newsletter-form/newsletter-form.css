@@ -196,7 +196,8 @@ body.newsletter-modal-open {
     background-color: var(--header-cta-hover-bg);
 }
 
-.newsletter-form-element .newsletter-submit:disabled {
+.newsletter-form-element .newsletter-submit:disabled,
+.newsletter-form-element .newsletter-submit[aria-disabled='true'] {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -247,6 +248,10 @@ body.newsletter-modal-open {
     min-width: 0;
 }
 
+.newsletter-inline .newsletter-message:empty {
+    display: none;
+}
+
 .newsletter-inline .newsletter-title {
     margin: 0;
     font-family: var(--type-font-family-body);
@@ -256,6 +261,28 @@ body.newsletter-modal-open {
     letter-spacing: normal;
     color: var(--color-text-main-heading);
     text-transform: uppercase;
+}
+
+@media (width >= 768px) {
+    .newsletter-inline .newsletter-title {
+        margin-block-end: 9px;
+    }
+
+    .newsletter-inline .newsletter-inline-submit {
+        min-height: 40px;
+        margin-block-start: 9px;
+        padding-block: 0;
+    }
+}
+
+@media (width >= 1920px) {
+    .newsletter-inline .newsletter-title {
+        margin-block-end: 8px;
+    }
+
+    .newsletter-inline .newsletter-inline-submit {
+        margin-block-start: 9px;
+    }
 }
 
 .newsletter-inline-row {
@@ -302,9 +329,10 @@ body.newsletter-modal-open {
     opacity: 1;
 }
 
-.newsletter-inline .newsletter-inline-field input:focus,
-.newsletter-inline .newsletter-inline-field select:focus {
-    outline: none;
+.newsletter-inline .newsletter-inline-field input:focus-visible,
+.newsletter-inline .newsletter-inline-field select:focus-visible {
+    outline: 2px solid var(--color-surface-action-default);
+    outline-offset: 2px;
 }
 
 .newsletter-inline-field-select select {
@@ -314,8 +342,8 @@ body.newsletter-modal-open {
 .newsletter-inline-chevron {
     position: absolute;
     inset-inline-end: 0;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
 }
 
@@ -323,6 +351,8 @@ body.newsletter-modal-open {
     display: flex;
     align-items: flex-start;
     gap: var(--dimension-spacing-general-s);
+    /* Figma measures the gap to the consent text's cap height, not its line box */
+    margin-block-start: -3px;
 }
 
 .newsletter-inline-consent input[type='checkbox'] {
@@ -389,9 +419,15 @@ body.newsletter-modal-open {
     cursor: pointer;
 }
 
-.newsletter-inline-submit:disabled {
+.newsletter-inline-submit:disabled,
+.newsletter-inline-submit[aria-disabled='true'] {
     color: var(--color-text-action-inactive);
     cursor: not-allowed;
+}
+
+.newsletter-inline-submit:focus-visible {
+    outline: 2px solid var(--color-surface-action-default);
+    outline-offset: 2px;
 }
 
 /* the hCaptcha widget iframe has a fixed intrinsic width (~304px) that cannot
@@ -405,5 +441,16 @@ body.newsletter-modal-open {
 @media (width <=767px) {
     .newsletter-inline .newsletter-form-element {
         padding: 0;
+        gap: 16px;
+    }
+
+    .newsletter-inline .newsletter-title {
+        margin-block-end: 2px;
+    }
+
+    .newsletter-inline .newsletter-inline-submit {
+        min-height: 40px;
+        margin-block-start: 1px;
+        padding-block: 0;
     }
 }

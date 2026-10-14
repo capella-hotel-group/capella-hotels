@@ -26,6 +26,11 @@ const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'countr
 // can tell newsletter sign-ups apart from other (e.g. enquiry) forms.
 const FORM_SOURCE = 'Newsletter';
 
+const CONSENT_REQUIRED_MESSAGE = 'Please accept the consent to continue.';
+
+// Per-instance suffix so ids stay unique when several newsletter blocks share a page.
+let instanceCount = 0;
+
 // `property` fallback codes for non-hotel pages (where no specific hotel is
 // matched from the URL), chosen by the site's domain. Hotel-specific pages
 // always send the resolved hotel code instead.
@@ -364,16 +369,27 @@ async function setupCaptcha(
 
 /**
  * Combines consent-checkbox and hCaptcha gating into the submit button's
- * disabled state — both conditions (when applicable) must be satisfied.
+ * `aria-disabled` state (not `disabled`, so the button stays focusable).
+ * `blockedBy()` reports which condition currently blocks submission.
  */
 function createSubmitGate(
   submitBtn: HTMLButtonElement,
   { requireConsent, requireCaptcha }: { requireConsent: boolean; requireCaptcha: boolean },
-): { setConsent: (ok: boolean) => void; setCaptcha: (ok: boolean) => void } {
+): {
+  setConsent: (ok: boolean) => void;
+  setCaptcha: (ok: boolean) => void;
+  blockedBy: () => 'consent' | 'captcha' | null;
+} {
   let consentOk = !requireConsent;
   let captchaOk = !requireCaptcha;
+  const blockedBy = () => {
+    if (!consentOk) return 'consent';
+    if (!captchaOk) return 'captcha';
+    return null;
+  };
   const recompute = () => {
-    submitBtn.disabled = !(consentOk && captchaOk);
+    if (blockedBy()) submitBtn.setAttribute('aria-disabled', 'true');
+    else submitBtn.removeAttribute('aria-disabled');
   };
   recompute();
   return {
@@ -385,6 +401,7 @@ function createSubmitGate(
       captchaOk = ok;
       recompute();
     },
+    blockedBy,
   };
 }
 
@@ -479,13 +496,13 @@ function buildInlineRow(fields: HTMLDivElement[]): HTMLDivElement {
 }
 
 /** Builds the `Inline` layout's required consent checkbox + notice. */
-function buildInlineConsent(consentHTML: string): HTMLDivElement {
+function buildInlineConsent(consentHTML: string, id: string): HTMLDivElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'newsletter-inline-consent';
 
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
-  checkbox.id = 'newsletter-inline-consent';
+  checkbox.id = id;
   checkbox.name = 'consent';
   checkbox.required = true;
 
@@ -570,6 +587,30 @@ function buildModal(
   return { overlay, trigger };
 }
 
+/** Writes the feedback message; `role` follows the kind so errors are announced assertively. */
+function showMessage(message: HTMLElement, text: string, kind?: 'error' | 'success'): void {
+  message.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+  message.className = kind ? `newsletter-message is-${kind}` : 'newsletter-message';
+  message.textContent = text;
+}
+
+function markInvalid(control: HTMLElement, message: HTMLElement): void {
+  control.setAttribute('aria-invalid', 'true');
+  control.setAttribute('aria-describedby', message.id);
+  control.focus();
+}
+
+/** Flags every failing control, announces the error and focuses the first failing one. */
+function flagInvalidFields(form: HTMLFormElement, message: HTMLElement): void {
+  const invalid = [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')].filter(
+    (control) => !control.checkValidity(),
+  );
+  invalid.forEach((control) => control.setAttribute('aria-invalid', 'true'));
+  showMessage(message, 'Please fill in all required fields.', 'error');
+  if (invalid[0]) markInvalid(invalid[0], message);
+  form.reportValidity();
+}
+
 interface SubmitConfig {
   endpoint: string;
   property: NormalizedProperty | null;
@@ -597,8 +638,7 @@ async function submitForm(
   // send the request.
   const missing = REQUIRED_FIELDS.filter((field) => !payload[field]);
   if (missing.length) {
-    message.textContent = 'Please fill in all required fields.';
-    message.className = 'newsletter-message is-error';
+    showMessage(message, 'Please fill in all required fields.', 'error');
     form.reportValidity();
     return;
   }
@@ -607,8 +647,7 @@ async function submitForm(
   // the disabled submit button). Skipped when captcha isn't configured/loaded.
   const captchaToken = config.captcha ? config.captcha.getToken() : '';
   if (config.captcha && !captchaToken) {
-    message.textContent = 'Please complete the captcha.';
-    message.className = 'newsletter-message is-error';
+    showMessage(message, 'Please complete the captcha.', 'error');
     return;
   }
   if (captchaToken) payload.captchaValue = captchaToken;
@@ -627,8 +666,7 @@ async function submitForm(
   payload.property = property ? property.code : resolveFallbackCode();
   payload.source = FORM_SOURCE;
 
-  message.textContent = '';
-  message.className = 'newsletter-message';
+  showMessage(message, '');
   submitBtn.disabled = true;
 
   try {
@@ -649,15 +687,13 @@ async function submitForm(
     }
 
     form.reset();
-    message.textContent = 'Thank you for subscribing!';
-    message.classList.add('is-success');
+    showMessage(message, 'Thank you for subscribing!', 'success');
     // hCaptcha tokens are single-use: reset so a new solve is needed to submit
     // again. This also re-disables the submit button.
     if (config.captcha) config.captcha.reset();
     else submitBtn.disabled = false;
   } catch (error) {
-    message.textContent = 'Sorry, something went wrong. Please try again.';
-    message.classList.add('is-error');
+    showMessage(message, 'Sorry, something went wrong. Please try again.', 'error');
 
     console.error('Newsletter submission error:', error);
     // The used token is now invalid; force a fresh challenge before retrying.
@@ -668,6 +704,8 @@ async function submitForm(
 
 export default async function decorate(block: HTMLElement): Promise<void> {
   const rows = [...block.children];
+  instanceCount += 1;
+  const uid = instanceCount;
 
   // ── Read authored labels / config (the dialog inputs) ────────────────────
   const cfg = {
@@ -718,9 +756,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   submitBtn.textContent = cfg.submitLabel;
 
   const message = document.createElement('div');
+  message.id = `newsletter-message-${uid}`;
   message.className = 'newsletter-message';
+  message.setAttribute('role', 'status');
   message.setAttribute('aria-live', 'polite');
 
+  let consentCheckbox: HTMLInputElement | null = null;
   const gate = createSubmitGate(submitBtn, {
     requireConsent: cfg.layout === 'Inline',
     requireCaptcha: !!siteKey,
@@ -739,9 +780,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const country = buildInlineField(buildInput('country', 'text', cfg.countryLabel), cfg.countryLabel);
     const email = buildInlineField(buildInput('email', 'email', cfg.emailLabel), cfg.emailLabel);
 
-    const consent = buildInlineConsent(cfg.consentHTML);
-    const consentCheckbox = consent.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    consentCheckbox.addEventListener('change', () => gate.setConsent(consentCheckbox.checked));
+    const consent = buildInlineConsent(cfg.consentHTML, `newsletter-inline-consent-${uid}`);
+    const checkbox = consent.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    consentCheckbox = checkbox;
+    checkbox.addEventListener('change', () => gate.setConsent(checkbox.checked));
 
     form.append(
       title,
@@ -802,11 +844,27 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // ── Wire up submission ───────────────────────────────────────────────────
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    const blocked = gate.blockedBy();
+    if (blocked === 'consent' && consentCheckbox) {
+      showMessage(message, CONSENT_REQUIRED_MESSAGE, 'error');
+      markInvalid(consentCheckbox, message);
+      return;
+    }
+    if (blocked === 'captcha') {
+      showMessage(message, 'Please complete the captcha.', 'error');
+      return;
+    }
     if (!form.checkValidity()) {
-      form.reportValidity();
+      flagInvalidFields(form, message);
       return;
     }
     submitForm(form, { endpoint: API_ENDPOINT, property, captcha }, message, submitBtn);
+  });
+
+  form.addEventListener('input', (event) => {
+    const target = event.target as HTMLElement;
+    target.removeAttribute('aria-invalid');
+    target.removeAttribute('aria-describedby');
   });
 
   if (cfg.layout === 'Inline') {

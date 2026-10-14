@@ -1,4 +1,7 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createFooterLink, newTabHint } from '@/utils/footer-link.js';
+
+let headingCount = 0;
 
 function isEnabled(text: string | undefined): boolean {
   return (text ?? '').trim().toLowerCase() === 'true';
@@ -35,13 +38,7 @@ function parseItemRow(row: Element): SocialEntry | null {
 function buildListItem(entry: SocialEntry): HTMLLIElement {
   const item = document.createElement('li');
   moveInstrumentation(entry.row, item);
-  const anchor = document.createElement('a');
-  anchor.href = entry.href || '#';
-  anchor.setAttribute('aria-label', entry.platform || 'Social media');
-  if (entry.openInNewTab) {
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-  }
+  const anchor = createFooterLink(entry.href, entry.openInNewTab);
 
   if (entry.icon) {
     // wrapped in `.icon` so the existing `.footer-social-list .icon` sizing rule still applies
@@ -53,9 +50,10 @@ function buildListItem(entry: SocialEntry): HTMLLIElement {
     iconWrap.append(picture);
     anchor.append(iconWrap);
   } else {
-    anchor.textContent = entry.platform || 'Link';
+    anchor.append(entry.platform || 'Link');
   }
 
+  if (entry.href && entry.openInNewTab) anchor.append(newTabHint());
   item.append(anchor);
   return item;
 }
@@ -76,13 +74,16 @@ export default function decorate(block: HTMLElement): void {
     return;
   }
 
-  const heading = document.createElement('p');
+  headingCount += 1;
+  const heading = document.createElement('h2');
+  heading.id = `footer-social-heading-${headingCount}`;
   heading.className = 'footer-heading';
   heading.textContent = rows[0]?.firstElementChild?.textContent?.trim() || 'Follow Us On';
   if (rows[0]) moveInstrumentation(rows[0], heading);
 
   const list = document.createElement('ul');
   list.className = 'footer-social-list';
+  list.setAttribute('aria-labelledby', heading.id);
   items.forEach((entry) => list.append(buildListItem(entry)));
 
   // renamed from `footer-social-link` (the xwalk block name) to the leaf class footer.css expects
