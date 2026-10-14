@@ -68,15 +68,39 @@ describe('hero-destination pause mechanism', () => {
     expect(block.querySelector('.hero-destination-toggle')).toBeNull();
   });
 
-  it('pauses on mouse hover and resumes on leave', () => {
+  it('pauses on mouse hover over pagination dots and resumes on leave', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+    const nav = block.querySelector<HTMLElement>('.hero-destination-dots')!;
+
+    nav.dispatchEvent(pointer('pointerenter', 'mouse'));
+    jest.advanceTimersByTime(20_000);
+    expect(activeIndex(block)).toBe(0);
+
+    nav.dispatchEvent(pointer('pointerleave', 'mouse'));
+    jest.advanceTimersByTime(5000);
+    expect(activeIndex(block)).toBe(1);
+  });
+
+  it('pauses on mouse hover over text heading and resumes on leave', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+    const heading = block.querySelector<HTMLElement>('.hero-destination-heading')!;
+
+    heading.dispatchEvent(pointer('pointerenter', 'mouse'));
+    jest.advanceTimersByTime(20_000);
+    expect(activeIndex(block)).toBe(0);
+
+    heading.dispatchEvent(pointer('pointerleave', 'mouse'));
+    jest.advanceTimersByTime(5000);
+    expect(activeIndex(block)).toBe(1);
+  });
+
+  it('does not pause when hovering over the video background', () => {
     const block = buildBlock(['true', '5'], 3);
     decorate(block);
 
     block.dispatchEvent(pointer('pointerenter', 'mouse'));
-    jest.advanceTimersByTime(20_000);
-    expect(activeIndex(block)).toBe(0);
-
-    block.dispatchEvent(pointer('pointerleave', 'mouse'));
     jest.advanceTimersByTime(5000);
     expect(activeIndex(block)).toBe(1);
   });
@@ -84,8 +108,11 @@ describe('hero-destination pause mechanism', () => {
   it('ignores touch pointers so a tap cannot freeze autoplay', () => {
     const block = buildBlock(['true', '5'], 3);
     decorate(block);
+    const nav = block.querySelector<HTMLElement>('.hero-destination-dots')!;
+    const heading = block.querySelector<HTMLElement>('.hero-destination-heading')!;
 
-    block.dispatchEvent(pointer('pointerenter', 'touch'));
+    nav.dispatchEvent(pointer('pointerenter', 'touch'));
+    heading.dispatchEvent(pointer('pointerenter', 'touch'));
     jest.advanceTimersByTime(5000);
 
     expect(activeIndex(block)).toBe(1);
@@ -109,14 +136,15 @@ describe('hero-destination pause mechanism', () => {
     const block = buildBlock(['true', '5'], 3);
     decorate(block);
     const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle')!;
+    const nav = block.querySelector<HTMLElement>('.hero-destination-dots')!;
 
     toggle.click();
     expect(toggle.getAttribute('aria-label')).toBe('Play slideshow');
     expect(toggle.dataset.state).toBe('paused');
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
 
-    block.dispatchEvent(pointer('pointerenter', 'mouse'));
-    block.dispatchEvent(pointer('pointerleave', 'mouse'));
+    nav.dispatchEvent(pointer('pointerenter', 'mouse'));
+    nav.dispatchEvent(pointer('pointerleave', 'mouse'));
     jest.advanceTimersByTime(20_000);
     expect(activeIndex(block)).toBe(0);
 
@@ -166,13 +194,14 @@ describe('hero-destination pause mechanism', () => {
     const block = buildBlock(['true', '5'], 3);
     decorate(block);
     const track = block.querySelector('.hero-destination-track')!;
+    const nav = block.querySelector<HTMLElement>('.hero-destination-dots')!;
 
     expect(track.getAttribute('aria-live')).toBe('off');
 
-    block.dispatchEvent(pointer('pointerenter', 'mouse'));
+    nav.dispatchEvent(pointer('pointerenter', 'mouse'));
     expect(track.getAttribute('aria-live')).toBe('polite');
 
-    block.dispatchEvent(pointer('pointerleave', 'mouse'));
+    nav.dispatchEvent(pointer('pointerleave', 'mouse'));
     expect(track.getAttribute('aria-live')).toBe('off');
   });
 });
