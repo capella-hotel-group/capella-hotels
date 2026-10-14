@@ -285,6 +285,12 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
     const links = document.createElement('div');
     links.className = 'choose-space-panel-links';
     if (primary) links.append(primary);
+    if (primary && secondary) {
+      const divider = document.createElement('span');
+      divider.className = 'choose-space-panel-divider';
+      divider.setAttribute('aria-hidden', 'true');
+      links.append(divider);
+    }
     if (secondary) links.append(secondary);
     body.append(links);
   }
