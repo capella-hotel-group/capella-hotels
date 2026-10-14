@@ -628,60 +628,26 @@
         "value": ""
       },
       {
-        "component": "text",
-        "name": "detail1Label",
-        "label": "Detail 1 Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail1Value",
-        "label": "Detail 1 Value",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail2Label",
-        "label": "Detail 2 Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail2Value",
-        "label": "Detail 2 Value",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail3Label",
-        "label": "Detail 3 Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail3Value",
-        "label": "Detail 3 Value",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail4Label",
-        "label": "Detail 4 Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detail4Value",
-        "label": "Detail 4 Value",
-        "valueType": "string",
-        "value": ""
+        "component": "container",
+        "name": "details",
+        "label": "Details",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "label",
+            "label": "Detail Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "value",
+            "label": "Detail Value",
+            "valueType": "string",
+            "required": true
+          }
+        ]
       },
       {
         "component": "container",
