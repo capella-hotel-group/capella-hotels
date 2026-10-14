@@ -160,7 +160,7 @@ function buildCopy(cell: Element | null | undefined, field: string): HTMLElement
 }
 
 /** Splits a node's own children at every direct `<br>`, or null when there is none. */
-function linesOf(node: Element): DocumentFragment[] | null {
+function linesOf(node: Node): DocumentFragment[] | null {
   if (![...node.childNodes].some((child) => child.nodeName === 'BR')) return null;
 
   const lines = [document.createDocumentFragment()];
@@ -172,33 +172,51 @@ function linesOf(node: Element): DocumentFragment[] | null {
   return lines.filter((line) => line.textContent?.trim());
 }
 
-function wrapLines(lines: DocumentFragment[], tagName: string): HTMLElement[] {
+function wrapLines(lines: DocumentFragment[]): HTMLElement[] {
   return lines.map((line) => {
     // a fresh element rather than a clone, so no data-aue-* attribute is duplicated
-    const element = document.createElement(tagName);
+    const element = document.createElement('span');
     element.append(line);
     return element;
   });
 }
 
+const BLOCK_TAGS = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+
 /**
- * Rewrites soft breaks as one paragraph per line so a heading written with `<br>`
- * lines up with one written as separate paragraphs. The stylesheet indents the
- * second child, which only works when each line is its own element. The breaks sit
- * either inside a paragraph or, when the field holds a single line of rich text,
- * directly in the authored cell.
+ * Rewrites the title's authored lines as `<span>`s, since a `<p>` is not allowed
+ * inside the `<h2>`. A title written with soft breaks lines up with one written as
+ * separate paragraphs: the stylesheet indents the second line, which only works
+ * when each line is its own element. The breaks sit either inside a paragraph or,
+ * when the field holds a single line of rich text, directly in the authored cell.
  */
-function splitOnLineBreaks(container: Element): void {
-  const ownLines = linesOf(container);
+function splitIntoLines(heading: Element): void {
+  const ownLines = linesOf(heading);
   if (ownLines) {
-    container.replaceChildren(...wrapLines(ownLines, 'p'));
+    heading.replaceChildren(...wrapLines(ownLines));
     return;
   }
 
-  [...container.children].forEach((element) => {
-    const lines = linesOf(element);
-    if (lines?.length) element.replaceWith(...wrapLines(lines, element.tagName));
+  [...heading.children].forEach((element) => {
+    if (!BLOCK_TAGS.includes(element.tagName)) return;
+    const whole = document.createDocumentFragment();
+    whole.append(...element.childNodes);
+    const lines = linesOf(whole) ?? [whole];
+    const spans = wrapLines(lines.filter((line) => line.textContent?.trim()));
+    if (spans.length) element.replaceWith(...spans);
+    else element.remove();
   });
+}
+
+/** The title reads as a heading, so the tabs and the page outline can reach each ritual. */
+function buildTitle(cell: Element | null | undefined): HTMLElement | null {
+  if (!hasContent(cell)) return null;
+  const heading = document.createElement('h2');
+  heading.className = 'hotel-architect-title';
+  moveInstrumentation(cell, heading);
+  while (cell.firstChild) heading.append(cell.firstChild);
+  splitIntoLines(heading);
+  return heading;
 }
 
 function buildHeader(
@@ -206,8 +224,7 @@ function buildHeader(
   titleCell: Element | null | undefined,
 ): HTMLElement | null {
   const eyebrow = buildCopy(eyebrowCell, 'eyebrow');
-  const title = buildCopy(titleCell, 'title');
-  if (title) splitOnLineBreaks(title);
+  const title = buildTitle(titleCell);
   if (!eyebrow && !title) return null;
 
   const header = document.createElement('div');
