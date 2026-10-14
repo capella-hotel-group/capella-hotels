@@ -213,3 +213,183 @@ describe('hotel-architect', () => {
     expect(block.querySelectorAll('.hotel-architect-slide')).toHaveLength(1);
   });
 });
+
+interface RitualOptions {
+  images?: number;
+  model?: boolean;
+  eyebrow?: string | null;
+  secondary?: boolean;
+}
+
+// Mirrors the delivered ritual item: the primary images multifield renders as a
+// list, the thumbnails and each CTA collapse into one grouped cell.
+function ritualRow(
+  label: string,
+  { images = 2, model = false, eyebrow = 'RITUAL', secondary = true }: RitualOptions = {},
+) {
+  const attribute = model ? ' data-aue-model="hotel-architect-ritual"' : '';
+  const media = Array.from(
+    { length: images },
+    (_value, index) => `<li><picture><img src="${label}-${index + 1}.jpg" alt="${label} ${index + 1}"></picture></li>`,
+  ).join('');
+  const cells = [
+    `<div>${label}</div>`,
+    eyebrow === null ? '' : `<div>${eyebrow}</div>`,
+    `<div>${label.toUpperCase()}</div>`,
+    `<div>About ${label}.</div>`,
+    `<div><ul>${media}</ul></div>`,
+    `<div><p><picture><img src="${label}-thumb.jpg" alt="${label} thumb"></picture></p></div>`,
+    '<div><p>Enquire</p><p><a href="/enquire">/enquire</a></p><p>false</p></div>',
+    secondary ? '<div><p>Details</p><p><a href="/details">/details</a></p><p>true</p></div>' : '<div>false</div>',
+  ];
+  return `<div${attribute}>${cells.join('')}</div>`;
+}
+
+describe('hotel-architect rituals', () => {
+  beforeAll(() => {
+    window.ResizeObserver = class {
+      observe(): void {}
+      unobserve(): void {}
+      disconnect(): void {}
+    } as unknown as typeof ResizeObserver;
+    Element.prototype.scrollIntoView = jest.fn();
+  });
+
+  afterEach(() => {
+    document.body.textContent = '';
+  });
+
+  const visiblePanel = (block: HTMLElement): HTMLElement | undefined =>
+    [...block.querySelectorAll<HTMLElement>('.hotel-architect-panel')].find((panel) => !panel.hidden);
+  const visibleMedia = (block: HTMLElement): HTMLElement | undefined =>
+    [...block.querySelectorAll<HTMLElement>('.hotel-architect-media')].find((media) => !media.hidden);
+
+  it.each([
+    ['published content', false],
+    ['editor content', true],
+  ])('switches every part of the ritual from its tab with %s', (_label, instrumented) => {
+    const block = build(
+      COPY_ROWS +
+        imageRow(1, 'true', instrumented) +
+        cardRow(instrumented) +
+        ritualRow('Morning', { model: instrumented }) +
+        ritualRow('Evening', { model: instrumented, images: 1 }),
+    );
+
+    decorate(block);
+
+    expect(block.id).toBe('the-architect');
+    expect(block.classList.contains('hotel-architect-rituals')).toBe(true);
+    // the tabbed variation drops the architect card and the block-level gallery
+    expect(block.querySelector('.hotel-architect-card')).toBeNull();
+    expect(block.querySelector('img[src="img1.jpg"]')).toBeNull();
+
+    const tabs = [...block.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Morning', 'Evening']);
+    expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual(['true', 'false']);
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1]);
+
+    let panel = visiblePanel(block)!;
+    expect(panel.getAttribute('role')).toBe('tabpanel');
+    expect(panel.getAttribute('aria-labelledby')).toBe(tabs[0]!.id);
+    expect(tabs[0]!.getAttribute('aria-controls')).toBe(panel.id);
+    expect(panel.querySelector('.hotel-architect-eyebrow')?.textContent).toBe('RITUAL');
+    expect(panel.querySelector('.hotel-architect-title')?.textContent).toBe('MORNING');
+    expect(panel.querySelector('.hotel-architect-body')?.textContent).toBe('About Morning.');
+    expect(panel.querySelector('.hotel-architect-thumb img')?.getAttribute('alt')).toBe('Morning thumb');
+    expect([...panel.querySelectorAll('.hotel-architect-cta a')].map((link) => link.textContent)).toEqual([
+      'Enquire',
+      'Details',
+    ]);
+    expect(panel.querySelectorAll('.hotel-architect-cta-divider')).toHaveLength(1);
+
+    let media = visibleMedia(block)!;
+    expect(media.querySelectorAll('.hotel-architect-slide')).toHaveLength(2);
+    expect(media.querySelector('.hotel-architect-slide.is-selected img')?.getAttribute('alt')).toBe('Morning 1');
+    expect(media.querySelectorAll('.hotel-architect-nav')).toHaveLength(2);
+    expect(media.querySelector('.hotel-architect-dots')).toBeNull();
+
+    tabs[1]!.click();
+
+    expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+    panel = visiblePanel(block)!;
+    expect(panel.querySelector('.hotel-architect-title')?.textContent).toBe('EVENING');
+    media = visibleMedia(block)!;
+    expect(media.querySelector('.hotel-architect-slide img')?.getAttribute('src')).toBe('Evening-1.jpg');
+    // a single primary image is a static photo
+    expect(media.querySelector('.hotel-architect-nav')).toBeNull();
+    expect(block.querySelectorAll('.hotel-architect-panel:not([hidden])')).toHaveLength(1);
+    expect(block.querySelectorAll('.hotel-architect-media:not([hidden])')).toHaveLength(1);
+  });
+
+  it('moves between tabs with the arrow, Home and End keys', () => {
+    const block = build(COPY_ROWS + ritualRow('One') + ritualRow('Two') + ritualRow('Three'));
+    decorate(block);
+
+    const tablist = block.querySelector<HTMLElement>('[role="tablist"]')!;
+    const press = (key: string): void => {
+      tablist.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    };
+    const selected = (): string | null | undefined => block.querySelector('[aria-selected="true"]')?.textContent;
+
+    press('ArrowLeft');
+    expect(selected()).toBe('Three');
+    expect(document.activeElement?.textContent).toBe('Three');
+    press('ArrowRight');
+    expect(selected()).toBe('One');
+    press('End');
+    expect(selected()).toBe('Three');
+    press('Home');
+    expect(selected()).toBe('One');
+  });
+
+  it('hides the tab bar for a single ritual', () => {
+    const block = build(COPY_ROWS + ritualRow('Morning', { images: 1, secondary: false }));
+
+    decorate(block);
+
+    expect(block.querySelector('[role="tablist"]')).toBeNull();
+    const panel = block.querySelector<HTMLElement>('.hotel-architect-panel')!;
+    expect(panel.hidden).toBe(false);
+    expect(panel.hasAttribute('role')).toBe(false);
+    expect(panel.querySelectorAll('.hotel-architect-cta a')).toHaveLength(1);
+    expect(panel.querySelector('.hotel-architect-cta-divider')).toBeNull();
+    expect(block.querySelector('.hotel-architect-nav')).toBeNull();
+  });
+
+  it('reads a ritual by cell content when the empty eyebrow drops its cell', () => {
+    const block = build(COPY_ROWS + ritualRow('Morning', { eyebrow: null }));
+
+    decorate(block);
+
+    const panel = block.querySelector<HTMLElement>('.hotel-architect-panel')!;
+    expect(panel.querySelector('.hotel-architect-eyebrow')).toBeNull();
+    expect(panel.querySelector('.hotel-architect-title')?.textContent).toBe('MORNING');
+    expect(panel.querySelector('.hotel-architect-body')?.textContent).toBe('About Morning.');
+    expect(block.querySelectorAll('.hotel-architect-slide')).toHaveLength(2);
+    expect([...panel.querySelectorAll('.hotel-architect-cta a')].map((link) => link.textContent)).toEqual([
+      'Enquire',
+      'Details',
+    ]);
+  });
+
+  it('gives a ritual just added in the editor a placeholder tab', () => {
+    const empty = `<div data-aue-model="hotel-architect-ritual">${'<div></div>'.repeat(7)}<div>false</div></div>`;
+    const block = build(COPY_ROWS + ritualRow('Morning', { model: true }) + empty);
+
+    decorate(block);
+
+    expect([...block.querySelectorAll('[role="tab"]')].map((tab) => tab.textContent)).toEqual(['Morning', 'Ritual 2']);
+  });
+
+  it('reveals the ritual the editor selects', () => {
+    const block = build(COPY_ROWS + ritualRow('Morning', { model: true }) + ritualRow('Evening', { model: true }));
+    decorate(block);
+
+    const panels = block.querySelectorAll<HTMLElement>('.hotel-architect-panel');
+    panels[1]!.dispatchEvent(new Event('aue:ui-select', { bubbles: true }));
+
+    expect(visiblePanel(block)).toBe(panels[1]);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Evening');
+  });
+});

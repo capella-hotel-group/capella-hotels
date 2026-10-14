@@ -2100,6 +2100,172 @@
     ]
   },
   {
+    "id": "hotel-architect-ritual",
+    "fields": [
+      {
+        "component": "text",
+        "name": "tabLabel",
+        "label": "Tab Label",
+        "description": "Shown in the tab bar, which only appears when the block has two or more rituals.",
+        "valueType": "string",
+        "value": "",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "description": "One paragraph per line. The second line is indented, as in the design.",
+        "valueType": "string",
+        "value": "",
+        "required": true
+      },
+      {
+        "component": "richtext",
+        "name": "body",
+        "label": "Description",
+        "valueType": "string",
+        "value": "",
+        "required": true
+      },
+      {
+        "component": "container",
+        "name": "media",
+        "label": "Primary Images",
+        "description": "Add one image for a static photo, or two or more to enable the carousel arrows.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "reference",
+            "name": "image",
+            "label": "Image",
+            "valueType": "string",
+            "multi": false,
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "imageAlt",
+            "label": "Image Alt Text",
+            "valueType": "string",
+            "value": "",
+            "required": true
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "thumbnails_image1",
+        "label": "Gallery Thumbnail 1",
+        "description": "Optional static supporting image. Thumbnails do not control the primary media carousel.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnails_image1Alt",
+        "label": "Gallery Thumbnail 1 Alt Text",
+        "valueType": "string",
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "thumbnails_image1"
+          }
+        }
+      },
+      {
+        "component": "reference",
+        "name": "thumbnails_image2",
+        "label": "Gallery Thumbnail 2",
+        "description": "Optional static supporting image.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnails_image2Alt",
+        "label": "Gallery Thumbnail 2 Alt Text",
+        "valueType": "string",
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "thumbnails_image2"
+          }
+        }
+      },
+      {
+        "component": "reference",
+        "name": "thumbnails_image3",
+        "label": "Gallery Thumbnail 3",
+        "description": "Optional static supporting image.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "thumbnails_image3Alt",
+        "label": "Gallery Thumbnail 3 Alt Text",
+        "valueType": "string",
+        "value": "",
+        "required": true,
+        "condition": {
+          "!!": {
+            "var": "thumbnails_image3"
+          }
+        }
+      },
+      {
+        "component": "text",
+        "name": "primaryCta",
+        "label": "Primary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "primaryCta_link",
+        "label": "Primary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "primaryCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "secondaryCta",
+        "label": "Secondary CTA Label",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "secondaryCta_link",
+        "label": "Secondary CTA URL",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "secondaryCta_openInNewTab",
+        "label": "Open in new tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "interactive-asset",
     "fields": [
       {
