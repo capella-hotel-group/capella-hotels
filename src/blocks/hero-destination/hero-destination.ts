@@ -103,14 +103,22 @@ export default function decorate(block: HTMLElement): void {
   });
   block.append(toggle);
 
+  // Autoplay pauses only when hovering specifically over the pagination dots or
+  // text heading, rather than the entire 100vh video background.
   // Touch taps emulate mouseenter and never fire a matching leave, which would freeze autoplay
   // permanently, so only real mice take part in hover pausing.
-  block.addEventListener('pointerenter', (event) => {
-    if (event.pointerType === 'mouse') carousel.pause('hover');
-  });
-  block.addEventListener('pointerleave', (event) => {
-    if (event.pointerType === 'mouse') carousel.resume('hover');
-  });
+  const pauseOnHover = (el: HTMLElement): void => {
+    el.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'mouse') carousel.pause('hover');
+    });
+    el.addEventListener('pointerleave', (event) => {
+      if (event.pointerType === 'mouse') carousel.resume('hover');
+    });
+  };
+
+  if (dots.length > 0) pauseOnHover(nav);
+  track.querySelectorAll<HTMLElement>('.hero-destination-heading').forEach(pauseOnHover);
+
   block.addEventListener('focusin', (event) => {
     // The toggle is exempt: focusing it must not add a pause reason that outlives a Play click.
     if (event.target === toggle) carousel.resume('focus');
