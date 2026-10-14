@@ -85,13 +85,14 @@
         position: absolute;
         inset: 0;
 
-        /* the copy sits on the lower half of the media, so it needs a scrim to stay
-           legible over both a pale image and a moving video */
+        /* Figma stacks two flat rgba(0,0,0,0.4) layers over the media at every
+           breakpoint (the Container fill and the Overlay node); painting both keeps
+           the white copy legible over a pale image or a moving video */
         &::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 40%, rgb(0 0 0 / 55%) 100%);
+            background: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), rgb(0 0 0 / 40%);
         }
     }
 
@@ -155,7 +156,10 @@
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
 
+        /* each authored line is a span (a <p> is not allowed inside a heading),
+           so it is made a block to keep its own line */
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
@@ -321,7 +325,10 @@
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
 
+        /* each authored line is a span (a <p> is not allowed inside a heading),
+           so it is made a block to keep its own line */
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
