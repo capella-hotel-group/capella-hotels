@@ -100,7 +100,7 @@ describe('hotel-architect with a single ritual', () => {
     const ritual = visibleRitual(block)!;
     expect(ritual.hasAttribute('role')).toBe(false);
     expect(ritual.querySelector('.hotel-architect-eyebrow')?.textContent).toBe('RITUAL');
-    expect(ritual.querySelectorAll('.hotel-architect-title > p')).toHaveLength(2);
+    expect(ritual.querySelectorAll('.hotel-architect-title > span')).toHaveLength(2);
     expect(ritual.querySelector('.hotel-architect-body')?.textContent).toBe('About Resort.');
 
     const ctas = ritual.querySelectorAll<HTMLAnchorElement>('.hotel-architect-cta a');
@@ -118,6 +118,24 @@ describe('hotel-architect with a single ritual', () => {
     expect(card.hidden).toBe(false);
     expect(card.querySelector('.hotel-architect-card-name')?.textContent).toBe('Andre Fu');
     expect(card.querySelector('a')?.getAttribute('href')).toBe('/architect');
+  });
+
+  it('renders the title as a heading with one span per authored line', () => {
+    const paragraphs = ritualRow('Resort').replace(
+      '<div>RESORT,<br>SECOND LINE</div>',
+      '<div><p>RED EARTH,</p><p>GREEN CANOPY</p></div>',
+    );
+    const block = build(IDENTITY_ROWS + paragraphs);
+
+    decorate(block);
+
+    const title = block.querySelector('.hotel-architect-title')!;
+    expect(title.tagName).toBe('H2');
+    expect(title.querySelector('p')).toBeNull();
+    expect([...title.children].map((line) => `${line.tagName}:${line.textContent}`)).toEqual([
+      'SPAN:RED EARTH,',
+      'SPAN:GREEN CANOPY',
+    ]);
   });
 
   it('keeps the editor instrumentation of every image on its ritual', () => {
@@ -216,7 +234,7 @@ describe('hotel-architect with a single ritual', () => {
 
     const ritual = block.querySelector<HTMLElement>('.hotel-architect-ritual')!;
     expect(ritual.querySelector('.hotel-architect-eyebrow')).toBeNull();
-    expect(ritual.querySelector('.hotel-architect-title p')?.textContent).toBe('RESORT,');
+    expect(ritual.querySelector('.hotel-architect-title span')?.textContent).toBe('RESORT,');
     expect(ritual.querySelector('.hotel-architect-body')?.textContent).toBe('About Resort.');
     expect(ritual.querySelectorAll('.hotel-architect-thumb')).toHaveLength(3);
     expect(ritual.querySelectorAll('.hotel-architect-slide')).toHaveLength(2);
@@ -255,7 +273,7 @@ describe('hotel-architect with ritual tabs', () => {
     expect(ritual.getAttribute('role')).toBe('tabpanel');
     expect(ritual.getAttribute('aria-labelledby')).toBe(tabs[0]!.id);
     expect(tabs[0]!.getAttribute('aria-controls')).toBe(ritual.id);
-    expect(ritual.querySelector('.hotel-architect-title p')?.textContent).toBe('MORNING,');
+    expect(ritual.querySelector('.hotel-architect-title span')?.textContent).toBe('MORNING,');
     expect(ritual.querySelectorAll('.hotel-architect-slide')).toHaveLength(2);
     expect(ritual.querySelectorAll('.hotel-architect-nav')).toHaveLength(2);
     // the design shows only the arrows on a ritual's media
@@ -265,7 +283,7 @@ describe('hotel-architect with ritual tabs', () => {
 
     expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual(['false', 'true']);
     ritual = visibleRitual(block)!;
-    expect(ritual.querySelector('.hotel-architect-title p')?.textContent).toBe('EVENING,');
+    expect(ritual.querySelector('.hotel-architect-title span')?.textContent).toBe('EVENING,');
     expect(ritual.querySelector('.hotel-architect-thumb img')?.getAttribute('alt')).toBe('Evening-thumb 1');
     expect(ritual.querySelector('.hotel-architect-slide img')?.getAttribute('alt')).toBe('Evening 1');
     expect(ritual.querySelector('.hotel-architect-nav')).toBeNull();

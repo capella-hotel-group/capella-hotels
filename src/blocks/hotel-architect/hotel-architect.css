@@ -168,6 +168,7 @@
     }
 
     .hotel-architect-title {
+        margin: 0;
         font-family: var(--type-font-family-heading);
         font-size: var(--typography-fontsize-heading-h1);
         font-weight: var(--type-font-weight-heading);
@@ -175,7 +176,10 @@
         color: var(--color-text-main-heading);
         text-transform: uppercase;
 
+        /* each authored line is a span (a <p> is not allowed inside the h2), so it
+           is made a block to keep its own line */
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
