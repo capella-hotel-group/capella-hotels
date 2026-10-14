@@ -624,15 +624,15 @@
           }
         },
         {
-          "title": "Hotel Architect Gallery Image",
-          "id": "hotel-architect-image",
+          "title": "Hotel Architect Ritual",
+          "id": "hotel-architect-ritual",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Hotel Architect Gallery Image",
-                  "model": "hotel-architect-image"
+                  "name": "Hotel Architect Ritual",
+                  "model": "hotel-architect-ritual"
                 }
               }
             }
@@ -648,21 +648,6 @@
                 "template": {
                   "name": "Hotel Architect Card",
                   "model": "hotel-architect-card"
-                }
-              }
-            }
-          }
-        },
-        {
-          "title": "Hotel Architect Ritual",
-          "id": "hotel-architect-ritual",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block/item",
-                "template": {
-                  "name": "Hotel Architect Ritual",
-                  "model": "hotel-architect-ritual"
                 }
               }
             }
