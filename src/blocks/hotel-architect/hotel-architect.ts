@@ -10,6 +10,26 @@ const MAX_THUMBNAILS = 3;
 
 const IMAGE_MODEL = 'hotel-architect-image';
 const CARD_MODEL = 'hotel-architect-card';
+const RITUAL_MODEL = 'hotel-architect-ritual';
+
+// Cell order of the `hotel-architect-ritual` model, a contract like COPY_FIELDS above.
+// Grouped fields (media, thumbnails, each CTA) each collapse into one cell.
+const RITUAL_FIELDS = [
+  'tabLabel',
+  'eyebrow',
+  'title',
+  'body',
+  'media',
+  'thumbnails',
+  'primaryCta',
+  'secondaryCta',
+] as const;
+type RitualField = (typeof RITUAL_FIELDS)[number];
+
+// the card is the widest of the other item rows (photo, name, role, CTA)
+const CARD_CELL_COUNT = 4;
+
+let blockCount = 0;
 
 // Exported from the Figma "arrow-icon" component (28x28). fill is currentColor
 // so the stylesheet owns the colour.
@@ -36,18 +56,20 @@ function isOverlayEnabled(cell: Element | null | undefined): boolean {
 }
 
 /**
- * In the editor every item row carries its model. Outside it the two item models
- * are told apart by cell content: every gallery cell after the image holds either
- * a picture or the overlay flag, where the card also carries its name and role.
+ * In the editor every item row carries its model. Outside it the item models are
+ * told apart by cell content: a ritual is the only item with more cells than the
+ * card, and every gallery cell after the image holds either a picture or the
+ * overlay flag, where the card also carries its name and role.
  */
 function itemModelOf(row: HTMLElement): string | null {
   const model = row.dataset.aueModel;
-  if (model) return model === IMAGE_MODEL || model === CARD_MODEL ? model : null;
+  if (model) return [IMAGE_MODEL, CARD_MODEL, RITUAL_MODEL].includes(model) ? model : null;
 
   const cells = cellsOf(row);
   // a single cell is a block field, including the thumbnail group; gallery items
   // also carry their overlay flag cell
   if (cells.length < 2) return null;
+  if (cells.length > CARD_CELL_COUNT) return RITUAL_MODEL;
 
   const isGalleryCell = (cell: Element): boolean =>
     !!cell.querySelector('picture, img') || ['', 'true', 'false'].includes(textOf(cell).toLowerCase());
@@ -115,7 +137,10 @@ function buildLink(cell: Element | null | undefined, testId: string): HTMLAnchor
 }
 
 function buildCopy(row: Element | undefined, field: string): HTMLElement | null {
-  const cell = row?.firstElementChild ?? null;
+  return buildCopyFromCell(row?.firstElementChild, field);
+}
+
+function buildCopyFromCell(cell: Element | null | undefined, field: string): HTMLElement | null {
   if (!hasContent(cell)) return null;
   const wrapper = document.createElement('div');
   wrapper.className = `hotel-architect-${field}`;
@@ -215,11 +240,35 @@ function buildSlide(row: HTMLElement, index: number): Slide {
 }
 
 /**
+ * Builds a ritual's slides from its primary-images multifield, which renders one
+ * `<li><picture>` per entry. A cell that arrives without the list (for example
+ * while the multi-field flag is off) still yields one slide per picture.
+ */
+function buildMediaSlides(cell: Element | null | undefined): Slide[] {
+  if (!cell) return [];
+  const listItems = [...cell.querySelectorAll<HTMLElement>('li')];
+  const items = listItems.length ? listItems : [...cell.querySelectorAll<HTMLElement>('picture')];
+
+  return items.map((item, index) => {
+    const element = document.createElement('li');
+    element.className = 'hotel-architect-slide';
+    if (item.matches('li')) moveInstrumentation(item, element);
+
+    const picture = item.matches('picture') ? item : buildPicture(item);
+    if (picture) element.append(picture);
+
+    return {
+      element,
+      label: picture?.querySelector('img')?.getAttribute('alt') || `Show image ${index + 1}`,
+    };
+  });
+}
+
+/**
  * Builds the static supporting gallery from the grouped thumbnail fields. These
  * images are content, not carousel controls, so they keep their authored alt text.
  */
-function buildThumbs(row: HTMLElement | null): HTMLUListElement | null {
-  const cell = row?.firstElementChild;
+function buildThumbs(cell: Element | null | undefined): HTMLUListElement | null {
   const pictures = [...(cell?.querySelectorAll<HTMLElement>('picture') ?? [])].slice(0, MAX_THUMBNAILS);
   if (!cell || !pictures.length) return null;
 
@@ -322,31 +371,18 @@ function buildCard(row: HTMLElement): HTMLElement {
 }
 
 /**
- * @param block The block element
+ * Builds the CTA row, with the hairline divider only between two links.
+ * Returns null when no CTA is complete, so no empty row takes up space.
  */
-export default function decorate(block: HTMLElement): void {
-  const rows = [...block.children] as HTMLElement[];
-  const models = new Map(rows.map((row) => [row, itemModelOf(row)]));
-  const imageRows = rows.filter((row) => models.get(row) === IMAGE_MODEL);
-  const cardRows = rows.filter((row) => models.get(row) === CARD_MODEL);
-  const blockRows = rows.filter((row) => !models.get(row));
-  const thumbnailsRow = takeThumbnailsRow(blockRows);
-  const copyRows = applyBlockIdentity(block, blockRows, { contentRows: COPY_FIELDS.length });
-
-  const header = document.createElement('div');
-  header.className = 'hotel-architect-header';
-  const eyebrow = buildCopy(copyRows[0], COPY_FIELDS[0]);
-  const title = buildCopy(copyRows[1], COPY_FIELDS[1]);
-  if (title) splitOnLineBreaks(title);
-  if (eyebrow) header.append(eyebrow);
-  if (title) header.append(title);
-
-  const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
-
+function buildCtas(
+  primaryCell: Element | null | undefined,
+  secondaryCell: Element | null | undefined,
+): HTMLElement | null {
   const links = [
-    buildLink(copyRows[3]?.firstElementChild, 'hotel-architect-primary-cta'),
-    buildLink(copyRows[4]?.firstElementChild, 'hotel-architect-secondary-cta'),
+    buildLink(primaryCell, 'hotel-architect-primary-cta'),
+    buildLink(secondaryCell, 'hotel-architect-secondary-cta'),
   ].filter((link): link is HTMLAnchorElement => link !== null);
+  if (!links.length) return null;
 
   const cta = document.createElement('div');
   cta.className = 'hotel-architect-cta';
@@ -359,8 +395,30 @@ export default function decorate(block: HTMLElement): void {
     }
     cta.append(link);
   });
+  return cta;
+}
 
-  const slides = imageRows.map(buildSlide);
+function buildHeader(
+  eyebrowCell: Element | null | undefined,
+  titleCell: Element | null | undefined,
+): HTMLElement | null {
+  const eyebrow = buildCopyFromCell(eyebrowCell, 'eyebrow');
+  const title = buildCopyFromCell(titleCell, 'title');
+  if (title) splitOnLineBreaks(title);
+  if (!eyebrow && !title) return null;
+
+  const header = document.createElement('div');
+  header.className = 'hotel-architect-header';
+  if (eyebrow) header.append(eyebrow);
+  if (title) header.append(title);
+  return header;
+}
+
+/**
+ * Builds one primary media carousel. The arrows (and, where the design shows them,
+ * the dots) only appear for two or more slides; selection wraps at either end.
+ */
+function buildGallery(slides: Slide[], { dots: withDots }: { dots: boolean }): HTMLElement {
   const track = document.createElement('ul');
   track.className = 'hotel-architect-track';
   slides.forEach((slide) => track.append(slide.element));
@@ -368,8 +426,7 @@ export default function decorate(block: HTMLElement): void {
   const interactive = slides.length > 1;
   const prev = interactive ? buildArrow('prev', 'Previous image') : null;
   const next = interactive ? buildArrow('next', 'Next image') : null;
-  const dots = interactive ? buildDots(slides) : null;
-  const thumbs = buildThumbs(thumbnailsRow);
+  const dots = interactive && withDots ? buildDots(slides) : null;
 
   const frame = document.createElement('div');
   frame.className = 'hotel-architect-frame';
@@ -381,29 +438,7 @@ export default function decorate(block: HTMLElement): void {
   media.className = 'hotel-architect-media';
   media.append(frame);
 
-  if (cardRows.length) {
-    const cards = document.createElement('div');
-    cards.className = 'hotel-architect-cards';
-    cardRows.forEach((row) => cards.append(buildCard(row)));
-    media.append(cards);
-  }
-
-  // the copy children share a wrapper so desktop can lay them out as one flex
-  // column beside the media; below desktop the wrapper is `display: contents`
-  const copy = document.createElement('div');
-  copy.className = 'hotel-architect-copy';
-  if (header.childElementCount > 0) copy.append(header);
-  if (body) copy.append(body);
-  if (thumbs) copy.append(thumbs);
-  if (cta.childElementCount > 0) copy.append(cta);
-
-  block.textContent = '';
-  block.dataset.testid = 'hotel-architect';
-  block.append(copy);
-  // appended even when empty so the editor still offers the gallery container
-  block.append(media);
-
-  if (!slides.length) return;
+  if (!slides.length) return media;
 
   const dotButtons = [...(dots?.querySelectorAll<HTMLElement>('.hotel-architect-dot') ?? [])];
   let selected = -1;
@@ -431,4 +466,227 @@ export default function decorate(block: HTMLElement): void {
   });
 
   select(0);
+  return media;
+}
+
+/* ---------- rituals ---------- */
+
+const FLAGS = ['true', 'false'];
+
+/**
+ * Maps a ritual row's cells to its fields. Every field normally keeps its cell, so
+ * they are read by position; a row with missing cells falls back to telling them
+ * apart by content, where the CTA groups always end in their open-in-new-tab flag
+ * and the required text fields fill the gaps left by the optional eyebrow.
+ */
+function ritualCellsOf(row: HTMLElement): Partial<Record<RitualField, HTMLElement>> {
+  const cells = cellsOf(row);
+  if (cells.length === RITUAL_FIELDS.length) {
+    return Object.fromEntries(RITUAL_FIELDS.map((field, index) => [field, cells[index]]));
+  }
+
+  const isFlag = (element: Element | null): boolean => !!element && FLAGS.includes(textOf(element).toLowerCase());
+  const ctaCells = cells.filter(
+    (cell) => isFlag(cell) || (isFlag(cell.lastElementChild) && !cell.querySelector('picture')),
+  );
+  const media = cells.find((cell) => cell.querySelector('li picture'));
+  const thumbnails = cells.find((cell) => cell !== media && cell.querySelector('picture'));
+  const texts = cells.filter(
+    (cell) => !ctaCells.includes(cell) && cell !== media && cell !== thumbnails && hasContent(cell),
+  );
+  const [tabLabel, ...rest] = texts;
+  const [eyebrow, title, body] = rest.length >= 3 ? rest : [undefined, ...rest];
+
+  return { tabLabel, eyebrow, title, body, media, thumbnails, primaryCta: ctaCells[0], secondaryCta: ctaCells[1] };
+}
+
+interface Ritual {
+  label: string;
+  panel: HTMLElement;
+  media: HTMLElement;
+}
+
+function buildRitual(row: HTMLElement, index: number): Ritual {
+  const cells = ritualCellsOf(row);
+
+  // the panel holds the editable copy, so it carries the item's instrumentation
+  const panel = document.createElement('div');
+  panel.className = 'hotel-architect-panel';
+  panel.dataset.index = String(index);
+  moveInstrumentation(row, panel);
+
+  const header = buildHeader(cells.eyebrow, cells.title);
+  const body = buildCopyFromCell(cells.body, 'body');
+  const thumbs = buildThumbs(cells.thumbnails);
+  const cta = buildCtas(cells.primaryCta, cells.secondaryCta);
+  [header, body, thumbs, cta].forEach((part) => part && panel.append(part));
+
+  // the design shows only the arrows on a ritual's media, never the dots
+  const media = buildGallery(buildMediaSlides(cells.media), { dots: false });
+  media.dataset.index = String(index);
+
+  return {
+    // a ritual just added in the editor has no label yet, but still needs a tab
+    label: textOf(cells.tabLabel) || `Ritual ${index + 1}`,
+    panel,
+    media,
+  };
+}
+
+function buildTab(ritual: Ritual, index: number, blockId: string): HTMLButtonElement {
+  const tab = document.createElement('button');
+  tab.type = 'button';
+  tab.className = 'hotel-architect-tab';
+  tab.id = `${blockId}-tab-${index}`;
+  tab.dataset.index = String(index);
+  tab.dataset.testid = 'hotel-architect-tab';
+  tab.setAttribute('role', 'tab');
+  tab.setAttribute('aria-controls', ritual.panel.id);
+  tab.textContent = ritual.label;
+  return tab;
+}
+
+/** Fades the tab bar's trailing edge while more tabs are scrolled out of view. */
+function trackOverflow(tablist: HTMLElement): void {
+  const sync = (): void => {
+    const remaining = tablist.scrollWidth - tablist.clientWidth - Math.abs(tablist.scrollLeft);
+    // +1 absorbs the sub-pixel difference these report at fractional widths
+    tablist.classList.toggle('has-more', remaining > 1);
+  };
+  tablist.addEventListener('scroll', sync, { passive: true });
+  new ResizeObserver(sync).observe(tablist);
+}
+
+/**
+ * Renders the tabbed ritual variation: each ritual brings its own copy, thumbnails,
+ * CTAs and primary media carousel, and a tab bar switches between them. A single
+ * ritual renders without the tab bar. The architect card is not part of this
+ * variation, so card items are not rendered.
+ */
+function decorateRituals(block: HTMLElement, rows: HTMLElement[]): void {
+  blockCount += 1;
+  const blockId = `hotel-architect-${blockCount}`;
+  const rituals = rows.map(buildRitual);
+  const tabbed = rituals.length > 1;
+
+  block.classList.add('hotel-architect-rituals');
+
+  const copy = document.createElement('div');
+  copy.className = 'hotel-architect-copy';
+
+  const tablist = document.createElement('div');
+  tablist.className = 'hotel-architect-tabs';
+  tablist.setAttribute('role', 'tablist');
+  tablist.setAttribute('aria-label', 'Rituals');
+
+  const tabs = rituals.map((ritual, index) => {
+    ritual.panel.id = `${blockId}-panel-${index}`;
+    if (tabbed) {
+      ritual.panel.setAttribute('role', 'tabpanel');
+      ritual.panel.setAttribute('aria-labelledby', `${blockId}-tab-${index}`);
+    }
+    return buildTab(ritual, index, blockId);
+  });
+
+  if (tabbed) {
+    tablist.append(...tabs);
+    copy.append(tablist);
+  }
+  rituals.forEach((ritual) => copy.append(ritual.panel));
+
+  block.append(copy, ...rituals.map((ritual) => ritual.media));
+
+  let selected = -1;
+  const select = (index: number, reveal = false): void => {
+    if (index === selected || !rituals[index]) return;
+    selected = index;
+    rituals.forEach((ritual, i) => {
+      const active = i === selected;
+      ritual.panel.hidden = !active;
+      ritual.media.hidden = !active;
+      tabs[i]!.setAttribute('aria-selected', String(active));
+      tabs[i]!.tabIndex = active ? 0 : -1;
+    });
+    if (reveal) tabs[selected]!.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+
+  select(0);
+  if (!tabbed) return;
+
+  tablist.addEventListener('click', (event) => {
+    const tab = (event.target as HTMLElement).closest<HTMLElement>('[role="tab"]');
+    if (tab) select(Number(tab.dataset.index), true);
+  });
+
+  const STEPS: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 };
+  tablist.addEventListener('keydown', (event: KeyboardEvent) => {
+    let target: number;
+    if (event.key in STEPS) target = (selected + STEPS[event.key]! + rituals.length) % rituals.length;
+    else if (event.key === 'Home') target = 0;
+    else if (event.key === 'End') target = rituals.length - 1;
+    else return;
+
+    event.preventDefault();
+    select(target, true);
+    tabs[target]!.focus();
+  });
+
+  trackOverflow(tablist);
+
+  // selecting a ritual in the editor rail, or editing its copy inline, should
+  // reveal the matching tab
+  const revealFromEvent = (event: Event): void => {
+    const owner = (event.target as Element | null)?.closest?.<HTMLElement>(
+      '.hotel-architect-panel, .hotel-architect-media',
+    );
+    if (owner?.dataset.index) select(Number(owner.dataset.index));
+  };
+  block.addEventListener('aue:ui-select', revealFromEvent);
+  block.addEventListener('focusin', revealFromEvent);
+}
+
+/**
+ * @param block The block element
+ */
+export default function decorate(block: HTMLElement): void {
+  const rows = [...block.children] as HTMLElement[];
+  const models = new Map(rows.map((row) => [row, itemModelOf(row)]));
+  const imageRows = rows.filter((row) => models.get(row) === IMAGE_MODEL);
+  const cardRows = rows.filter((row) => models.get(row) === CARD_MODEL);
+  const ritualRows = rows.filter((row) => models.get(row) === RITUAL_MODEL);
+  const blockRows = rows.filter((row) => !models.get(row));
+  const thumbnailsRow = takeThumbnailsRow(blockRows);
+  const copyRows = applyBlockIdentity(block, blockRows, { contentRows: COPY_FIELDS.length });
+
+  block.textContent = '';
+  block.dataset.testid = 'hotel-architect';
+
+  // rituals replace the block-level copy, gallery and card with their own
+  if (ritualRows.length) {
+    decorateRituals(block, ritualRows);
+    return;
+  }
+
+  const header = buildHeader(copyRows[0]?.firstElementChild, copyRows[1]?.firstElementChild);
+  const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
+  const cta = buildCtas(copyRows[3]?.firstElementChild, copyRows[4]?.firstElementChild);
+  const thumbs = buildThumbs(thumbnailsRow?.firstElementChild);
+  const media = buildGallery(imageRows.map(buildSlide), { dots: true });
+
+  if (cardRows.length) {
+    const cards = document.createElement('div');
+    cards.className = 'hotel-architect-cards';
+    cardRows.forEach((row) => cards.append(buildCard(row)));
+    media.append(cards);
+  }
+
+  // the copy children share a wrapper so desktop can lay them out as one flex
+  // column beside the media; below desktop the wrapper is `display: contents`
+  const copy = document.createElement('div');
+  copy.className = 'hotel-architect-copy';
+  [header, body, thumbs, cta].forEach((part) => part && copy.append(part));
+
+  block.append(copy);
+  // appended even when empty so the editor still offers the gallery container
+  block.append(media);
 }

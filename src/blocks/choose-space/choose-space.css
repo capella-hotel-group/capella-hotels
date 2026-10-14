@@ -1,10 +1,9 @@
 /* choose-space
-   Figma: desktop 6047:27021 (1440), tablet 6048:28586 (834), mobile 6048:30207 (393).
-   The hero is full-bleed, so its desktop spacing is written as calc(N * var(--fluid-unit))
-   where N is the raw Figma pixel value and the copy stays proportional to the viewport.
-   The selector below it is the opposite: a fixed 848 band centred in the viewport, so its
-   columns keep their drawn size. Everything nests under the block class, so no
-   rule can leak to another block. */
+   Figma: Content-card/choose-space 4214:4226 - desktop-xl 1920, desktop 1440, tablet 834,
+   mobile 393. The hero is full-bleed, so its copy stays pinned to the module padding
+   from the viewport edge. The selector below it is the opposite: a band centred in
+   the viewport (848 at 1440, 1164 at 1920), so its columns keep their drawn size.
+   Everything nests under the block class, so no rule can leak to another block. */
 .choose-space {
     display: flex;
     flex-direction: column;
@@ -30,8 +29,8 @@
         justify-content: flex-end;
         min-width: 0;
         width: 100%;
-        /* Figma mobile 393x660 */
-        aspect-ratio: 393 / 660;
+        /* Figma mobile 393x680 */
+        aspect-ratio: 393 / 680;
         overflow: hidden;
         background-color: var(--color-text-main-heading);
         opacity: 0;
@@ -46,14 +45,22 @@
             display: none;
         }
 
+        /* mobile pins the copy to the bottom of the media; tablet and up hang it
+           from the top padding instead */
         @media (width >= 768px) {
-            /* Figma tablet 834x425 */
-            aspect-ratio: 834 / 425;
+            /* Figma tablet 834x600 */
+            aspect-ratio: 834 / 600;
+            justify-content: flex-start;
         }
 
         @media (width >= 1200px) {
             /* Figma desktop 1440x680 */
             aspect-ratio: 1440 / 680;
+        }
+
+        @media (width >= 1920px) {
+            /* Figma desktop-xl 1920x760 */
+            aspect-ratio: 1920 / 760;
         }
     }
 
@@ -78,13 +85,14 @@
         position: absolute;
         inset: 0;
 
-        /* the copy sits on the lower half of the media, so it needs a scrim to stay
-           legible over both a pale image and a moving video */
+        /* Figma stacks two flat rgba(0,0,0,0.4) layers over the media at every
+           breakpoint (the Container fill and the Overlay node); painting both keeps
+           the white copy legible over a pale image or a moving video */
         &::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 40%, rgb(0 0 0 / 55%) 100%);
+            background: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), rgb(0 0 0 / 40%);
         }
     }
 
@@ -107,23 +115,26 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        /* Figma 1440: container padding 80, so the inset copy lands on 112 and the
-           heading's outdented first line on 80 */
+        /* the media is full-bleed and so is the copy: it stays pinned to the module
+           padding from the viewport edge at every width. Centring it in a capped band
+           made it drift right as the viewport grew and snap back at each breakpoint */
         padding-inline: var(--dimension-layout-module-padding-inline-s);
-        padding-block-end: var(--dimension-layout-margin-m);
+        /* Figma module/padding/block-L: 96 mobile, 112 tablet, 120 desktop */
+        padding-block: var(--dimension-layout-module-padding-top) var(--dimension-layout-margin-m);
         color: var(--color-text-main-inverse-heading);
+    }
 
-        @media (width >= 1200px) {
-            /* same band as offers-carousel: the content stops growing at the 1440
-               artboard, so past it the side padding absorbs the slack */
-            width: 100%;
-            max-width: calc(var(--dimension-layout-40vw) + var(--dimension-layout-60vw));
-            margin-inline: auto;
+    /* Figma tablet and desktop inset the copy by 2xl and hang only the heading's
+       first line out of it; mobile sets every line flush */
+    .choose-space-eyebrow,
+    .choose-space-panel-description,
+    .choose-space-panel-links {
+        @media (width >= 768px) {
+            padding-inline-start: var(--dimension-spacing-general-2xl);
         }
     }
 
     .choose-space-eyebrow {
-        padding-inline-start: var(--dimension-spacing-general-2xl);
         margin: 0 0 var(--dimension-spacing-eyebrow-to-title);
         font-family: var(--type-font-family-body);
         font-size: var(--typography-fontsize-body-eyebrow);
@@ -145,7 +156,10 @@
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
 
+        /* each authored line is a span (a <p> is not allowed inside a heading),
+           so it is made a block to keep its own line */
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
@@ -153,27 +167,30 @@
 
         /* the copy is inset by 2xl and only the heading's first line hangs out of it */
         > :nth-child(n + 2) {
-            padding-inline-start: var(--dimension-spacing-general-2xl);
+            @media (width >= 768px) {
+                padding-inline-start: var(--dimension-spacing-general-2xl);
+            }
         }
 
-        /* right edge lines up with the 600px copy column; below desktop the column is
-           already narrow, so an extra cap would break the authored lines a second time */
-        @media (width >= 1200px) {
-            max-width: 600px;
+        /* Figma Content-block is 522 wide on tablet and desktop */
+        @media (width >= 768px) {
+            max-width: 522px;
         }
     }
 
     /* Figma styles the panel copy with heading/subtitle, not a body style */
     .choose-space-panel-description {
-        padding-inline-start: var(--dimension-spacing-general-2xl);
         margin-block-start: var(--dimension-spacing-heading-to-content);
-        max-width: calc(600px + var(--dimension-spacing-general-2xl));
         font-family: var(--type-font-family-subtitle);
         font-size: var(--typography-fontsize-heading-subtitle);
         font-weight: var(--type-font-weight-subtitle);
         line-height: var(--typography-line-height-heading-subtitle);
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
+
+        @media (width >= 768px) {
+            max-width: 522px;
+        }
 
         > * {
             margin: 0;
@@ -184,13 +201,20 @@
         }
     }
 
+    /* Figma text-links: 16 gap either side of a 20px hairline divider */
     .choose-space-panel-links {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: var(--dimension-spacing-general-2xl);
-        padding-inline-start: var(--dimension-spacing-general-2xl);
+        gap: var(--dimension-spacing-general-m);
         margin-block-start: var(--dimension-spacing-heading-to-content);
+    }
+
+    .choose-space-panel-divider {
+        flex: none;
+        width: var(--stroke-weight-s);
+        height: 20px;
+        background-color: var(--color-stroke-action-inverse-default);
     }
 
     /* ---------- links ---------- */
@@ -231,22 +255,45 @@
     /* ---------- selector ---------- */
 
     .choose-space-selector {
+        /* Figma inset of the stacked title, tabs and link: the module padding on
+           mobile, plus 2xl on tablet; desktop lays them out in a centred band */
+        --choose-space-inset: var(--dimension-layout-module-padding-inline-s);
+
         position: relative;
         display: flex;
         flex-direction: column;
+        row-gap: var(--dimension-layout-module-gutter-m);
         min-width: 0;
-        padding-block: var(--dimension-layout-module-padding-block-s);
+        padding-block: var(--dimension-layout-module-padding-block);
         background-color: var(--color-surface-page);
 
+        @media (width >= 768px) {
+            --choose-space-inset: calc(
+                var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl)
+            );
+
+            padding-block: var(--dimension-layout-module-padding-block-s);
+        }
+
         @media (width >= 1200px) {
+            --choose-space-inset: 0px;
+
             flex-direction: row;
-            align-items: flex-start;
-            /* Figma 1440 runs the content from x=296 to x=1144. Centring that 848
-               band beats fluid gutters: the columns keep their drawn size at any
-               viewport instead of scaling with it */
+            align-items: center;
+            /* Figma runs the content between the inline-l paddings of its artboard:
+               296 to 1144 at 1440, 378 to 1542 at 1920. Centring that band beats
+               fluid gutters: the columns keep their drawn size at any viewport */
             width: 100%;
-            max-width: 848px;
+            max-width: calc(
+                var(--dimension-viewport-width) * 1px - 2 * var(--dimension-layout-module-padding-inline-l)
+            );
             margin-inline: auto;
+        }
+
+        @media (width >= 1920px) {
+            /* the h4 title grows to 32px here, so the columns need the drawn 3xl gap
+               or ACCOMMODATION runs straight into the first thumbnail */
+            column-gap: var(--dimension-spacing-general-3xl);
         }
     }
 
@@ -259,16 +306,16 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            /* Figma title block is 288 wide, so the column ends exactly where the
-               tab list starts and the remaining 560 holds three thumbnails */
-            flex: 0 0 288px;
+            /* takes whatever the thumbnails leave: 288 at 1440, 504 at 1920 */
+            flex: 1 1 0;
+            min-width: 0;
         }
     }
 
     .choose-space-title {
         order: 1;
         margin: 0;
-        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        padding-inline: var(--choose-space-inset);
         font-family: var(--type-font-family-heading);
         font-size: var(--typography-fontsize-heading-h4);
         font-weight: var(--type-font-weight-heading);
@@ -278,7 +325,10 @@
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
 
+        /* each authored line is a span (a <p> is not allowed inside a heading),
+           so it is made a block to keep its own line */
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
@@ -286,19 +336,17 @@
 
         @media (width >= 1200px) {
             order: 0;
-            padding-inline: 0;
         }
     }
 
     .choose-space-explore {
         order: 3;
         align-self: flex-start;
-        margin-block-start: var(--dimension-spacing-general-m);
-        margin-inline: var(--dimension-layout-module-padding-inline-s);
+        margin-inline: var(--choose-space-inset);
 
         @media (width >= 1200px) {
             order: 0;
-            margin-inline: 0;
+            margin-block-start: var(--dimension-spacing-general-m);
         }
     }
 
@@ -306,12 +354,10 @@
         order: 2;
         position: relative;
         min-width: 0;
-        margin-block-start: var(--dimension-spacing-title-to-content);
 
         @media (width >= 1200px) {
             order: 0;
-            flex: 1;
-            margin-block-start: 0;
+            flex: none;
         }
     }
 
@@ -319,10 +365,10 @@
         display: flex;
         min-width: 0;
         column-gap: var(--dimension-layout-carousel-item-gap-xl);
-        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        padding-inline: var(--choose-space-inset);
         /* the snapport ignores the container's own padding, so a tab snapped to the
            start would sit flush against the viewport edge without this mirror */
-        scroll-padding-inline: var(--dimension-layout-module-padding-inline-s);
+        scroll-padding-inline: var(--choose-space-inset);
         overflow-x: auto;
         overscroll-behavior-inline: contain;
         scroll-snap-type: inline mandatory;
@@ -331,11 +377,6 @@
 
         &::-webkit-scrollbar {
             display: none;
-        }
-
-        @media (width >= 1200px) {
-            padding-inline: 0;
-            scroll-padding-inline: 0;
         }
     }
 
@@ -347,7 +388,7 @@
         flex-direction: column;
         align-items: flex-start;
         row-gap: var(--dimension-spacing-general-m);
-        /* Figma mobile 140 wide, tablet and desktop 160 */
+        /* Figma mobile 140 wide, tablet and desktop 160, desktop-xl 180 */
         width: 140px;
         padding: 0;
         border: 0;
@@ -360,12 +401,16 @@
         @media (width >= 768px) {
             width: 160px;
         }
+
+        @media (width >= 1920px) {
+            width: 180px;
+        }
     }
 
     .choose-space-tab-media {
         display: block;
         width: 100%;
-        /* Figma image-ratio: 140x105 mobile, 160x120 tablet and desktop */
+        /* Figma image-ratio: 140x105 mobile, 160x120 tablet and desktop, 180x135 desktop-xl */
         aspect-ratio: 4 / 3;
         overflow: hidden;
         background-color: var(--color-text-main-heading);

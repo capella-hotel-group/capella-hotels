@@ -97,13 +97,15 @@ function buildCopy(cell: Element | null | undefined, tag: string, className: str
 }
 
 /**
- * Rewrites `<p>one<br>two</p>` as `<p>one</p><p>two</p>` so a heading written with
- * soft breaks lines up with one written as separate paragraphs. The stylesheet
- * indents the second child, which only works when each line is its own element.
+ * Rewrites the authored lines of a heading as `<span>` elements, since `<p>` is not
+ * allowed inside `<h2>`/`<h3>`. `<p>one<br>two</p>` also becomes two spans, so a
+ * heading written with soft breaks lines up with one written as separate
+ * paragraphs. The stylesheet indents the second line, which only works when each
+ * line is its own element.
  */
-function splitOnLineBreaks(container: Element): void {
-  [...container.children].forEach((element) => {
-    if (!element.querySelector('br')) return;
+function buildHeadingLines(heading: Element): void {
+  [...heading.children].forEach((element) => {
+    if (!['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(element.tagName)) return;
 
     const lines = [document.createDocumentFragment()];
     [...element.childNodes].forEach((node) => {
@@ -111,16 +113,17 @@ function splitOnLineBreaks(container: Element): void {
       else lines[lines.length - 1]!.append(node);
     });
 
-    const paragraphs = lines
+    const spans = lines
       .filter((line) => line.textContent?.trim())
       .map((line) => {
         // a fresh element rather than a clone, so no data-aue-* attribute is duplicated
-        const paragraph = document.createElement(element.tagName);
-        paragraph.append(line);
-        return paragraph;
+        const span = document.createElement('span');
+        span.append(line);
+        return span;
       });
 
-    if (paragraphs.length) element.replaceWith(...paragraphs);
+    if (spans.length) element.replaceWith(...spans);
+    else element.remove();
   });
 }
 
@@ -273,7 +276,7 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
   body.className = 'choose-space-panel-body';
   const eyebrow = buildText(cells[ITEM.eyebrow], 'p', 'choose-space-eyebrow');
   const title = buildCopy(cells[ITEM.title], 'h3', 'choose-space-panel-title');
-  if (title) splitOnLineBreaks(title);
+  if (title) buildHeadingLines(title);
   const description = buildCopy(cells[ITEM.description], 'div', 'choose-space-panel-description');
   if (eyebrow) body.append(eyebrow);
   if (title) body.append(title);
@@ -285,6 +288,12 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
     const links = document.createElement('div');
     links.className = 'choose-space-panel-links';
     if (primary) links.append(primary);
+    if (primary && secondary) {
+      const divider = document.createElement('span');
+      divider.className = 'choose-space-panel-divider';
+      divider.setAttribute('aria-hidden', 'true');
+      links.append(divider);
+    }
     if (secondary) links.append(secondary);
     body.append(links);
   }
@@ -435,8 +444,11 @@ export default function decorate(block: HTMLElement): void {
   const head = document.createElement('div');
   head.className = 'choose-space-head';
   const title = buildCopy(blockRows[BLOCK_ROWS.title]?.firstElementChild, 'h2', 'choose-space-title');
-  if (title) splitOnLineBreaks(title);
-  if (title) head.append(title);
+  if (title) {
+    buildHeadingLines(title);
+    title.id = `${blockId}-title`;
+    head.append(title);
+  }
   const explore = buildCta(blockRows[BLOCK_ROWS.exploreCta]?.firstElementChild, 'primary');
   if (explore) {
     explore.className = 'choose-space-explore';
@@ -446,7 +458,10 @@ export default function decorate(block: HTMLElement): void {
   const tablist = document.createElement('div');
   tablist.className = 'choose-space-tablist';
   tablist.setAttribute('role', 'tablist');
-  tablist.setAttribute('aria-label', title?.textContent?.trim() || 'Choose a space');
+  // labelled by the visible title rather than its textContent, which runs the
+  // heading's lines together ("SIGNATUREACCOMMODATION")
+  if (title) tablist.setAttribute('aria-labelledby', title.id);
+  else tablist.setAttribute('aria-label', 'Choose a space');
   spaces.forEach((space) => tablist.append(space.tab));
 
   const nav = document.createElement('div');
