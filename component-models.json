@@ -626,7 +626,7 @@
         "label": "Highlight Tags",
         "description": "Select feature tags, such as private pool or private terrace.",
         "valueType": "string",
-        "multi": true
+        "multi": false
       },
       {
         "component": "container",
