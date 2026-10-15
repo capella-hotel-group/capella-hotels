@@ -37,10 +37,11 @@
           "value": ""
         },
         {
-          "component": "text",
+          "component": "aem-tag",
           "name": "eyebrow",
-          "label": "Card Eyebrow",
+          "label": "Category",
           "valueType": "string",
+          "multi": false,
           "required": true
         },
         {
@@ -58,12 +59,12 @@
           "required": true
         },
         {
-          "component": "textarea",
+          "component": "aem-tag",
           "name": "highlights",
-          "label": "Highlights",
-          "description": "Optional short feature line, such as private pool or private terrace.",
+          "label": "Highlight Tags",
+          "description": "Select feature tags, such as private pool or private terrace.",
           "valueType": "string",
-          "value": ""
+          "multi": true
         },
         {
           "component": "container",
