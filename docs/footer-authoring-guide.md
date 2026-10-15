@@ -3,6 +3,8 @@
 > **Audience:** Content authors
 > **Source document:** `/footer` (per site/language, e.g. `/global/en/footer`)
 
+**Footer lookup:** page `footer` metadata first; otherwise the nearest URL-level footer (for example, `/global/en/home` → `/global/en/footer`; `/en` → `/en/footer`), then the configured site fallback (for example, `/global/footer`) and finally `/footer`.
+
 ## 1. Overview
 
 Site footer content (background theme, contact details, social links, nav link
