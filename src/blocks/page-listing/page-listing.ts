@@ -209,10 +209,12 @@ function createCard(record: ListingRecord): HTMLElement {
   card.className = 'page-listing-card';
   const parsed = new DOMParser().parseFromString(record.listHtml || '', 'text/html');
   const rows = Array.from(parsed.body.children);
+  const cardTitle = textOf(rows[3]);
+  const cardDescription = textOf(rows[4]);
   const category = readTags(rows[2])[0] || '';
   card.dataset.category = category;
   const tags = readTags(rows[5]);
-  const media = createMedia(record, parsed);
+  const media = createMedia({ ...record, title: cardTitle }, parsed);
   if (media) card.append(media);
 
   const content = document.createElement('div');
@@ -227,7 +229,7 @@ function createCard(record: ListingRecord): HTMLElement {
 
   const title = document.createElement('h2');
   title.className = 'page-listing-card-title';
-  title.textContent = record.title?.trim() || 'Explore';
+  title.textContent = cardTitle || 'Explore';
 
   const pageUrl = getPageUrl(record.path);
   if (pageUrl) {
@@ -238,10 +240,10 @@ function createCard(record: ListingRecord): HTMLElement {
   }
   content.append(title);
 
-  if (record.description?.trim()) {
+  if (cardDescription) {
     const description = document.createElement('p');
     description.className = 'page-listing-card-description';
-    description.textContent = record.description.trim();
+    description.textContent = cardDescription;
     content.append(description);
   }
 
@@ -301,6 +303,7 @@ function createFilters(cards: HTMLElement[], results: HTMLElement): void {
 async function loadListings(
   type: ListingType,
   location: string,
+  enableCategoryFilters: boolean,
   status: HTMLElement,
   results: HTMLElement,
 ): Promise<void> {
@@ -325,7 +328,7 @@ async function loadListings(
     );
     const cards = matchingRecords.map(createCard);
     results.append(...cards);
-    createFilters(cards, results);
+    if (enableCategoryFilters) createFilters(cards, results);
     status.textContent = matchingRecords.length
       ? ''
       : `No listings are available for ${location}.`;
@@ -338,12 +341,15 @@ export default function decorate(block: HTMLElement): void {
   if (block.querySelector(':scope > .page-listing-results')) return;
 
   const rows = [...block.children] as HTMLElement[];
-  const [typeRow] = applyBlockIdentity(block, rows, {
-    contentRows: 1,
+  const hasFilterRow = rows.length >= 4 || ['true', 'false'].includes(textOf(rows.at(-1)).toLowerCase());
+  const [typeRow, filterRow] = applyBlockIdentity(block, rows, {
+    contentRows: hasFilterRow ? 2 : 1,
     hiddenClass: 'page-listing-config',
   });
   const type = readListingType(typeRow);
   typeRow?.classList.add('page-listing-config');
+  filterRow?.classList.add('page-listing-config');
+  const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
   const location = locationFromPath(window.location.pathname);
 
   const status = document.createElement('p');
@@ -354,5 +360,5 @@ export default function decorate(block: HTMLElement): void {
   results.className = 'page-listing-results';
 
   block.append(status, results);
-  void loadListings(type, location, status, results);
+  void loadListings(type, location, enableCategoryFilters, status, results);
 }

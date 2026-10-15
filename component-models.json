@@ -2566,6 +2566,14 @@
             "value": "dining"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "enableCategoryFilters",
+        "label": "Enable Category Filters",
+        "description": "Show the category selection bar above the cards.",
+        "valueType": "boolean",
+        "value": true
       }
     ]
   },
