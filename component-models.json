@@ -2546,6 +2546,15 @@
         "description": "Show the category selection bar above the cards.",
         "valueType": "boolean",
         "value": true
+      },
+      {
+        "component": "aem-tag",
+        "name": "categoryRootTag",
+        "label": "Category Root Tag",
+        "description": "Direct child tags define the category selection bar, including categories with no matching cards.",
+        "valueType": "string",
+        "multi": false,
+        "value": "/content/cq:tags/capella-hotels/accomodation"
       }
     ]
   },
