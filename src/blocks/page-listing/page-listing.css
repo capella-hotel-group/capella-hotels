@@ -33,6 +33,18 @@
     display: none;
 }
 
+.page-listing .page-listing-load-more {
+    display: block;
+    margin: 32px auto 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.page-listing .page-listing-load-more[hidden] {
+    display: none;
+}
+
 .page-listing .page-listing-filters {
     display: flex;
     flex-wrap: wrap;

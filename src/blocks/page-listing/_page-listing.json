@@ -66,6 +66,29 @@
 					"valueType": "string",
 					"multi": false,
 					"value": "/content/cq:tags/capella-hotels/accomodation"
+				},
+				{
+					"component": "boolean",
+					"name": "enableLoadMore",
+					"label": "Enable Load More",
+					"valueType": "boolean",
+					"value": false
+				},
+				{
+					"component": "number",
+					"name": "cardsPerLoad",
+					"label": "Cards Per Load",
+					"description": "Initial card count and number revealed on each click when Load More is enabled.",
+					"valueType": "number",
+					"value": 6,
+					"validation": { "numberMin": 1 }
+				},
+				{
+					"component": "text",
+					"name": "loadMoreLabel",
+					"label": "Load More Label",
+					"valueType": "string",
+					"value": "Load More"
 				}
 			]
 		}

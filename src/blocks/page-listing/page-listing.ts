@@ -299,7 +299,50 @@ async function loadCategories(rootTag: string): Promise<CategoryTag[]> {
   }
 }
 
-function createFilters(cards: HTMLElement[], results: HTMLElement, categories: CategoryTag[]): void {
+interface LoadMoreConfig {
+  enabled: boolean;
+  batchSize: number;
+  label: string;
+}
+
+function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config: LoadMoreConfig): (category: string) => void {
+  let selectedCategory = '';
+  let visibleCount = config.batchSize;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'page-listing-load-more';
+  button.dataset.testid = 'page-listing-load-more';
+  button.textContent = config.label;
+  const update = (): void => {
+    let matched = 0;
+    cards.forEach((card) => {
+      const matches = !selectedCategory || card.dataset.category === selectedCategory;
+      card.hidden = !matches || (config.enabled && matched >= visibleCount);
+      if (matches) matched += 1;
+    });
+    button.hidden = !config.enabled || matched <= visibleCount;
+  };
+  button.addEventListener('click', () => {
+    const firstHidden = cards.find((card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory));
+    visibleCount += config.batchSize;
+    update();
+    if (button.hidden) firstHidden?.querySelector<HTMLElement>('a, button')?.focus();
+  });
+  if (config.enabled) results.after(button);
+  update();
+  return (category: string): void => {
+    selectedCategory = category;
+    visibleCount = config.batchSize;
+    update();
+  };
+}
+
+function createFilters(
+  cards: HTMLElement[],
+  results: HTMLElement,
+  categories: CategoryTag[],
+  selectCategory: (category: string) => void,
+): void {
   if (!categories.length) return;
   const filters = document.createElement('div');
   filters.className = 'page-listing-filters';
@@ -316,7 +359,7 @@ function createFilters(cards: HTMLElement[], results: HTMLElement, categories: C
     button.append(label, ` (${count})`);
     button.addEventListener('click', () => {
       buttons.forEach((entry) => entry.setAttribute('aria-pressed', String(entry === button)));
-      cards.forEach((card) => { card.hidden = Boolean(category && card.dataset.category !== category); });
+      selectCategory(category);
     });
     buttons.push(button);
     filters.append(button);
@@ -334,6 +377,7 @@ async function loadListings(
   location: string,
   enableCategoryFilters: boolean,
   categoryRootTag: string,
+  loadMore: LoadMoreConfig,
   status: HTMLElement,
   results: HTMLElement,
 ): Promise<void> {
@@ -359,7 +403,8 @@ async function loadListings(
     const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
     const cards = matchingRecords.map(createCard);
     results.append(...cards);
-    if (enableCategoryFilters) createFilters(cards, results, categories);
+    const selectCategory = createCardVisibility(cards, results, loadMore);
+    if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
     status.textContent = matchingRecords.length
       ? ''
       : `No listings are available for ${location}.`;
@@ -372,17 +417,21 @@ export default function decorate(block: HTMLElement): void {
   if (block.querySelector(':scope > .page-listing-results')) return;
 
   const rows = [...block.children] as HTMLElement[];
-  const hasFilterRow = rows.length >= 4 || ['true', 'false'].includes(textOf(rows.at(-1)).toLowerCase());
-  const [typeRow, filterRow, rootRow] = applyBlockIdentity(block, rows, {
-    contentRows: rows.length >= 5 ? 3 : hasFilterRow ? 2 : 1,
+  const configRows = applyBlockIdentity(block, rows, {
+    contentRows: Math.max(1, rows.length - 2),
     hiddenClass: 'page-listing-config',
   });
+  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow] = configRows;
   const type = readListingType(typeRow);
-  typeRow?.classList.add('page-listing-config');
-  filterRow?.classList.add('page-listing-config');
-  rootRow?.classList.add('page-listing-config');
+  configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
   const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accomodation';
+  const count = Number(textOf(countRow));
+  const loadMore: LoadMoreConfig = {
+    enabled: textOf(loadMoreRow).toLowerCase() === 'true',
+    batchSize: Number.isFinite(count) && count >= 1 ? Math.floor(count) : 6,
+    label: textOf(labelRow) || 'Load More',
+  };
   const location = locationFromPath(window.location.pathname);
 
   const status = document.createElement('p');
@@ -393,5 +442,5 @@ export default function decorate(block: HTMLElement): void {
   results.className = 'page-listing-results';
 
   block.append(status, results);
-  void loadListings(type, location, enableCategoryFilters, categoryRootTag, status, results);
+  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, status, results);
 }
