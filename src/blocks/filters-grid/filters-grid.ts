@@ -4,8 +4,6 @@ import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
 const PERSISTED_QUERY = '/graphql/execute.json/capella-hotels/Filter-grid-card';
 const PAGE_SIZE = 6;
 
-type FilterMode = 'experience' | 'destination';
-
 const ALLOWED_RICH_TEXT_TAGS = new Set(['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'blockquote']);
 
 interface Reference {
@@ -47,16 +45,14 @@ interface AuthoredFilter {
   tag: string;
 }
 
-interface AuthoredMode {
-  key: FilterMode;
-  label: string;
-  filters: AuthoredFilter[];
-}
-
 interface ModeSetting {
-  key: FilterMode;
+  key: string;
   label: string;
   rootTag: string;
+}
+
+interface AuthoredMode extends ModeSetting {
+  filters: AuthoredFilter[];
 }
 
 interface BlockConfig {
@@ -65,7 +61,7 @@ interface BlockConfig {
   backgroundTheme: string;
   cfRootPath: string;
   revealMoreLabel: string;
-  defaultMode: FilterMode;
+  defaultMode: string;
   modeSettings: ModeSetting[];
 }
 
@@ -73,10 +69,6 @@ const textOf = (element?: Element | null): string => element?.textContent?.trim(
 
 export function normalizeChoice(value?: string | null): string {
   return (value || '').trim().toLowerCase();
-}
-
-function normalizeMode(value?: string | null): FilterMode {
-  return normalizeChoice(value) === 'destination' ? 'destination' : 'experience';
 }
 
 function referenceUrl(reference?: Reference | null): string {
@@ -102,12 +94,12 @@ function resolveModalHref(details: ModalDetails): string {
 
 export function cardMatchesFilter(
   card: Pick<FilterGridCard, 'cardLocationTag' | 'associatedFilterTags'>,
-  mode: FilterMode,
+  _mode: string,
   tag: string,
 ): boolean {
   if (!tag) return true;
-  const values = mode === 'destination' ? card.cardLocationTag : card.associatedFilterTags;
-  return Boolean(values?.some((value) => normalizeTagId(value) === normalizeTagId(tag)));
+  const values = [...(card.cardLocationTag || []), ...(card.associatedFilterTags || [])];
+  return values.some((value) => normalizeTagId(value) === normalizeTagId(tag));
 }
 
 export function tagIsWithinRoot(tag: string, rootTag: string): boolean {
@@ -174,22 +166,52 @@ function rowHref(row: Element | undefined, name: string): string {
   return resolvePickerPath(value, window.location.origin);
 }
 
+function parseModeSettings(row: Element | undefined): ModeSetting[] {
+  if (!row) return [];
+  const field = row.querySelector('[data-aue-prop="filterModeLabels"]') || row.firstElementChild || row;
+  const entries = [...field.querySelectorAll('li')].filter((entry) => !entry.parentElement?.closest('li'));
+  return entries.map((entry, index) => {
+    const walker = document.createTreeWalker(entry, NodeFilter.SHOW_TEXT);
+    const values: string[] = [];
+    while (walker.nextNode()) {
+      const value = walker.currentNode.textContent?.trim();
+      if (value) values.push(value);
+    }
+    const rootTag =
+      textOf(entry.querySelector('[data-aue-prop="rootTag"]')) ||
+      entry.querySelector('a[href*="/content/cq:tags/"]')?.getAttribute('href') ||
+      values.find((value) => /^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value)) ||
+      '';
+    const label =
+      textOf(entry.querySelector('[data-aue-prop="label"]')) ||
+      values.find((value) => value !== rootTag && !/^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value)) ||
+      labelFromTag(rootTag) ||
+      'Filter mode';
+    return { key: `mode-${index}`, label, rootTag };
+  });
+}
+
 function parseConfig(block: HTMLElement): BlockConfig {
   const allRows = [...block.children] as HTMLElement[];
-  const contentRows = applyBlockIdentity(block, allRows, { contentRows: 10 });
-  const legacyTitleContinuation = contentRows.length > 10 ? contentRows.splice(3, 1)[0] : undefined;
-  const [
-    backgroundTheme,
-    eyebrow,
-    title,
-    cfRootPath,
-    defaultMode,
-    experienceModeLabel,
-    experienceRootTag,
-    destinationModeLabel,
-    destinationRootTag,
-    revealMore,
-  ] = contentRows;
+  const legacy = allRows.length >= 10 && !block.querySelector('[data-aue-prop="filterModeLabels"]');
+  const rowCount = legacy ? 10 : 7;
+  const contentRows = applyBlockIdentity(block, allRows, { contentRows: rowCount });
+  const legacyTitleContinuation = contentRows.length > rowCount ? contentRows.splice(3, 1)[0] : undefined;
+  const [backgroundTheme, eyebrow, title, cfRootPath, defaultMode] = contentRows;
+  const modeSettings = legacy
+    ? [
+        {
+          key: 'experience',
+          label: rowValue(contentRows[5], 'experienceModeLabel') || 'Experience',
+          rootTag: rowValue(contentRows[6], 'experienceRootTag'),
+        },
+        {
+          key: 'destination',
+          label: rowValue(contentRows[7], 'destinationModeLabel') || 'Destination',
+          rootTag: rowValue(contentRows[8], 'destinationRootTag'),
+        },
+      ]
+    : parseModeSettings(contentRows[5]);
 
   return {
     backgroundTheme: rowValue(backgroundTheme, 'backgroundTheme') || 'white',
@@ -199,20 +221,9 @@ function parseConfig(block: HTMLElement): BlockConfig {
       legacyTitleContinuation ? `<p>${escapeHtml(textOf(legacyTitleContinuation))}</p>` : '',
     ].join(''),
     cfRootPath: rowHref(cfRootPath, 'cfRootPath'),
-    defaultMode: normalizeMode(rowValue(defaultMode, 'defaultFilterMode')),
-    revealMoreLabel: rowValue(revealMore, 'revealMoreLabel') || 'Reveal More',
-    modeSettings: [
-      {
-        key: 'experience',
-        label: rowValue(experienceModeLabel, 'experienceModeLabel') || 'Experience',
-        rootTag: rowValue(experienceRootTag, 'experienceRootTag'),
-      },
-      {
-        key: 'destination',
-        label: rowValue(destinationModeLabel, 'destinationModeLabel') || 'Destination',
-        rootTag: rowValue(destinationRootTag, 'destinationRootTag'),
-      },
-    ],
+    defaultMode: rowValue(defaultMode, 'defaultFilterMode'),
+    revealMoreLabel: rowValue(contentRows[legacy ? 9 : 6], 'revealMoreLabel') || 'Reveal More',
+    modeSettings,
   };
 }
 
@@ -296,9 +307,26 @@ function createImage(reference: Reference | null | undefined, alt: string): HTML
   return image;
 }
 
-function createImageSlider(images: HTMLImageElement[], className: string): HTMLElement {
+function createModalImage(
+  reference: Reference | null | undefined,
+  alt: string,
+  eager = false,
+): HTMLImageElement | null {
+  const image = createImage(reference, alt);
+  if (!image) return null;
+  image.classList.add('filters-grid-modal-image');
+  image.loading = eager ? 'eager' : 'lazy';
+  image.fetchPriority = eager ? 'high' : 'auto';
+  const reveal = () => image.classList.add('is-loaded');
+  image.addEventListener('load', reveal, { once: true });
+  if (image.complete && image.naturalWidth) reveal();
+  return image;
+}
+
+function createImageSlider(images: HTMLImageElement[], className: string, placeholder = ''): HTMLElement {
   const slider = document.createElement('div');
   slider.className = className;
+  if (placeholder) slider.style.backgroundImage = placeholder;
   const viewport = document.createElement('div');
   viewport.className = `${className}-viewport`;
   let activeIndex = 0;
@@ -306,6 +334,7 @@ function createImageSlider(images: HTMLImageElement[], className: string): HTMLE
 
   images.forEach((image, index) => {
     image.hidden = index !== activeIndex;
+    if (index === activeIndex) image.loading = 'eager';
     viewport.append(image);
   });
   slider.append(viewport);
@@ -325,7 +354,10 @@ function createImageSlider(images: HTMLImageElement[], className: string): HTMLE
         dots[activeIndex]?.setAttribute('aria-pressed', 'false');
         activeIndex = index;
         const next = images[activeIndex];
-        if (next) next.hidden = false;
+        if (next) {
+          next.loading = 'eager';
+          next.hidden = false;
+        }
         dots[activeIndex]?.setAttribute('aria-pressed', 'true');
       });
       dots.push(dot);
@@ -356,9 +388,9 @@ function createModal() {
   let lastFocused: HTMLElement | null = null;
   const close = () => {
     overlay.hidden = true;
-    panel.querySelector('.filters-grid-modal-content')?.remove();
+    panel.querySelectorAll('.filters-grid-modal-content').forEach((content) => content.remove());
     document.body.classList.remove('filters-grid-modal-open');
-    lastFocused?.focus();
+    lastFocused?.focus({ preventScroll: true });
   };
 
   closeButton.addEventListener('click', close);
@@ -372,18 +404,22 @@ function createModal() {
   const open = (card: FilterGridCard, selectedFilterLabel: string) => {
     const details = card.modalDetails;
     if (!details) return;
+    panel.querySelectorAll('.filters-grid-modal-content').forEach((content) => content.remove());
     const content = document.createElement('div');
     content.className = 'filters-grid-modal-content';
     const variant = normalizeChoice(details.modalImageAspectRatioVariant) === 'wide' ? 'wide' : 'square';
     panel.dataset.variant = variant;
     overlay.setAttribute('aria-label', card.cardHeadline || 'Experience details');
+    const thumbnail = referenceUrl(card.cardBackgroundPhoto);
+    const placeholder = thumbnail ? `url(${JSON.stringify(thumbnail)})` : '';
 
-    const feature = createImage(
+    const feature = createModalImage(
       details.modalFeatureImageAsset,
       details.modalFeatureImageAssetAltText || card.cardHeadline || '',
+      true,
     );
     const carouselImages = (details.carouselImages || [])
-      .map((image, index) => createImage(image, details.carouselImagesAltText?.[index] || ''))
+      .map((image, index) => createModalImage(image, details.carouselImagesAltText?.[index] || ''))
       .filter((image): image is HTMLImageElement => Boolean(image));
     const mediaCopy = document.createElement('div');
     mediaCopy.className = 'filters-grid-modal-media-copy';
@@ -395,16 +431,18 @@ function createModal() {
       gallery.className = 'filters-grid-modal-gallery';
       const featurePanel = document.createElement('div');
       featurePanel.className = 'filters-grid-modal-feature';
+      if (placeholder) featurePanel.style.backgroundImage = placeholder;
       if (feature) featurePanel.append(feature);
       featurePanel.append(mediaCopy);
       gallery.append(featurePanel);
       if (carouselImages.length) {
-        gallery.append(createImageSlider(carouselImages, 'filters-grid-modal-carousel'));
+        gallery.append(createImageSlider(carouselImages, 'filters-grid-modal-carousel', placeholder));
       }
       content.append(gallery);
     } else {
       const media = document.createElement('div');
       media.className = 'filters-grid-modal-media';
+      if (placeholder) media.style.backgroundImage = placeholder;
       const bannerImages = [feature, ...carouselImages].filter((image): image is HTMLImageElement => Boolean(image));
       if (bannerImages.length) {
         media.append(createImageSlider(bannerImages, 'filters-grid-modal-banner-slider'));
@@ -435,10 +473,10 @@ function createModal() {
     content.append(body);
     panel.append(content);
 
-    lastFocused = document.activeElement as HTMLElement | null;
+    if (overlay.hidden) lastFocused = document.activeElement as HTMLElement | null;
     overlay.hidden = false;
     document.body.classList.add('filters-grid-modal-open');
-    closeButton.focus();
+    closeButton.focus({ preventScroll: true });
   };
 
   document.body.append(overlay);
@@ -458,6 +496,26 @@ function createCard(
   if (action instanceof HTMLButtonElement) {
     action.type = 'button';
     action.setAttribute('aria-haspopup', 'dialog');
+    let warmed = false;
+    const warmImages = () => {
+      if (warmed || !card.modalDetails) return;
+      warmed = true;
+      const details = card.modalDetails;
+      const references = [details.modalFeatureImageAsset];
+      if (normalizeChoice(details.modalImageAspectRatioVariant) !== 'wide' || !references[0]) {
+        references.push(details.carouselImages?.[0]);
+      }
+      references.forEach((reference) => {
+        const src = referenceUrl(reference);
+        if (!src) return;
+        const image = new Image();
+        image.decoding = 'async';
+        image.fetchPriority = 'low';
+        image.src = src;
+      });
+    };
+    action.addEventListener('pointerenter', warmImages, { once: true });
+    action.addEventListener('focus', warmImages, { once: true });
     action.addEventListener('click', () => openModal(card, selectedFilterLabel));
   } else {
     action.href = href || '#';
@@ -492,7 +550,7 @@ function createCard(
 async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
   return Promise.all(
     settings.map(async ({ key, label, rootTag }) => {
-      if (!rootTag.trim()) return { key, label, filters: [] };
+      if (!rootTag.trim()) return { key, label, rootTag, filters: [] };
       const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
       url.searchParams.set('tag', rootTag.trim());
       const response = await fetch(url.href, { headers: { Accept: 'application/json' } });
@@ -509,15 +567,27 @@ async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
         tag: normalizeTagId(path),
         label: title?.trim() || labelFromTag(path),
       }));
-      return { key, label, filters };
+      return { key, label, rootTag, filters };
     }),
   );
 }
 
 function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
-  let activeMode = modes.some(({ key }) => key === config.defaultMode)
-    ? config.defaultMode
-    : modes[0]?.key || 'experience';
+  const requestedMode = normalizeChoice(config.defaultMode);
+  let activeMode =
+    modes.find(
+      ({ key, label, rootTag }) =>
+        requestedMode &&
+        (normalizeChoice(key) === requestedMode ||
+          normalizeChoice(label) === requestedMode ||
+          normalizeChoice(normalizeTagId(rootTag)) === normalizeChoice(normalizeTagId(config.defaultMode))),
+    )?.key ||
+    modes[0]?.key ||
+    '';
+  const orderedModes = [
+    ...modes.filter(({ key }) => key === activeMode),
+    ...modes.filter(({ key }) => key !== activeMode),
+  ];
   let activeTag = modes.find(({ key }) => key === activeMode)?.filters[0]?.tag || '';
   let visibleCount = PAGE_SIZE;
 
@@ -560,7 +630,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     if (!items.length) {
       const empty = document.createElement('li');
       empty.className = 'filters-grid-empty';
-      empty.textContent = cards.length ? 'No matching experiences.' : 'No experiences are available.';
+      empty.textContent = cards.length ? 'No matching results.' : 'No results are available.';
       items.push(empty);
     }
     list.replaceChildren(...items);
@@ -595,7 +665,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     });
   };
 
-  const activateMode = (key: FilterMode, focus = false) => {
+  const activateMode = (key: string, focus = false) => {
     const mode = modes.find(({ key: modeKey }) => modeKey === key);
     if (!mode) return;
 
@@ -623,10 +693,10 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
           ? buttons.length - 1
           : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
     const nextButton = buttons[nextIndex];
-    if (nextButton?.dataset.modeKey) activateMode(nextButton.dataset.modeKey as FilterMode, true);
+    if (nextButton?.dataset.modeKey) activateMode(nextButton.dataset.modeKey, true);
   });
 
-  modes.forEach((mode) => {
+  orderedModes.forEach((mode) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'filters-grid-tab';
