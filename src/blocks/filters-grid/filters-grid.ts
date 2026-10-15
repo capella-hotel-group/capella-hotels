@@ -489,17 +489,29 @@ function createCard(
   return item;
 }
 
-function deriveModes(cards: FilterGridCard[], settings: ModeSetting[]): AuthoredMode[] {
-  return settings.map(({ key, label, rootTag }) => {
-    const values = cards.flatMap(
-      (card) => (key === 'experience' ? card.associatedFilterTags : card.cardLocationTag) || [],
-    );
-    const filters = [...new Set(values.map(normalizeTagId))]
-      .filter((tag) => !rootTag || tagIsWithinRoot(tag, rootTag))
-      .sort()
-      .map((tag) => ({ tag, label: labelFromTag(tag) }));
-    return { key, label, filters };
-  });
+async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
+  return Promise.all(
+    settings.map(async ({ key, label, rootTag }) => {
+      if (!rootTag.trim()) return { key, label, filters: [] };
+      const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
+      url.searchParams.set('tag', rootTag.trim());
+      const response = await fetch(url.href, { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error(`Child tags request failed with status ${response.status}`);
+      const payload: {
+        data?: Array<{ path: string; title?: string | null }>;
+        status?: string;
+        code?: number;
+      } = await response.json();
+      if (payload.status === 'error' || (payload.code !== undefined && payload.code !== 200)) {
+        throw new Error('Unable to load filter tags.');
+      }
+      const filters = (payload.data || []).map(({ path, title }) => ({
+        tag: normalizeTagId(path),
+        label: title?.trim() || labelFromTag(path),
+      }));
+      return { key, label, filters };
+    }),
+  );
 }
 
 function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
@@ -648,8 +660,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   block.setAttribute('aria-busy', 'true');
   try {
     const config = parseConfig(block);
-    const cards = await fetchCards(config.cfRootPath);
-    const modes = deriveModes(cards, config.modeSettings);
+    const [cards, modes] = await Promise.all([fetchCards(config.cfRootPath), fetchModes(config.modeSettings)]);
     render(block, config, cards, modes);
   } catch (error) {
     console.error('[filters-grid] Failed to load card content', error);

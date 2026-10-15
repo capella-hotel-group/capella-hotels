@@ -190,9 +190,6 @@ main .filters-grid .filters-grid-filters {
     scrollbar-width: none;
     width: 100%;
     margin-inline-start: 0;
-    /* Figma "Rectangle 3": the scroller is alpha-masked so overflowing filters fade out. */
-    mask-image: linear-gradient(90deg, #000 73%, rgba(0 0 0 / 0%) 100%);
-    -webkit-mask-image: linear-gradient(90deg, #000 73%, rgba(0 0 0 / 0%) 100%);
     text-align: left;
 }
 
@@ -203,12 +200,15 @@ main .filters-grid .filters-grid-filters::-webkit-scrollbar {
 main .filters-grid .filters-grid-filter {
     flex: 0 0 auto;
     padding: 0;
-    /* Every filter shares one colour in Figma; the list's hierarchy comes from the mask alone. */
-    color: var(--filters-grid-heading);
+    color: var(--filters-grid-muted);
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h4);
     line-height: var(--typography-line-height-heading-h4);
     white-space: nowrap;
+}
+
+main .filters-grid .filters-grid-filter[aria-pressed='true'] {
+    color: var(--filters-grid-heading);
 }
 
 main .filters-grid .filters-grid-results {
@@ -609,13 +609,10 @@ body.filters-grid-modal-open {
         align-items: flex-start;
         overflow-x: clip;
         overflow-y: auto;
-        /* Fixed 600px so the mask ramp matches Figma regardless of how many filters exist. */
         height: 600px;
         /* Figma's tablet artboard drops the filter list one step below the card grid. */
         margin-top: var(--dimension-spacing-general-3xl);
         padding-bottom: 0;
-        mask-image: linear-gradient(180deg, #000 0%, rgba(0 0 0 / 0%) 100%);
-        -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0 0 0 / 0%) 100%);
     }
 
     main .filters-grid .filters-grid-results {
