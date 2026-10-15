@@ -43,7 +43,9 @@
       "footer-contact",
       "footer-social-link",
       "footer-links",
-      "footer-legal"
+      "footer-legal",
+      "content-listing",
+      "page-listing"
     ]
   },
   {
@@ -152,7 +154,7 @@
   {
     "id": "hotel-architect",
     "components": [
-      "hotel-architect-image",
+      "hotel-architect-ritual",
       "hotel-architect-card"
     ]
   },

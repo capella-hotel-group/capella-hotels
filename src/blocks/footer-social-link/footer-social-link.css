@@ -2,18 +2,25 @@
 .footer-social-list {
     display: flex;
     gap: var(--dimension-spacing-general-xs);
+    /* padding, not margin: a margin would collapse into the heading's bottom margin */
     margin: 0;
-    padding: 0;
+    padding: 5px 0 0;
     list-style: none;
 }
 
-.footer-social-list a {
+.footer-social-list a,
+.footer-social-list li > span {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
     height: 40px;
     border-radius: 50%;
+}
+
+.footer-social-list a:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
 }
 
 /* size the icon span itself, not the <img> — the global `img { max-width: 100% }`

@@ -1,47 +1,155 @@
 /* hotel-architect
    Figma: desktop 8035:20745 (1440), tablet 8035:20836 (834), mobile 8035:20923 (393).
-   Source order follows the block's model field order so the Universal Editor lists
-   the gallery images and the architect card last in the content tree; `order`
-   restores the reading order. Everything nests under the block class, so no rule
-   can leak to another block. */
+   Ritual tabs variation (CAP-78): desktop 8057:21165, tablet 8040:24975, mobile 8144:33949.
+   The block is a grid of three areas: media, the tab bar and the copy. Each ritual
+   is one element (so the editor lists its fields and images under it) that spans
+   the whole grid as a subgrid and hands its copy and media back to their areas;
+   the shared tab bar and the architect card sit in the block's own areas.
+   Everything nests under the block class, so no rule can leak to another block. */
 .hotel-architect {
-    display: flex;
-    flex-direction: column;
+    /* lets the desktop card measure the media height in cqw */
+    container-type: inline-size;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        'media'
+        'tabs'
+        'copy';
     background-color: var(--color-surface-general-subtle);
     color: var(--color-text-main-body);
 
     @media (width >= 1200px) {
-        flex-direction: row;
-        align-items: center;
-        /* room for the architect card, which hangs below the media */
-        padding-block-end: calc(72 * var(--fluid-unit));
+        /* Figma: copy 576/1440, media 864/1440. The flexible rows above and below
+           keep the tabs and copy centred beside the media. */
+        grid-template-columns: 40% 60%;
+        grid-template-rows: 1fr auto auto 1fr;
+        grid-template-areas:
+            '. media'
+            'tabs media'
+            'copy media'
+            '. media';
+    }
+
+    /* room for the architect card, which hangs below the media */
+    &.hotel-architect-has-card {
+        @media (width >= 1200px) {
+            padding-block-end: calc(72 * var(--fluid-unit));
+        }
+    }
+
+    /* ---------- rituals ---------- */
+
+    .hotel-architect-ritual {
+        display: grid;
+        grid-row: 1 / -1;
+        grid-column: 1 / -1;
+        grid-template-rows: subgrid;
+        grid-template-columns: subgrid;
+
+        &[hidden] {
+            display: none;
+        }
     }
 
     /* ---------- copy ---------- */
 
     .hotel-architect-copy {
+        /* line numbers rather than area names: a subgrid inherits the parent's lines */
+        grid-row: 3;
+        grid-column: 1;
         display: flex;
         flex-direction: column;
         min-width: 0;
-        /* clears the architect card, which overlaps the top of this column */
-        padding-block-start: 120px;
-        padding-block-end: var(--dimension-layout-module-padding-block);
+        padding-block: var(--dimension-layout-module-padding-block);
         padding-inline: var(--dimension-layout-module-padding-inline-s);
 
-        @media (width >= 768px) {
-            padding-block-start: var(--dimension-layout-module-padding-block);
-        }
-
         @media (width >= 1200px) {
-            /* Figma: copy 576/1440, media 864/1440 */
-            flex: 0 0 40%;
-            padding-inline-start: var(--dimension-layout-module-padding-inline-s);
             padding-inline-end: var(--dimension-layout-module-padding-inline-xs);
         }
     }
 
+    /* clears the architect card, which overlaps the top of this column on mobile */
+    &.hotel-architect-has-card .hotel-architect-copy {
+        @media (width < 768px) {
+            padding-block-start: 120px;
+        }
+    }
+
+    /* the tab bar above carries the module padding instead */
+    &.hotel-architect-tabbed .hotel-architect-copy {
+        padding-block-start: 0;
+    }
+
     .hotel-architect-header {
         order: 1;
+    }
+
+    /* ---------- tabs ---------- */
+
+    /* Figma "→ Location listing": Button/choice tabs inset like the eyebrow, with
+       a 65px fade over the trailing edge while more tabs are out of view */
+    .hotel-architect-tabs {
+        grid-area: tabs;
+        /* the active ritual spans this cell too, so the tabs sit above it */
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: var(--dimension-layout-module-gutter-l);
+        min-width: 0;
+        margin-block: var(--dimension-layout-module-padding-block) var(--dimension-spacing-heading-to-content);
+        margin-inline: var(--dimension-layout-module-padding-inline-s);
+        padding-block: 10px;
+        padding-inline: var(--dimension-spacing-general-2xl);
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scroll-padding-inline: var(--dimension-spacing-general-2xl);
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        &.has-more {
+            mask-image: linear-gradient(to right, #000 calc(100% - 65px), transparent);
+        }
+
+        /* a mouse can drag the bar sideways once the tabs overflow */
+        &.is-scrollable {
+            cursor: grab;
+            user-select: none;
+        }
+
+        &.is-dragging,
+        &.is-dragging .hotel-architect-tab {
+            cursor: grabbing;
+        }
+
+        @media (width >= 1200px) {
+            margin-inline-end: var(--dimension-layout-module-padding-inline-xs);
+        }
+    }
+
+    .hotel-architect-tab {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        /* Figma fixes Button/choice at 40px, which overrides its padding-block */
+        height: var(--component-button-height);
+        padding: 0;
+        border: 0;
+        border-radius: var(--component-button-corner-standard);
+        background: none;
+        font-family: var(--type-font-family-body);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-body-reg);
+        line-height: var(--typography-line-height-body-md);
+        color: var(--color-text-action-inactive);
+        white-space: nowrap;
+        cursor: pointer;
+
+        &[aria-selected='true'] {
+            color: var(--color-text-action-default);
+        }
     }
 
     .hotel-architect-eyebrow {
@@ -60,6 +168,7 @@
     }
 
     .hotel-architect-title {
+        margin: 0;
         font-family: var(--type-font-family-heading);
         font-size: var(--typography-fontsize-heading-h1);
         font-weight: var(--type-font-weight-heading);
@@ -67,7 +176,10 @@
         color: var(--color-text-main-heading);
         text-transform: uppercase;
 
+        /* each authored line is a span (a <p> is not allowed inside the h2), so it
+           is made a block to keep its own line */
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
@@ -162,11 +274,6 @@
         padding: 0;
         list-style: none;
 
-        > li {
-            flex: 1 1 0;
-            min-width: 0;
-        }
-
         @media (width >= 1200px) {
             order: 3;
             margin-block-start: var(--dimension-layout-module-gutter-m);
@@ -174,27 +281,25 @@
     }
 
     .hotel-architect-thumb {
-        display: block;
-        width: 100%;
+        /* keeps each image at one third of the row when fewer than three are authored */
+        flex: 0 0 calc((100% - (2 * var(--dimension-layout-carousel-item-gap-s))) / 3);
+        min-width: 0;
         aspect-ratio: 4 / 5;
-        padding: 0;
-        border: 0;
         background-color: #000;
-        cursor: pointer;
     }
 
     /* ---------- media ---------- */
 
     .hotel-architect-media {
-        /* drawn before the copy while staying after it in the source order */
-        order: -1;
+        grid-row: 1;
+        grid-column: 1;
         position: relative;
         min-width: 0;
 
         @media (width >= 1200px) {
-            /* Figma: copy 576/1440, media 864/1440 */
-            flex: 0 0 60%;
-            order: 0;
+            grid-row: 1 / -1;
+            grid-column: 2;
+            align-self: center;
         }
     }
 
@@ -235,16 +340,12 @@
             opacity: 1;
         }
 
-        /* the dark scrim authors can switch off per image */
+        /* dark scrim that keeps the white carousel arrows legible */
         &::after {
             content: '';
             position: absolute;
             inset: 0;
             background-color: rgb(0 0 0 / 40%);
-        }
-
-        &.hotel-architect-slide-no-overlay::after {
-            background-color: transparent;
         }
 
         @media (prefers-reduced-motion: no-preference) {
@@ -339,23 +440,38 @@
     /* ---------- architect card ---------- */
 
     .hotel-architect-cards {
-        position: absolute;
-        /* hangs past the bottom-end corner of the media, per Figma */
-        inset-block-end: -69px;
-        inset-inline-end: 0;
+        grid-area: media;
+        position: relative;
         z-index: 3;
+        /* hangs past the bottom-end corner of the media, per Figma */
+        align-self: end;
+        justify-self: end;
+        margin-block-end: -69px;
         display: flex;
         flex-direction: column;
         align-items: flex-end;
         gap: var(--dimension-spacing-general-s);
-        max-width: 100%;
+        /* the card hugs its copy; these caps are the Figma widths, so long copy
+           wraps instead of stretching the card across the media */
+        max-width: calc(100% - 64px);
+
+        &[hidden] {
+            display: none;
+        }
 
         @media (width >= 768px) {
-            inset-block-end: -76px;
+            margin-block-end: -76px;
+            max-width: 369px;
         }
 
         @media (width >= 1200px) {
-            inset-block-end: -65px;
+            /* the media is centred in a row that may be taller than it, so the card
+               is centred with it and pushed down to its bottom edge: the media is
+               50cqw tall (a 6/5 frame in the 60% column) and the card hangs 65px past it */
+            align-self: center;
+            margin-block-end: 0;
+            translate: 0 calc(25cqw + 65px - 50%);
+            max-width: 350px;
         }
     }
 
@@ -366,6 +482,10 @@
         padding-block: var(--dimension-layout-card-padding-block);
         padding-inline: var(--dimension-layout-card-padding-inline);
         background-color: var(--color-surface-general-light);
+
+        &[hidden] {
+            display: none;
+        }
     }
 
     .hotel-architect-card-photo {
@@ -381,6 +501,9 @@
         flex-direction: column;
         gap: var(--dimension-layout-module-gutter-xs);
         min-width: 0;
+        /* Figma sets word-break on the card's text; long names must not push the
+           card past its cap */
+        overflow-wrap: break-word;
     }
 
     .hotel-architect-card-identity {

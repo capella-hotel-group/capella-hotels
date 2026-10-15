@@ -4,6 +4,13 @@
 
 Both `header.js` and `footer.js` use the same two-option mechanism to resolve the nav/footer fragment path.
 
+When a `nav`, `header`, or `footer` page is opened inside Universal Editor,
+the page runtime skips loading both site-wide fragments and hides the empty
+header/footer landmarks. The authored content in `main` continues to decorate
+normally, without a duplicate fragment above or below it. This also applies to
+AEM author URLs ending in `.html`. Other pages in UE and standalone preview/live
+pages keep the normal header/footer loading behavior.
+
 ---
 
 ## Option 1 — Metadata (happy path)

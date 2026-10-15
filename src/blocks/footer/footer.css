@@ -27,20 +27,25 @@ footer.footer-theme-clean-white {
     display: flex;
     align-items: flex-start;
     width: 100%;
-    margin-block-end: var(--dimension-layout-module-gutter-l);
+    margin-block-end: 40px;
 }
 
 .footer-brand-logo picture {
     display: block;
-    width: min(100%, 112px);
+    width: min(100%, 100px);
+    aspect-ratio: 16 / 9;
 }
 
 .footer-brand-logo img {
     display: block;
     width: 100%;
-    max-height: 80px;
+    height: 100%;
     object-fit: contain;
     object-position: left center;
+}
+
+[dir='rtl'] .footer-brand-logo img {
+    object-position: right center;
 }
 
 /* ---------- dividers ---------- */
@@ -50,11 +55,31 @@ footer.footer-theme-clean-white {
     margin-block: var(--dimension-layout-module-gutter-l);
 }
 
+@media (width <= 767px) {
+    .footer-divider[data-after='nav'] {
+        margin-block-end: 31px;
+    }
+
+    .footer-divider[data-after='newsletter'] {
+        margin-block: 40px 39px;
+    }
+
+    .footer-divider[data-after='contact'] {
+        margin-block-start: 38px;
+        margin-block-end: 39px;
+    }
+}
+
+.footer-divider[data-after='contact'] {
+    margin-block-end: 39px;
+}
+
 /* ---------- shared heading (static label, not authored) — used by both
    footer-contact.ts and footer-social-link.ts */
 
+/* Figma gaps are measured on cap-height-trimmed text; the 7px offsets the untrimmed line box. */
 .footer-heading {
-    margin: 0 0 var(--dimension-spacing-general-l);
+    margin: 0 0 calc(var(--dimension-spacing-general-l) - 7px);
     font-family: var(--type-font-family-body);
     font-size: var(--typography-fontsize-body-m);
     font-weight: var(--type-font-weight-body-bold);
@@ -75,7 +100,7 @@ footer.footer-theme-clean-white {
 .footer-contact {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-spacing-general-2xl);
+    gap: calc(var(--dimension-spacing-general-2xl) - 7px);
     min-width: 0;
 }
 
@@ -83,33 +108,51 @@ footer.footer-theme-clean-white {
 
 @media (width >= 768px) {
     .footer-brand-logo picture {
-        width: min(100%, 128px);
+        width: min(100%, 120px);
     }
 
-    /* contact info is wider than social in the Figma tablet frame */
+    /* social is a fixed 280px column flush right, aligned with nav column 2 in the Figma tablet frame */
     .footer-contact {
         display: grid;
-        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        grid-template-columns: minmax(0, 1fr) 280px;
         gap: var(--dimension-layout-module-gutter-xl);
+    }
+}
+
+@media (width >= 768px) and (width < 1200px) {
+    .footer-divider[data-after='nav'] {
+        margin-block-end: 35px;
+    }
+
+    .footer-divider[data-after='newsletter'] {
+        margin-block-end: 35px;
+    }
+
+    .footer-divider[data-after='contact'] {
+        margin-block-start: 38px;
     }
 }
 
 /* ---------- desktop (>=1200px) ---------- */
 
 @media (width >= 1200px) {
+    .footer-brand-logo picture {
+        width: min(100%, 100px);
+    }
+
     /* Non-equal CSS Grid columns (not equal fractions): the Figma desktop frame
        gives nav columns 1/2 a fixed hug-width, contact a narrower hug-width, and
        lets newsletter grow widest to fill the row. Named `grid-area`s place items
        independently of DOM order (see design.md's "display: contents reflow"). */
     .footer-inner {
         display: grid;
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 280px) minmax(0, 280px) minmax(0, 1.3fr);
+        grid-template-columns: minmax(0, 0.56658fr) 280px 280px minmax(0, 1fr);
         grid-template-areas:
             'brand brand brand brand'
             'contact nav1 nav2 newsletter'
             'divider divider divider divider'
             'legal legal legal legal';
-        column-gap: var(--dimension-layout-module-gutter-xl);
+        column-gap: 40px;
     }
 
     .footer-brand-logo {
@@ -143,6 +186,7 @@ footer.footer-theme-clean-white {
         grid-area: contact;
         flex-direction: column;
         align-items: stretch;
+        gap: calc(var(--dimension-spacing-general-3xl) - 7px);
     }
 
     /* only the divider before legal + copyright survives at desktop; the row above
@@ -158,5 +202,188 @@ footer.footer-theme-clean-white {
 
     .footer-legal {
         grid-area: legal;
+    }
+}
+
+@media (width >= 1920px) {
+    /* no brand logo: the Figma frame has no brand column, contact takes the 440px first column */
+    .footer-inner {
+        grid-template-columns: 440px 280px 280px 383px;
+        grid-template-areas:
+            'contact nav1 nav2 newsletter'
+            'divider divider divider divider'
+            'legal legal legal legal';
+        column-gap: 0;
+        justify-content: space-between;
+    }
+
+    .footer-inner.footer-inner-has-logo {
+        grid-template-columns: 136px 340px 280px 280px 383px;
+        grid-template-areas:
+            'brand contact nav1 nav2 newsletter'
+            'divider divider divider divider divider'
+            'legal legal legal legal legal';
+    }
+
+    .footer-brand-logo {
+        margin-block-end: 0;
+    }
+
+    .footer-brand-logo picture {
+        width: min(100%, 136px);
+    }
+}
+
+/* ---------- screen-reader-only text (e.g. "opens in a new tab") ---------- */
+
+.footer-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@media (width <= 767px) {
+    .footer-inner > .footer-nav-columns {
+        order: 1;
+    }
+
+    .footer-inner > .footer-divider[data-after='nav'] {
+        order: 2;
+    }
+
+    .footer-inner > .footer-newsletter {
+        order: 3;
+    }
+
+    .footer-inner > .footer-divider[data-after='newsletter'] {
+        order: 4;
+    }
+
+    .footer-inner > .footer-contact {
+        order: 5;
+    }
+
+    .footer-inner > .footer-divider[data-after='contact'] {
+        display: none;
+    }
+
+    .footer-inner > .footer-social {
+        order: 6;
+        margin-block-start: calc(var(--dimension-spacing-general-2xl) - 7px);
+    }
+
+    .footer-inner > .footer-divider[data-after='social'] {
+        order: 7;
+        margin-block: 38px 39px;
+    }
+
+    .footer-inner > .footer-legal {
+        order: 8;
+    }
+}
+
+@media (width >= 768px) and (width < 1200px) {
+    .footer-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        grid-template-areas:
+            'brand brand'
+            'nav nav'
+            'divider-nav divider-nav'
+            'newsletter newsletter'
+            'divider-newsletter divider-newsletter'
+            'contact social'
+            'divider-social divider-social'
+            'legal legal';
+    }
+
+    .footer-inner > .footer-brand-logo {
+        grid-area: brand;
+    }
+
+    .footer-inner > .footer-contact {
+        display: block;
+        grid-area: contact;
+    }
+
+    .footer-inner > .footer-nav-columns {
+        grid-area: nav;
+    }
+
+    .footer-inner > .footer-divider[data-after='nav'] {
+        grid-area: divider-nav;
+    }
+
+    .footer-inner > .footer-newsletter {
+        grid-area: newsletter;
+    }
+
+    .footer-inner > .footer-divider[data-after='newsletter'] {
+        grid-area: divider-newsletter;
+    }
+
+    .footer-inner > .footer-social {
+        grid-area: social;
+    }
+
+    .footer-inner > .footer-divider[data-after='contact'] {
+        display: none;
+    }
+
+    .footer-inner > .footer-divider[data-after='social'] {
+        grid-area: divider-social;
+        margin-block: 38px 39px;
+    }
+
+    .footer-inner > .footer-legal {
+        grid-area: legal;
+    }
+}
+
+@media (width >= 1200px) {
+    .footer-inner {
+        grid-template-areas:
+            'brand brand brand brand'
+            'contact nav1 nav2 newsletter'
+            'social . . .'
+            'divider divider divider divider'
+            'legal legal legal legal';
+    }
+
+    .footer-inner > .footer-social {
+        grid-area: social;
+        margin-block-start: calc(var(--dimension-spacing-general-3xl) - 7px);
+    }
+
+    .footer-inner > .footer-divider[data-after='contact'] {
+        display: none;
+    }
+
+    .footer-inner > .footer-divider[data-after='social'] {
+        grid-area: divider;
+    }
+}
+
+@media (width >= 1920px) {
+    .footer-inner {
+        grid-template-areas:
+            'contact nav1 nav2 newsletter'
+            'social . . .'
+            'divider divider divider divider'
+            'legal legal legal legal';
+    }
+
+    .footer-inner.footer-inner-has-logo {
+        grid-template-areas:
+            'brand contact nav1 nav2 newsletter'
+            'brand social . . .'
+            'divider divider divider divider divider'
+            'legal legal legal legal legal';
     }
 }

@@ -48,7 +48,9 @@ function getHierarchicalFooterPaths(): string[] {
 
 function applyBackgroundTheme(block: HTMLElement, themeBlock: Element | null): void {
   const theme = themeBlock?.children[0]?.firstElementChild?.textContent?.trim() || '';
-  block.classList.toggle('footer-theme-clean-white', theme === 'clean-white');
+  const isGlobalEn = getFragmentBasePath() === '/global/en';
+  block.classList.toggle('footer-theme-global-en', isGlobalEn);
+  block.classList.toggle('footer-theme-clean-white', !isGlobalEn && theme === 'clean-white');
 }
 
 function footerField(block: Element, name: string, rowIndex: number): Element | null {
@@ -126,17 +128,21 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const legalGroup = fragment.querySelector('.footer-legal');
   const newsletterBlock = fragment.querySelector('.newsletter-form');
 
-  const contactGroup = buildGroup('footer-contact', [contactInfo, social]);
+  const contactGroup = buildGroup('footer-contact', [contactInfo]);
   const newsletterGroup = buildGroup('footer-newsletter', [newsletterBlock]);
 
   const inner = document.createElement('div');
   inner.className = 'footer-inner';
-  if (brandLogo) inner.append(brandLogo);
+  if (brandLogo) {
+    inner.classList.add('footer-inner-has-logo');
+    inner.append(brandLogo);
+  }
 
   const groups: Array<{ name: string; element: Element | null }> = [
+    { name: 'contact', element: contactGroup },
     { name: 'nav', element: navGroup },
     { name: 'newsletter', element: newsletterGroup },
-    { name: 'contact', element: contactGroup },
+    { name: 'social', element: social },
     { name: 'legal', element: legalGroup },
   ];
 

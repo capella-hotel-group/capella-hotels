@@ -12,6 +12,41 @@ if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
   document.documentElement.classList.add('no-touch');
 }
 
+const NEW_TAB_LABEL = 'opens in a new tab';
+const MAIN_NAV_LABEL = 'Main navigation';
+const PANEL_ID = 'header-menu-panel';
+const LANGUAGE_LABEL = 'Language';
+
+// Marks a link as opening a new tab and tells assistive technology about it.
+function applyNewTab(anchor: HTMLAnchorElement): void {
+  anchor.target = '_blank';
+  anchor.rel = 'noopener';
+  const name = anchor.getAttribute('aria-label');
+  if (name) {
+    // aria-label replaces the link's content, so a child hint would never be announced.
+    anchor.setAttribute('aria-label', `${name} (${NEW_TAB_LABEL})`);
+    return;
+  }
+  const hint = document.createElement('span');
+  hint.className = 'header-sr-only';
+  hint.textContent = ` (${NEW_TAB_LABEL})`;
+  anchor.append(hint);
+}
+
+// Derives a BCP 47 tag from the first language segment of an option's URL (mirrors getPageLang).
+function langFromHref(href: string): string {
+  const path = href.split(/[?#]/)[0] ?? '';
+  const segment = path
+    .split('/')
+    .map((part) => part.toLowerCase())
+    .find((part) => LANG_MAP[part] || VALID_LANG_PRIMARIES.has(part.split('-')[0] ?? ''));
+  if (!segment) return '';
+  const mapped = LANG_MAP[segment];
+  if (mapped) return mapped;
+  const [primary = '', region] = segment.split('-');
+  return region ? `${primary}-${region.toUpperCase()}` : primary;
+}
+
 interface NavLanguage {
   label: string;
   shortLabel: string;
@@ -249,8 +284,8 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
   const trigger = document.createElement('button');
   trigger.className = 'header-lang-trigger';
   trigger.type = 'button';
+  trigger.setAttribute('aria-label', `${LANGUAGE_LABEL}: ${activeLabel}`);
   trigger.setAttribute('aria-expanded', 'false');
-  trigger.setAttribute('aria-haspopup', 'true');
   trigger.setAttribute('aria-controls', dropdownId);
   trigger.dataset.testid = 'header-lang-trigger';
 
@@ -277,10 +312,12 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
     anchor.textContent = lang.label;
     anchor.dataset.testid = 'header-lang-option';
     if (lang.shortLabel === activeLabel) anchor.setAttribute('aria-current', 'true');
-    if (lang.openInNewTab) {
-      anchor.target = '_blank';
-      anchor.rel = 'noopener';
+    const langCode = langFromHref(lang.href);
+    if (langCode) {
+      anchor.lang = langCode;
+      anchor.setAttribute('hreflang', langCode);
     }
+    if (lang.openInNewTab) applyNewTab(anchor);
     anchor.addEventListener('click', () => closeLangDropdown(trigger, dropdown));
     item.append(anchor);
 
@@ -307,6 +344,7 @@ function buildLangZone(languages: NavLanguage[], activeLabel: string): HTMLDivEl
     if (event.key === 'Escape' && isOpen()) {
       closeLangDropdown(trigger, dropdown);
       trigger.focus();
+      event.stopPropagation();
       return;
     }
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
@@ -383,10 +421,7 @@ function buildCtaZone(label: string, href: string, openInNewTab: boolean): HTMLA
   cta.dataset.testid = 'header-cta';
   cta.href = href;
   cta.textContent = label;
-  if (openInNewTab) {
-    cta.target = '_blank';
-    cta.rel = 'noopener';
-  }
+  if (openInNewTab) applyNewTab(cta);
   return cta;
 }
 
@@ -396,6 +431,7 @@ function buildMenuToggle(closeLabel: string): HTMLButtonElement {
   button.type = 'button';
   button.setAttribute('aria-label', 'Open navigation menu');
   button.setAttribute('aria-expanded', 'false');
+  button.setAttribute('aria-controls', PANEL_ID);
 
   const icon = document.createElement('span');
   icon.className = 'header-menu-icon';
@@ -425,19 +461,17 @@ function appendLinkContent(el: HTMLElement, link: NavLink): void {
   }
 }
 
-function buildLinkGrid(links: NavLink[]): HTMLUListElement {
+function buildLinkGrid(links: NavLink[], labelId?: string): HTMLUListElement {
   const grid = document.createElement('ul');
   grid.className = 'header-menu-link-grid';
+  if (labelId) grid.setAttribute('aria-labelledby', labelId);
   links.forEach((link) => {
     const li = document.createElement('li');
     if (link.href) {
       const anchor = document.createElement('a');
       anchor.href = link.href;
       appendLinkContent(anchor, link);
-      if (link.openInNewTab) {
-        anchor.target = '_blank';
-        anchor.rel = 'noopener';
-      }
+      if (link.openInNewTab) applyNewTab(anchor);
       moveInstrumentation(link.source, anchor);
       li.append(anchor);
     } else {
@@ -521,10 +555,7 @@ function buildMergedCell(slot: MergeSlot): HTMLDivElement {
       const anchor = document.createElement('a');
       anchor.href = slot.link.href;
       appendLinkContent(anchor, slot.link);
-      if (slot.link.openInNewTab) {
-        anchor.target = '_blank';
-        anchor.rel = 'noopener';
-      }
+      if (slot.link.openInNewTab) applyNewTab(anchor);
       moveInstrumentation(slot.link.source, anchor);
       cell.append(anchor);
     } else {
@@ -547,6 +578,8 @@ function buildMergedRows(regions: NavRegion[]): HTMLDivElement[] {
   });
 }
 
+let regionLabelCount = 0;
+
 function buildCategoryContent(category: NavCategory): HTMLDivElement {
   const content = document.createElement('div');
   content.className = 'header-menu-category-content';
@@ -560,13 +593,17 @@ function buildCategoryContent(category: NavCategory): HTMLDivElement {
     if (group.length === 1 && region) {
       const regionEl = document.createElement('div');
       regionEl.className = 'header-menu-region header-menu-block';
+      let labelId: string | undefined;
       if (region.label) {
+        regionLabelCount += 1;
+        labelId = `header-menu-region-label-${regionLabelCount}`;
         const heading = document.createElement('p');
         heading.className = 'header-menu-region-label';
+        heading.id = labelId;
         heading.textContent = region.label;
         regionEl.append(heading);
       }
-      regionEl.append(buildLinkGrid(region.links));
+      regionEl.append(buildLinkGrid(region.links, labelId));
       inner.append(regionEl);
       return;
     }
@@ -655,7 +692,7 @@ function buildMenuCategories(
 
   const entries: { category: NavCategory; li: HTMLLIElement; content: HTMLDivElement; trigger: HTMLElement }[] = [];
 
-  categories.forEach((category) => {
+  categories.forEach((category, index) => {
     const li = document.createElement('li');
     li.className = 'header-menu-category';
     moveInstrumentation(category.source, li);
@@ -670,16 +707,16 @@ function buildMenuCategories(
       button.textContent = category.label;
       trigger = button;
       content = buildCategoryContent(category);
+      content.id = `header-menu-category-content-${index}`;
+      button.setAttribute('aria-controls', content.id);
+      button.setAttribute('aria-expanded', 'false');
       li.append(trigger, content);
     } else {
       const anchor = document.createElement('a');
       anchor.className = 'header-menu-category-trigger';
       anchor.href = category.href || '#';
       anchor.textContent = category.label;
-      if (category.openInNewTab) {
-        anchor.target = '_blank';
-        anchor.rel = 'noopener';
-      }
+      if (category.openInNewTab) applyNewTab(anchor);
       trigger = anchor;
       content = document.createElement('div');
       content.hidden = true;
@@ -712,10 +749,12 @@ function buildMenuPanel(
   categories: NavCategory[],
   languages: NavLanguage[],
   activeLangLabel: string,
-): { panel: HTMLDivElement; activateInitial: () => void } {
-  const panel = document.createElement('div');
+): { panel: HTMLElement; activateInitial: () => void } {
+  const panel = document.createElement('nav');
   panel.className = 'header-menu-panel';
-  panel.setAttribute('aria-hidden', 'true');
+  panel.id = PANEL_ID;
+  panel.setAttribute('aria-label', MAIN_NAV_LABEL);
+  panel.inert = true;
   panel.tabIndex = -1;
 
   const body = document.createElement('div');
@@ -788,22 +827,28 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     logoLinkLabel,
   );
   if (logoLinkAnchor) moveInstrumentation(logoLinkAnchor, logo);
-  if (logoLinkMarker === 'open-in-new-tab') {
-    logo.target = '_blank';
-    logo.rel = 'noopener';
-  }
+  if (logoLinkMarker === 'open-in-new-tab') applyNewTab(logo);
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
   const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');
   const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel);
 
+  let previousOverflow = '';
+  const setPageInert = (inert: boolean) => {
+    document.querySelectorAll<HTMLElement>('body > main, body > footer').forEach((element) => {
+      element.inert = inert;
+    });
+  };
+
   const closeMenu = () => {
+    if (!panel.classList.contains('is-open')) return;
     const hadFocusInPanel = panel.contains(document.activeElement);
     panel.classList.remove('is-open');
-    panel.setAttribute('aria-hidden', 'true');
+    panel.inert = true;
     menuToggle.setAttribute('aria-expanded', 'false');
     menuToggle.setAttribute('aria-label', 'Open navigation menu');
-    document.body.style.overflow = '';
+    setPageInert(false);
+    document.body.style.overflow = previousOverflow;
     if (hadFocusInPanel) menuToggle.focus();
   };
 
@@ -814,9 +859,11 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       activateInitial();
     }
     panel.classList.add('is-open');
-    panel.setAttribute('aria-hidden', 'false');
+    panel.inert = false;
     menuToggle.setAttribute('aria-expanded', 'true');
     menuToggle.setAttribute('aria-label', 'Close navigation menu');
+    setPageInert(true);
+    previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     panel.focus();
   };
@@ -825,8 +872,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     if (panel.classList.contains('is-open')) closeMenu();
     else openMenu();
   });
+  // Ignores a panel the Universal Editor has already replaced, so re-decoration doesn't leave live handlers.
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeMenu();
+    if (event.key === 'Escape' && panel.isConnected) closeMenu();
   });
 
   const tools = document.createElement('div');

@@ -30,6 +30,11 @@ function isEnabled(value?: Element | string | null, fallback = false): boolean {
   return ['true', 'yes', 'enabled'].includes(text.trim().toLowerCase());
 }
 
+// distinguishes a boolean flag cell's "true"/"false" text from a real CTA label
+function isBooleanToken(text: string): boolean {
+  return ['true', 'false', 'yes', 'no', 'enabled', 'disabled'].includes(text.trim().toLowerCase());
+}
+
 function setLinkAttributes(link: HTMLAnchorElement, href: string, openInNewTab = false): void {
   link.setAttribute('href', href);
   if (openInNewTab) {
@@ -96,8 +101,20 @@ function getCardFields(row: Element): CardFields {
   const imageAltCell = getCellByProp(cells, 'imageAlt');
   const isNewModelOrder = !!ctaLinkCell;
   const fallbackCtaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
-  // ctaName is authored right before ctaLink, not after it
-  const fallbackCtaLabelCell = isNewModelOrder ? cells[4] : cells[linkIndex - 1];
+  // ctaName is usually authored right before ctaLink, but some content has the two swapped
+  // (e.g. a legacy/migrated row) — detect that by checking which neighbor actually holds a
+  // plain-text label instead of an empty/media cell or a boolean flag's "true"/"false" text.
+  const neighborLabel = (cell: Element | undefined): string =>
+    cell && !cell.querySelector('a, picture, img') ? textFromCell(cell) : '';
+  const beforeLinkLabel = neighborLabel(cells[linkIndex - 1]);
+  const afterLinkLabel = neighborLabel(cells[linkIndex + 1]);
+  const useLabelAfterLink = !beforeLinkLabel && !!afterLinkLabel && !isBooleanToken(afterLinkLabel);
+  const fallbackCtaLabelCell = isNewModelOrder
+    ? cells[4]
+    : useLabelAfterLink
+      ? cells[linkIndex + 1]
+      : cells[linkIndex - 1];
+  const lastCtaCellIndex = isNewModelOrder ? 5 : useLabelAfterLink ? linkIndex + 1 : linkIndex;
   const hasLegacyAltField = !isNewModelOrder && linkIndex >= 5;
   const cta = getLinkFromCell(ctaLinkCell || fallbackCtaLinkCell);
 
@@ -112,9 +129,9 @@ function getCardFields(row: Element): CardFields {
         : null,
     href: cta.href,
     ctaLabel: textFromCell(ctaLabelCell || fallbackCtaLabelCell) || cta.label,
-    // cell order after the CTA link is: openInNewTab, darkOverlay
-    openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : linkIndex + 1], false),
-    darkOverlay: isEnabled(darkOverlayCell || cells[isNewModelOrder ? 7 : linkIndex + 2], true),
+    // the 2 boolean fields always follow whichever CTA cell (link or name) is authored last
+    openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : lastCtaCellIndex + 1], false),
+    darkOverlay: isEnabled(darkOverlayCell || cells[isNewModelOrder ? 7 : lastCtaCellIndex + 2], true),
   };
 }
 

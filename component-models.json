@@ -34,6 +34,50 @@
         "name": "footer",
         "multi": false,
         "label": "Footer"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cardEyebrow",
+        "label": "Card Eyebrow"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta1Label",
+        "label": "CTA 1 Label"
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "cta1Link",
+        "label": "CTA 1 Link"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "cta1OpenInNewTab",
+        "label": "CTA 1 Open in New Tab",
+        "value": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "cta2Label",
+        "label": "CTA 2 Label"
+      },
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "cta2Link",
+        "label": "CTA 2 Link"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "cta2OpenInNewTab",
+        "label": "CTA 2 Open in New Tab",
+        "value": false
       }
     ]
   },
@@ -536,6 +580,130 @@
     ]
   },
   {
+    "id": "content-listing",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute for QA automation. Leave empty to omit it.",
+        "value": ""
+      },
+      {
+        "component": "aem-tag",
+        "name": "eyebrow",
+        "label": "Category",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Card Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "textarea",
+        "name": "description",
+        "label": "Card Description",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-tag",
+        "name": "highlights",
+        "label": "Highlight Tags",
+        "description": "Select feature tags, such as private pool or private terrace.",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "container",
+        "name": "details",
+        "label": "Details",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "label",
+            "label": "Detail Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "value",
+            "label": "Detail Value",
+            "valueType": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "component": "container",
+        "name": "images",
+        "label": "Images",
+        "multi": true,
+        "fields": [
+          {
+            "component": "reference",
+            "name": "image",
+            "label": "Image",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "imageAlt",
+            "label": "Alt Text",
+            "valueType": "string",
+            "required": true
+          }
+        ]
+      },
+      {
+        "component": "container",
+        "name": "ctas",
+        "label": "CTAs",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "label",
+            "label": "CTA Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "CTA Link",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "culturist-card",
     "fields": [
       {
@@ -794,26 +962,6 @@
         "valueType": "string",
         "required": true,
         "value": ""
-      },
-      {
-        "component": "text",
-        "name": "footerCta",
-        "label": "Footer CTA Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "name": "footerCta_link",
-        "label": "Footer CTA URL",
-        "valueType": "string"
-      },
-      {
-        "component": "boolean",
-        "name": "footerCta_openInNewTab",
-        "label": "Open in new tab",
-        "valueType": "boolean",
-        "value": false
       }
     ]
   },
@@ -1857,6 +2005,20 @@
         "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
         "valueType": "string",
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "hotel-architect-ritual",
+    "fields": [
+      {
+        "component": "text",
+        "name": "tabLabel",
+        "label": "Tab Label",
+        "description": "Shown in the tab bar, which only appears when the block has two or more rituals.",
+        "valueType": "string",
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
@@ -1871,14 +2033,41 @@
         "label": "Title",
         "description": "One paragraph per line. The second line is indented, as in the design.",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "richtext",
         "name": "body",
         "label": "Description",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
+      },
+      {
+        "component": "container",
+        "name": "thumbnails",
+        "label": "Gallery Thumbnails",
+        "description": "Static supporting images shown with the copy; only the first three are displayed. They do not control the primary carousel.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "reference",
+            "name": "image",
+            "label": "Image",
+            "valueType": "string",
+            "multi": false,
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "imageAlt",
+            "label": "Image Alt Text",
+            "valueType": "string",
+            "value": "",
+            "required": true
+          }
+        ]
       },
       {
         "component": "text",
@@ -1919,49 +2108,31 @@
         "label": "Open in new tab",
         "valueType": "boolean",
         "value": false
-      }
-    ]
-  },
-  {
-    "id": "hotel-architect-image",
-    "fields": [
-      {
-        "component": "reference",
-        "name": "image",
-        "label": "Image",
-        "valueType": "string",
-        "multi": false,
-        "required": true
       },
       {
-        "component": "text",
-        "name": "imageAlt",
-        "label": "Image Alt Text",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "name": "thumbnail",
-        "label": "Thumbnail",
-        "description": "Optional. The image itself is used when this is empty.",
-        "valueType": "string",
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "thumbnailAlt",
-        "label": "Thumbnail Alt Text",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "boolean",
-        "name": "overlay",
-        "label": "Dark Image Overlay",
-        "description": "Dims the image so the carousel controls stay legible.",
-        "valueType": "boolean",
-        "value": true
+        "component": "container",
+        "name": "media",
+        "label": "Primary Images",
+        "description": "Add one image for a static photo, or two or more to enable the carousel arrows.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "reference",
+            "name": "image",
+            "label": "Image",
+            "valueType": "string",
+            "multi": false,
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "imageAlt",
+            "label": "Image Alt Text",
+            "valueType": "string",
+            "value": "",
+            "required": true
+          }
+        ]
       }
     ]
   },
@@ -1973,41 +2144,47 @@
         "name": "photo",
         "label": "Portrait",
         "valueType": "string",
-        "multi": false
+        "multi": false,
+        "required": true
       },
       {
         "component": "text",
         "name": "photoAlt",
         "label": "Portrait Alt Text",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "name": "personName",
         "label": "Name",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "name": "role",
         "label": "Role",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "text",
         "name": "cta",
         "label": "CTA Label",
         "valueType": "string",
-        "value": ""
+        "value": "",
+        "required": true
       },
       {
         "component": "aem-content",
         "name": "cta_link",
         "label": "CTA URL",
-        "valueType": "string"
+        "valueType": "string",
+        "required": true
       },
       {
         "component": "boolean",
@@ -2314,6 +2491,53 @@
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
         "value": false
+      }
+    ]
+  },
+  {
+    "id": "page-listing",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "valueType": "string",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "valueType": "string",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute for QA automation. Leave empty to omit it.",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "listingType",
+        "label": "Listing Type",
+        "valueType": "string",
+        "value": "offers",
+        "required": true,
+        "options": [
+          {
+            "name": "Offers",
+            "value": "offers"
+          },
+          {
+            "name": "Wellness",
+            "value": "wellness"
+          },
+          {
+            "name": "Experience",
+            "value": "experience"
+          },
+          {
+            "name": "Dining",
+            "value": "dining"
+          }
+        ]
       }
     ]
   },

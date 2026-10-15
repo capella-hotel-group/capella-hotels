@@ -366,7 +366,7 @@ header .header-cta:active {
 }
 
 .header-menu-body {
-    padding: 24px var(--site-header-inline) 56px;
+    padding: 24px var(--site-header-inline) 40px;
     opacity: 0;
     transform: translateY(-8px);
     transition:
@@ -387,7 +387,17 @@ header .header-cta:active {
 }
 
 .header-menu-category {
+    padding-block: var(--dimension-layout-module-gutter-s, 16px);
     border-bottom: 1px solid var(--color-stroke-main-primary, #898987);
+}
+
+.header-menu-category:first-child {
+    padding-top: 0;
+}
+
+.header-menu-category:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
 }
 
 .header-menu-category-trigger {
@@ -395,7 +405,7 @@ header .header-cta:active {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    min-height: 56px;
+    min-height: 40px;
     color: var(--color-text-main-disabled, #6e6e6c);
     font-family: var(--type-font-family-body, sans-serif);
     font-size: var(--typography-fontsize-body-l, 20px);
@@ -445,17 +455,23 @@ button.header-menu-category-trigger::after {
     /* Matches Figma's gap between the accordion trigger and its opened content:
        --dimension-layout-module-gutter-s is 16px on mobile, 24px from tablet up. */
     padding-top: var(--dimension-layout-module-gutter-s, 16px);
-    padding-bottom: 24px;
+    padding-bottom: 0;
     opacity: 0;
     transform: translateY(-4px);
     transition:
         opacity 0.35s ease,
-        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        padding-top 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .header-menu-category-content[data-expanded='true'] .header-menu-category-content-inner {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* A collapsed accordion must take no space: padding survives the 0fr row (Figma: collapsed items are spaced by the divider gaps only). */
+.header-menu-category-content:not([data-expanded='true']) .header-menu-category-content-inner {
+    padding-top: 0;
 }
 
 .header-menu-block + .header-menu-block {
@@ -538,7 +554,7 @@ button.header-menu-category-trigger::after {
 }
 
 .header-menu-promo {
-    margin-top: 32px;
+    margin-top: 24px;
     opacity: 0;
     visibility: hidden;
     transform: translateY(12px);
@@ -572,8 +588,9 @@ button.header-menu-category-trigger::after {
        layout — a replaced element with no intrinsic size and only aspect-ratio set
        does not reliably keep that ratio once it fails to load. */
     width: 100%;
-    max-width: 320px;
-    aspect-ratio: 4 / 5;
+    max-width: 240px;
+    margin-inline: auto;
+    aspect-ratio: 240 / 300;
 }
 
 .header-menu-promo-image img {
@@ -600,16 +617,39 @@ button.header-menu-category-trigger::after {
     text-underline-offset: 0.205em;
 }
 
-.header-menu-bottom-lang {
-    margin-top: 40px;
-    border-top: 1px solid var(--color-stroke-main-primary, #898987);
-    padding-top: 24px;
+.header-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
-/* The trigger sits at the panel's left edge, so anchor the dropdown to it instead of right-aligning off-screen */
+.header-menu-bottom-lang {
+    margin-top: 24px;
+}
+
+/* Figma's mobile language row is the 24px label/icon line, not the 40px button height. */
+.header-menu-bottom-lang .header-lang-trigger {
+    height: 24px;
+}
+
+/* The trigger sits at the panel's left edge, so anchor the dropdown to it instead of right-aligning off-screen.
+   It also sits at the bottom of the panel, so the list opens upward instead of being cut off. */
 .header-menu-bottom-lang .header-lang-dropdown {
+    top: auto;
+    bottom: 100%;
     right: auto;
     left: 0;
+    transform: translateY(4px);
+}
+
+.header-menu-bottom-lang .header-lang-dropdown.is-open {
+    transform: translateY(0);
 }
 
 @media (min-width: 768px) {
@@ -678,6 +718,7 @@ button.header-menu-category-trigger::after {
     }
 
     .header-menu-category {
+        padding-block: 0;
         border-bottom: 1px solid var(--color-stroke-main-primary, #898987);
     }
 
@@ -781,5 +822,88 @@ button.header-menu-category-trigger::after {
            the fixed 4-column track into the next column. */
         max-width: 107px;
         overflow-wrap: break-word;
+    }
+}
+
+header {
+    --site-header-focus: #fff;
+}
+
+header:has(.header-menu-panel.is-open) {
+    --site-header-focus: var(--site-header-text);
+}
+
+.header-menu-toggle:focus-visible,
+.header-logo:focus-visible,
+.header-lang-trigger:focus-visible,
+header .header-cta:focus-visible,
+.header-menu-category-trigger:focus-visible,
+.header-menu-link-grid a:focus-visible,
+.header-menu-merged-cell a:focus-visible,
+.header-menu-promo-cta:focus-visible {
+    outline: 2px solid var(--site-header-focus);
+    outline-offset: 2px;
+}
+
+/* The dropdown clips overflow, so its focus ring sits inside the option. */
+.header-lang-dropdown a:focus-visible {
+    outline: 2px solid var(--site-header-text);
+    outline-offset: -2px;
+}
+
+/* The panel is only focused programmatically (when the menu opens); it is not a control. */
+.header-menu-panel:focus {
+    outline: none;
+}
+
+/* The category trigger spans the panel width, so an outer ring is clipped (audit H-10). */
+.header-menu-category-trigger:focus-visible {
+    outline-offset: -2px;
+}
+
+/* RTL only (audit H-14): the existing rules anchor the desktop rail content and promo with physical left/right. */
+@media (min-width: 1200px) {
+    [dir='rtl'] .header-menu-category-content {
+        left: calc(var(--site-header-inline) + 240px + 85px);
+        right: calc(var(--site-header-inline) + 305px + 64px);
+    }
+
+    [dir='rtl'] .header-menu-promo {
+        right: auto;
+        left: var(--site-header-inline);
+    }
+}
+
+[dir='rtl'] .header-lang-dropdown {
+    right: auto;
+    left: 0;
+}
+
+[dir='rtl'] .header-menu-bottom-lang .header-lang-dropdown {
+    left: auto;
+    right: 0;
+}
+
+/* The bar stays put while the open panel scrolls under it; an opaque surface stops menu content showing through the logo and buttons. */
+.header-inner {
+    transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+header:has(.header-menu-panel.is-open) .header-inner {
+    background: var(--site-header-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    header,
+    header *,
+    header *::before,
+    header *::after {
+        transition: none !important;
+    }
+
+    /* Without the fade there is nothing to hide while the promo content swaps. */
+    .header-menu-promo.is-swapping .header-menu-promo-image,
+    .header-menu-promo.is-swapping .header-menu-promo-cta {
+        opacity: 1;
     }
 }

@@ -1,0 +1,146 @@
+{
+  "definitions": [
+    {
+      "title": "Content Listing",
+      "id": "content-listing",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Content Listing",
+              "model": "content-listing"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "content-listing",
+      "fields": [
+        {
+          "component": "text",
+          "name": "id",
+          "valueType": "string",
+          "label": "Block ID",
+          "description": "Sets the id attribute on the block, usable as an anchor target.",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "dataTestId",
+          "valueType": "string",
+          "label": "Data Test ID",
+          "description": "Adds a data-test-id attribute for QA automation. Leave empty to omit it.",
+          "value": ""
+        },
+        {
+          "component": "aem-tag",
+          "name": "eyebrow",
+          "label": "Category",
+          "valueType": "string",
+          "multi": false,
+          "required": true
+        },
+        {
+          "component": "text",
+          "name": "title",
+          "label": "Card Title",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "textarea",
+          "name": "description",
+          "label": "Card Description",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "aem-tag",
+          "name": "highlights",
+          "label": "Highlight Tags",
+          "description": "Select feature tags, such as private pool or private terrace.",
+          "valueType": "string",
+          "multi": false
+        },
+        {
+          "component": "container",
+          "name": "details",
+          "label": "Details",
+          "multi": true,
+          "fields": [
+            {
+              "component": "text",
+              "name": "label",
+              "label": "Detail Label",
+              "valueType": "string",
+              "required": true
+            },
+            {
+              "component": "text",
+              "name": "value",
+              "label": "Detail Value",
+              "valueType": "string",
+              "required": true
+            }
+          ]
+        },
+        {
+          "component": "container",
+          "name": "images",
+          "label": "Images",
+          "multi": true,
+          "fields": [
+            {
+              "component": "reference",
+              "name": "image",
+              "label": "Image",
+              "valueType": "string",
+              "required": true
+            },
+            {
+              "component": "text",
+              "name": "imageAlt",
+              "label": "Alt Text",
+              "valueType": "string",
+              "required": true
+            }
+          ]
+        },
+        {
+          "component": "container",
+          "name": "ctas",
+          "label": "CTAs",
+          "multi": true,
+          "fields": [
+            {
+              "component": "text",
+              "name": "label",
+              "label": "CTA Label",
+              "valueType": "string",
+              "required": true
+            },
+            {
+              "component": "aem-content",
+              "name": "link",
+              "label": "CTA Link",
+              "valueType": "string",
+              "required": true
+            },
+            {
+              "component": "boolean",
+              "name": "openInNewTab",
+              "label": "Open in New Tab",
+              "valueType": "boolean",
+              "value": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "filters": []
+}

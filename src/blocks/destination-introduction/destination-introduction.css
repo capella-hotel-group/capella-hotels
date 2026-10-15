@@ -1,5 +1,6 @@
 /* destination-introduction
-   Figma: desktop 6047:27004 (1440), tablet 6048:28574 (834), mobile 6048:30195 (393).
+   Figma: desktop 6260:29620 (1440), desktop 6275:21935 (1920), tablet 6260:29624 (834),
+   mobile 6260:29628 (393).
    Source order follows the block's model field order so the Universal Editor lists
    the gallery items last in the content tree; `order` restores the reading order.
    Everything nests under the block class, so no rule can leak to another block. */
@@ -54,15 +55,20 @@
     .destination-introduction-eyebrow {
         padding-inline-start: var(--dimension-spacing-general-2xl);
         margin-block-end: var(--dimension-spacing-eyebrow-to-title);
+        /* Figma text style body/eyebrow */
         font-family: var(--type-font-family-body);
-        font-size: var(--typography-fontsize-body-m);
+        font-size: var(--typography-fontsize-body-eyebrow);
         font-weight: var(--type-font-weight-body-reg);
-        line-height: var(--typography-line-height-body-md);
+        line-height: var(--typography-line-height-body-eyebrow);
+        letter-spacing: var(--typography-letter-spacing-body-eyebrow);
         color: var(--color-text-main-heading);
         text-transform: uppercase;
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
     }
 
     .destination-introduction-title {
+        margin: 0;
         font-family: var(--type-font-family-heading);
         font-size: var(--typography-fontsize-heading-h1);
         font-weight: var(--type-font-weight-heading);
@@ -73,6 +79,7 @@
         text-box-edge: cap alphabetic;
 
         > * {
+            display: block;
             margin: 0;
             font: inherit;
             color: inherit;
@@ -112,43 +119,6 @@
                 var(--dimension-layout-module-padding-inline-xs) + var(--dimension-spacing-general-2xl)
             );
             padding-inline-end: var(--dimension-layout-module-padding-inline-s);
-        }
-    }
-
-    .destination-introduction-cta {
-        order: 4;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--dimension-spacing-general-m);
-        margin-block-start: var(--dimension-spacing-general-l);
-        padding-inline: calc(var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl));
-
-        a {
-            display: inline-flex;
-            align-items: center;
-            min-height: var(--component-button-height);
-            padding-block: var(--component-button-padding-block);
-            border: 0;
-            border-radius: var(--component-button-corner-standard);
-            font-family: var(--type-font-family-cta);
-            font-size: var(--typography-fontsize-body-m);
-            font-weight: var(--type-font-weight-text-link);
-            line-height: var(--typography-line-height-body-md);
-            color: var(--color-text-action-default);
-            text-transform: uppercase;
-            text-decoration: underline;
-            background: none;
-            text-decoration-line: underline;
-            text-decoration-style: solid;
-            text-decoration-skip-ink: auto;
-            text-decoration-thickness: 7%; /* 1.26px */
-            text-underline-offset: 20.5%; /* 3.69px */
-        }
-
-        @media (width >= 1200px) {
-            /* Figma has no CTA in the desktop composition */
-            display: none;
         }
     }
 
@@ -272,6 +242,12 @@
         inset: 0;
         background-color: rgb(0 0 0 / 40%);
         pointer-events: none;
+    }
+
+    .destination-introduction-slide-clone {
+        @media (width >= 1200px) {
+            display: none;
+        }
     }
 
     .destination-introduction-nav {

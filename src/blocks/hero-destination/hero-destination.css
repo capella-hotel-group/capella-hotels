@@ -6,6 +6,10 @@
 }
 
 .hero-destination {
+    /* Height of Figma's Pagination component (88x56), which sits flush with the hero's bottom
+       edge and centres its 8px dots 28px above it. */
+    --hero-destination-pagination-height: 56px;
+
     position: relative;
     width: 100%;
     height: 100vh; /* fallback */
@@ -19,15 +23,6 @@
 /* Authoring: cap height to prevent layout issues in the Universal Editor */
 .adobe-ue-edit .hero-destination {
     max-height: 1080px;
-}
-
-.hero-destination-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 50;
-    background: rgb(0 0 0 / 40%);
-    display: none;
-    pointer-events: none;
 }
 
 .hero-destination-track {
@@ -62,6 +57,12 @@
     pointer-events: none;
 }
 
+/* The active panel is focusable because it holds no focusable content of its own. */
+.hero-destination-slide:focus-visible {
+    outline: 2px solid var(--color-icon-on-action-default);
+    outline-offset: -4px;
+}
+
 .hero-destination-media {
     position: absolute;
     inset: 0;
@@ -85,12 +86,23 @@
     user-select: none;
 }
 
+/* Figma's Overlay layer sits above the background image but below the Content frame, so the
+   scrim belongs to the media and fades in and out with its slide. Kept at Figma's 40% by
+   design decision: that measures 2.85:1 against white large-scale text over a fully white
+   frame, short of SC 1.4.3's 3:1 — 45% would be the compliant minimum. */
+.hero-destination-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 40%);
+    pointer-events: none;
+}
+
 .hero-destination-heading {
     position: relative;
     z-index: 55;
-    max-width: 800px;
     margin: 0;
-    padding-inline: var(--dimension-layout-module-padding-inline-xs);
+    padding-inline: var(--dimension-layout-module-padding-block-s);
     color: var(--color-text-main-inverse-heading);
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h2);
@@ -127,38 +139,97 @@
 .hero-destination-dots {
     position: absolute;
     z-index: 60;
-    bottom: var(--dimension-spacing-general-xl);
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: var(--dimension-spacing-general-xs);
 }
 
+/* The tap target is the button's padding box, not a negative-inset pseudo-element: overlapping
+   targets let a neighbouring dot swallow the click and jump to the wrong slide. */
 .hero-destination-dot {
-    position: relative;
+    box-sizing: content-box;
     width: var(--dimension-spacing-general-xs);
     height: var(--dimension-spacing-general-xs);
-    padding: 0;
+    padding-block: calc((var(--hero-destination-pagination-height) - var(--dimension-spacing-general-xs)) / 2);
+    padding-inline: calc(var(--dimension-spacing-general-xs) / 2);
     border: none;
-    border-radius: var(--corner-radius-round);
-    background: var(--color-icon-action-opaque-inverse);
+    background: none;
     cursor: pointer;
 }
 
-/* Enlarges the tappable area well past the small visual dot (mobile target-size accessibility)
-   without affecting layout/spacing between dots. */
 .hero-destination-dot::before {
     content: '';
-    position: absolute;
-    inset: -14px;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--corner-radius-round);
+    background: var(--color-icon-action-opaque-inverse);
 }
 
-.hero-destination-dot.is-active {
+.hero-destination-dot.is-active::before {
     background: var(--color-icon-on-action-default);
 }
 
+.hero-destination-toggle {
+    position: absolute;
+    z-index: 60;
+    /* Centres the 44px control on the 56px pagination row. */
+    bottom: calc((var(--hero-destination-pagination-height) - 44px) / 2);
+    inset-inline-end: var(--dimension-layout-module-padding-inline-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: var(--corner-radius-round);
+    background: rgb(0 0 0 / 35%);
+    color: var(--color-icon-action-opaque-inverse);
+    cursor: pointer;
+    /* Absent from the Figma design, so it stays invisible until keyboard focus reveals it —
+       that keeps the WCAG 2.2.2 pause mechanism without altering the visual design. */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hero-destination-toggle:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    outline: 2px solid var(--color-icon-on-action-default);
+    outline-offset: 2px;
+}
+
+.hero-destination-toggle-icon {
+    display: block;
+    width: 14px;
+    height: 14px;
+}
+
+.hero-destination-toggle[data-state='playing'] .hero-destination-toggle-icon {
+    background: linear-gradient(to right, currentcolor 0 38%, transparent 38% 62%, currentcolor 62% 100%);
+}
+
+.hero-destination-toggle[data-state='paused'] .hero-destination-toggle-icon {
+    background: currentcolor;
+    clip-path: polygon(15% 0%, 100% 50%, 15% 100%);
+}
+
+/* Figma caps the heading column: 482px content frame on tablet, 513px on desktop — both
+   include the 40px inline padding, giving the design's 402px / 433px text widths. */
 @media (width >= 768px) {
     .hero-destination-heading {
-        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        max-width: 482px;
+    }
+
+    .hero-destination-toggle {
+        inset-inline-end: var(--dimension-layout-module-padding-inline-s);
+    }
+}
+
+@media (width >= 1200px) {
+    .hero-destination-heading {
+        max-width: 513px;
     }
 }

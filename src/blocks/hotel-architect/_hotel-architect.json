@@ -17,15 +17,15 @@
       }
     },
     {
-      "title": "Hotel Architect Gallery Image",
-      "id": "hotel-architect-image",
+      "title": "Hotel Architect Ritual",
+      "id": "hotel-architect-ritual",
       "plugins": {
         "xwalk": {
           "page": {
             "resourceType": "core/franklin/components/block/v1/block/item",
             "template": {
-              "name": "Hotel Architect Gallery Image",
-              "model": "hotel-architect-image"
+              "name": "Hotel Architect Ritual",
+              "model": "hotel-architect-ritual"
             }
           }
         }
@@ -66,6 +66,20 @@
           "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
           "valueType": "string",
           "value": ""
+        }
+      ]
+    },
+    {
+      "id": "hotel-architect-ritual",
+      "fields": [
+        {
+          "component": "text",
+          "name": "tabLabel",
+          "label": "Tab Label",
+          "description": "Shown in the tab bar, which only appears when the block has two or more rituals.",
+          "valueType": "string",
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
@@ -80,14 +94,41 @@
           "label": "Title",
           "description": "One paragraph per line. The second line is indented, as in the design.",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "richtext",
           "name": "body",
           "label": "Description",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
+        },
+        {
+          "component": "container",
+          "name": "thumbnails",
+          "label": "Gallery Thumbnails",
+          "description": "Static supporting images shown with the copy; only the first three are displayed. They do not control the primary carousel.",
+          "multi": true,
+          "fields": [
+            {
+              "component": "reference",
+              "name": "image",
+              "label": "Image",
+              "valueType": "string",
+              "multi": false,
+              "required": true
+            },
+            {
+              "component": "text",
+              "name": "imageAlt",
+              "label": "Image Alt Text",
+              "valueType": "string",
+              "value": "",
+              "required": true
+            }
+          ]
         },
         {
           "component": "text",
@@ -128,49 +169,31 @@
           "label": "Open in new tab",
           "valueType": "boolean",
           "value": false
-        }
-      ]
-    },
-    {
-      "id": "hotel-architect-image",
-      "fields": [
-        {
-          "component": "reference",
-          "name": "image",
-          "label": "Image",
-          "valueType": "string",
-          "multi": false,
-          "required": true
         },
         {
-          "component": "text",
-          "name": "imageAlt",
-          "label": "Image Alt Text",
-          "valueType": "string",
-          "value": ""
-        },
-        {
-          "component": "reference",
-          "name": "thumbnail",
-          "label": "Thumbnail",
-          "description": "Optional. The image itself is used when this is empty.",
-          "valueType": "string",
-          "multi": false
-        },
-        {
-          "component": "text",
-          "name": "thumbnailAlt",
-          "label": "Thumbnail Alt Text",
-          "valueType": "string",
-          "value": ""
-        },
-        {
-          "component": "boolean",
-          "name": "overlay",
-          "label": "Dark Image Overlay",
-          "description": "Dims the image so the carousel controls stay legible.",
-          "valueType": "boolean",
-          "value": true
+          "component": "container",
+          "name": "media",
+          "label": "Primary Images",
+          "description": "Add one image for a static photo, or two or more to enable the carousel arrows.",
+          "multi": true,
+          "fields": [
+            {
+              "component": "reference",
+              "name": "image",
+              "label": "Image",
+              "valueType": "string",
+              "multi": false,
+              "required": true
+            },
+            {
+              "component": "text",
+              "name": "imageAlt",
+              "label": "Image Alt Text",
+              "valueType": "string",
+              "value": "",
+              "required": true
+            }
+          ]
         }
       ]
     },
@@ -182,41 +205,47 @@
           "name": "photo",
           "label": "Portrait",
           "valueType": "string",
-          "multi": false
+          "multi": false,
+          "required": true
         },
         {
           "component": "text",
           "name": "photoAlt",
           "label": "Portrait Alt Text",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "name": "personName",
           "label": "Name",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "name": "role",
           "label": "Role",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "text",
           "name": "cta",
           "label": "CTA Label",
           "valueType": "string",
-          "value": ""
+          "value": "",
+          "required": true
         },
         {
           "component": "aem-content",
           "name": "cta_link",
           "label": "CTA URL",
-          "valueType": "string"
+          "valueType": "string",
+          "required": true
         },
         {
           "component": "boolean",
@@ -231,7 +260,7 @@
   "filters": [
     {
       "id": "hotel-architect",
-      "components": ["hotel-architect-image", "hotel-architect-card"]
+      "components": ["hotel-architect-ritual", "hotel-architect-card"]
     }
   ]
 }

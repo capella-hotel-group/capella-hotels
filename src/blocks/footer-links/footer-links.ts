@@ -1,4 +1,7 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createTextLink } from '@/utils/footer-link.js';
+
+const NAV_LABEL = 'Footer navigation';
 
 const cellOf = (row?: Element | null) => row?.firstElementChild ?? null;
 
@@ -28,23 +31,16 @@ function parseItemRow(row: Element): LinkEntry | null {
   return { row, label, href, openInNewTab };
 }
 
-function buildLink(entry: LinkEntry): HTMLParagraphElement {
-  const item = document.createElement('p');
+function buildLink(entry: LinkEntry): HTMLLIElement {
+  const item = document.createElement('li');
   item.className = 'footer-nav-link';
   moveInstrumentation(entry.row, item);
-  const anchor = document.createElement('a');
-  anchor.href = entry.href || '#';
-  anchor.textContent = entry.label || entry.href;
-  if (entry.openInNewTab) {
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-  }
-  item.append(anchor);
+  item.append(createTextLink(entry.label || entry.href, entry.href, entry.openInNewTab));
   return item;
 }
 
-function buildColumn(entries: LinkEntry[]): HTMLDivElement {
-  const col = document.createElement('div');
+function buildColumn(entries: LinkEntry[]): HTMLUListElement {
+  const col = document.createElement('ul');
   col.className = 'footer-nav-col';
   entries.forEach((entry) => col.append(buildLink(entry)));
   return col;
@@ -70,11 +66,13 @@ export default function decorate(block: HTMLElement): void {
   const firstGroup = entries.slice(0, Math.max(0, count));
   const secondGroup = entries.slice(Math.max(0, count));
 
-  const columns: HTMLDivElement[] = [];
+  const columns: HTMLUListElement[] = [];
   if (firstGroup.length) columns.push(buildColumn(firstGroup));
   if (secondGroup.length) columns.push(buildColumn(secondGroup));
 
   // renamed from `footer-links` (the xwalk block name) to the leaf class footer.css expects
   block.className = 'footer-nav-columns';
+  block.setAttribute('role', 'navigation');
+  block.setAttribute('aria-label', NAV_LABEL);
   block.replaceChildren(...columns);
 }

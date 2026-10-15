@@ -12,7 +12,7 @@ export default function decorate(block: HTMLElement): void {
   const titleCell = cellOf(rows[0]);
   const contentCell = cellOf(rows[1]);
 
-  const heading = document.createElement('p');
+  const heading = document.createElement('h2');
   heading.className = 'footer-heading';
   heading.textContent = titleCell?.textContent?.trim() || 'Contact Us';
   if (titleCell) moveInstrumentation(titleCell, heading);
