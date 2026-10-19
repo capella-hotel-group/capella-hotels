@@ -29,14 +29,6 @@ const ITEM = {
 } as const;
 
 const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
-const RESIZE_DEBOUNCE_MS = 150;
-
-// Exported from the Figma "arrow-icon" component (28x28); fill is currentColor so
-// the stylesheet owns the colour.
-const ARROW_PATHS: Record<'prev' | 'next', string> = {
-  prev: 'M19.71 4C15.98 7.16 12.47 10.56 9 14C10.79 15.78 12.59 17.56 14.44 19.27C15.96 20.68 18.13 22.69 19.71 24C16.71 20.46 11 14 11 14C11 14 18.2116 5.76279 19.71 4Z',
-  next: 'M9 4C12.73 7.16 16.24 10.56 19.71 14C17.92 15.78 16.12 17.56 14.27 19.27C12.75 20.68 10.58 22.69 9 24C12 20.46 17.5 14 17.5 14C17.5 14 10.4984 5.76279 9 4Z',
-};
 
 let blockCount = 0;
 
@@ -135,27 +127,6 @@ function buildText(cell: Element | null | undefined, tag: string, className: str
   element.className = className;
   element.textContent = text;
   return element;
-}
-
-function buildArrow(direction: 'prev' | 'next', label: string): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = `choose-space-nav choose-space-nav-${direction}`;
-  button.setAttribute('aria-label', label);
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 28 28');
-  svg.setAttribute('width', '28');
-  svg.setAttribute('height', '28');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('fill', 'currentColor');
-  path.setAttribute('d', ARROW_PATHS[direction]);
-  svg.append(path);
-  button.append(svg);
-
-  return button;
 }
 
 function buildVideo(
@@ -336,88 +307,6 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
 }
 
 /**
- * Adds carousel affordances to the tab list, but only while the tabs actually
- * overflow. The controls live on `nav`, a sibling of the observed `tablist`, so
- * showing them cannot resize the element whose size triggered them.
- */
-function createCarousel(tablist: HTMLElement, nav: HTMLElement) {
-  const prev = buildArrow('prev', 'Previous spaces');
-  const next = buildArrow('next', 'Next spaces');
-  const scrollBy = (sign: number) => (): void => {
-    tablist.scrollBy({ left: sign * tablist.clientWidth * 0.8, behavior: 'smooth' });
-  };
-  const onPrev = scrollBy(-1);
-  const onNext = scrollBy(1);
-
-  let inited = false;
-
-  const init = (): void => {
-    if (inited) return;
-    inited = true;
-    prev.addEventListener('click', onPrev);
-    next.addEventListener('click', onNext);
-    nav.append(prev, next);
-    tablist.classList.add('is-carousel');
-  };
-
-  const destroy = (): void => {
-    if (!inited) return;
-    inited = false;
-    prev.removeEventListener('click', onPrev);
-    next.removeEventListener('click', onNext);
-    prev.remove();
-    next.remove();
-    tablist.classList.remove('is-carousel');
-    tablist.scrollTo({ left: 0 });
-  };
-
-  // +1 absorbs the sub-pixel difference these two report at fractional widths
-  const overflows = (): boolean => tablist.scrollWidth > tablist.clientWidth + 1;
-
-  let timer = 0;
-  const sync = (): void => {
-    if (overflows()) init();
-    else destroy();
-  };
-
-  const observer = new ResizeObserver(() => {
-    window.clearTimeout(timer);
-    timer = window.setTimeout(sync, RESIZE_DEBOUNCE_MS);
-  });
-  // the tab list for viewport changes, and each tab because a ResizeObserver on a
-  // scroll container never fires when only its content grows
-  observer.observe(tablist);
-  [...tablist.children].forEach((tab) => observer.observe(tab));
-
-  // Blocks decorate while their section is still hidden, so this first pass
-  // measures zero and finds no overflow. ResizeObserver corrects that once the
-  // section is shown, but its callbacks are only delivered while the page
-  // renders, so a background tab would keep an overflowing list without
-  // controls. Watching the section status covers that case: mutation records are
-  // delivered on the microtask queue rather than per frame.
-  sync();
-
-  const section = tablist.closest('.section');
-  const sectionWatcher = new MutationObserver(() => {
-    if (section?.getAttribute('data-section-status') !== 'loaded') return;
-    sectionWatcher.disconnect();
-    sync();
-  });
-  if (section && section.getAttribute('data-section-status') !== 'loaded') {
-    sectionWatcher.observe(section, { attributeFilter: ['data-section-status'] });
-  }
-
-  return {
-    disconnect: (): void => {
-      observer.disconnect();
-      sectionWatcher.disconnect();
-      window.clearTimeout(timer);
-      destroy();
-    },
-  };
-}
-
-/**
  * loads and decorates the block
  * @param block The block element
  */
@@ -464,14 +353,11 @@ export default function decorate(block: HTMLElement): void {
   else tablist.setAttribute('aria-label', 'Choose a space');
   spaces.forEach((space) => tablist.append(space.tab));
 
-  const nav = document.createElement('div');
-  nav.className = 'choose-space-nav-group';
-
-  // the arrows overlay the track rather than sitting beside the tab list, so
-  // revealing them cannot change the width the ResizeObserver is measuring
+  // Figma has no prev/next controls: an overflowing list is swiped or scrolled,
+  // and keyboard focus scrolls the focused tab into view
   const track = document.createElement('div');
   track.className = 'choose-space-track';
-  track.append(tablist, nav);
+  track.append(tablist);
 
   const selector = document.createElement('div');
   selector.className = 'choose-space-selector';
@@ -543,8 +429,6 @@ export default function decorate(block: HTMLElement): void {
   // armed a frame later so the first space appears instantly instead of fading in
   requestAnimationFrame(() => stage.classList.add('is-ready'));
 
-  const carousel = createCarousel(tablist, nav);
-
   // `preload="none"` keeps the videos off the critical path; they start buffering
   // once the block is near the viewport, so switching space is not a cold start
   const videos = spaces.map((space) => space.video).filter((video): video is HTMLVideoElement => video !== null);
@@ -565,12 +449,11 @@ export default function decorate(block: HTMLElement): void {
   preloader?.observe(block);
 
   // the editor replaces the block element on every item change, so the observer
-  // must not outlive the DOM it was measuring
+  // must not outlive the DOM it was watching
   const parent = block.parentElement;
   if (parent) {
     const watcher = new MutationObserver(() => {
       if (block.isConnected) return;
-      carousel.disconnect();
       preloader?.disconnect();
       watcher.disconnect();
     });

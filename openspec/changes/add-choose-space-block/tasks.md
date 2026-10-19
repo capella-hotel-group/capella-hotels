@@ -63,14 +63,10 @@
 - [ ] 7.4 Play the video when its panel activates; pause and reset `currentTime` when it deactivates
 - [ ] 7.5 Suppress autoplay under `prefers-reduced-motion: reduce` and keep the poster visible
 
-## 8. Conditional carousel
+## 8. Tab list scrolling
 
-- [ ] 8.1 Implement the overflow measurement `scrollWidth > clientWidth + 1`
-- [ ] 8.2 Observe the tab list with `ResizeObserver` and debounce the callback by 150ms trailing
-- [ ] 8.3 Implement `init()` guarded by an `inited` flag, adding controls to a sibling element
-- [ ] 8.4 Implement `destroy()` removing controls, detaching the exact listener references and resetting scroll position
-- [ ] 8.5 Disconnect the observer when the block is removed from the DOM
-- [ ] 8.6 Test resizing across the threshold in both directions repeatedly and confirm no duplicated controls or listeners
+- [x] 8.1 No prev/next arrow controls, per Figma (CAP-100); an overflowing tab list scrolls natively with snap positions
+- [x] 8.2 Keyboard selection scrolls the selected tab into view
 
 ## 9. Styling
 
