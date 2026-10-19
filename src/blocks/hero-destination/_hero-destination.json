@@ -154,6 +154,13 @@
           }
         },
         {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "showOverlay",
+          "label": "Show media overlay",
+          "value": true
+        },
+        {
           "component": "text",
           "valueType": "string",
           "name": "heading",

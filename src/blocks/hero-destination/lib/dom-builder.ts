@@ -15,6 +15,7 @@ export function buildSlide(item: HeroDestinationItem, index: number, idPrefix: s
   moveInstrumentation(item.sourceRow, slide);
 
   const media = buildMedia(item);
+  if (!item.showOverlay) media.classList.add('hero-destination-media--no-overlay');
 
   const heading = document.createElement('h2');
   heading.className = 'hero-destination-heading';
