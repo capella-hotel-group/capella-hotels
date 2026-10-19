@@ -691,6 +691,7 @@
     padding: 0;
     background: transparent;
     cursor: pointer;
+    isolation: isolate;
 }
 
 .culturist-carousel-card-slot-img {
@@ -706,14 +707,18 @@
     transition: transform 0.3s ease;
 }
 
-/* Flat scrim over the whole image for title legibility (Figma: flat rgba(0,0,0,0.2) over the entire card) */
-.culturist-carousel-carousel-card::after {
+/* Scrim sits above the image (z 1) and below the title (z 3) */
+.culturist-carousel-card-content::after {
     content: '';
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 20%);
     pointer-events: none;
     z-index: 2;
+}
+
+.culturist-carousel-carousel-col--no-overlay .culturist-carousel-card-content::after {
+    content: none;
 }
 
 @media (hover: hover) {

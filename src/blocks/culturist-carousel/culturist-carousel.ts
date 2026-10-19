@@ -450,6 +450,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     });
   };
 
+  const applyOverlay = (index: number) => {
+    const overlayText = itemRows[index]?.querySelectorAll(':scope > div')[2]?.textContent?.trim().toLowerCase() ?? '';
+    const showOverlay = overlayText !== 'false' && overlayText !== 'no';
+    carouselCol.classList.toggle('culturist-carousel-carousel-col--no-overlay', !showOverlay);
+  };
+
   const selectTab = async (index: number) => {
     currentTabIndex = index;
     updateDestinationBtn();
@@ -470,6 +476,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     await renderCulturistInfo(infoSlot, cfRef);
     await renderGalleryCarousel(carouselCol, cfRef);
     if (generation !== selectTabGeneration) return;
+
+    applyOverlay(currentTabIndex);
 
     infoSlot.classList.remove('is-fading');
     carouselCol.classList.remove('is-fading');
@@ -652,6 +660,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   wrapper.append(infoCol);
   wrapper.append(carouselCol);
+
+  applyOverlay(0);
 
   // Load initial tab data
   const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';

@@ -98,6 +98,10 @@
     pointer-events: none;
 }
 
+.hero-destination-media--no-overlay::after {
+    content: none;
+}
+
 .hero-destination-heading {
     position: relative;
     z-index: 55;

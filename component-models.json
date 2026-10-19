@@ -815,6 +815,13 @@
         "label": "Content Fragment",
         "multi": false,
         "required": true
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "showOverlay",
+        "label": "Show image overlay",
+        "value": true
       }
     ]
   },
@@ -1841,6 +1848,13 @@
             "video"
           ]
         }
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "showOverlay",
+        "label": "Show media overlay",
+        "value": true
       },
       {
         "component": "text",
