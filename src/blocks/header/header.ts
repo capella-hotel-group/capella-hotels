@@ -727,15 +727,30 @@ function buildMenuCategories(
     list.append(li);
   });
 
+  const firstExpandable = entries.findIndex((entry) => entry.category.regions.length);
+  const desktop = window.matchMedia('(min-width: 1200px)');
+  let lastActive = firstExpandable;
+
   entries.forEach(({ trigger }, index) => {
     if (trigger.tagName !== 'BUTTON') return;
     trigger.addEventListener('click', () => {
       const isActive = entries[index]?.li.dataset.active === 'true';
+      // The desktop rail always shows one category; only the mobile/tablet accordion can collapse it.
+      if (isActive && desktop.matches) return;
+      if (!isActive) lastActive = index;
       setActiveCategory(entries, promo, isActive ? -1 : index);
     });
   });
 
-  const firstExpandable = entries.findIndex((entry) => entry.category.regions.length);
+  // A group collapsed on mobile/tablet would leave the desktop rail's content pane empty after a resize.
+  desktop.addEventListener('change', () => {
+    const wasActivated = entries.some(({ li }) => li.dataset.active !== undefined);
+    const hasActive = entries.some(({ li }) => li.dataset.active === 'true');
+    if (desktop.matches && wasActivated && !hasActive && lastActive !== -1) {
+      setActiveCategory(entries, promo, lastActive);
+    }
+  });
+
   // Deferred until the menu is first opened, so the promo <picture> isn't inserted (and its
   // image requested) on every page load while the panel is still closed.
   const activateInitial = () => {
