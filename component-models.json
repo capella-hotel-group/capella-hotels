@@ -1352,52 +1352,36 @@
         "required": true
       },
       {
-        "component": "select",
+        "component": "text",
         "name": "defaultFilterMode",
         "label": "Default Filter Mode",
-        "valueType": "string",
-        "required": true,
-        "value": "experience",
-        "options": [
-          {
-            "name": "Experience",
-            "value": "experience"
-          },
-          {
-            "name": "Destination",
-            "value": "destination"
-          }
-        ]
-      },
-      {
-        "component": "text",
-        "name": "experienceModeLabel",
-        "label": "Experience Filter Mode Label",
+        "description": "Enter a configured mode label or root tag. Matching ignores label case. A blank or unmatched value selects the first mode.",
         "valueType": "string",
         "value": "Experience"
       },
       {
-        "component": "aem-tag",
-        "name": "experienceRootTag",
-        "label": "Experience Root Tag",
-        "description": "Experience tags used by cards beneath this parent are listed as filters.",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "destinationModeLabel",
-        "label": "Destination Filter Mode Label",
-        "valueType": "string",
-        "value": "Destination"
-      },
-      {
-        "component": "aem-tag",
-        "name": "destinationRootTag",
-        "label": "Destination Root Tag",
-        "description": "Destination tags used by cards beneath this parent are listed as filters.",
-        "valueType": "string",
-        "required": true
+        "component": "container",
+        "name": "filterModeLabels",
+        "label": "Filter Mode Labels",
+        "description": "Configures top mode toggler labels (e.g., EXPERIENCE, DESTINATION, BY INTEREST, BY TYPE) with their root tag. Modes appear in authored order; all child tags are listed as filters.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "label",
+            "label": "Mode Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "aem-tag",
+            "name": "rootTag",
+            "label": "Root Tag",
+            "valueType": "string",
+            "multi": false,
+            "required": true
+          }
+        ]
       },
       {
         "component": "text",
