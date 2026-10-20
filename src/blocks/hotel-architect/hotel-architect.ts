@@ -607,10 +607,7 @@ export default function decorate(block: HTMLElement): void {
   tablist.setAttribute('role', 'tablist');
   tablist.setAttribute('aria-label', 'Rituals');
   const tabs = rituals.map((ritual, index) => buildTab(ritual.label, index, blockId));
-  if (tabbed) {
-    tablist.append(...tabs);
-    block.append(tablist);
-  }
+  if (tabbed) tablist.append(...tabs);
 
   rituals.forEach((ritual, index) => {
     ritual.element.id = `${blockId}-panel-${index}`;
@@ -647,6 +644,14 @@ export default function decorate(block: HTMLElement): void {
       tabs[i]!.setAttribute('aria-selected', String(active));
       tabs[i]!.tabIndex = active ? 0 : -1;
     });
+    // the design puts the tab bar at the top of the copy column, and only the
+    // selected ritual is on the page, so the one tab bar follows the selection
+    if (tabbed) {
+      const focused = document.activeElement;
+      rituals[selected]!.element.querySelector('.hotel-architect-copy')?.prepend(tablist);
+      // reparenting the bar drops focus, which breaks arrow-key navigation
+      if (focused instanceof HTMLElement && tablist.contains(focused)) focused.focus({ preventScroll: true });
+    }
     if (reveal) tabs[selected]!.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
 
