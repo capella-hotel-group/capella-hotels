@@ -25,8 +25,7 @@ Constraints that shape the design:
 - One authoring model that produces both the hero panel and its tab trigger from a single item.
 - Desktop spacing that resolves to the exact Figma pixel values at a 1440px viewport and scales
   proportionally at other widths.
-- A carousel that exists only when the tab list actually overflows, and that can be torn down
-  cleanly when it no longer does.
+- A tab list that scrolls natively with snap positions when it overflows, with no arrow controls.
 - Image and video hero media behind one authoring switch, with video playing only while visible.
 - Universal Editor stays usable: inline text editing works and selecting an item reveals it.
 
@@ -147,32 +146,12 @@ property declared once in `tokens.css` gives the same reuse a mixin would, costs
 is inert for blocks that never reference it. Native CSS `@function` would read better but its
 browser baseline must be checked before the repo depends on it.
 
-### D5 — Carousel initialises only on measured overflow
+### D5 — Tab list scrolls natively, no arrow controls
 
-```
-      ResizeObserver(tablist)
-                │  (catches zoom, font swap and container changes
-                │   that a window resize listener would miss)
-                ▼
-      debounce 150ms trailing
-                ▼
-      scrollWidth > clientWidth + 1 ?
-         ╱                        ╲
-      yes, not inited          no, inited
-         ▼                        ▼
-       init()                 destroy()
-   arrows + snap          remove arrows, listeners,
-   + aria wiring          reset scroll position
-```
-
-- An `inited` flag makes repeated `init()` calls a no-op, so listeners are never double-bound.
-- Arrow controls are appended to a **sibling** of the observed element. Mutating the observed
-  element inside its own `ResizeObserver` callback would loop.
-- Listener references are retained so `destroy()` can remove exactly what it added.
-- Media loading changes the tab list width; the observer already covers it, so no extra `load`
-  handler is needed.
-- The observer is disconnected when the block leaves the DOM, which the Universal Editor does on
-  every item re-render.
+The Figma design shows no prev/next arrows (CAP-100). When the tabs overflow, the tab list is a
+native horizontal scroller with `scroll-snap-type: inline mandatory`; touch and trackpad users
+swipe, and keyboard selection scrolls the selected tab into view. No measurement, observer or
+teardown is needed.
 
 ### D6 — Media polymorphism and playback
 
@@ -235,10 +214,6 @@ computing it from `line-height`.
 
 - **`display: contents` removes a box from layout.** → Only applied to a semantically empty wrapper
   `div`, so no accessibility semantics are dropped.
-
-- **A `ResizeObserver` that mutates its own observed element loops.** → Mitigated by D5's sibling
-  placement rule plus the `inited` guard; the teardown path is exercised by a resize test that
-  crosses the overflow threshold in both directions.
 
 - **Author supplies many items with heavy media.** → Only the active panel preloads; inactive
   panels use `preload="none"` and lazily loaded images.
