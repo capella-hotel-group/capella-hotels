@@ -152,9 +152,9 @@ export function resolvePickerPath(value: string, baseUrl: string): string {
   const normalizedValue = value.trim();
   if (!normalizedValue) return '';
   try {
-    return new URL(normalizedValue, baseUrl).pathname;
+    return new URL(normalizedValue, baseUrl).pathname.replace(/\.html$/i, '');
   } catch {
-    return normalizedValue;
+    return normalizedValue.replace(/\.html$/i, '');
   }
 }
 
