@@ -23,8 +23,8 @@ Figma references (file `2AVYi5QIYXJhL72SkC31P7`):
   mobile media, eyebrow, title, description, primary CTA, secondary CTA).
 - Runtime behaviour: tab list drives a set of hero panels; the first item is active on decorate;
   panel media may be an image or a video that autoplays only while active and stops when inactive.
-- The tab list becomes a carousel **only when the items overflow**, decided by measurement and
-  re-evaluated on resize with debounce, init guard and a real teardown path.
+- When the items overflow, the tab list scrolls natively with snap positions; there are no
+  prev/next arrow controls, matching Figma (CAP-100).
 
 ### New fluid desktop scaling mechanism
 
@@ -63,7 +63,7 @@ declarations, so no existing block changes behaviour:
 ### New Capabilities
 
 - `choose-space-block`: authoring model, DOM contract, tab/panel behaviour, media handling and
-  conditional carousel for the Choose Space module.
+  tab list scrolling for the Choose Space module.
 - `fluid-desktop-scaling`: the `--fluid-unit` viewport-proportional spacing mechanism and the rules
   for when a block may use it.
 - `design-token-parity`: the requirement that `src/styles/tokens.css` mirrors the Figma variable

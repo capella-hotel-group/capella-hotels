@@ -1,12 +1,15 @@
 main .filters-grid {
     --filters-grid-background: var(--color-surface-general-subtle);
+    --filters-grid-shade: transparent;
+    --filters-grid-shade-end: transparent;
     --filters-grid-heading: var(--color-text-main-heading);
     --filters-grid-body: var(--color-text-main-body);
     --filters-grid-muted: var(--color-text-action-inactive);
 
     position: relative;
     overflow: hidden;
-    background: var(--filters-grid-background);
+    background:
+        linear-gradient(90deg, var(--filters-grid-shade), var(--filters-grid-shade-end)), var(--filters-grid-background);
     color: var(--filters-grid-body);
 }
 
@@ -15,7 +18,8 @@ main .filters-grid::before {
     z-index: 0;
     inset: 0;
     min-height: 1036px;
-    background: var(--filters-grid-background);
+    background:
+        linear-gradient(90deg, var(--filters-grid-shade), var(--filters-grid-shade-end)), var(--filters-grid-background);
     content: '';
     pointer-events: none;
 }
@@ -23,24 +27,35 @@ main .filters-grid::before {
 main .filters-grid.filters-grid-theme-terracotta,
 main .filters-grid.filters-grid-theme-brown {
     --filters-grid-background: #a57f61;
+    --filters-grid-shade: rgb(86 64 46 / 45%);
+    --filters-grid-shade-end: rgb(165 127 97 / 0%);
     --filters-grid-heading: var(--color-text-main-inverse-heading);
     --filters-grid-body: var(--color-text-main-inverse-body);
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
 main .filters-grid.filters-grid-theme-sage-green {
-    --filters-grid-background: #728078;
+    --filters-grid-background: #cdcfbc;
+    --filters-grid-shade: rgb(94 98 37 / 65%);
+    --filters-grid-shade-end: rgb(215 165 126 / 0%);
     --filters-grid-heading: var(--color-text-main-inverse-heading);
     --filters-grid-body: var(--color-text-main-inverse-body);
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
 main .filters-grid.filters-grid-theme-soft-blush {
-    --filters-grid-background: var(--color-surface-general-default);
+    --filters-grid-background: #e0d3d1;
+    --filters-grid-shade: rgb(101 63 56 / 40%);
+    --filters-grid-shade-end: rgb(224 211 209 / 0%);
+    --filters-grid-heading: var(--color-text-main-inverse-heading);
+    --filters-grid-body: var(--color-text-main-inverse-body);
+    --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
 main .filters-grid.filters-grid-theme-dark-navy-blue {
-    --filters-grid-background: #1b364b;
+    --filters-grid-background: #213549;
+    --filters-grid-shade: rgb(0 25 48 / 60%);
+    --filters-grid-shade-end: rgb(176 197 222 / 0%);
     --filters-grid-heading: var(--color-text-main-inverse-heading);
     --filters-grid-body: var(--color-text-main-inverse-body);
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
@@ -48,7 +63,12 @@ main .filters-grid.filters-grid-theme-dark-navy-blue {
 
 main .filters-grid.filters-grid-theme-light-neutral,
 main .filters-grid.filters-grid-theme-sand {
-    --filters-grid-background: var(--color-surface-general-light);
+    --filters-grid-background: #dec5b0;
+    --filters-grid-shade: rgb(92 56 24 / 50%);
+    --filters-grid-shade-end: rgb(222 197 176 / 0%);
+    --filters-grid-heading: var(--color-text-main-inverse-heading);
+    --filters-grid-body: var(--color-text-main-inverse-body);
+    --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
 main .filters-grid .filters-grid-shell {
@@ -124,10 +144,12 @@ main .filters-grid .filters-grid-tabs {
     position: relative;
     z-index: 3;
     display: flex;
+    flex-wrap: wrap;
     align-self: center;
     justify-content: flex-start;
     min-height: 40px;
     width: max-content;
+    max-width: 100%;
     gap: 0;
     isolation: isolate;
 }
@@ -190,9 +212,6 @@ main .filters-grid .filters-grid-filters {
     scrollbar-width: none;
     width: 100%;
     margin-inline-start: 0;
-    /* Figma "Rectangle 3": the scroller is alpha-masked so overflowing filters fade out. */
-    mask-image: linear-gradient(90deg, #000 73%, rgba(0 0 0 / 0%) 100%);
-    -webkit-mask-image: linear-gradient(90deg, #000 73%, rgba(0 0 0 / 0%) 100%);
     text-align: left;
 }
 
@@ -203,12 +222,15 @@ main .filters-grid .filters-grid-filters::-webkit-scrollbar {
 main .filters-grid .filters-grid-filter {
     flex: 0 0 auto;
     padding: 0;
-    /* Every filter shares one colour in Figma; the list's hierarchy comes from the mask alone. */
-    color: var(--filters-grid-heading);
+    color: var(--filters-grid-muted);
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h4);
     line-height: var(--typography-line-height-heading-h4);
     white-space: nowrap;
+}
+
+main .filters-grid .filters-grid-filter[aria-pressed='true'] {
+    color: var(--filters-grid-heading);
 }
 
 main .filters-grid .filters-grid-results {
@@ -239,6 +261,8 @@ main .filters-grid .filters-grid-card-item {
 
 main .filters-grid .filters-grid-empty {
     flex: 1 1 100%;
+    font-size: 24px;
+    line-height: 1.4;
     list-style: none;
     text-align: center;
 }
@@ -293,6 +317,11 @@ main .filters-grid .filters-grid-card-location,
 main .filters-grid .filters-grid-card-title {
     margin: 0;
     color: var(--color-text-main-inverse-heading);
+}
+
+main .filters-grid .filters-grid-card-location {
+    flex-shrink: 0;
+    text-box: normal;
 }
 
 main .filters-grid .filters-grid-card-title {
@@ -358,6 +387,7 @@ main .filters-grid .filters-grid-error {
     overflow-y: auto;
     padding: 24px;
     background: rgb(0 0 0 / 40%);
+    animation: filters-grid-modal-reveal 180ms ease-out;
 }
 
 .filters-grid-modal[hidden] {
@@ -373,6 +403,49 @@ main .filters-grid .filters-grid-error {
     overflow-y: auto;
     padding: var(--dimension-layout-modal-padding-block) var(--dimension-layout-modal-padding-inline);
     background: var(--color-surface-general-default);
+    animation: filters-grid-modal-panel-reveal 200ms ease-out;
+}
+
+@keyframes filters-grid-modal-reveal {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes filters-grid-modal-panel-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filters-grid-modal-image {
+    opacity: 0;
+    transition: opacity 180ms ease-out;
+}
+
+.filters-grid-modal-image.is-loaded {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .filters-grid-modal,
+    .filters-grid-modal-panel {
+        animation: none;
+    }
+
+    .filters-grid-modal-image {
+        transition: none;
+    }
 }
 
 .filters-grid-modal-content {
@@ -429,6 +502,8 @@ main .filters-grid .filters-grid-error {
     aspect-ratio: 1;
     overflow: hidden;
     background: #000;
+    background-position: center;
+    background-size: cover;
 }
 
 .filters-grid-modal-media {
@@ -587,7 +662,7 @@ body.filters-grid-modal-open {
 
     main .filters-grid .filters-grid-layout {
         display: grid;
-        grid-template-rows: 56px auto;
+        grid-template-rows: minmax(56px, auto) auto;
         grid-template-columns: 200px minmax(0, 440px);
         justify-content: space-between;
         column-gap: 80px;
@@ -609,13 +684,10 @@ body.filters-grid-modal-open {
         align-items: flex-start;
         overflow-x: clip;
         overflow-y: auto;
-        /* Fixed 600px so the mask ramp matches Figma regardless of how many filters exist. */
         height: 600px;
         /* Figma's tablet artboard drops the filter list one step below the card grid. */
         margin-top: var(--dimension-spacing-general-3xl);
         padding-bottom: 0;
-        mask-image: linear-gradient(180deg, #000 0%, rgba(0 0 0 / 0%) 100%);
-        -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0 0 0 / 0%) 100%);
     }
 
     main .filters-grid .filters-grid-results {

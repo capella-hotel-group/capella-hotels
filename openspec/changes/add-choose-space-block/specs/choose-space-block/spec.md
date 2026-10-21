@@ -131,40 +131,21 @@ to panel selection.
 - **WHEN** `mediaAssetMobile` is empty
 - **THEN** `mediaAsset` is used at every viewport width
 
-### Requirement: Tab list becomes a carousel only when it overflows
+### Requirement: Tab list scrolls natively when it overflows
 
-The tab list SHALL be measured rather than assumed, and carousel affordances SHALL exist only while
-the tabs do not fit.
+The tab list SHALL render no prev/next arrow controls at any viewport width, matching the Figma
+design (CAP-100). When the tabs do not fit, the list SHALL scroll horizontally with snap positions.
 
-#### Scenario: No carousel when tabs fit
+#### Scenario: No arrow controls
 
-- **WHEN** the tab list content fits within its available width
-- **THEN** no carousel controls are rendered
+- **WHEN** the block is rendered at any viewport width
+- **THEN** no prev/next arrow controls are rendered
 
-#### Scenario: Carousel appears on overflow
+#### Scenario: Overflowing tabs are swipeable
 
 - **WHEN** the tab list content is wider than its available width
-- **THEN** carousel controls are rendered and the tab list becomes horizontally scrollable with
-  snap positions
-
-#### Scenario: Resize crossing the threshold initialises and tears down
-
-- **WHEN** the available width shrinks so the tabs no longer fit
-- **THEN** the carousel initialises
-- **WHEN** the available width grows so the tabs fit again
-- **THEN** the carousel is destroyed, its controls are removed, its listeners are detached and the
-  scroll position is reset
-
-#### Scenario: Repeated measurements do not duplicate state
-
-- **WHEN** the overflow condition is measured many times in succession
-- **THEN** the carousel initialises at most once
-- **AND** no event listener is bound more than once
-
-#### Scenario: Measurement is debounced
-
-- **WHEN** a resize produces a rapid burst of measurements
-- **THEN** initialisation or teardown runs once after the burst settles, not once per measurement
+- **THEN** the tab list is horizontally scrollable with snap positions and the next tab peeks past
+  the edge
 
 #### Scenario: Activating an off-screen tab scrolls it into view
 

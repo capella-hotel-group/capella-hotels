@@ -352,7 +352,6 @@
 
     .choose-space-track {
         order: 2;
-        position: relative;
         min-width: 0;
 
         @media (width >= 1200px) {
@@ -442,54 +441,5 @@
         font-size: var(--typography-fontsize-body-m);
         font-weight: var(--type-font-weight-body-reg);
         line-height: var(--typography-line-height-body-md);
-    }
-
-    /* ---------- carousel controls ---------- */
-
-    /* the controls overlay the track instead of sharing a row with the tab list,
-       so revealing them cannot resize the element whose size revealed them */
-    .choose-space-nav-group {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-    }
-
-    .choose-space-nav {
-        position: absolute;
-        inset-block-start: 50%;
-        translate: 0 -50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        border: 0;
-        background: none;
-        color: var(--color-text-action-inverse-default);
-        cursor: pointer;
-        pointer-events: auto;
-        /* the glyph sits over the thumbnails, so the shadow keeps it legible
-           against a pale image */
-        filter: drop-shadow(0 1px 3px rgb(0 0 0 / 45%));
-
-        &:focus-visible {
-            outline: var(--stroke-weight-m) solid var(--color-stroke-action-inverse-default);
-            outline-offset: var(--dimension-spacing-general-2xs);
-        }
-    }
-
-    .choose-space-nav-prev {
-        inset-inline-start: var(--dimension-spacing-general-2xs);
-    }
-
-    .choose-space-nav-next {
-        inset-inline-end: var(--dimension-spacing-general-2xs);
-    }
-
-    /* the arrow glyphs are drawn pointing left and right; under RTL the reading
-       direction flips, so the pair swaps to keep prev pointing at earlier tabs */
-    &:dir(rtl) .choose-space-nav svg {
-        scale: -1 1;
     }
 }
