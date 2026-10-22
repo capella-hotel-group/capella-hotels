@@ -70,6 +70,8 @@
     --color-surface-action-inverse-focused: #dad9da;
     --color-surface-action-inverse-pressed: #deddde;
     --color-surface-brand-subtle: #d1d7db;
+    --color-surface-brand-lighter: #a4afb7;
+    --color-surface-brand-default: #1b364b;
     --color-surface-component-toggle-inverse-selector-dot: #f7f7f7;
     --color-surface-component-toggle-inverse-fill-default: #ebebeb1a;
     --color-surface-component-scrollbar-main: #1b364b33;
@@ -97,11 +99,13 @@
 
     /* color / stroke */
     --color-stroke-main-primary: #898987;
+    --color-stroke-main-secondary: #b8b8b7;
     --color-stroke-action-default: #1b364b;
     --color-stroke-action-inverse-default: #ffffff;
 
     /* type / font weight (Figma weight names mapped to numeric CSS values) */
     --type-font-weight-body-reg: 400;
+    --type-font-weight-body-light: 300;
     --type-font-weight-body-bold: 600;
     --type-font-weight-heading: 400;
     --type-font-weight-subtitle: 400;

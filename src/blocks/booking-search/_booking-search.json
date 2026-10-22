@@ -1,0 +1,136 @@
+{
+  "definitions": [
+    {
+      "title": "Booking Search",
+      "id": "booking-search",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Booking Search",
+              "model": "booking-search"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "booking-search",
+      "fields": [
+        {
+          "component": "text",
+          "name": "id",
+          "label": "Block ID",
+          "description": "Sets the id attribute on the block, usable as an anchor target.",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "dataTestId",
+          "label": "Data Test ID",
+          "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "locationLabel",
+          "label": "Location Label",
+          "description": "Shown on the selector until a location is picked.",
+          "valueType": "string",
+          "required": true,
+          "value": "LOCATION"
+        },
+        {
+          "component": "textarea",
+          "name": "locations",
+          "label": "Locations",
+          "description": "One location per line. Use Label|code to also send a property code to the booking engine.",
+          "valueType": "string",
+          "required": true,
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "datesLabel",
+          "label": "Arrival/Depart Label",
+          "description": "Shown on the selector until both dates are picked.",
+          "valueType": "string",
+          "required": true,
+          "value": "ARRIVAL/DEPART"
+        },
+        {
+          "component": "text",
+          "name": "guestSingularLabel",
+          "label": "Guest Label (singular)",
+          "description": "Used after the number when exactly one guest is selected.",
+          "valueType": "string",
+          "required": true,
+          "value": "GUEST"
+        },
+        {
+          "component": "text",
+          "name": "guestPluralLabel",
+          "label": "Guests Label (plural)",
+          "valueType": "string",
+          "required": true,
+          "value": "GUESTS"
+        },
+        {
+          "component": "text",
+          "name": "adultsLabel",
+          "label": "Adults Counter Label",
+          "valueType": "string",
+          "required": true,
+          "value": "Adult"
+        },
+        {
+          "component": "text",
+          "name": "childrenLabel",
+          "label": "Children Counter Label",
+          "valueType": "string",
+          "required": true,
+          "value": "Children"
+        },
+        {
+          "component": "text",
+          "name": "checkRatesLabel",
+          "label": "Check Rates Label",
+          "valueType": "string",
+          "required": true,
+          "value": "Check rates"
+        },
+        {
+          "component": "text",
+          "name": "bookingUrl",
+          "label": "Booking Engine URL",
+          "description": "Absolute https URL. The selected dates, guests and location are appended as query parameters.",
+          "valueType": "string",
+          "required": true,
+          "value": ""
+        },
+        {
+          "component": "boolean",
+          "name": "checkRatesOpenInNewTab",
+          "label": "Open Check Rates in New Tab",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
+          "component": "text",
+          "name": "doneLabel",
+          "label": "Done Button Label",
+          "description": "Closes the open selector flyout.",
+          "valueType": "string",
+          "required": true,
+          "value": "Done"
+        }
+      ]
+    }
+  ],
+  "filters": []
+}

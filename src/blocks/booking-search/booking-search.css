@@ -1,0 +1,515 @@
+/* Booking bar: location, arrival/depart and guests selectors with an inline CHECK RATES link. */
+
+.booking-search {
+    padding-block: var(--dimension-layout-module-padding-block-s);
+    padding-inline: var(--dimension-layout-module-padding-inline-s);
+    background-color: var(--color-surface-general-light);
+}
+
+.booking-search .booking-search-source {
+    display: none;
+}
+
+/* layout */
+
+.booking-search .booking-search-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--dimension-spacing-general-xl);
+}
+
+.booking-search .booking-search-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-layout-carousel-item-gap-l);
+    width: 100%;
+}
+
+@media (width >= 768px) {
+    .booking-search .booking-search-fields {
+        flex-direction: row;
+        gap: 0;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+/* Figma's desktop frame is 1440 wide with 240px side padding, i.e. a 960px bar; keep that bar width as the viewport grows or shrinks. */
+@media (width >= 1200px) {
+    .booking-search .booking-search-form {
+        flex-direction: row;
+        gap: var(--dimension-spacing-general-5xl);
+        max-width: 960px;
+        margin-inline: auto;
+    }
+
+    .booking-search .booking-search-fields {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+    }
+}
+
+/* divider: horizontal on mobile, vertical from tablet up */
+
+.booking-search .booking-search-divider {
+    flex: none;
+    width: 100%;
+    height: var(--stroke-weight-s);
+    background-color: var(--color-stroke-main-primary);
+}
+
+@media (width >= 768px) {
+    .booking-search .booking-search-divider {
+        width: var(--stroke-weight-s);
+        height: 20px;
+    }
+}
+
+/* selector */
+
+.booking-search .booking-search-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--dimension-layout-carousel-item-gap-l);
+    width: 100%;
+    padding-block: var(--dimension-spacing-general-m);
+    padding-inline: var(--dimension-layout-card-padding-inline);
+    border: 0;
+    background: none;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-subtitle);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-subtitle);
+    line-height: var(--typography-line-height-body-md);
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+@media (width >= 768px) {
+    .booking-search .booking-search-trigger {
+        width: auto;
+        max-width: 100%;
+    }
+}
+
+.booking-search .booking-search-trigger:focus-visible,
+.booking-search .booking-search-submit:focus-visible,
+.booking-search .booking-search-done:focus-visible,
+.booking-search .booking-search-option:focus-visible,
+.booking-search .booking-search-day:focus-visible,
+.booking-search .booking-search-counter-button:focus-visible,
+.booking-search .booking-search-calendar-prev:focus-visible,
+.booking-search .booking-search-calendar-next:focus-visible {
+    outline: var(--stroke-weight-m) solid currentcolor;
+    outline-offset: 2px;
+}
+
+.booking-search .booking-search-trigger-main {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-layout-carousel-item-gap-m);
+    min-width: 0;
+}
+
+.booking-search .booking-search-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.booking-search .booking-search-field {
+    position: relative;
+    min-width: 0;
+}
+
+/* Only the location name can be long enough to need the ellipsis. */
+@media (width >= 768px) {
+    .booking-search .booking-search-field-dates,
+    .booking-search .booking-search-field-guests {
+        flex-shrink: 0;
+    }
+}
+
+.booking-search .booking-search-icon,
+.booking-search .booking-search-chevron {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-text-action-default);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: 20px 20px;
+}
+
+.booking-search .booking-search-icon-location {
+    mask-image: url('/icons/booking-location.svg');
+}
+
+.booking-search .booking-search-icon-dates {
+    mask-image: url('/icons/booking-calendar.svg');
+}
+
+.booking-search .booking-search-icon-guests {
+    mask-image: url('/icons/booking-guests.svg');
+}
+
+.booking-search .booking-search-chevron {
+    mask-image: url('/icons/chevron-down-20.svg');
+}
+
+.booking-search .booking-search-field.is-open .booking-search-chevron {
+    transform: rotate(180deg);
+}
+
+/* flyout panels: overlay below the field, start-aligned; full field width on mobile */
+
+/* Figma binds every flyout frame to the mobile mode, so desktop and tablet keep the base type scale. */
+.booking-search .booking-search-panel {
+    --typography-fontsize-body-m: 16px;
+    --typography-fontsize-body-l: 20px;
+    --typography-line-height-body-md: 16px;
+
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--dimension-spacing-general-l);
+    padding: var(--dimension-spacing-general-l);
+    border-radius: var(--corner-radius-2xs);
+    background-color: var(--color-surface-page);
+    color: var(--color-text-main-body);
+}
+
+.booking-search .booking-search-panel[hidden] {
+    display: none;
+}
+
+@media (width >= 768px) {
+    .booking-search .booking-search-panel {
+        inset-inline-end: auto;
+    }
+
+    .booking-search .booking-search-panel-location {
+        width: 229px;
+    }
+
+    .booking-search .booking-search-panel-dates {
+        width: 390px;
+    }
+
+    .booking-search .booking-search-panel-guests {
+        width: 268px;
+    }
+}
+
+/* Figma runs the tablet guests flyout flush with the viewport edge. */
+@media (768px <= width < 1200px) {
+    .booking-search .booking-search-panel-guests {
+        inset-inline: auto calc(-1 * var(--dimension-layout-module-padding-inline-s));
+    }
+}
+
+@media (width >= 1200px) {
+    .booking-search .booking-search-panel-location {
+        width: 240px;
+    }
+}
+
+/* Button/text-standard — DONE */
+
+.booking-search .booking-search-done {
+    height: var(--component-button-height);
+    padding: 0;
+    border: 0;
+    border-radius: var(--component-button-corner-standard);
+    background: none;
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-text-link);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration-line: underline;
+    text-decoration-thickness: 7%;
+    text-transform: uppercase;
+    text-underline-position: from-font;
+    cursor: pointer;
+}
+
+/* location list */
+
+.booking-search .booking-search-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-l);
+    box-sizing: border-box;
+    width: 100%;
+    height: 100px;
+    margin: 0;
+    padding: 0;
+    padding-inline-end: var(--dimension-spacing-general-m);
+    overflow-y: auto;
+    list-style: none;
+    scrollbar-color: var(--color-surface-brand-default) var(--color-surface-general-opaque);
+    scrollbar-width: thin;
+}
+
+.booking-search .booking-search-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.booking-search .booking-search-options::-webkit-scrollbar-track {
+    border-radius: var(--corner-radius-round);
+    background-color: var(--color-surface-general-opaque);
+}
+
+.booking-search .booking-search-options::-webkit-scrollbar-thumb {
+    border-radius: var(--corner-radius-round);
+    background-color: var(--color-surface-brand-default);
+}
+
+.booking-search .booking-search-option {
+    flex: none;
+    color: var(--color-text-action-inactive);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    cursor: pointer;
+}
+
+.booking-search .booking-search-option:hover,
+.booking-search .booking-search-option[aria-selected='true'] {
+    color: var(--color-text-action-default);
+}
+
+/* calendar */
+
+.booking-search .booking-search-calendar {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    width: 100%;
+}
+
+.booking-search .booking-search-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block-end: calc(var(--dimension-spacing-general-2xs) - var(--stroke-weight-s));
+    border-block-end: var(--stroke-weight-s) solid var(--color-stroke-main-secondary);
+}
+
+.booking-search .booking-search-calendar-title {
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-l);
+    font-weight: var(--type-font-weight-body-light);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
+}
+
+.booking-search .booking-search-calendar-prev,
+.booking-search .booking-search-calendar-next {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-action-default);
+    cursor: pointer;
+}
+
+.booking-search .booking-search-calendar-prev::before,
+.booking-search .booking-search-calendar-next::before {
+    content: '';
+    width: 28px;
+    height: 28px;
+    background-color: currentcolor;
+    mask: url('/icons/chevron-down-28.svg') center / 28px 28px no-repeat;
+}
+
+.booking-search .booking-search-calendar-prev::before {
+    transform: rotate(90deg);
+}
+
+.booking-search .booking-search-calendar-next::before {
+    transform: rotate(-90deg);
+}
+
+html[dir='rtl'] .booking-search .booking-search-calendar-prev::before {
+    transform: rotate(-90deg);
+}
+
+html[dir='rtl'] .booking-search .booking-search-calendar-next::before {
+    transform: rotate(90deg);
+}
+
+.booking-search .booking-search-calendar-prev:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.booking-search .booking-search-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.booking-search .booking-search-weekday {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    margin-block-end: var(--dimension-layout-carousel-item-gap-m);
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-light);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
+}
+
+.booking-search .booking-search-day {
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-light);
+    line-height: var(--typography-line-height-body-md);
+    cursor: pointer;
+}
+
+.booking-search .booking-search-day:hover:not(:disabled, .is-start, .is-end, .is-in-range) {
+    background-color: var(--color-surface-general-light);
+}
+
+.booking-search .booking-search-day.is-start {
+    background-color: var(--color-surface-action-default);
+    color: var(--color-text-on-action-default);
+}
+
+.booking-search .booking-search-day.is-end,
+.booking-search .booking-search-day.is-in-range {
+    background-color: var(--color-surface-brand-lighter);
+    color: var(--color-text-on-action-default);
+}
+
+/* Figma uses a raw grey here, no variable bound. */
+.booking-search .booking-search-day:disabled {
+    color: #9f9f9f;
+    cursor: default;
+}
+
+/* guests counter */
+
+.booking-search .booking-search-counters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-layout-carousel-item-gap-m);
+    width: 100%;
+}
+
+.booking-search .booking-search-counter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.booking-search .booking-search-counter-label {
+    width: 80px;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-light);
+    line-height: var(--typography-line-height-body-md);
+}
+
+.booking-search .booking-search-counter-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-layout-carousel-item-gap-m);
+}
+
+.booking-search .booking-search-counter-value {
+    width: 40px;
+    color: #000;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-light);
+    line-height: var(--typography-line-height-body-md);
+    text-align: center;
+}
+
+.booking-search .booking-search-counter-button {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--component-button-corner-standard);
+    background-color: var(--color-surface-general-light);
+    color: var(--color-text-action-default);
+    cursor: pointer;
+}
+
+.booking-search .booking-search-counter-button::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background-color: currentcolor;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: 20px 20px;
+}
+
+.booking-search .booking-search-counter-decrease::before {
+    mask-image: url('/icons/booking-minus.svg');
+}
+
+.booking-search .booking-search-counter-increase::before {
+    mask-image: url('/icons/booking-plus.svg');
+}
+
+.booking-search .booking-search-counter-button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/* Button/text-standard — CHECK RATES */
+
+.booking-search .booking-search-submit {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: var(--component-button-height);
+    border-radius: var(--component-button-corner-standard);
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-text-link);
+    line-height: var(--typography-line-height-body-md);
+    text-decoration-line: underline;
+    text-decoration-thickness: 7%;
+    text-transform: uppercase;
+    text-underline-position: from-font;
+    cursor: pointer;
+}
+
+.booking-search .booking-search-submit:not([href]) {
+    cursor: default;
+}
