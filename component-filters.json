@@ -67,6 +67,12 @@
     ]
   },
   {
+    "id": "booking-search",
+    "components": [
+      "booking-search-location"
+    ]
+  },
+  {
     "id": "cards",
     "components": [
       "card"

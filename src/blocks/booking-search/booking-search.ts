@@ -12,13 +12,13 @@ import { BLOCK, DEFAULT_ADULTS } from './lib/types';
 import type { Field, Selection } from './lib/types';
 
 export default function decorate(block: HTMLElement): void {
-  const { labels, locations, bookingUrl, openInNewTab } = parseConfig(block);
+  const { labels, locations, limits, bookingUrl, openInNewTab } = parseConfig(block);
   const lang = getPageLang();
   // Figma writes dates day-first ("30 Jul - 31 Jul 2026"), which plain `en` (US) would not.
   const dateLocale = lang === 'en' ? 'en-GB' : lang;
   const shortDate = new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'short' });
   const yearFormat = new Intl.DateTimeFormat(dateLocale, { year: 'numeric' });
-  const selection: Selection = { adults: DEFAULT_ADULTS, children: 0 };
+  const selection: Selection = { adults: Math.min(DEFAULT_ADULTS, limits.adults.max), children: 0 };
 
   block.dataset.testid = BLOCK;
 
@@ -76,8 +76,8 @@ export default function decorate(block: HTMLElement): void {
   };
   const counters = el('div', `${BLOCK}-counters`);
   counters.append(
-    buildCounter('adults', labels.adults, selection, updateGuestsLabel),
-    buildCounter('children', labels.children, selection, updateGuestsLabel),
+    buildCounter('adults', limits.adults, labels.adults, selection, updateGuestsLabel),
+    buildCounter('children', limits.children, labels.children, selection, updateGuestsLabel),
   );
   guestsField.panel.append(counters);
 
