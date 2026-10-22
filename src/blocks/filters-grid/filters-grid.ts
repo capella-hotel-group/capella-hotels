@@ -170,7 +170,20 @@ function rowHref(row: Element | undefined, name: string): string {
 function parseModeSettings(row: Element | undefined): ModeSetting[] {
   if (!row) return [];
   const field = row.querySelector('[data-aue-prop="filterModeLabels"]') || row.firstElementChild || row;
-  const entries = [...field.querySelectorAll('li')].filter((entry) => !entry.parentElement?.closest('li'));
+  let entries: Element[] = [...field.querySelectorAll('li')].filter((entry) => !entry.parentElement?.closest('li'));
+  if (field.querySelector(':scope > hr')) {
+    entries = [];
+    let group = document.createElement('div');
+    [...field.childNodes].forEach((node) => {
+      if (node instanceof HTMLElement && node.tagName === 'HR') {
+        if (textOf(group)) entries.push(group);
+        group = document.createElement('div');
+      } else {
+        group.append(node.cloneNode(true));
+      }
+    });
+    if (textOf(group)) entries.push(group);
+  }
   return entries.map((entry, index) => {
     const walker = document.createTreeWalker(entry, NodeFilter.SHOW_TEXT);
     const values: string[] = [];
