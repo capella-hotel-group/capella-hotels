@@ -131,6 +131,21 @@
           }
         },
         {
+          "title": "Booking Search",
+          "id": "booking-search",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Booking Search",
+                  "model": "booking-search"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Cards",
           "id": "cards",
           "plugins": {
