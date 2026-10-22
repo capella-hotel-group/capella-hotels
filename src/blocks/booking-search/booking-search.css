@@ -10,6 +10,13 @@
     display: none;
 }
 
+/* The 1920 artboard only bumps body-md line-height, which the bar keeps at its 1440 value. */
+@media (width >= 1920px) {
+    .booking-search {
+        --typography-line-height-body-md: 18px;
+    }
+}
+
 /* layout */
 
 .booking-search .booking-search-form {
@@ -26,12 +33,24 @@
     width: 100%;
 }
 
+/* Fixed columns, sized from Figma's 227/286/219 frames to fit the longest city name (SHANGHAI) and a full date range, so picking a value never moves the bar. */
 @media (width >= 768px) {
     .booking-search .booking-search-fields {
-        flex-direction: row;
-        gap: 0;
+        display: grid;
+        grid-template-columns:
+            minmax(0, 232fr) var(--stroke-weight-s) minmax(0, 327fr)
+            var(--stroke-weight-s) minmax(0, 220fr);
         align-items: center;
-        justify-content: space-between;
+        gap: 0;
+    }
+}
+
+/* Tablet is as wide as Figma's own frame (227/286/219), so the columns barely move from it. */
+@media (768px <= width < 1200px) {
+    .booking-search .booking-search-fields {
+        grid-template-columns:
+            minmax(0, 231.5fr) var(--stroke-weight-s) minmax(0, 286.3fr)
+            var(--stroke-weight-s) minmax(0, 218.5fr);
     }
 }
 
@@ -62,6 +81,7 @@
 
 @media (width >= 768px) {
     .booking-search .booking-search-divider {
+        justify-self: center;
         width: var(--stroke-weight-s);
         height: 20px;
     }
@@ -89,10 +109,10 @@
     cursor: pointer;
 }
 
-@media (width >= 768px) {
-    .booking-search .booking-search-trigger {
-        width: auto;
-        max-width: 100%;
+/* The tablet bar has no room for the year next to a full range. */
+@media (768px <= width < 1200px) {
+    .booking-search .booking-search-label-year {
+        display: none;
     }
 }
 
@@ -119,19 +139,15 @@
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-transform: uppercase;
+
+    /* GoudyWtcT's caps sit about 3px above the line-box centre at 18px; nudge them level with the icon. */
+    transform: translateY(0.175em);
 }
 
 .booking-search .booking-search-field {
     position: relative;
     min-width: 0;
-}
-
-/* Only the location name can be long enough to need the ellipsis. */
-@media (width >= 768px) {
-    .booking-search .booking-search-field-dates,
-    .booking-search .booking-search-field-guests {
-        flex-shrink: 0;
-    }
 }
 
 .booking-search .booking-search-icon,

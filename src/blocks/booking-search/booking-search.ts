@@ -17,7 +17,7 @@ export default function decorate(block: HTMLElement): void {
   // Figma writes dates day-first ("30 Jul - 31 Jul 2026"), which plain `en` (US) would not.
   const dateLocale = lang === 'en' ? 'en-GB' : lang;
   const shortDate = new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'short' });
-  const fullDate = new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' });
+  const yearFormat = new Intl.DateTimeFormat(dateLocale, { year: 'numeric' });
   const selection: Selection = { adults: DEFAULT_ADULTS, children: 0 };
 
   block.dataset.testid = BLOCK;
@@ -48,6 +48,7 @@ export default function decorate(block: HTMLElement): void {
   const locationList = buildLocationList(locations, labels.location, (location) => {
     selection.location = location;
     locationField.label.textContent = location.label;
+    locationField.label.title = location.label;
     locationList.mark(location);
     syncSubmit();
   });
@@ -55,12 +56,15 @@ export default function decorate(block: HTMLElement): void {
 
   const calendar = buildCalendar(lang, selection, () => {
     const { arrival, departure } = selection;
-    datesField.label.textContent =
-      arrival && departure
-        ? `${shortDate.format(arrival)} - ${fullDate.format(departure)}`
-        : arrival
-          ? shortDate.format(arrival)
-          : labels.dates;
+    const { label } = datesField;
+    if (arrival && departure) {
+      // The year is its own node so CSS can drop it where the bar is too narrow.
+      const year = el('span', `${BLOCK}-label-year`, ` ${yearFormat.format(departure)}`);
+      label.replaceChildren(`${shortDate.format(arrival)} - ${shortDate.format(departure)}`, year);
+    } else {
+      label.textContent = arrival ? shortDate.format(arrival) : labels.dates;
+    }
+    label.title = label.textContent ?? '';
     syncSubmit();
   });
   datesField.panel.append(calendar.root);

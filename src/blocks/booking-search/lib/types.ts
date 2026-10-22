@@ -1,7 +1,7 @@
 export const BLOCK = 'booking-search';
 
 export const DEFAULT_ADULTS = 2;
-export const LIMITS = { adults: { min: 1, max: 8 }, children: { min: 0, max: 6 } } as const;
+export const LIMITS = { adults: { min: 1, max: 6 }, children: { min: 0, max: 3 } } as const;
 
 export interface Location {
   label: string;
