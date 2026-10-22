@@ -387,15 +387,6 @@
         "value": "LOCATION"
       },
       {
-        "component": "textarea",
-        "name": "locations",
-        "label": "Locations",
-        "description": "One location per line. Use Label|code to also send a property code to the booking engine.",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
         "component": "text",
         "name": "datesLabel",
         "label": "Arrival/Depart Label",
@@ -469,6 +460,44 @@
         "valueType": "string",
         "required": true,
         "value": "Done"
+      },
+      {
+        "component": "number",
+        "name": "maxAdults",
+        "label": "Max Adults",
+        "description": "Highest adult count the guests flyout allows (1-20). Totals of 10 or more guests no longer fit the selector label.",
+        "valueType": "number",
+        "value": 6
+      },
+      {
+        "component": "number",
+        "name": "maxChildren",
+        "label": "Max Children",
+        "description": "Highest child count the guests flyout allows (0-20).",
+        "valueType": "number",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "booking-search-location",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Location Name",
+        "description": "Shown in the list and on the selector once picked. Keep it short, e.g. a city name.",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "code",
+        "label": "Property Code",
+        "description": "Sent to the booking engine for this location. Falls back to the name when empty.",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },

@@ -1,7 +1,19 @@
 export const BLOCK = 'booking-search';
 
 export const DEFAULT_ADULTS = 2;
-export const LIMITS = { adults: { min: 1, max: 6 }, children: { min: 0, max: 3 } } as const;
+
+export interface Range {
+  min: number;
+  max: number;
+}
+
+export interface Limits {
+  adults: Range;
+  children: Range;
+}
+
+/** Adults always need at least one; the maximums are authored, these are the fallbacks. */
+export const DEFAULT_LIMITS: Limits = { adults: { min: 1, max: 6 }, children: { min: 0, max: 3 } };
 
 export interface Location {
   label: string;
@@ -22,6 +34,7 @@ export interface Labels {
 export interface BookingConfig {
   labels: Labels;
   locations: Location[];
+  limits: Limits;
   bookingUrl: string;
   openInNewTab: boolean;
 }

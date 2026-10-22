@@ -1,14 +1,14 @@
 import { el, nextId } from './dom';
-import { BLOCK, LIMITS } from './types';
-import type { Selection } from './types';
+import { BLOCK } from './types';
+import type { Range, Selection } from './types';
 
 export function buildCounter(
-  name: keyof typeof LIMITS,
+  name: 'adults' | 'children',
+  { min, max }: Range,
   labelText: string,
   selection: Selection,
   onChange: () => void,
 ): HTMLElement {
-  const { min, max } = LIMITS[name];
   const row = el('div', `${BLOCK}-counter`);
   const id = `${BLOCK}-counter-${name}-${nextId()}`;
 
