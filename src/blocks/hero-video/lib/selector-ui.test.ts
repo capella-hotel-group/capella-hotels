@@ -18,36 +18,49 @@ function createItem(openInNewTab: boolean): HeroVideoItem {
   };
 }
 
-describe('hero-video item navigation', () => {
+function createUI(item: HeroVideoItem): { ui: SelectorUI; list: HTMLUListElement } {
+  const list = document.createElement('ul');
+  const ui = new SelectorUI(list, document.createElement('div'));
+  ui.setIntroComplete(true);
+  ui.renderItems([item], 0);
+  // jsdom has no Element.animate
+  jest.spyOn(ui, 'activateItem').mockImplementation(() => {});
+  return { ui, list };
+}
+
+describe('hero-video item button', () => {
   afterEach(() => {
     jest.restoreAllMocks();
     if (initialTop) Object.defineProperty(window, 'top', initialTop);
   });
 
-  it('opens the active item link in a safe new tab when requested', () => {
+  it('never navigates, even when clicking the active item', () => {
     const open = jest.spyOn(window, 'open').mockReturnValue(null);
-    const list = document.createElement('ul');
-    const viewport = document.createElement('div');
-    const ui = new SelectorUI(list, viewport);
-    ui.setIntroComplete(true);
-    ui.renderItems([createItem(true)], 0);
-
-    list.querySelector('button')?.click();
-
-    expect(open).toHaveBeenCalledWith('/destination', '_blank', 'noopener,noreferrer');
-  });
-
-  it('leaves item clicks to Universal Editor selection', () => {
-    const open = jest.spyOn(window, 'open').mockReturnValue(null);
-    Object.defineProperty(window, 'top', { configurable: true, value: {} });
-    const list = document.createElement('ul');
-    const viewport = document.createElement('div');
-    const ui = new SelectorUI(list, viewport);
-    ui.setIntroComplete(true);
-    ui.renderItems([createItem(true)], 0);
+    const { list } = createUI(createItem(true));
 
     list.querySelector('button')?.click();
 
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it('emits selection when clicked', () => {
+    const { ui, list } = createUI(createItem(false));
+    const onSelect = jest.fn();
+    ui.onSelect(onSelect);
+
+    list.querySelector('button')?.click();
+
+    expect(onSelect).toHaveBeenCalledWith(0);
+  });
+
+  it('leaves item clicks to Universal Editor selection', () => {
+    Object.defineProperty(window, 'top', { configurable: true, value: {} });
+    const { ui, list } = createUI(createItem(false));
+    const onSelect = jest.fn();
+    ui.onSelect(onSelect);
+
+    list.querySelector('button')?.click();
+
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });

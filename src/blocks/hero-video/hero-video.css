@@ -47,6 +47,18 @@
     background-position: center;
 }
 
+/* Inert (tabindex -1) until the intro completes; also inert without an href. */
+.hero-video-media-link {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
+
+.hero-video-media-link[tabindex='-1'],
+.hero-video-media-link:not([href]) {
+    pointer-events: none;
+}
+
 .hero-video-video {
     position: absolute;
     inset: 0;
@@ -116,7 +128,7 @@
     font-weight: var(--type-font-weight-heading);
     color: #fff;
     white-space: nowrap;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 /* Arrow icon trailing the suffix, vertically centered with the text and scaled to it (em). */
