@@ -609,6 +609,13 @@ button.header-menu-category-trigger::after {
     line-height: var(--typography-line-height-body-sm, 16px);
 }
 
+@media (min-width: 768px) {
+    .header-menu-link-grid .nav-link-note,
+    .header-menu-merged-cell .nav-link-note {
+        line-height: 16px;
+    }
+}
+
 .header-menu-promo {
     margin-top: 24px;
     opacity: 0;
