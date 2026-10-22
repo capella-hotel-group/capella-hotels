@@ -1,5 +1,6 @@
 // src/blocks/hero-video/lib/selector-ui.ts
 import { moveInstrumentation } from '@/app/scripts';
+import { isUniversalEditor } from '@/utils/env';
 import type { HeroVideoItem } from './types';
 
 const ANCHOR_MS = 310;
@@ -60,9 +61,10 @@ export class SelectorUI {
       btn.style.opacity = idx === activeIndex ? '1' : '0.5';
       if (item.link) btn.dataset.href = item.link;
 
-      // Keyboard interaction
-      btn.addEventListener('keydown', (e) => this.handleKeyDown(e, idx));
-      btn.addEventListener('click', () => this.handleClick(idx));
+      if (!isUniversalEditor()) {
+        btn.addEventListener('keydown', (e) => this.handleKeyDown(e, idx));
+        btn.addEventListener('click', () => this.handleClick(idx));
+      }
 
       li.append(btn);
       this.itemListEl.append(li);
@@ -101,7 +103,8 @@ export class SelectorUI {
     if (!this.introComplete) return;
     const item = this.items[index];
     if (index === this.activeIndex && item?.link) {
-      window.location.href = item.link;
+      if (item.openInNewTab) window.open(item.link, '_blank', 'noopener,noreferrer');
+      else window.location.href = item.link;
       return;
     }
     this.activateItem(index, true);

@@ -70,7 +70,7 @@ function syncActiveState(pathname: string): void {
       expLink?.removeAttribute('aria-current');
       destLink?.setAttribute('aria-current', 'page');
     }
-    if (indicator) indicator.style.transform = isExperience ? TOGGLE_INDICATOR_SHIFT : 'translateX(0%)';
+    if (indicator) indicator.style.setProperty('--toggle-indicator-x', isExperience ? TOGGLE_INDICATOR_SHIFT : '0px');
   });
 }
 
