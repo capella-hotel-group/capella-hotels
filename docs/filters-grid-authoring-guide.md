@@ -6,14 +6,17 @@ Add one entry per top-level mode in **Filter Mode Labels**. Each entry has:
 
 - **Mode Label**: the tab title, such as Experience, Destination, By Interest, or By Type.
 - **Root Tag**: the parent tag whose children the child-tags API lists as filters.
+- **Default Active Tab**: check this for the mode that should open first.
 
 The number of tabs follows these entries. The default mode is displayed first; the remaining modes keep their authored order. A root can use either `capella-hotels:destination` or `/content/cq:tags/capella-hotels/destination` format. The API supplies the child-filter labels and order, including tags that have no matching cards.
 
-## Default Filter Mode
+## Default Active Tab
 
-Enter a configured mode label or its root tag. Label matching ignores case and surrounding spaces. Using a root tag keeps the default stable when a label is renamed. A blank or unmatched value selects the first configured mode.
+Select **Default Active Tab** inside the desired **Filter Mode Labels** entry. The checked mode is selected on load and displayed first, even if its label is renamed. No label or root tag needs to be typed into a separate default field.
 
-For example, to open a mode labeled **By Place** with the destination root, set the default to `By Place` or `capella-hotels:destination`.
+Select only one default. If multiple modes are checked, the first checked entry wins. If all mode checkboxes are unchecked, the first authored mode is used.
+
+Universal Editor's standard repeated boolean fields are independent checkboxes; checking one does not automatically uncheck another entry. Cross-entry exclusivity requires a custom UE extension. The runtime always activates just one mode and uses the first checked entry if multiple are selected.
 
 ## Card Matching And Empty States
 
