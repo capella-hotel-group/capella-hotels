@@ -49,6 +49,7 @@ interface ModeSetting {
   key: string;
   label: string;
   rootTag: string;
+  isDefault?: boolean;
 }
 
 interface AuthoredMode extends ModeSetting {
@@ -182,22 +183,44 @@ function parseModeSettings(row: Element | undefined): ModeSetting[] {
       entry.querySelector('a[href*="/content/cq:tags/"]')?.getAttribute('href') ||
       values.find((value) => /^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value)) ||
       '';
+    const checkbox = entry.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    const defaultValue =
+      textOf(entry.querySelector('[data-aue-prop="isDefault"]')) ||
+      values.find((value) => ['true', 'false'].includes(normalizeChoice(value)));
+    const isDefault = checkbox
+      ? checkbox.checked
+      : defaultValue === undefined
+        ? undefined
+        : normalizeChoice(defaultValue) === 'true';
     const label =
       textOf(entry.querySelector('[data-aue-prop="label"]')) ||
-      values.find((value) => value !== rootTag && !/^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value)) ||
+      values.find(
+        (value) =>
+          value !== rootTag &&
+          !['true', 'false'].includes(normalizeChoice(value)) &&
+          !/^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value),
+      ) ||
       labelFromTag(rootTag) ||
       'Filter mode';
-    return { key: `mode-${index}`, label, rootTag };
+    return { key: `mode-${index}`, label, rootTag, isDefault };
   });
 }
 
 function parseConfig(block: HTMLElement): BlockConfig {
   const allRows = [...block.children] as HTMLElement[];
   const legacy = allRows.length >= 10 && !block.querySelector('[data-aue-prop="filterModeLabels"]');
-  const rowCount = legacy ? 10 : 7;
+  const rootIndex = allRows.findIndex((row) => {
+    if (row.querySelector('[data-aue-prop="cfRootPath"]')) return true;
+    const href = row.querySelector('a[href]')?.getAttribute('href');
+    return /^(?:https?:\/\/[^/]+)?\/content\/dam(?:\/|$)/i.test(href || textOf(row));
+  });
+  const hasLegacyDefault =
+    legacy || (rootIndex >= 0 ? allRows.length - rootIndex === 4 : [7, 9].includes(allRows.length));
+  const rowCount = legacy ? 10 : hasLegacyDefault ? 7 : 6;
   const contentRows = applyBlockIdentity(block, allRows, { contentRows: rowCount });
   const legacyTitleContinuation = contentRows.length > rowCount ? contentRows.splice(3, 1)[0] : undefined;
-  const [backgroundTheme, eyebrow, title, cfRootPath, defaultMode] = contentRows;
+  const [backgroundTheme, eyebrow, title, cfRootPath] = contentRows;
+  const modeRowIndex = hasLegacyDefault ? 5 : 4;
   const modeSettings = legacy
     ? [
         {
@@ -211,7 +234,7 @@ function parseConfig(block: HTMLElement): BlockConfig {
           rootTag: rowValue(contentRows[8], 'destinationRootTag'),
         },
       ]
-    : parseModeSettings(contentRows[5]);
+    : parseModeSettings(contentRows[modeRowIndex]);
 
   return {
     backgroundTheme: rowValue(backgroundTheme, 'backgroundTheme') || 'white',
@@ -221,8 +244,8 @@ function parseConfig(block: HTMLElement): BlockConfig {
       legacyTitleContinuation ? `<p>${escapeHtml(textOf(legacyTitleContinuation))}</p>` : '',
     ].join(''),
     cfRootPath: rowHref(cfRootPath, 'cfRootPath'),
-    defaultMode: rowValue(defaultMode, 'defaultFilterMode'),
-    revealMoreLabel: rowValue(contentRows[legacy ? 9 : 6], 'revealMoreLabel') || 'Reveal More',
+    defaultMode: hasLegacyDefault ? rowValue(contentRows[4], 'defaultFilterMode') : '',
+    revealMoreLabel: rowValue(contentRows[legacy ? 9 : modeRowIndex + 1], 'revealMoreLabel') || 'Reveal More',
     modeSettings,
   };
 }
@@ -549,8 +572,8 @@ function createCard(
 
 async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
   return Promise.all(
-    settings.map(async ({ key, label, rootTag }) => {
-      if (!rootTag.trim()) return { key, label, rootTag, filters: [] };
+    settings.map(async ({ key, label, rootTag, isDefault }) => {
+      if (!rootTag.trim()) return { key, label, rootTag, isDefault, filters: [] };
       const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
       url.searchParams.set('tag', rootTag.trim());
       const response = await fetch(url.href, { headers: { Accept: 'application/json' } });
@@ -567,23 +590,27 @@ async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
         tag: normalizeTagId(path),
         label: title?.trim() || labelFromTag(path),
       }));
-      return { key, label, rootTag, filters };
+      return { key, label, rootTag, isDefault, filters };
     }),
   );
 }
 
 function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
   const requestedMode = normalizeChoice(config.defaultMode);
-  let activeMode =
-    modes.find(
-      ({ key, label, rootTag }) =>
-        requestedMode &&
-        (normalizeChoice(key) === requestedMode ||
-          normalizeChoice(label) === requestedMode ||
-          normalizeChoice(normalizeTagId(rootTag)) === normalizeChoice(normalizeTagId(config.defaultMode))),
-    )?.key ||
-    modes[0]?.key ||
-    '';
+  const checkboxDefault = modes.find(({ isDefault }) => isDefault);
+  const hasDefaultCheckbox = modes.some(({ isDefault }) => isDefault !== undefined);
+  const defaultMode =
+    checkboxDefault ||
+    (hasDefaultCheckbox
+      ? modes[0]
+      : modes.find(
+          ({ key, label, rootTag }) =>
+            requestedMode &&
+            (normalizeChoice(key) === requestedMode ||
+              normalizeChoice(label) === requestedMode ||
+              normalizeChoice(normalizeTagId(rootTag)) === normalizeChoice(normalizeTagId(config.defaultMode))),
+        ));
+  let activeMode = defaultMode?.key || modes[0]?.key || '';
   const orderedModes = [
     ...modes.filter(({ key }) => key === activeMode),
     ...modes.filter(({ key }) => key !== activeMode),
