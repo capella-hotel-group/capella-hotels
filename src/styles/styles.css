@@ -203,6 +203,10 @@ main > .section:has(.hero-banner) {
     z-index: 0;
 }
 
+.adobe-ue-edit main > .section:has(.hero-banner) {
+    max-height: 1080px;
+}
+
 input,
 textarea,
 select,

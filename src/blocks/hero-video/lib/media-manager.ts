@@ -145,6 +145,11 @@ export class MediaManager {
     this.transition = style;
   }
 
+  setPoster(item: HeroVideoItem): void {
+    this.posterEl.style.backgroundImage = item.posterUrl ? `url(${item.posterUrl})` : 'none';
+    this.posterEl.style.backgroundPosition = this.getFocalPosition(item);
+  }
+
   setMuted(muted: boolean): void {
     this.muted = muted;
     this.videoA.muted = muted;
@@ -237,8 +242,7 @@ export class MediaManager {
       this.pendingFadeOut?.cancel();
       this.pendingFadeIn = null;
       this.pendingFadeOut = null;
-      this.posterEl.style.backgroundImage = item.posterUrl ? `url(${item.posterUrl})` : 'none';
-      this.posterEl.style.backgroundPosition = this.getFocalPosition(item);
+      this.setPoster(item);
       await this.fadeOutgoingToBlank(outgoing, mySeq);
       return;
     }
@@ -258,8 +262,7 @@ export class MediaManager {
     this.pendingFadeOut = null;
 
     // Update poster fallback immediately
-    this.posterEl.style.backgroundImage = `url(${item.posterUrl})`;
-    this.posterEl.style.backgroundPosition = this.getFocalPosition(item);
+    this.setPoster(item);
 
     // Load video into incoming layer
     // Native poster keeps the layer opaque with the right image while buffering — without it,

@@ -18,9 +18,10 @@
  * `--typography-line-height-body-lg` is 20/22/22 (tablet override was missing
  * entirely). `--dimension-spacing-title-to-content` aliases the exact same
  * unit as `--dimension-spacing-eyebrow-to-title` at every breakpoint (12/14/14),
- * not 32/48/56. `--component-toogle-width/-selector-dot/-padding` are IDENTICAL
- * between tablet and desktop-1440 (72/20/4) - they only grow to 80/24/4 at the
- * unmodeled 1920 breakpoint, so no desktop override is needed for them anymore.
+ * not 32/48/56. `--component-toogle-width/-selector-dot` are 64/20 mobile, 72/20
+ * tablet and 80/24 from desktop-1440 up (confirmed on the Hero/navigationtoggle
+ * variants 4052:1540 and 6275:23452: toggle 80x32, dot 24, padding 4), so 1920
+ * needs no override of its own.
  * `-heading-h2` and `-body-sm` have NOT been re-verified and may carry the
  * same error.
  * Figma artboards are 393/834/1440/1920px; our breakpoints are mobile <=767,
@@ -418,8 +419,9 @@
         --component-button-padding-inline: 32px;
         --component-button-padding-block: 16px;
 
-        /* component / toggle: desktop-1440 is identical to tablet (72/32/20/4),
-           so no override here - only the unmodeled 1920 breakpoint grows further. */
+        /* component / toggle (desktop; height stays 32, padding 4) */
+        --component-toogle-selector-dot: 24px;
+        --component-toogle-width: 80px;
 
         /* Desktop spacing scales with the viewport instead of stepping: a value
            written as calc(N * var(--fluid-unit)) renders exactly N Figma pixels
@@ -476,9 +478,5 @@
         --dimension-layout-40vw: 768px;
         --dimension-layout-60vw: 1152px;
         --dimension-layout-50vw: 960px;
-
-        /* component / toggle (desktop-xl; padding stays at the global 4px) */
-        --component-toogle-selector-dot: 24px;
-        --component-toogle-width: 80px;
     }
 }

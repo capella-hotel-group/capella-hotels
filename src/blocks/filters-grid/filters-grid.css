@@ -80,6 +80,11 @@ main .filters-grid .filters-grid-shell {
     padding: 96px 24px 40px;
 }
 
+/* Authoring: cap height to prevent layout issues in the Universal Editor */
+.adobe-ue-edit main .filters-grid .filters-grid-shell {
+    min-height: min(100vh, 1080px);
+}
+
 main .filters-grid .filters-grid-heading {
     display: flex;
     flex-direction: column;

@@ -1,11 +1,12 @@
 // src/blocks/hero-video/hero-video.ts
-import { resolveDAMUrl } from '@/utils/env';
+import { isUniversalEditor } from '@/utils/env';
 import { emitHeroImpression, emitItemSelect, emitMediaError } from './lib/analytics';
 import { runIntro, shouldSkipIntro, skipIntro } from './lib/intro';
 import { MediaManager } from './lib/media-manager';
+import { parseItems } from './lib/parse';
 import { SelectorUI } from './lib/selector-ui';
 import { initSoftNav } from './lib/soft-nav';
-import type { HeroVideoConfig, HeroVideoElement, HeroVideoItem, HeroVideoState, IntroElements } from './lib/types';
+import type { HeroVideoConfig, HeroVideoElement, HeroVideoState, IntroElements } from './lib/types';
 import { TOGGLE_INDICATOR_SHIFT } from './lib/types';
 
 // ── Cursor controller ─────────────────────────────────────────────────────────
@@ -105,54 +106,12 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
   };
 }
 
-function parseItems(itemRows: HTMLElement[]): HeroVideoItem[] {
-  const cellText = (cell?: Element | null): string => cell?.textContent?.trim() ?? '';
-  const cellHref = (cell?: Element | null): string =>
-    cell?.querySelector<HTMLAnchorElement>('a')?.getAttribute('href')?.trim() ?? '';
-  const cellUrl = (cell?: Element | null): string => {
-    const href = cellHref(cell);
-    if (href) return href;
-    const text = cellText(cell);
-    return /^https?:\/\//i.test(text) || text.startsWith('/') ? text : '';
-  };
-  const looksLikeVideoReference = (value: string): boolean =>
-    /\.(mp4|m4v|mov|ogv|ogg|webm|m3u8)(?:[?#].*)?$/i.test(value);
-
-  // Never drop an authored row (see docs/coding-guidelines.md): a freshly-added, still-empty
-  // hero-video-item must still render so it stays visible/selectable on the UE canvas.
-  return itemRows.map((row): HeroVideoItem => {
-    const cells = [...row.children] as HTMLElement[];
-    const label = cellText(cells[0]) || 'New destination';
-    const otherCells = cells.slice(1);
-
-    // Item rows can lose hidden optional cells in delivery HTML, so identify cells by what they
-    // contain instead of fixed offsets. The first cell is always the label; after that we match
-    // the poster by <picture>, the video by a video-like asset URL, then treat the remaining text
-    // cells as the desktop/mobile focal points in authored order.
-    const posterCell = otherCells.find((cell) => cell.querySelector('picture'));
-    const linkedCells = otherCells.filter((cell) => cell !== posterCell && cellUrl(cell));
-    const videoCell = linkedCells.find((cell) => looksLikeVideoReference(cellUrl(cell)));
-    const linkCell = linkedCells.find((cell) => cell !== videoCell);
-
-    const rawVideo = videoCell ? cellUrl(videoCell) : '';
-    const videoUrl = rawVideo ? resolveDAMUrl(rawVideo) : '';
-    const posterUrl = posterCell?.querySelector<HTMLImageElement>('picture img')?.src ?? '';
-    const linkHref = linkCell ? cellHref(linkCell) : '';
-    const link = linkHref || null;
-
-    const focalCells = otherCells.filter(
-      (cell) => cell !== posterCell && cell !== videoCell && cell !== linkCell && cellText(cell),
-    );
-    const focalDesktop = cellText(focalCells[0]) || 'center';
-    const focalMobile = cellText(focalCells[1]) || 'center';
-
-    return { label, videoUrl, posterUrl, link, focalDesktop, focalMobile, sourceRow: row };
-  });
-}
-
 // ── DOM builder ───────────────────────────────────────────────────────────────
 
-function buildToggle(config: HeroVideoConfig): {
+function buildToggle(
+  config: HeroVideoConfig,
+  isAuthoring: boolean,
+): {
   toggleWrapper: HTMLElement;
   destLink: HTMLAnchorElement;
   expLink: HTMLAnchorElement;
@@ -184,7 +143,7 @@ function buildToggle(config: HeroVideoConfig): {
   track.setAttribute('aria-label', 'Toggle site mode');
   const indicator = document.createElement('div');
   indicator.className = 'mode-toggle-indicator';
-  indicator.style.transform = isExperience ? TOGGLE_INDICATOR_SHIFT : 'translateX(0%)';
+  indicator.style.setProperty('--toggle-indicator-x', isExperience ? TOGGLE_INDICATOR_SHIFT : '0px');
   track.append(indicator);
 
   const expLink = document.createElement('a');
@@ -199,13 +158,19 @@ function buildToggle(config: HeroVideoConfig): {
     const target = expLink.classList.contains('mode-toggle-btn--active') ? destLink : expLink;
     target.click();
   };
-  track.addEventListener('click', toggleViaTrack);
-  track.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      toggleViaTrack();
-    }
-  });
+  if (isAuthoring) {
+    [destLink, expLink].forEach((link) => {
+      link.addEventListener('click', (event) => event.preventDefault());
+    });
+  } else {
+    track.addEventListener('click', toggleViaTrack);
+    track.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleViaTrack();
+      }
+    });
+  }
 
   inner.append(destLink, track, expLink);
   toggleWrapper.append(inner);
@@ -213,7 +178,10 @@ function buildToggle(config: HeroVideoConfig): {
   return { toggleWrapper, destLink, expLink };
 }
 
-function buildDOM(config: HeroVideoConfig): {
+function buildDOM(
+  config: HeroVideoConfig,
+  isAuthoring: boolean,
+): {
   root: DocumentFragment;
   mediaEl: HTMLElement;
   posterEl: HTMLElement;
@@ -333,7 +301,7 @@ function buildDOM(config: HeroVideoConfig): {
 
   // Mode toggle lives inside hero-video so soft-nav can preserve it across swaps while the media
   // reloads. It is appended last but positioned as an overlay by CSS.
-  const { toggleWrapper, destLink, expLink } = buildToggle(config);
+  const { toggleWrapper, destLink, expLink } = buildToggle(config, isAuthoring);
 
   fragment.append(mediaEl, overlayEl, introPhraseEl, selectorEl, controlsEl, cursorEl, toggleWrapper);
 
@@ -360,6 +328,8 @@ function buildDOM(config: HeroVideoConfig): {
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
+  const isAuthoring = isUniversalEditor();
+  block.classList.toggle('hero-video--authoring', isAuthoring);
   const rows = [...block.children] as HTMLElement[];
   if (rows.length < 2) return;
 
@@ -379,16 +349,16 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     muted: true,
   };
 
-  const dom = buildDOM(config);
+  const dom = buildDOM(config, isAuthoring);
   block.replaceChildren(dom.root);
   // Videos are always muted — the sound/unmute control is intentionally removed.
   dom.soundBtn.hidden = true;
 
   // Soft-nav toggle: wire mode switching on the toggle links now that they're in the DOM.
-  initSoftNav([dom.destLink, dom.expLink]);
+  if (!isAuthoring) initSoftNav([dom.destLink, dom.expLink]);
 
   const cursor = new CursorController(block, dom.cursorEl);
-  cursor.mount();
+  if (!isAuthoring) cursor.mount();
 
   const media = new MediaManager(dom.videoA, dom.videoB, dom.posterEl);
   media.setTransition(config.transition);
@@ -416,6 +386,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const isLiveConnected = (node: Element): boolean => node.isConnected && node.ownerDocument.defaultView !== null;
   const firstItem = items[state.activeIndex];
   if (firstItem) {
+    if (isAuthoring) media.setPoster(firstItem);
     const startFirstLoad = (): void => {
       media.switchTo(firstItem).catch(() => {});
       // Self-healing "auto-click": on soft-nav mounts play() sometimes succeeds silently (no
@@ -428,9 +399,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       // any outgoing MutationObserver callback fire first, macrotask lets any load-abort settle.
       queueMicrotask(() => setTimeout(startFirstLoad, 0));
     };
-    if (isLiveConnected(block)) {
+    if (!isAuthoring && isLiveConnected(block)) {
       scheduleStart();
-    } else {
+    } else if (!isAuthoring) {
       const waitForAttach = (): void => {
         if (isLiveConnected(block)) scheduleStart();
         else requestAnimationFrame(waitForAttach);
