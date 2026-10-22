@@ -87,6 +87,7 @@ function waitForFirstFrame(video: HTMLVideoElement): Promise<void> {
 }
 
 export type TransitionStyle = 'crossfade' | 'slide' | 'cut';
+export type SwitchOutcome = 'played' | 'blank' | 'failed' | 'same' | 'stale';
 
 export class MediaManager {
   private videoA: HTMLVideoElement;
@@ -94,10 +95,15 @@ export class MediaManager {
   private posterEl: HTMLElement;
   private activeLayer: 'a' | 'b' = 'a';
   private sequenceId = 0;
+  private settledSeq = 0;
   private muted = true;
   private transition: TransitionStyle = 'crossfade';
   private onError: (item: HeroVideoItem, errorType: string) => void = () => {};
   private onFirstFrame: () => void = () => {};
+  private onEnded: () => void = () => {};
+  private readonly handleEnded = (event: Event): void => {
+    if (event.target === this.activeVideo && !this.isSwitching) this.onEnded();
+  };
   private firstFrameEmitted = false;
   private pendingFadeIn: Animation | null = null;
   private pendingFadeOut: Animation | null = null;
@@ -122,6 +128,12 @@ export class MediaManager {
     videoB.style.opacity = '0';
     videoA.preload = 'auto';
     videoB.preload = 'auto';
+    videoA.addEventListener('ended', this.handleEnded);
+    videoB.addEventListener('ended', this.handleEnded);
+  }
+
+  get isSwitching(): boolean {
+    return this.settledSeq !== this.sequenceId;
   }
 
   get activeVideo(): HTMLVideoElement {
@@ -139,6 +151,11 @@ export class MediaManager {
   /** Fires once, right after the first successfully-loaded video decodes its first frame. */
   setFirstFrameHandler(cb: () => void): void {
     this.onFirstFrame = cb;
+  }
+
+  /** Fires when the visible video reaches its end (never fires while `loop` is on). */
+  setEndedHandler(cb: () => void): void {
+    this.onEnded = cb;
   }
 
   setTransition(style: TransitionStyle): void {
@@ -226,11 +243,22 @@ export class MediaManager {
     outgoing.pause();
   }
 
-  /** Switch to a new item's video with opacity crossfade. */
-  async switchTo(item: HeroVideoItem): Promise<void> {
+  /**
+   * Switch to a new item's video with opacity crossfade. `restartIfSame` replays from the start
+   * when the item's URL is already playing (auto-advance between items sharing one video).
+   */
+  async switchTo(item: HeroVideoItem, { restartIfSame = false } = {}): Promise<SwitchOutcome> {
     this.sequenceId += 1;
     const mySeq = this.sequenceId;
+    try {
+      const outcome = await this.runSwitch(item, mySeq, restartIfSame);
+      return this.sequenceId === mySeq ? outcome : 'stale';
+    } finally {
+      if (this.sequenceId === mySeq) this.settledSeq = mySeq;
+    }
+  }
 
+  private async runSwitch(item: HeroVideoItem, mySeq: number, restartIfSame: boolean): Promise<SwitchOutcome> {
     const incoming = this.inactiveVideo;
     const outgoing = this.activeVideo;
 
@@ -244,7 +272,7 @@ export class MediaManager {
       this.pendingFadeOut = null;
       this.setPoster(item);
       await this.fadeOutgoingToBlank(outgoing, mySeq);
-      return;
+      return 'blank';
     }
 
     // If the active layer is already playing this URL, avoid redundant reload/fade.
@@ -252,7 +280,11 @@ export class MediaManager {
     const requestedSrc = this.normalizeUrl(item.videoUrl);
     if (activeSrc && requestedSrc && activeSrc === requestedSrc) {
       outgoing.style.objectPosition = this.getFocalPosition(item);
-      return;
+      if (restartIfSame) {
+        outgoing.currentTime = 0;
+        this.playSafely(outgoing);
+      }
+      return 'same';
     }
 
     // Cancel any in-flight fade animations so a new switch starts from a clean state.
@@ -288,13 +320,13 @@ export class MediaManager {
       // new item's poster underneath. Leave outgoing.src loaded so re-selecting the previous
       // item can resume cheaply, and don't swap activeLayer so future dedup still references
       // the last successfully-playing item.
-      if (this.sequenceId !== mySeq) return;
+      if (this.sequenceId !== mySeq) return 'stale';
       await this.fadeOutgoingToBlank(outgoing, mySeq);
-      return;
+      return 'failed';
     }
 
     // Stale request guard: another switchTo() was called while we were loading
-    if (this.sequenceId !== mySeq) return;
+    if (this.sequenceId !== mySeq) return 'stale';
 
     // Start playback before fade
     this.playSafely(incoming);
@@ -331,7 +363,7 @@ export class MediaManager {
         // Animation interrupted (e.g. rapid switching) — that's fine
       });
 
-      if (this.sequenceId !== mySeq) return;
+      if (this.sequenceId !== mySeq) return 'stale';
 
       incoming.style.transform = 'translateX(0%)';
       outgoing.style.opacity = '0';
@@ -359,7 +391,7 @@ export class MediaManager {
         // Animation interrupted (e.g. rapid switching) — that's fine
       });
 
-      if (this.sequenceId !== mySeq) return;
+      if (this.sequenceId !== mySeq) return 'stale';
 
       incoming.style.opacity = '1';
       outgoing.style.opacity = '0';
@@ -387,6 +419,7 @@ export class MediaManager {
     if (incoming.paused) {
       this.playSafely(incoming);
     }
+    return 'played';
   }
 
   private getFocalPosition(item: HeroVideoItem): string {
@@ -416,6 +449,8 @@ export class MediaManager {
         window.removeEventListener(evt, this.gestureRetry),
       );
     }
+    this.videoA.removeEventListener('ended', this.handleEnded);
+    this.videoB.removeEventListener('ended', this.handleEnded);
     this.videoA.pause();
     this.videoB.pause();
     this.videoA.removeAttribute('src');

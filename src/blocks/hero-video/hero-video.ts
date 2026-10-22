@@ -1,6 +1,7 @@
 // src/blocks/hero-video/hero-video.ts
 import { isUniversalEditor } from '@/utils/env';
 import { emitHeroImpression, emitItemSelect, emitMediaError } from './lib/analytics';
+import { AutoAdvance } from './lib/auto-advance';
 import { runIntro, shouldSkipIntro, skipIntro } from './lib/intro';
 import { MediaManager } from './lib/media-manager';
 import { parseItems } from './lib/parse';
@@ -219,7 +220,6 @@ function buildDOM(
   videoA.setAttribute('muted', '');
   videoA.setAttribute('autoplay', '');
   videoA.playsInline = true;
-  videoA.loop = true;
   videoA.setAttribute('aria-hidden', 'true');
 
   const videoB = document.createElement('video');
@@ -228,7 +228,6 @@ function buildDOM(
   videoB.setAttribute('muted', '');
   videoB.setAttribute('autoplay', '');
   videoB.playsInline = true;
-  videoB.loop = true;
   videoB.setAttribute('aria-hidden', 'true');
 
   mediaEl.append(posterEl, videoA, videoB);
@@ -351,6 +350,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const dom = buildDOM(config, isAuthoring);
   block.replaceChildren(dom.root);
+  // A lone item loops forever; with several, `ended` drives auto-advance to the next item.
+  dom.videoA.loop = items.length < 2;
+  dom.videoB.loop = items.length < 2;
   // Videos are always muted — the sound/unmute control is intentionally removed.
   dom.soundBtn.hidden = true;
 
@@ -374,6 +376,28 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   media.setFirstFrameHandler(() => resolveFirstFrame());
   window.setTimeout(() => resolveFirstFrame(), 1500);
 
+  const selectorUI = new SelectorUI(dom.itemListEl, dom.itemsViewportEl);
+  selectorUI.renderItems(items, state.activeIndex);
+
+  const autoAdvance = new AutoAdvance(isAuthoring ? 0 : items.length, (next) => {
+    selectorUI.activateItem(next, true);
+    goTo(next, true);
+  });
+  media.setEndedHandler(() => autoAdvance.handleEnded(state.activeIndex));
+
+  function goTo(index: number, restartIfSame: boolean): void {
+    const item = items[index];
+    if (!item) return;
+    state.activeIndex = index;
+    autoAdvance.cancel();
+    media
+      .switchTo(item, { restartIfSame })
+      .then((outcome) => {
+        if (outcome === 'blank' || outcome === 'failed') autoAdvance.scheduleFallback(index);
+      })
+      .catch(() => {});
+  }
+
   // Load first item — deferred until the block is attached to a *live, rendered* document.
   // `Node.isConnected` only means "rooted in some Document", which is true even for a block
   // still living inside mode-toggle soft-nav's `DOMParser().parseFromString()` scratch document
@@ -388,7 +412,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (firstItem) {
     if (isAuthoring) media.setPoster(firstItem);
     const startFirstLoad = (): void => {
-      media.switchTo(firstItem).catch(() => {});
+      goTo(state.activeIndex, false);
       // Self-healing "auto-click": on soft-nav mounts play() sometimes succeeds silently (no
       // rejection logged) but the crossfade leaves the video paused/invisible. Re-check shortly
       // after mount settles and force it visible+playing, same effect as a manual click.
@@ -410,9 +434,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     }
   }
 
-  const selectorUI = new SelectorUI(dom.itemListEl, dom.itemsViewportEl);
-  selectorUI.renderItems(items, state.activeIndex);
-
   // Recalculate row offsets after fonts load and on resize
   if (document.fonts) {
     document.fonts.ready.then(() => selectorUI.measureRows());
@@ -433,10 +454,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // Wire item selection to media switch
   selectorUI.onSelect((index) => {
     const prevItem = items[state.activeIndex];
-    state.activeIndex = index;
     const item = items[index];
     if (item) {
-      media.switchTo(item).catch(() => {});
+      goTo(index, false);
       emitItemSelect(prevItem?.label ?? '', item.label, 'pointer');
     }
   });
@@ -457,6 +477,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     selectorUI.activateItem(state.activeIndex, false);
     selectorUI.setIntroComplete(true);
     state.introComplete = true;
+    autoAdvance.setReady(true);
   };
 
   const startIntro = (): void => {
@@ -479,6 +500,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     ).then(() => {
       selectorUI.setIntroComplete(true);
       state.introComplete = true;
+      autoAdvance.setReady(true);
 
       // Preload metadata for next item to reduce switching latency
       const nextIdx = (state.activeIndex + 1) % items.length;
@@ -549,6 +571,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const disconnectObserver = new MutationObserver(() => {
     if (!block.isConnected) {
       clearTimeout(impressionTimer);
+      autoAdvance.destroy();
       cursor.destroy();
       selectorUI.destroy();
       media.destroy();
