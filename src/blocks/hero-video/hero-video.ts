@@ -4,6 +4,7 @@ import { emitHeroImpression, emitItemSelect, emitMediaError } from './lib/analyt
 import { AutoAdvance } from './lib/auto-advance';
 import { runIntro, shouldSkipIntro, skipIntro } from './lib/intro';
 import { MediaManager } from './lib/media-manager';
+import { applyMediaLink } from './lib/media-link';
 import { parseItems } from './lib/parse';
 import { SelectorUI } from './lib/selector-ui';
 import { initSoftNav } from './lib/soft-nav';
@@ -185,6 +186,7 @@ function buildDOM(
 ): {
   root: DocumentFragment;
   mediaEl: HTMLElement;
+  mediaLinkEl: HTMLAnchorElement;
   posterEl: HTMLElement;
   videoA: HTMLVideoElement;
   videoB: HTMLVideoElement;
@@ -231,6 +233,13 @@ function buildDOM(
   videoB.setAttribute('aria-hidden', 'true');
 
   mediaEl.append(posterEl, videoA, videoB);
+
+  // Full-bleed link; inert until the intro finishes. Selector/overlay are pointer-events: none, so
+  // only their interactive children (items, suffix, toggle) block clicks from reaching it.
+  const mediaLinkEl = document.createElement('a');
+  mediaLinkEl.className = 'hero-video-media-link';
+  mediaLinkEl.tabIndex = -1;
+  mediaEl.append(mediaLinkEl);
 
   // ── Contrast overlay ──────────────────────────────────────────────────────
   const overlayEl = document.createElement('div');
@@ -307,6 +316,7 @@ function buildDOM(
   return {
     root: fragment,
     mediaEl,
+    mediaLinkEl,
     posterEl,
     videoA,
     videoB,
@@ -389,6 +399,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const item = items[index];
     if (!item) return;
     state.activeIndex = index;
+    applyMediaLink(dom.mediaLinkEl, item, isAuthoring);
     autoAdvance.cancel();
     media
       .switchTo(item, { restartIfSame })
@@ -477,6 +488,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     selectorUI.activateItem(state.activeIndex, false);
     selectorUI.setIntroComplete(true);
     state.introComplete = true;
+    dom.mediaLinkEl.tabIndex = 0;
     autoAdvance.setReady(true);
   };
 
@@ -500,6 +512,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     ).then(() => {
       selectorUI.setIntroComplete(true);
       state.introComplete = true;
+      dom.mediaLinkEl.tabIndex = 0;
       autoAdvance.setReady(true);
 
       // Preload metadata for next item to reduce switching latency

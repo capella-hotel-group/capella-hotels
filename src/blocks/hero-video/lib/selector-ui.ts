@@ -59,7 +59,6 @@ export class SelectorUI {
       // WAAPI opacity animation misfires (which happens when decorate() runs on a detached block
       // during mode-toggle soft-nav — `fill: forwards` doesn't retain after DOM adoption).
       btn.style.opacity = idx === activeIndex ? '1' : '0.5';
-      if (item.link) btn.dataset.href = item.link;
 
       if (!isUniversalEditor()) {
         btn.addEventListener('keydown', (e) => this.handleKeyDown(e, idx));
@@ -101,12 +100,6 @@ export class SelectorUI {
 
   private handleClick(index: number): void {
     if (!this.introComplete) return;
-    const item = this.items[index];
-    if (index === this.activeIndex && item?.link) {
-      if (item.openInNewTab) window.open(item.link, '_blank', 'noopener,noreferrer');
-      else window.location.href = item.link;
-      return;
-    }
     this.activateItem(index, true);
     this.emitSelect(index);
   }
