@@ -154,6 +154,14 @@
           "valueType": "string",
           "required": true,
           "value": "Thank you, your details have been received."
+        },
+        {
+          "component": "boolean",
+          "name": "enableHCaptcha",
+          "label": "Enable hCaptcha",
+          "description": "Require hCaptcha verification before showing the success message.",
+          "valueType": "boolean",
+          "value": false
         }
       ]
     }
