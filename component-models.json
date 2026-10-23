@@ -3053,6 +3053,21 @@
         "description": "Require hCaptcha verification before showing the success message.",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "text",
+        "name": "errorMessage",
+        "label": "Error Message",
+        "valueType": "string",
+        "required": true,
+        "value": "Sorry, something went wrong. Please try again."
+      },
+      {
+        "component": "aem-content",
+        "name": "propertyOptions",
+        "label": "Property Mapping (Content Fragment path)",
+        "description": "Maps the current page to the Newsletter API property code.",
+        "valueType": "string"
       }
     ]
   },
