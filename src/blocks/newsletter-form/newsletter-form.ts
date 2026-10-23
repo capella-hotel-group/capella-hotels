@@ -1,6 +1,10 @@
 import { getPageLang } from '@/app/scripts.js';
 import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
 import { loadHCaptcha } from '@/utils/hcaptcha.js';
+import * as countryCodes from 'i18n-iso-countries';
+import englishCountryNames from 'i18n-iso-countries/langs/en.json';
+
+countryCodes.registerLocale(englishCountryNames);
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
@@ -34,8 +38,8 @@ const GROUP_PROPERTY_CODE = 'CHG';
 const NON_HOTEL_PROPERTY_CODE = 'CHR';
 
 // Authored row order — must match the field order in `_newsletter-form.json`.
-// COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment paths; salutation
-// choices are authored as a repeatable list in their own cell.
+// PROPERTY_OPTIONS remains a Content Fragment path; salutation choices are
+// authored as a repeatable list.
 const ROW = {
   TITLE: 0,
   SALUTATION_LABEL: 1,
@@ -44,7 +48,7 @@ const ROW = {
   LAST_NAME: 4,
   EMAIL: 5,
   COUNTRY_LABEL: 6,
-  COUNTRY_OPTIONS: 7,
+  COUNTRY_PLACEHOLDER: 7,
   CONSENT: 8,
   SUBMIT: 9,
   PROPERTY_OPTIONS: 10,
@@ -56,6 +60,14 @@ const ROW = {
 /** Reads the trimmed text of an authored row's value cell. */
 function rowText(rows: Element[], index: number): string {
   return rows[index]?.querySelector(':scope > div')?.textContent?.trim() ?? '';
+}
+
+/** Reads optional plain text, ignoring a legacy Content Fragment link. */
+function rowPlainText(rows: Element[], index: number): string {
+  const cell = rows[index]?.querySelector(':scope > div');
+  if (!cell || cell.querySelector('a')) return '';
+  const value = cell.textContent?.trim() ?? '';
+  return value.startsWith('/content/') ? '' : value;
 }
 
 /** Reads the inner HTML of an authored row's value cell (for richtext). */
@@ -75,58 +87,24 @@ function rowLink(rows: Element[], index: number): string {
   return (link?.getAttribute('href') || cell.textContent || '').trim();
 }
 
-/** Reads repeatable salutation items, with a fallback for legacy CF paths. */
-function rowList(rows: Element[], index: number): string[] {
+/** Reads repeatable list items, with a field-specific fallback for legacy content. */
+function rowList(rows: Element[], index: number, fallback: string[] = []): string[] {
   const cell = rows[index]?.querySelector(':scope > div');
-  if (!cell) return DEFAULT_SALUTATION_OPTIONS;
+  if (!cell) return fallback;
 
   const items = [...cell.querySelectorAll('li')].map((item) => item.textContent?.trim() ?? '').filter(Boolean);
   if (items.length) return items;
 
   const authoredText = cell.textContent?.trim() ?? '';
   if (!authoredText || cell.querySelector('a') || authoredText.startsWith('/content/')) {
-    return DEFAULT_SALUTATION_OPTIONS;
+    return fallback;
   }
 
   const options = authoredText
     .split(',')
     .map((option) => option.trim())
     .filter(Boolean);
-  return options.length ? options : DEFAULT_SALUTATION_OPTIONS;
-}
-
-interface NormalizedOption {
-  value: string;
-  label: string;
-}
-
-/**
- * Normalises a single raw Content Fragment entry into a { value, label } pair.
- * Accepts either a `Label|VALUE` string (e.g. `Singapore|SG` — the visible label
- * first, the submitted value/code last; value optional) or an object using any
- * of the common key names (value/code/key/id and label/name/title/text).
- */
-function normalizeOption(item: unknown): NormalizedOption | null {
-  if (typeof item === 'string') {
-    const line = item.trim();
-    if (!line) return null;
-    // Authored as `Label|VALUE` (e.g. `Singapore|SG`): the visible label comes
-    // first, the submitted value/code last. The value never contains a pipe, so
-    // take the final segment as the value and everything before it as the label.
-    // A single segment (no pipe) is used for both value and label.
-    const parts = line.split('|');
-    const value = parts.pop()?.trim() ?? '';
-    const label = parts.length ? parts.join('|').trim() : value;
-    return { value, label };
-  }
-  if (item && typeof item === 'object') {
-    const obj = item as Record<string, unknown>;
-    const value = obj.value ?? obj.code ?? obj.key ?? obj.id ?? obj.label ?? obj.name ?? obj.title;
-    if (value == null) return null;
-    const label = obj.label ?? obj.name ?? obj.title ?? obj.text ?? value;
-    return { value: String(value).trim(), label: String(label).trim() };
-  }
-  return null;
+  return options.length ? options : fallback;
 }
 
 // Field names a Content Fragment might use to hold its list of options.
@@ -198,13 +176,6 @@ async function fetchRawList(path: string): Promise<unknown[]> {
     console.error('Newsletter list fetch error:', path, error);
     return [];
   }
-}
-
-/**
- * Fetches dropdown options from a Content Fragment as { value, label } pairs.
- */
-async function fetchOptions(path: string): Promise<NormalizedOption[]> {
-  return (await fetchRawList(path)).map(normalizeOption).filter((opt): opt is NormalizedOption => !!opt && !!opt.value);
 }
 
 interface NormalizedProperty {
@@ -413,7 +384,7 @@ function buildField(
 }
 
 /** Builds a <select> from a list of { value, label } (or plain string) options. */
-function buildSelect(name: string, placeholder: string, options: (NormalizedOption | string)[]): HTMLSelectElement {
+function buildSelect(name: string, placeholder: string, options: string[]): HTMLSelectElement {
   const select = document.createElement('select');
   select.name = name;
 
@@ -425,11 +396,9 @@ function buildSelect(name: string, placeholder: string, options: (NormalizedOpti
   select.append(blank);
 
   options.forEach((opt) => {
-    const value = typeof opt === 'string' ? opt : opt.value;
-    const text = typeof opt === 'string' ? opt : opt.label;
     const option = document.createElement('option');
-    option.value = value;
-    option.textContent = text;
+    option.value = opt;
+    option.textContent = opt;
     select.append(option);
   });
 
@@ -601,6 +570,7 @@ interface SubmitConfig {
   endpoint: string;
   property: NormalizedProperty | null;
   captcha: CaptchaController | null;
+  captchaEnabled: boolean;
 }
 
 /**
@@ -628,6 +598,17 @@ async function submitForm(
     form.reportValidity();
     return;
   }
+
+  payload.captchaEnabled = String(config.captchaEnabled);
+
+  const countryCode = countryCodes.getAlpha2Code(payload.country ?? '', 'en');
+  if (!countryCode) {
+    showMessage(message, 'Enter a valid country name.', 'error');
+    const countryInput = form.querySelector<HTMLInputElement>('[name="country"]');
+    if (countryInput) markInvalid(countryInput, message);
+    return;
+  }
+  payload.country = countryCode.toUpperCase();
 
   // hCaptcha: require a solved token before sending (defence-in-depth on top of
   // the disabled submit button). Skipped when captcha isn't configured/loaded.
@@ -697,12 +678,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const cfg = {
     title: rowText(rows, ROW.TITLE) || 'Subscribe to our newsletter',
     salutationLabel: rowText(rows, ROW.SALUTATION_LABEL) || 'Salutation',
-    salutationOptions: rowList(rows, ROW.SALUTATION_OPTIONS),
+    salutationOptions: rowList(rows, ROW.SALUTATION_OPTIONS, DEFAULT_SALUTATION_OPTIONS),
     firstNameLabel: rowText(rows, ROW.FIRST_NAME) || 'First Name',
     lastNameLabel: rowText(rows, ROW.LAST_NAME) || 'Last Name',
     emailLabel: rowText(rows, ROW.EMAIL) || 'Email Address',
     countryLabel: rowText(rows, ROW.COUNTRY_LABEL) || 'Country',
-    countryPath: rowLink(rows, ROW.COUNTRY_OPTIONS),
+    countryPlaceholder: rowPlainText(rows, ROW.COUNTRY_PLACEHOLDER) || rowText(rows, ROW.COUNTRY_LABEL) || 'Country',
     consentHTML: rowHTML(rows, ROW.CONSENT),
     submitLabel: rowText(rows, ROW.SUBMIT) || 'Continue',
     propertyPath: rowLink(rows, ROW.PROPERTY_OPTIONS),
@@ -711,12 +692,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     enableHCaptcha: rowText(rows, ROW.ENABLE_HCAPTCHA).toLowerCase() === 'true',
   };
 
-  // Load dropdown options and the property mapping from the authored Content
-  // Fragments (in parallel). Only fragment data is used — nothing is hardcoded.
-  const [countryOptions, properties] = await Promise.all([
-    fetchOptions(cfg.countryPath),
-    fetchProperties(cfg.propertyPath),
-  ]);
+  // The property mapping remains Content Fragment-backed; dropdown options are
+  // read from the authored repeatable lists above.
+  const properties = await fetchProperties(cfg.propertyPath);
 
   // Resolve the current page's property once, for use on submit.
   const property = resolveProperty(properties);
@@ -762,8 +740,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     );
     const firstName = buildInlineField(buildInput('firstName', 'text', cfg.firstNameLabel), cfg.firstNameLabel);
     const lastName = buildInlineField(buildInput('lastName', 'text', cfg.lastNameLabel), cfg.lastNameLabel);
-    // Unlike Modal, Inline shows Country as a plain text field, not a dropdown.
-    const country = buildInlineField(buildInput('country', 'text', cfg.countryLabel), cfg.countryLabel);
+    const country = buildInlineField(buildInput('country', 'text', cfg.countryPlaceholder), cfg.countryLabel);
     const email = buildInlineField(buildInput('email', 'email', cfg.emailLabel), cfg.emailLabel);
 
     const consent = buildInlineConsent(cfg.consentHTML, `newsletter-inline-consent-${uid}`);
@@ -808,7 +785,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const country = buildField(
       'newsletter-country',
       cfg.countryLabel,
-      buildSelect('country', 'Select', countryOptions),
+      buildInput('country', 'text', cfg.countryPlaceholder),
     );
 
     // Consent notice — an informational line (no checkbox). By submitting the
@@ -851,7 +828,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       flagInvalidFields(form, message);
       return;
     }
-    submitForm(form, { endpoint: API_ENDPOINT, property, captcha }, message, submitBtn);
+    submitForm(
+      form,
+      { endpoint: API_ENDPOINT, property, captcha, captchaEnabled: cfg.enableHCaptcha },
+      message,
+      submitBtn,
+    );
   });
 
   form.addEventListener('input', (event) => {
