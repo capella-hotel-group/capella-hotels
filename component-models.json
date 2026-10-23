@@ -2504,6 +2504,14 @@
             "value": "Inline"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "enableHCaptcha",
+        "label": "Enable hCaptcha",
+        "description": "Require hCaptcha verification before submitting the form.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },

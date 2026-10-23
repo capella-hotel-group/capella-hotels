@@ -13,6 +13,7 @@ export interface HCaptchaApi {
 declare global {
   interface Window {
     hcaptcha?: HCaptchaApi;
+    capellaHCaptchaOnLoad?: () => void;
   }
 }
 

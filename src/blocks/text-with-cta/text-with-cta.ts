@@ -1,6 +1,7 @@
 import { moveInstrumentation } from '@/app/scripts.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
-import { isUniversalEditor } from '@/utils/env.js';
+import { getHCaptchaSiteKey, isUniversalEditor } from '@/utils/env.js';
+import { loadHCaptcha } from '@/utils/hcaptcha.js';
 
 const BLOCK = 'text-with-cta';
 const ITEM_MODEL = 'text-with-cta-signup-form';
@@ -17,6 +18,7 @@ const FIELD = {
   consentLabel: 7,
   submitLabel: 8,
   successMessage: 9,
+  enableHCaptcha: 10,
 } as const;
 
 let uid = 0;
@@ -133,11 +135,17 @@ function buildRow(modifier: string, fields: HTMLElement[]): HTMLElement {
   return row;
 }
 
-function wireDisclosure(trigger: HTMLButtonElement, form: HTMLFormElement, panel: HTMLElement): void {
+function wireDisclosure(
+  trigger: HTMLButtonElement,
+  form: HTMLFormElement,
+  panel: HTMLElement,
+  onExpand: () => void,
+): void {
   const setExpanded = (expanded: boolean): void => {
     trigger.setAttribute('aria-expanded', String(expanded));
     form.hidden = !expanded;
     panel.classList.toggle('is-expanded', expanded);
+    if (expanded && form.isConnected) onExpand();
   };
 
   trigger.addEventListener('click', () => {
@@ -155,10 +163,16 @@ function wireDisclosure(trigger: HTMLButtonElement, form: HTMLFormElement, panel
   setExpanded(isUniversalEditor());
 }
 
-function buildSignupForm(row: Element): HTMLElement {
+interface SignupFormBuild {
+  panel: HTMLElement;
+  initializeCaptcha: () => void;
+}
+
+function buildSignupForm(row: Element): SignupFormBuild {
   const cells = [...row.children];
   const formId = `${BLOCK}-form-${(uid += 1)}`;
   const label = (index: number, fallback: string): string => textOf(cells[index]) || fallback;
+  const enableHCaptcha = textOf(cells[FIELD.enableHCaptcha]).toLowerCase() === 'true';
 
   const panel = el('div', `${BLOCK}-signup`);
   moveInstrumentation(row, panel);
@@ -210,22 +224,85 @@ function buildSignupForm(row: Element): HTMLElement {
 
   const submit = el('button', `${BLOCK}-submit`, label(FIELD.submitLabel, 'Sign up'));
   submit.type = 'submit';
+  submit.setAttribute('data-testid', `${BLOCK}-submit`);
+  submit.disabled = enableHCaptcha;
+
+  const captcha = el('div', `${BLOCK}-captcha`);
+  captcha.setAttribute('data-testid', `${BLOCK}-captcha`);
 
   const status = el('p', `${BLOCK}-status`);
   status.setAttribute('role', 'status');
 
-  form.append(fields, submit, status);
+  form.append(fields);
+  if (enableHCaptcha) form.append(captcha);
+  form.append(submit, status);
   panel.append(trigger, form);
 
   const successMessage = label(FIELD.successMessage, '');
+  let captchaToken = '';
+  let captchaWidgetId: string | undefined;
+  let captchaInitialized = false;
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    if (enableHCaptcha && !captchaToken) {
+      status.textContent = 'Please complete the CAPTCHA verification.';
+      return;
+    }
     status.textContent = successMessage;
     form.reset();
+    if (enableHCaptcha) {
+      captchaToken = '';
+      submit.disabled = true;
+      if (window.hcaptcha && captchaWidgetId !== undefined) window.hcaptcha.reset(captchaWidgetId);
+    }
   });
 
-  wireDisclosure(trigger, form, panel);
-  return panel;
+  const initializeCaptcha = (): void => {
+    if (!enableHCaptcha || captchaInitialized) return;
+    captchaInitialized = true;
+
+    const siteKey =
+      getHCaptchaSiteKey() ||
+      document.head.querySelector<HTMLMetaElement>('meta[name="hcaptcha-site-key"]')?.content?.trim() ||
+      '';
+
+    if (!siteKey) {
+      status.textContent = 'CAPTCHA is unavailable. Please try again later.';
+      return;
+    }
+
+    loadHCaptcha()
+      .then((hcaptcha) => {
+        captchaWidgetId = hcaptcha.render(captcha, {
+          sitekey: siteKey,
+          callback: (token) => {
+            captchaToken = token;
+            submit.disabled = false;
+            status.textContent = '';
+          },
+          'expired-callback': () => {
+            captchaToken = '';
+            submit.disabled = true;
+            status.textContent = 'Please complete the CAPTCHA verification.';
+          },
+          'error-callback': () => {
+            captchaToken = '';
+            submit.disabled = true;
+            status.textContent = 'CAPTCHA verification failed. Please try again.';
+          },
+        });
+      })
+      .catch((error: unknown) => {
+        console.error('Text with CTA CAPTCHA error:', error);
+        captchaToken = '';
+        submit.disabled = true;
+        status.textContent = 'CAPTCHA is unavailable. Please try again later.';
+      });
+  };
+
+  wireDisclosure(trigger, form, panel, initializeCaptcha);
+  return { panel, initializeCaptcha };
 }
 
 export default function decorate(block: HTMLElement): void {
@@ -252,8 +329,13 @@ export default function decorate(block: HTMLElement): void {
   }
 
   const aside = el('div', `${BLOCK}-aside`);
-  itemRows.forEach((row) => aside.append(buildSignupForm(row)));
+  const signupForms = itemRows.map((row) => buildSignupForm(row));
+  signupForms.forEach(({ panel }) => aside.append(panel));
 
   block.textContent = '';
   block.append(text, aside);
+  signupForms.forEach(({ panel, initializeCaptcha }) => {
+    const form = panel.querySelector('form');
+    if (form && !form.hidden) initializeCaptcha();
+  });
 }
