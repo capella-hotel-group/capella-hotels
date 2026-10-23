@@ -10,9 +10,6 @@ const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubsc
 // /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
 
-// Temporarily disabled while performance scoring is evaluated.
-const HCAPTCHA_ENABLED = false;
-
 // Visitor-entered fields that are all mandatory. Submission is rejected (and
 // never sent) if any of these is missing or blank.
 const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'country'];
@@ -55,6 +52,7 @@ const ROW = {
   PROPERTY_OPTIONS: 10,
   TRIGGER_LABEL: 11,
   LAYOUT: 12,
+  ENABLE_HCAPTCHA: 13,
 };
 
 /** Reads the trimmed text of an authored row's value cell. */
@@ -276,8 +274,8 @@ function resolveFallbackCode(): string {
  * `env.js` (the "environment variable" equivalent in EDS); falls back to the
  * `hcaptcha-site-key` <meta> tag when no environment key is configured.
  */
-function getHCaptchaSiteKey(): string {
-  if (!HCAPTCHA_ENABLED) return '';
+function getHCaptchaSiteKey(enabled: boolean): string {
+  if (!enabled) return '';
   return (
     getEnvHCaptchaSiteKey() ||
     document.head.querySelector<HTMLMetaElement>('meta[name="hcaptcha-site-key"]')?.content?.trim() ||
@@ -295,8 +293,7 @@ interface CaptchaController {
  * through `onChange` (rather than touching the submit button directly), so a
  * caller can combine it with other gating conditions (e.g. a consent
  * checkbox). Returns a getter for the current token (empty when unsolved). On
- * any failure `onChange(true)` is reported so the form still works — server-side
- * verification remains the source of truth.
+ * any failure `onChange(false)` is reported so an enabled CAPTCHA fails closed.
  */
 async function setupCaptcha(
   container: HTMLElement,
@@ -324,7 +321,7 @@ async function setupCaptcha(
     });
   } catch (error) {
     console.error('Newsletter captcha error:', error);
-    onChange(true);
+    onChange(false);
     return { getToken: () => '', reset: () => {} };
   }
 
@@ -693,6 +690,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     propertyPath: rowLink(rows, ROW.PROPERTY_OPTIONS),
     triggerLabel: rowText(rows, ROW.TRIGGER_LABEL) || 'Subscribe',
     layout: rowText(rows, ROW.LAYOUT) === 'Inline' ? 'Inline' : 'Modal',
+    enableHCaptcha: rowText(rows, ROW.ENABLE_HCAPTCHA).toLowerCase() === 'true',
   };
 
   // Load dropdown options and the property mapping from the authored Content
@@ -718,7 +716,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // hCaptcha widget mount point. The submit button starts disabled whenever a
   // captcha is configured and/or (in `Inline`) consent is required, until the
   // combined gate below reports both conditions satisfied.
-  const siteKey = getHCaptchaSiteKey();
+  const siteKey = getHCaptchaSiteKey(cfg.enableHCaptcha);
   const captchaWrapper = document.createElement('div');
   captchaWrapper.className = 'newsletter-captcha';
 
@@ -735,7 +733,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   let consentCheckbox: HTMLInputElement | null = null;
   const gate = createSubmitGate(submitBtn, {
     requireConsent: cfg.layout === 'Inline',
-    requireCaptcha: !!siteKey,
+    requireCaptcha: cfg.enableHCaptcha,
   });
 
   if (cfg.layout === 'Inline') {
@@ -811,6 +809,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   // Render the captcha (if configured) and combine it with any consent gating.
   const captcha = siteKey ? await setupCaptcha(captchaWrapper, siteKey, (ok) => gate.setCaptcha(ok)) : null;
+  if (cfg.enableHCaptcha && !siteKey) {
+    showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+  }
 
   // ── Wire up submission ───────────────────────────────────────────────────
   form.addEventListener('submit', (event) => {
@@ -822,7 +823,11 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       return;
     }
     if (blocked === 'captcha') {
-      showMessage(message, 'Please complete the captcha.', 'error');
+      showMessage(
+        message,
+        siteKey ? 'Please complete the captcha.' : 'CAPTCHA is unavailable. Please try again later.',
+        'error',
+      );
       return;
     }
     if (!form.checkValidity()) {
