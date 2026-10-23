@@ -314,7 +314,8 @@
     .hero-video-item-btn {
         font-size: var(--typography-fontsize-heading-h3);
         line-height: var(--typography-line-height-heading-h3);
-        padding: 0.4rem 0;
+        padding: 4px 0;
+        max-height: 44px;
     }
 
     .hero-video-controls {
