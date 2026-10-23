@@ -14,11 +14,12 @@ const mockGetSiteKey = jest.mocked(getHCaptchaSiteKey);
 function buildBlock({
   enableHCaptcha,
   layout = 'Modal',
-}: { enableHCaptcha?: string; layout?: string } = {}): HTMLElement {
+  salutationValue = '<ul><li>Mr</li><li>Mrs</li><li>Ms</li></ul>',
+}: { enableHCaptcha?: string; layout?: string; salutationValue?: string } = {}): HTMLElement {
   const values = [
     'Newsletter',
     'Salutation',
-    '',
+    salutationValue,
     'First name',
     'Last name',
     'Email',
@@ -93,5 +94,20 @@ describe('newsletter-form hCaptcha toggle', () => {
       'CAPTCHA is unavailable. Please try again later.',
     );
     expect(document.querySelector('.newsletter-captcha')?.childElementCount).toBe(0);
+  });
+
+  it.each(['Modal', 'Inline'])('uses repeatable salutation options in %s layout', async (layout) => {
+    Object.assign(window, { hlx: { codeBasePath: '' } });
+    await decorate(buildBlock({ layout }));
+
+    const select = document.querySelector<HTMLSelectElement>('select[name="salutation"]')!;
+    expect([...select.options].slice(1).map((option) => option.textContent)).toEqual(['Mr', 'Mrs', 'Ms']);
+  });
+
+  it('falls back to standard salutations for legacy Content Fragment paths', async () => {
+    await decorate(buildBlock({ salutationValue: '<a href="/content/dam/salutations">/content/dam/salutations</a>' }));
+
+    const select = document.querySelector<HTMLSelectElement>('select[name="salutation"]')!;
+    expect([...select.options].slice(1).map((option) => option.textContent)).toEqual(['Mr', 'Mrs', 'Ms', 'Mx', 'Dr']);
   });
 });

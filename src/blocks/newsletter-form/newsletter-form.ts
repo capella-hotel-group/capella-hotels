@@ -19,6 +19,7 @@ const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'countr
 const FORM_SOURCE = 'Newsletter';
 
 const CONSENT_REQUIRED_MESSAGE = 'Please accept the consent to continue.';
+const DEFAULT_SALUTATION_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Mx', 'Dr'];
 
 // Per-instance suffix so ids stay unique when several newsletter blocks share a page.
 let instanceCount = 0;
@@ -33,11 +34,8 @@ const GROUP_PROPERTY_CODE = 'CHG';
 const NON_HOTEL_PROPERTY_CODE = 'CHR';
 
 // Authored row order — must match the field order in `_newsletter-form.json`.
-// SALUTATION_OPTIONS, COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment
-// paths: the first two populate the dropdowns, the last provides the
-// location → Property/Source mapping used on submit. LAYOUT was appended
-// after every pre-existing field (rather than inserted) so earlier indices
-// never shift for already-authored content.
+// COUNTRY_OPTIONS and PROPERTY_OPTIONS are Content Fragment paths; salutation
+// choices are authored as a repeatable list in their own cell.
 const ROW = {
   TITLE: 0,
   SALUTATION_LABEL: 1,
@@ -75,6 +73,26 @@ function rowLink(rows: Element[], index: number): string {
   if (!cell) return '';
   const link = cell.querySelector('a');
   return (link?.getAttribute('href') || cell.textContent || '').trim();
+}
+
+/** Reads repeatable salutation items, with a fallback for legacy CF paths. */
+function rowList(rows: Element[], index: number): string[] {
+  const cell = rows[index]?.querySelector(':scope > div');
+  if (!cell) return DEFAULT_SALUTATION_OPTIONS;
+
+  const items = [...cell.querySelectorAll('li')].map((item) => item.textContent?.trim() ?? '').filter(Boolean);
+  if (items.length) return items;
+
+  const authoredText = cell.textContent?.trim() ?? '';
+  if (!authoredText || cell.querySelector('a') || authoredText.startsWith('/content/')) {
+    return DEFAULT_SALUTATION_OPTIONS;
+  }
+
+  const options = authoredText
+    .split(',')
+    .map((option) => option.trim())
+    .filter(Boolean);
+  return options.length ? options : DEFAULT_SALUTATION_OPTIONS;
 }
 
 interface NormalizedOption {
@@ -679,7 +697,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const cfg = {
     title: rowText(rows, ROW.TITLE) || 'Subscribe to our newsletter',
     salutationLabel: rowText(rows, ROW.SALUTATION_LABEL) || 'Salutation',
-    salutationPath: rowLink(rows, ROW.SALUTATION_OPTIONS),
+    salutationOptions: rowList(rows, ROW.SALUTATION_OPTIONS),
     firstNameLabel: rowText(rows, ROW.FIRST_NAME) || 'First Name',
     lastNameLabel: rowText(rows, ROW.LAST_NAME) || 'Last Name',
     emailLabel: rowText(rows, ROW.EMAIL) || 'Email Address',
@@ -695,8 +713,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   // Load dropdown options and the property mapping from the authored Content
   // Fragments (in parallel). Only fragment data is used — nothing is hardcoded.
-  const [salutationOptions, countryOptions, properties] = await Promise.all([
-    fetchOptions(cfg.salutationPath),
+  const [countryOptions, properties] = await Promise.all([
     fetchOptions(cfg.countryPath),
     fetchProperties(cfg.propertyPath),
   ]);
@@ -740,7 +757,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     submitBtn.className = 'newsletter-inline-submit';
 
     const salutation = buildInlineField(
-      buildSelect('salutation', cfg.salutationLabel, salutationOptions),
+      buildSelect('salutation', cfg.salutationLabel, cfg.salutationOptions),
       cfg.salutationLabel,
     );
     const firstName = buildInlineField(buildInput('firstName', 'text', cfg.firstNameLabel), cfg.firstNameLabel);
@@ -767,7 +784,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const salutation = buildField(
       'newsletter-salutation',
       cfg.salutationLabel,
-      buildSelect('salutation', 'Select', salutationOptions),
+      buildSelect('salutation', 'Select', cfg.salutationOptions),
     );
 
     const firstName = buildField(
