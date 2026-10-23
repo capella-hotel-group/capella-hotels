@@ -1,6 +1,6 @@
-import type { HCaptchaApi } from '@/types/hcaptcha.js';
 import { getPageLang } from '@/app/scripts.js';
 import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
+import { loadHCaptcha } from '@/utils/hcaptcha.js';
 
 // Fixed submission endpoint — resolved per environment, not author-editable.
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
@@ -9,11 +9,6 @@ const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubsc
 // authored CF path is appended as `;path=<cfPath>`, e.g.
 // /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
-
-// hCaptcha JS API, loaded on demand. `render=explicit` lets us mount the widget
-// ourselves (rather than auto-scanning the DOM), which is what we need inside a
-// dynamically decorated block.
-const HCAPTCHA_API_SRC = 'https://js.hcaptcha.com/1/api.js?render=explicit';
 
 // Temporarily disabled while performance scoring is evaluated.
 const HCAPTCHA_ENABLED = false;
@@ -288,30 +283,6 @@ function getHCaptchaSiteKey(): string {
     document.head.querySelector<HTMLMetaElement>('meta[name="hcaptcha-site-key"]')?.content?.trim() ||
     ''
   );
-}
-
-// Single shared promise so the hCaptcha API script is loaded at most once, even
-// when several newsletter blocks are present on the page.
-let hcaptchaApiPromise: Promise<HCaptchaApi> | undefined;
-
-/**
- * Loads the hCaptcha JS API on demand and resolves with `window.hcaptcha`.
- * Rejects if the script fails to load.
- */
-function loadHCaptcha(): Promise<HCaptchaApi> {
-  if (window.hcaptcha) return Promise.resolve(window.hcaptcha);
-  if (hcaptchaApiPromise) return hcaptchaApiPromise;
-
-  hcaptchaApiPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = HCAPTCHA_API_SRC;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => (window.hcaptcha ? resolve(window.hcaptcha) : reject(new Error('hCaptcha API unavailable')));
-    script.onerror = () => reject(new Error('Failed to load hCaptcha API'));
-    document.head.append(script);
-  });
-  return hcaptchaApiPromise;
 }
 
 interface CaptchaController {
