@@ -49,6 +49,46 @@
 						{ "name": "Experience", "value": "experience" },
 						{ "name": "Dining", "value": "dining" }
 					]
+				},
+				{
+					"component": "boolean",
+					"name": "enableCategoryFilters",
+					"label": "Enable Category Filters",
+					"description": "Show the category selection bar above the cards.",
+					"valueType": "boolean",
+					"value": true
+				},
+				{
+					"component": "aem-tag",
+					"name": "categoryRootTag",
+					"label": "Category Root Tag",
+					"description": "Direct child tags define the category selection bar, including categories with no matching cards.",
+					"valueType": "string",
+					"multi": false,
+					"value": "/content/cq:tags/capella-hotels/accomodation"
+				},
+				{
+					"component": "boolean",
+					"name": "enableLoadMore",
+					"label": "Enable Load More",
+					"valueType": "boolean",
+					"value": false
+				},
+				{
+					"component": "number",
+					"name": "cardsPerLoad",
+					"label": "Cards Per Load",
+					"description": "Initial card count and number revealed on each click when Load More is enabled.",
+					"valueType": "number",
+					"value": 6,
+					"validation": { "numberMin": 1 }
+				},
+				{
+					"component": "text",
+					"name": "loadMoreLabel",
+					"label": "Load More Label",
+					"valueType": "string",
+					"value": "Load More"
 				}
 			]
 		}

@@ -80,6 +80,13 @@
           "label": "Content Fragment",
           "multi": false,
           "required": true
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "showOverlay",
+          "label": "Show image overlay",
+          "value": true
         }
       ]
     }

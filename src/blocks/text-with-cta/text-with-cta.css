@@ -162,6 +162,11 @@
     width: 100%;
 }
 
+.text-with-cta .text-with-cta-captcha {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 .text-with-cta .text-with-cta-form-row {
     display: flex;
     flex-direction: column;

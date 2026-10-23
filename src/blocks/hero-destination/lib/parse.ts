@@ -1,7 +1,7 @@
 // src/blocks/hero-destination/lib/parse.ts
 // Rows (authored): config rows have a single cell (0=autoplay, 1=autoplayInterval, 2=loop,
 // 3=transitionEffect, 4=simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
-// video, videoMobile, heading fields, but conditionally-hidden fields can drop their cell from
+// video, videoMobile, showOverlay, heading fields, but conditionally-hidden fields can drop their cell from
 // the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
 import type { EffectName } from './effects/types';
@@ -9,6 +9,7 @@ import type { HeroDestinationItem } from './types';
 
 const DEFAULT_INTERVAL_SECONDS = 3;
 const DEFAULT_EFFECT: EffectName = 'fade';
+const BOOLEAN_TEXTS = ['true', 'false', 'yes', 'no'];
 
 export interface CarouselConfig {
   autoplay: boolean;
@@ -63,8 +64,13 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
   const headingCell = cells[cells.length - 1];
   const heading = cellText(headingCell);
 
+  // showOverlay sits right before heading; legacy rows without it default to showing the overlay.
+  const overlayCandidate = cells.length > 2 ? cells[cells.length - 2] : undefined;
+  const overlayCell = BOOLEAN_TEXTS.includes(cellText(overlayCandidate).toLowerCase()) ? overlayCandidate : undefined;
+  const showOverlay = parseBoolean(overlayCell, true);
+
   const mediaType = cellText(cells[0]).toLowerCase();
-  const otherCells = cells.slice(0, -1);
+  const otherCells = cells.slice(0, -1).filter((cell) => cell !== overlayCell);
   const pictureCells = otherCells.filter((cell) => cell.querySelector('picture'));
   const videoCells = otherCells.filter((cell) => cellVideoUrl(cell));
 
@@ -75,7 +81,7 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
     const desktopVideoUrl = cellVideoUrl(videoCells[0]);
     if (desktopVideoUrl) {
       const mobileVideoUrl = cellVideoUrl(videoCells[1]) || desktopVideoUrl;
-      return { mediaType: 'video', desktopVideoUrl, mobileVideoUrl, heading, sourceRow: row };
+      return { mediaType: 'video', desktopVideoUrl, mobileVideoUrl, heading, showOverlay, sourceRow: row };
     }
   } else {
     const desktopPicture = pictureCells[0]?.querySelector('picture');
@@ -88,10 +94,11 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
         mobilePicture,
         imageAlt: cellText(altCell),
         heading,
+        showOverlay,
         sourceRow: row,
       };
     }
   }
 
-  return { mediaType: 'empty', heading, sourceRow: row };
+  return { mediaType: 'empty', heading, showOverlay, sourceRow: row };
 }

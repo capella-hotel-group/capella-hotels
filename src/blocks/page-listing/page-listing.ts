@@ -209,10 +209,12 @@ function createCard(record: ListingRecord): HTMLElement {
   card.className = 'page-listing-card';
   const parsed = new DOMParser().parseFromString(record.listHtml || '', 'text/html');
   const rows = Array.from(parsed.body.children);
+  const cardTitle = textOf(rows[3]);
+  const cardDescription = textOf(rows[4]);
   const category = readTags(rows[2])[0] || '';
   card.dataset.category = category;
   const tags = readTags(rows[5]);
-  const media = createMedia(record, parsed);
+  const media = createMedia({ ...record, title: cardTitle }, parsed);
   if (media) card.append(media);
 
   const content = document.createElement('div');
@@ -227,7 +229,7 @@ function createCard(record: ListingRecord): HTMLElement {
 
   const title = document.createElement('h2');
   title.className = 'page-listing-card-title';
-  title.textContent = record.title?.trim() || 'Explore';
+  title.textContent = cardTitle || 'Explore';
 
   const pageUrl = getPageUrl(record.path);
   if (pageUrl) {
@@ -238,10 +240,10 @@ function createCard(record: ListingRecord): HTMLElement {
   }
   content.append(title);
 
-  if (record.description?.trim()) {
+  if (cardDescription) {
     const description = document.createElement('p');
     description.className = 'page-listing-card-description';
-    description.textContent = record.description.trim();
+    description.textContent = cardDescription;
     content.append(description);
   }
 
@@ -265,42 +267,117 @@ function createCard(record: ListingRecord): HTMLElement {
   return card;
 }
 
-function createFilters(cards: HTMLElement[], results: HTMLElement): void {
-  const categories = new Map<string, number>();
-  cards.forEach((card) => {
-    const category = card.dataset.category || '';
-    if (category) categories.set(category, (categories.get(category) || 0) + 1);
+interface CategoryTag {
+  id: string;
+  title: string;
+}
+
+async function loadCategories(rootTag: string): Promise<CategoryTag[]> {
+  const normalized = normalizeTag(rootTag);
+  const separator = normalized.indexOf(':');
+  if (separator < 1) return [];
+  const tagPath = `/content/cq:tags/${normalized.slice(0, separator)}/${normalized.slice(separator + 1)}`;
+  const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
+  url.searchParams.set('tag', tagPath);
+  try {
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error(`Category request failed: ${response.status}`);
+    const payload = await response.json() as { data?: Array<{ path?: string; title?: string }> };
+    const categories: CategoryTag[] = [];
+    for (const child of payload.data || []) {
+      if (typeof child.path !== 'string' || typeof child.title !== 'string') continue;
+      if (!child.path.startsWith(`${tagPath}/`) || child.path.slice(tagPath.length + 1).includes('/')) continue;
+      const id = normalizeTag(child.path);
+      if (categories.some((category) => category.id === id)) continue;
+      categories.push({ id, title: child.title });
+      tagTitles.set(id, Promise.resolve(child.title));
+    }
+    return categories;
+  } catch (error) {
+    console.warn('[page-listing] Could not load category tags.', error);
+    return [];
+  }
+}
+
+interface LoadMoreConfig {
+  enabled: boolean;
+  batchSize: number;
+  label: string;
+}
+
+function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config: LoadMoreConfig): (category: string) => void {
+  let selectedCategory = '';
+  let visibleCount = config.batchSize;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'page-listing-load-more';
+  button.dataset.testid = 'page-listing-load-more';
+  button.textContent = config.label;
+  const update = (): void => {
+    let matched = 0;
+    cards.forEach((card) => {
+      const matches = !selectedCategory || card.dataset.category === selectedCategory;
+      card.hidden = !matches || (config.enabled && matched >= visibleCount);
+      if (matches) matched += 1;
+    });
+    button.hidden = !config.enabled || matched <= visibleCount;
+  };
+  button.addEventListener('click', () => {
+    const firstHidden = cards.find((card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory));
+    visibleCount += config.batchSize;
+    update();
+    if (button.hidden) firstHidden?.querySelector<HTMLElement>('a, button')?.focus();
   });
-  if (!categories.size) return;
+  if (config.enabled) results.after(button);
+  update();
+  return (category: string): void => {
+    selectedCategory = category;
+    visibleCount = config.batchSize;
+    update();
+  };
+}
+
+function createFilters(
+  cards: HTMLElement[],
+  results: HTMLElement,
+  categories: CategoryTag[],
+  selectCategory: (category: string) => void,
+): void {
+  if (!categories.length) return;
   const filters = document.createElement('div');
   filters.className = 'page-listing-filters';
   filters.setAttribute('role', 'group');
   filters.setAttribute('aria-label', 'Filter by category');
   const buttons: HTMLButtonElement[] = [];
-  const addFilter = (category: string, count: number): void => {
+  const addFilter = (category: string, count: number, title: string): void => {
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.testid = 'page-listing-category-filter';
     button.setAttribute('aria-pressed', String(!category));
     const label = document.createElement('span');
-    if (category) setTagTitle(label, category);
-    else label.textContent = 'All';
+    label.textContent = title;
     button.append(label, ` (${count})`);
     button.addEventListener('click', () => {
       buttons.forEach((entry) => entry.setAttribute('aria-pressed', String(entry === button)));
-      cards.forEach((card) => { card.hidden = Boolean(category && card.dataset.category !== category); });
+      selectCategory(category);
     });
     buttons.push(button);
     filters.append(button);
   };
-  addFilter('', cards.length);
-  categories.forEach((count, category) => addFilter(category, count));
+  addFilter('', cards.length, 'All');
+  categories.forEach((category) => {
+    const count = cards.filter((card) => card.dataset.category === category.id).length;
+    addFilter(category.id, count, category.title);
+  });
   results.before(filters);
 }
 
 async function loadListings(
   type: ListingType,
   location: string,
+  enableCategoryFilters: boolean,
+  categoryRootTag: string,
+  loadMore: LoadMoreConfig,
   status: HTMLElement,
   results: HTMLElement,
 ): Promise<void> {
@@ -323,9 +400,11 @@ async function loadListings(
     const matchingRecords = records.filter(
       (record) => locationFromPath(record.path) === location,
     );
+    const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
     const cards = matchingRecords.map(createCard);
     results.append(...cards);
-    createFilters(cards, results);
+    const selectCategory = createCardVisibility(cards, results, loadMore);
+    if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
     status.textContent = matchingRecords.length
       ? ''
       : `No listings are available for ${location}.`;
@@ -338,12 +417,21 @@ export default function decorate(block: HTMLElement): void {
   if (block.querySelector(':scope > .page-listing-results')) return;
 
   const rows = [...block.children] as HTMLElement[];
-  const [typeRow] = applyBlockIdentity(block, rows, {
-    contentRows: 1,
+  const configRows = applyBlockIdentity(block, rows, {
+    contentRows: Math.max(1, rows.length - 2),
     hiddenClass: 'page-listing-config',
   });
+  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow] = configRows;
   const type = readListingType(typeRow);
-  typeRow?.classList.add('page-listing-config');
+  configRows.forEach((row) => row.classList.add('page-listing-config'));
+  const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
+  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accomodation';
+  const count = Number(textOf(countRow));
+  const loadMore: LoadMoreConfig = {
+    enabled: textOf(loadMoreRow).toLowerCase() === 'true',
+    batchSize: Number.isFinite(count) && count >= 1 ? Math.floor(count) : 6,
+    label: textOf(labelRow) || 'Load More',
+  };
   const location = locationFromPath(window.location.pathname);
 
   const status = document.createElement('p');
@@ -354,5 +442,5 @@ export default function decorate(block: HTMLElement): void {
   results.className = 'page-listing-results';
 
   block.append(status, results);
-  void loadListings(type, location, status, results);
+  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, status, results);
 }

@@ -121,8 +121,11 @@ header {
     text-transform: uppercase;
 }
 
-.header-menu-toggle[aria-expanded='true'] .header-menu-toggle-label {
-    display: inline;
+/* Figma's mobile close control is the cross only; the CLOSE text appears from tablet up. */
+@media (min-width: 768px) {
+    .header-menu-toggle[aria-expanded='true'] .header-menu-toggle-label {
+        display: inline;
+    }
 }
 
 .header-logo {
@@ -387,7 +390,9 @@ header .header-cta:active {
 }
 
 .header-menu-category {
-    padding-block: var(--dimension-layout-module-gutter-s, 16px);
+    /* Figma's divider is a zero-height line between two equal gutters, so the 1px border is taken from the bottom gutter. */
+    padding-block: var(--dimension-layout-module-gutter-s, 16px)
+        calc(var(--dimension-layout-module-gutter-s, 16px) - 1px);
     border-bottom: 1px solid var(--color-stroke-main-primary, #898987);
 }
 
@@ -426,18 +431,19 @@ header .header-cta:active {
     font-weight: var(--type-font-weight-body-reg, 400);
 }
 
+/* Figma Button/action-icon: a 40px box holding the 28px chevron (2px stroke) in the heading colour, regardless of the label's inactive grey. */
 button.header-menu-category-trigger::after {
     content: '';
-    width: 8px;
-    height: 8px;
-    border: solid currentcolor;
-    border-width: 0 1px 1px 0;
-    transform: rotate(45deg);
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    background: var(--color-text-main-heading, #1b364b);
+    mask: url('/icons/chevron-down-28.svg') center / 28px 28px no-repeat;
     transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .header-menu-category[data-active='true'] button.header-menu-category-trigger::after {
-    transform: rotate(-135deg);
+    transform: rotate(180deg);
 }
 
 .header-menu-category-content {
@@ -455,7 +461,10 @@ button.header-menu-category-trigger::after {
     /* Matches Figma's gap between the accordion trigger and its opened content:
        --dimension-layout-module-gutter-s is 16px on mobile, 24px from tablet up. */
     padding-top: var(--dimension-layout-module-gutter-s, 16px);
-    padding-bottom: 0;
+    /* Cap-height trimming leaves the last line's descenders (e.g. a note's parentheses) outside the box, where overflow
+       would clip them; the padding gives them room and the negative margin keeps the layout height unchanged. */
+    padding-bottom: 4px;
+    margin-bottom: -4px;
     opacity: 0;
     transform: translateY(-4px);
     transition:
@@ -479,11 +488,37 @@ button.header-menu-category-trigger::after {
 }
 
 .header-menu-merged-row {
-    display: block;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 107px);
+    gap: 24px 48px;
 }
 
-.header-menu-merged-cell + .header-menu-merged-cell {
-    margin-top: 32px;
+/* Below desktop (Figma mobile/tablet) every region is a full-width label above one 107px link grid, so
+   the cells' labels and links flow straight into the row's grid instead of stacking as separate cells. */
+@media not all and (min-width: 1200px) {
+    .header-menu-merged-cell {
+        display: contents;
+    }
+
+    .header-menu-merged-cell .header-menu-region-label {
+        grid-column: 1 / -1;
+        margin: 0;
+    }
+
+    .header-menu-merged-cell:not(:first-child) .header-menu-region-label:not([aria-hidden='true']) {
+        margin-top: 8px;
+    }
+
+    .header-menu-merged-cell .header-menu-region-label[aria-hidden='true'] {
+        display: none;
+    }
+
+    /* A row that only continues the previous region's links keeps the 24px link gap, not the 32px region gap. */
+    .header-menu-merged-row:has(
+        > .header-menu-merged-cell:first-child > .header-menu-region-label[aria-hidden='true']
+    ) {
+        margin-top: 24px;
+    }
 }
 
 .header-menu-region-label {
@@ -493,15 +528,16 @@ button.header-menu-category-trigger::after {
     font-size: var(--typography-fontsize-body-s, 14px);
     font-weight: var(--type-font-weight-body-reg, 400);
     line-height: var(--typography-line-height-body-sm, 16px);
+    text-box: trim-both cap alphabetic;
     text-transform: uppercase;
 }
 
 .header-menu-link-grid {
     display: grid;
-    /* Let columns drop to the next row instead of forcing a fixed count and breaking
-       long, unbreakable labels (e.g. "SHENZHEN(2029)") mid-word to make them fit. */
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px 24px;
+    /* Figma wraps fixed 107px link cells with a 24px/48px gap (2 per row on mobile, 3 on
+       tablet); columns drop to the next row instead of squeezing long labels. */
+    grid-template-columns: repeat(auto-fill, 107px);
+    gap: 24px 48px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -518,12 +554,14 @@ button.header-menu-category-trigger::after {
 .header-menu-merged-cell a {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: var(--dimension-spacing-general-xs, 8px);
+    min-height: 24px;
     color: var(--color-text-main-heading, #1b364b);
     font-family: var(--type-font-family-body, sans-serif);
     font-size: var(--typography-fontsize-body-l, 20px);
     font-weight: 300;
-    line-height: 24px;
+    line-height: var(--typography-line-height-body-md, 16px);
     text-transform: uppercase;
     text-decoration: none;
 }
@@ -538,19 +576,44 @@ button.header-menu-category-trigger::after {
 .header-menu-merged-cell .nav-link.is-disabled {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: var(--dimension-spacing-general-xs, 8px);
+    min-height: 24px;
     color: var(--color-text-main-disabled, #6e6e6c);
     font-family: var(--type-font-family-body, sans-serif);
     font-size: var(--typography-fontsize-body-l, 20px);
     font-weight: 300;
-    line-height: 24px;
+    line-height: var(--typography-line-height-body-md, 16px);
     text-transform: uppercase;
+}
+
+/* In a row that mixes one- and two-line links, align the first lines instead of centring the single-line ones in their 24px box. */
+.header-menu-link-grid:has(.nav-link-note) a,
+.header-menu-link-grid:has(.nav-link-note) .nav-link.is-disabled,
+.header-menu-merged-row:has(.nav-link-note) a,
+.header-menu-merged-row:has(.nav-link-note) .nav-link.is-disabled {
+    justify-content: flex-start;
+}
+
+/* Figma trims each text line to its cap height, so the 24px link box and 8px label/note gap are measured glyph to glyph. */
+.header-menu-link-grid .nav-link-label,
+.header-menu-merged-cell .nav-link-label,
+.header-menu-link-grid .nav-link-note,
+.header-menu-merged-cell .nav-link-note {
+    text-box: trim-both cap alphabetic;
 }
 
 .header-menu-link-grid .nav-link-note,
 .header-menu-merged-cell .nav-link-note {
     font-size: var(--typography-fontsize-body-s, 14px);
     line-height: var(--typography-line-height-body-sm, 16px);
+}
+
+@media (min-width: 768px) {
+    .header-menu-link-grid .nav-link-note,
+    .header-menu-merged-cell .nav-link-note {
+        line-height: 16px;
+    }
 }
 
 .header-menu-promo {
@@ -722,12 +785,14 @@ button.header-menu-category-trigger::after {
         border-bottom: 1px solid var(--color-stroke-main-primary, #898987);
     }
 
+    /* Figma measures the 28px gaps from the cap-height-trimmed text to the divider (the 1px border takes one of them). */
     .header-menu-category-trigger {
-        align-items: center;
+        display: block;
         min-height: auto;
-        padding: 28px 0;
+        padding: 28px 0 27px;
         margin: 0;
         border-bottom: 0;
+        text-box: trim-both cap alphabetic;
     }
 
     .header-menu-category:first-child .header-menu-category-trigger {
@@ -736,10 +801,6 @@ button.header-menu-category-trigger::after {
 
     .header-menu-category:last-child {
         border-bottom: 0;
-    }
-
-    .header-menu-region-label {
-        line-height: 24px;
     }
 
     button.header-menu-category-trigger::after {
@@ -778,7 +839,6 @@ button.header-menu-category-trigger::after {
         /* Desktop's rail content is positioned via .header-menu-category-content's own
            top offset, not the accordion's open/close gap. */
         padding-top: 0;
-        padding-bottom: 0;
     }
 
     .header-menu-promo {
@@ -794,32 +854,13 @@ button.header-menu-category-trigger::after {
         aspect-ratio: 240 / 300;
     }
 
-    .header-menu-link-grid {
-        /* Fixed 4-column grid at this breakpoint (matches Figma node 6968:25912's desktop
-           mega-menu, where every region wraps at exactly 4 items per row) — the fluid
-           auto-fit used at smaller breakpoints only fits 3 columns in this rail's content
-           pane width, one short of the reference. */
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 24px 48px;
-    }
-
-    .header-menu-merged-row {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 24px 48px;
-    }
-
-    .header-menu-merged-cell + .header-menu-merged-cell {
-        margin-top: 0;
-    }
-
     .header-menu-link-grid a,
     .header-menu-merged-cell a,
     .header-menu-link-grid .nav-link.is-disabled,
     .header-menu-merged-cell .nav-link.is-disabled {
         /* Caps a link's title to the column's own width so a long, unbreakable label
            (e.g. "SHENZHEN(2029)") wraps onto a second line instead of overflowing past
-           the fixed 4-column track into the next column. */
+           the 107px column track into the next column. */
         max-width: 107px;
         overflow-wrap: break-word;
     }

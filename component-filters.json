@@ -45,7 +45,8 @@
       "footer-links",
       "footer-legal",
       "content-listing",
-      "page-listing"
+      "page-listing",
+      "booking-search"
     ]
   },
   {
@@ -63,6 +64,12 @@
     "id": "awards-list",
     "components": [
       "awards-list-item"
+    ]
+  },
+  {
+    "id": "booking-search",
+    "components": [
+      "booking-search-location"
     ]
   },
   {

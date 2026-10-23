@@ -359,6 +359,149 @@
     ]
   },
   {
+    "id": "booking-search",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Block ID",
+        "description": "Sets the id attribute on the block, usable as an anchor target.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "dataTestId",
+        "label": "Data Test ID",
+        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "locationLabel",
+        "label": "Location Label",
+        "description": "Shown on the selector until a location is picked.",
+        "valueType": "string",
+        "required": true,
+        "value": "LOCATION"
+      },
+      {
+        "component": "text",
+        "name": "datesLabel",
+        "label": "Arrival/Depart Label",
+        "description": "Shown on the selector until both dates are picked.",
+        "valueType": "string",
+        "required": true,
+        "value": "ARRIVAL/DEPART"
+      },
+      {
+        "component": "text",
+        "name": "guestSingularLabel",
+        "label": "Guest Label (singular)",
+        "description": "Used after the number when exactly one guest is selected.",
+        "valueType": "string",
+        "required": true,
+        "value": "GUEST"
+      },
+      {
+        "component": "text",
+        "name": "guestPluralLabel",
+        "label": "Guests Label (plural)",
+        "valueType": "string",
+        "required": true,
+        "value": "GUESTS"
+      },
+      {
+        "component": "text",
+        "name": "adultsLabel",
+        "label": "Adults Counter Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Adult"
+      },
+      {
+        "component": "text",
+        "name": "childrenLabel",
+        "label": "Children Counter Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Children"
+      },
+      {
+        "component": "text",
+        "name": "checkRatesLabel",
+        "label": "Check Rates Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Check rates"
+      },
+      {
+        "component": "text",
+        "name": "bookingUrl",
+        "label": "Booking Engine URL",
+        "description": "Absolute https URL. The selected dates, guests and location are appended as query parameters.",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "checkRatesOpenInNewTab",
+        "label": "Open Check Rates in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "doneLabel",
+        "label": "Done Button Label",
+        "description": "Closes the open selector flyout.",
+        "valueType": "string",
+        "required": true,
+        "value": "Done"
+      },
+      {
+        "component": "number",
+        "name": "maxAdults",
+        "label": "Max Adults",
+        "description": "Highest adult count the guests flyout allows (1-20). Totals of 10 or more guests no longer fit the selector label.",
+        "valueType": "number",
+        "value": 6
+      },
+      {
+        "component": "number",
+        "name": "maxChildren",
+        "label": "Max Children",
+        "description": "Highest child count the guests flyout allows (0-20).",
+        "valueType": "number",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "id": "booking-search-location",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Location Name",
+        "description": "Shown in the list and on the selector once picked. Keep it short, e.g. a city name.",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "code",
+        "label": "Property Code",
+        "description": "Sent to the booking engine for this location. Falls back to the name when empty.",
+        "valueType": "string",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "card",
     "fields": [
       {
@@ -815,6 +958,13 @@
         "label": "Content Fragment",
         "multi": false,
         "required": true
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "showOverlay",
+        "label": "Show image overlay",
+        "value": true
       }
     ]
   },
@@ -1827,6 +1977,13 @@
         }
       },
       {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "showOverlay",
+        "label": "Show media overlay",
+        "value": true
+      },
+      {
         "component": "text",
         "valueType": "string",
         "name": "heading",
@@ -1928,6 +2085,13 @@
         "valueType": "string",
         "name": "link",
         "label": "Link"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "openInNewTab",
+        "label": "Open in New Tab",
+        "value": false
       },
       {
         "component": "text",
@@ -2258,10 +2422,20 @@
         "value": "Salutation"
       },
       {
-        "component": "aem-content",
+        "component": "container",
         "name": "salutationOptions",
-        "label": "Salutation Options (Content Fragment path)",
-        "valueType": "string"
+        "label": "Salutation Options",
+        "description": "Add one choice per item (e.g., Mr, Mrs, Ms, Mx, Dr). If left empty, the dropdown defaults to Mr, Mrs, Ms, Mx, Dr.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "option",
+            "label": "Salutation",
+            "valueType": "string",
+            "required": true
+          }
+        ]
       },
       {
         "component": "text",
@@ -2340,6 +2514,14 @@
             "value": "Inline"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "enableHCaptcha",
+        "label": "Enable hCaptcha",
+        "description": "Require hCaptcha verification before submitting the form.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -2522,6 +2704,48 @@
             "value": "dining"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "enableCategoryFilters",
+        "label": "Enable Category Filters",
+        "description": "Show the category selection bar above the cards.",
+        "valueType": "boolean",
+        "value": true
+      },
+      {
+        "component": "aem-tag",
+        "name": "categoryRootTag",
+        "label": "Category Root Tag",
+        "description": "Direct child tags define the category selection bar, including categories with no matching cards.",
+        "valueType": "string",
+        "multi": false,
+        "value": "/content/cq:tags/capella-hotels/accomodation"
+      },
+      {
+        "component": "boolean",
+        "name": "enableLoadMore",
+        "label": "Enable Load More",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "number",
+        "name": "cardsPerLoad",
+        "label": "Cards Per Load",
+        "description": "Initial card count and number revealed on each click when Load More is enabled.",
+        "valueType": "number",
+        "value": 6,
+        "validation": {
+          "numberMin": 1
+        }
+      },
+      {
+        "component": "text",
+        "name": "loadMoreLabel",
+        "label": "Load More Label",
+        "valueType": "string",
+        "value": "Load More"
       }
     ]
   },
@@ -2819,6 +3043,14 @@
         "valueType": "string",
         "required": true,
         "value": "Thank you, your details have been received."
+      },
+      {
+        "component": "boolean",
+        "name": "enableHCaptcha",
+        "label": "Enable hCaptcha",
+        "description": "Require hCaptcha verification before showing the success message.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
