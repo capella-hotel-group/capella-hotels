@@ -37,10 +37,20 @@
           "value": "Salutation"
         },
         {
-          "component": "aem-content",
+          "component": "container",
           "name": "salutationOptions",
-          "label": "Salutation Options (Content Fragment path)",
-          "valueType": "string"
+          "label": "Salutation Options",
+          "description": "Add one choice per item (e.g., Mr, Mrs, Ms, Mx, Dr). If left empty, the dropdown defaults to Mr, Mrs, Ms, Mx, Dr.",
+          "multi": true,
+          "fields": [
+            {
+              "component": "text",
+              "name": "option",
+              "label": "Salutation",
+              "valueType": "string",
+              "required": true
+            }
+          ]
         },
         {
           "component": "text",
