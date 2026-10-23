@@ -2469,7 +2469,7 @@
         "component": "text",
         "name": "countryPlaceholder",
         "label": "Country Field Placeholder",
-        "description": "Optional hint for the required text field. Visitors enter a full country name (e.g., Singapore); it is converted to an ISO alpha-2 code for submission.",
+        "description": "Enter a country name (e.g., Singapore).",
         "valueType": "string",
         "value": "Country (e.g., Singapore)"
       },
