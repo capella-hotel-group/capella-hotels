@@ -1495,18 +1495,10 @@
         "required": true
       },
       {
-        "component": "text",
-        "name": "defaultFilterMode",
-        "label": "Default Filter Mode",
-        "description": "Enter a configured mode label or root tag. Matching ignores label case. A blank or unmatched value selects the first mode.",
-        "valueType": "string",
-        "value": "Experience"
-      },
-      {
         "component": "container",
         "name": "filterModeLabels",
         "label": "Filter Mode Labels",
-        "description": "Configures top mode toggler labels (e.g., EXPERIENCE, DESTINATION, BY INTEREST, BY TYPE) with their root tag. Modes appear in authored order; all child tags are listed as filters.",
+        "description": "Configures top mode toggler labels (e.g., EXPERIENCE, DESTINATION, BY INTEREST, BY TYPE) with their root tag. The checked default appears first; other modes retain authored order. All child tags are listed as filters.",
         "multi": true,
         "fields": [
           {
@@ -1523,6 +1515,14 @@
             "valueType": "string",
             "multi": false,
             "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "isDefault",
+            "label": "Default Active Tab",
+            "description": "Select this mode as the initially active, first tab. Select only one mode. If several are selected, the first selected entry wins; if none are selected, the first mode is used.",
+            "valueType": "boolean",
+            "value": false
           }
         ]
       },
@@ -3025,6 +3025,14 @@
         "valueType": "string",
         "required": true,
         "value": "Thank you, your details have been received."
+      },
+      {
+        "component": "boolean",
+        "name": "enableHCaptcha",
+        "label": "Enable hCaptcha",
+        "description": "Require hCaptcha verification before showing the success message.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
