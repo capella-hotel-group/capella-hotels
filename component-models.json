@@ -2466,10 +2466,12 @@
         "value": "Country"
       },
       {
-        "component": "aem-content",
-        "name": "countryOptions",
-        "label": "Country Options (Content Fragment path)",
-        "valueType": "string"
+        "component": "text",
+        "name": "countryPlaceholder",
+        "label": "Country Field Placeholder",
+        "description": "Optional hint for the required text field. Visitors enter a full country name (e.g., Singapore); it is converted to an ISO alpha-2 code for submission.",
+        "valueType": "string",
+        "value": "Country (e.g., Singapore)"
       },
       {
         "component": "richtext",
