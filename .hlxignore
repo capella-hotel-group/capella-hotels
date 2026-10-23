@@ -6,3 +6,11 @@ package.json
 package-lock.json
 test/*
 _*
+
+# Source, tooling and docs: only the built output is served
+src/
+openspec/
+docs/
+/*.ts
+/*.config.js
+/tsconfig*.json
