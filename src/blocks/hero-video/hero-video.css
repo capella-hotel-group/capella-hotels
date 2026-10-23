@@ -102,13 +102,17 @@
    width never counts toward centering the visible group — only the list and suffix columns do,
    keeping them on true center regardless of "See"'s own text width. column-gap is 0 (not the
    usual token) so that 0-width column doesn't still add a phantom gap on the invisible side —
-   the real gap between list and suffix is added back explicitly via suffix's own margin. */
+   the real gap between list and suffix is added back explicitly via suffix's own margin.
+   Figma (Hero/navigationtoggle): list column is a fixed 282px (122px mobile), suffix hugs its text + arrow. */
 .hero-video-selector {
+    --hero-video-list-width: 282px;
+    --hero-video-arrow-size: 28px;
+
     position: absolute;
     inset: 0;
     z-index: 2;
     display: grid;
-    grid-template-columns: 0 auto auto;
+    grid-template-columns: 0 minmax(var(--hero-video-list-width), max-content) auto;
     justify-content: center;
     align-items: center;
     column-gap: 0;
@@ -131,32 +135,28 @@
     pointer-events: auto;
 }
 
-/* Arrow icon trailing the suffix, vertically centered with the text and scaled to it (em). */
+/* Arrow is an in-flow flex item whose bottom edge sits on the text baseline (glyph is bottom-aligned
+   in Figma's 28px box), so it tracks the glyphs instead of the line box, which varies per OS font metrics. */
 .hero-video-suffix {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4em;
-    margin-left: var(--dimension-spacing-general-l);
+    display: flex;
+    align-items: baseline;
+    margin-inline-start: var(--dimension-spacing-general-l);
 }
 
 .hero-video-suffix::after {
     content: '';
-    position: absolute;
-    right: -20px;
-    top: 50%;
-    transform: translateY(-63%);
     flex: none;
-    height: 0.5em;
-    aspect-ratio: 11 / 20;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='20' viewBox='0 0 11 20' fill='none'%3E%3Cpath d='M0 0C3.73 3.16 7.24 6.56 10.71 10C8.92 11.78 7.12 13.56 5.27 15.27C3.75 16.68 1.58 18.69 0 20C3 16.46 8.5 10 8.5 10C8.5 10 1.49837 1.76279 0 0Z' fill='white'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+    width: var(--hero-video-arrow-size);
+    height: var(--hero-video-arrow-size);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none'%3E%3Cpath d='M17 8C20.73 11.16 24.24 14.56 27.71 18C25.92 19.78 24.12 21.56 22.27 23.27C20.75 24.68 18.58 26.69 17 28C20 24.46 25.5 18 25.5 18C25.5 18 18.4984 9.76279 17 8Z' fill='white'/%3E%3C/svg%3E")
+        center / 100% 100% no-repeat;
 }
 
 /* Figma "Rectangle 2" mask (Hero/navigationtoggle, node 4158:5068): fades destinations out as they
    move away from the active center row instead of a hard cut. Height is a fixed window (not tied
    to item count) so the fade always spans a fixed span around the always-centered active item. */
 .hero-video-items-viewport {
-    height: 20rem;
+    height: 371px;
     min-width: max-content;
     overflow: hidden;
     mask-image: linear-gradient(180deg, rgba(0 0 0 / 0%) 0%, #000 50%, rgba(0 0 0 / 0%) 100%);
@@ -186,12 +186,14 @@
     width: 100%;
     background: none;
     border: none;
-    padding: 0.55rem 0;
+    padding: 4px 0;
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h2);
     line-height: var(--typography-line-height-heading-h2);
     font-weight: var(--type-font-weight-heading);
-    color: #fff;
+
+    /* Figma inactive text is #ebebeb @ 50%; the 50% comes from the opacity JS animates. */
+    color: #ebebeb;
     opacity: 0.5;
     cursor: pointer;
     text-align: right;
@@ -199,6 +201,10 @@
     will-change: opacity;
     transition: none;
     justify-content: flex-end;
+}
+
+.hero-video-item[aria-selected='true'] .hero-video-item-btn {
+    color: var(--color-text-action-inverse-default);
 }
 
 .hero-video-item-btn:focus-visible {
@@ -302,7 +308,10 @@
     }
 
     .hero-video-selector {
-        padding: 0 1.5rem;
+        --hero-video-list-width: 122px;
+        --hero-video-arrow-size: 18px;
+
+        padding: 0 var(--dimension-layout-module-padding-block-s);
     }
 
     .hero-video-prefix,
@@ -314,7 +323,7 @@
     .hero-video-item-btn {
         font-size: var(--typography-fontsize-heading-h3);
         line-height: var(--typography-line-height-heading-h3);
-        padding: 0.4rem 0;
+        min-height: 44px;
     }
 
     .hero-video-controls {
@@ -328,7 +337,7 @@
 /* Touch devices — larger tap targets */
 @media (hover: none) {
     .hero-video-item-btn {
-        min-height: 48px;
+        min-height: 44px;
     }
 }
 
