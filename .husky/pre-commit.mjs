@@ -1,12 +1,12 @@
-import { exec } from "node:child_process";
+import { exec } from 'node:child_process';
 
-const run = (cmd) => new Promise((resolve, reject) => exec(
-  cmd,
-  (error, stdout, stderr) => {
-    if (error) reject(new Error(stderr || stdout || error.message));
-    else resolve(stdout);
-  }
-));
+const run = (cmd) =>
+  new Promise((resolve, reject) =>
+    exec(cmd, { maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) reject(new Error(stderr || stdout || error.message));
+      else resolve(stdout);
+    }),
+  );
 
 // Lint + format staged files; aborts the commit if this fails.
 try {
