@@ -296,6 +296,8 @@ function buildSignupForm(row: Element): SignupFormBuild {
         country.focus();
       }
       status.textContent = 'Enter a valid country name.';
+    } else if (result === 'country-validation-unavailable') {
+      status.textContent = 'Country validation is unavailable. Please try again later.';
     } else if (result === 'captcha-required') {
       status.textContent = 'Please complete the CAPTCHA verification.';
     } else {

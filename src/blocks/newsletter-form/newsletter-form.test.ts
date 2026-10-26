@@ -149,11 +149,11 @@ describe('newsletter-form hCaptcha toggle', () => {
 
     const form = fillModalRequiredFields('Singapore');
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(String(request.body)).toContain('country=SG');
-    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   it.each(['false', 'true'])('sends captchaEnabled=%s to the API', async (enableHCaptcha) => {

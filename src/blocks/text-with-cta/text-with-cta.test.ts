@@ -245,4 +245,19 @@ describe('text-with-cta hCaptcha', () => {
     );
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Sorry, please try again.');
   });
+
+  it('shows a retry message when country validation cannot load', async () => {
+    mockSubmitNewsletterForm.mockResolvedValue('country-validation-unavailable');
+    const block = buildBlock('false');
+
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('.text-with-cta-form')!;
+    block.querySelector<HTMLButtonElement>('.text-with-cta-trigger')!.click();
+    fillRequiredFields(form);
+    await dispatchSubmit(form);
+
+    expect(form.querySelector('.text-with-cta-status')?.textContent).toBe(
+      'Country validation is unavailable. Please try again later.',
+    );
+  });
 });

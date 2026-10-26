@@ -406,6 +406,8 @@ async function submitForm(
     showMessage(message, 'Enter a valid country name.', 'error');
     const countryInput = form.querySelector<HTMLInputElement>('[name="country"]');
     if (countryInput) markInvalid(countryInput, message);
+  } else if (result === 'country-validation-unavailable') {
+    showMessage(message, 'Country validation is unavailable. Please try again later.', 'error');
   } else if (result === 'captcha-required') {
     showMessage(message, 'Please complete the captcha.', 'error');
   } else {
