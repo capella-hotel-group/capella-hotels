@@ -862,15 +862,14 @@
     }
 }
 
-/* Content is capped at 1920px and centered beyond it; profile column keeps the 1440 spec (720px, 80/52 insets, 40px gap) */
+/* Profile column stays centered in a 1920px frame; the carousel bleeds to the right viewport edge */
 @media (width >= 1920px) {
     .culturist-carousel {
         background-color: var(--color-surface-general-light);
     }
 
     .culturist-carousel-grid {
-        max-width: 1920px;
-        margin-inline: auto;
+        padding-left: calc((100% - 1920px) / 2);
     }
     .culturist-carousel-info-col {
         padding: 64px 52px 64px 80px;
