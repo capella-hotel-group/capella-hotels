@@ -71,6 +71,9 @@ export function manualChunks(rawId: string): string | undefined {
   if (id.includes(AEM_CORE_ID)) return 'aem-core';
   if (ENV_IDS.some((envId) => id.includes(envId))) return 'env';
   if (id.includes('node_modules/dompurify')) return 'dompurify';
+  if (id.includes('node_modules/i18n-iso-countries') || id.includes('node_modules/diacritics')) {
+    return 'newsletter-countries';
+  }
   if (!id.includes('node_modules')) return undefined;
   return 'aem-core';
 }

@@ -1,26 +1,6 @@
-import { getPageLang } from '@/app/scripts.js';
-import { getBasePathBasedOnEnv, getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
+import { getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
 import { loadHCaptcha } from '@/utils/hcaptcha.js';
-import * as countryCodes from 'i18n-iso-countries';
-import englishCountryNames from 'i18n-iso-countries/langs/en.json';
-
-countryCodes.registerLocale(englishCountryNames);
-
-// Fixed submission endpoint — resolved per environment, not author-editable.
-const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
-
-// Persisted GraphQL query that returns a Content Fragment "list" by path. The
-// authored CF path is appended as `;path=<cfPath>`, e.g.
-// /graphql/execute.json/capella-hotels/ListCF;path=/content/dam/.../salutation-list
-const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
-
-// Visitor-entered fields that are all mandatory. Submission is rejected (and
-// never sent) if any of these is missing or blank.
-const REQUIRED_FIELDS = ['salutation', 'firstName', 'lastName', 'email', 'country'];
-
-// Identifies which form was submitted — sent as the auto `source` field so SFMC
-// can tell newsletter sign-ups apart from other (e.g. enquiry) forms.
-const FORM_SOURCE = 'Newsletter';
+import { resolveNewsletterProperty, submitNewsletterForm } from '@/utils/newsletter-submission.js';
 
 const CONSENT_REQUIRED_MESSAGE = 'Please accept the consent to continue.';
 const DEFAULT_SALUTATION_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Mx', 'Dr'];
@@ -28,18 +8,9 @@ const DEFAULT_SALUTATION_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Mx', 'Dr'];
 // Per-instance suffix so ids stay unique when several newsletter blocks share a page.
 let instanceCount = 0;
 
-// `property` fallback codes for non-hotel pages (where no specific hotel is
-// matched from the URL), chosen by the site's domain. Hotel-specific pages
-// always send the resolved hotel code instead.
-//   • capellahotelgroup.com          → CHG (Capella Hotel Group)
-//   • any other domain, e.g.
-//     capellahotels.com              → CHR (Capella Hotels & Resorts)
-const GROUP_PROPERTY_CODE = 'CHG';
-const NON_HOTEL_PROPERTY_CODE = 'CHR';
-
 // Authored row order — must match the field order in `_newsletter-form.json`.
-// PROPERTY_OPTIONS remains a Content Fragment path; salutation choices are
-// authored as a repeatable list.
+// PROPERTY_OPTIONS is the only Content Fragment path; dropdown choices and
+// other form labels are read from authored fields.
 const ROW = {
   TITLE: 0,
   SALUTATION_LABEL: 1,
@@ -57,12 +28,10 @@ const ROW = {
   ENABLE_HCAPTCHA: 13,
 };
 
-/** Reads the trimmed text of an authored row's value cell. */
 function rowText(rows: Element[], index: number): string {
   return rows[index]?.querySelector(':scope > div')?.textContent?.trim() ?? '';
 }
 
-/** Reads optional plain text, ignoring a legacy Content Fragment link. */
 function rowPlainText(rows: Element[], index: number): string {
   const cell = rows[index]?.querySelector(':scope > div');
   if (!cell || cell.querySelector('a')) return '';
@@ -70,16 +39,10 @@ function rowPlainText(rows: Element[], index: number): string {
   return value.startsWith('/content/') ? '' : value;
 }
 
-/** Reads the inner HTML of an authored row's value cell (for richtext). */
 function rowHTML(rows: Element[], index: number): string {
   return rows[index]?.querySelector(':scope > div')?.innerHTML?.trim() ?? '';
 }
 
-/**
- * Reads a Content Fragment path from an `aem-content` row. The picker renders
- * the selected path as a link; fall back to the cell's text if it is stored as
- * plain text.
- */
 function rowLink(rows: Element[], index: number): string {
   const cell = rows[index]?.querySelector(':scope > div');
   if (!cell) return '';
@@ -87,175 +50,18 @@ function rowLink(rows: Element[], index: number): string {
   return (link?.getAttribute('href') || cell.textContent || '').trim();
 }
 
-/** Reads repeatable list items, with a field-specific fallback for legacy content. */
 function rowList(rows: Element[], index: number, fallback: string[] = []): string[] {
   const cell = rows[index]?.querySelector(':scope > div');
   if (!cell) return fallback;
-
   const items = [...cell.querySelectorAll('li')].map((item) => item.textContent?.trim() ?? '').filter(Boolean);
   if (items.length) return items;
-
   const authoredText = cell.textContent?.trim() ?? '';
-  if (!authoredText || cell.querySelector('a') || authoredText.startsWith('/content/')) {
-    return fallback;
-  }
-
+  if (!authoredText || cell.querySelector('a') || authoredText.startsWith('/content/')) return fallback;
   const options = authoredText
     .split(',')
     .map((option) => option.trim())
     .filter(Boolean);
   return options.length ? options : fallback;
-}
-
-// Field names a Content Fragment might use to hold its list of options.
-const OPTION_KEYS = ['options', 'items', 'elements', 'values', 'list', 'salutations', 'countries'];
-
-/**
- * Extracts the raw list of option entries from the query response, tolerating
- * the shapes AEM commonly returns: the GraphQL persisted-query envelope
- * (`{ data: { <model>List: { items: [{ listItems: [...] }] } } }`), a bare
- * array, a model field that is an array, a single multiline text field (one
- * option per line), or the nested JCR export (`jcr:content/data/master`).
- */
-function collectRawItems(data: unknown): unknown[] {
-  if (Array.isArray(data)) return data;
-  if (!data || typeof data !== 'object') return [];
-  const obj = data as Record<string, any>;
-
-  // GraphQL persisted-query envelope: drill into `data` → `<model>List.items`.
-  if (obj.data && typeof obj.data === 'object') {
-    const node = Object.values(obj.data).find((v) => v && typeof v === 'object');
-    const items = Array.isArray((node as any)?.items)
-      ? (node as any).items
-      : Object.values(obj.data).find((v) => Array.isArray(v));
-    if (Array.isArray(items)) {
-      // Each list fragment holds its options in a nested array field
-      // (e.g. `listItems`); flatten those out. Items without a nested array are
-      // treated as option entries themselves.
-      return items.flatMap((item: unknown) => {
-        if (item && typeof item === 'object') {
-          const nested = Object.values(item as Record<string, unknown>).find((v) => Array.isArray(v));
-          if (nested) return nested;
-        }
-        return item;
-      });
-    }
-  }
-
-  // Unwrap the Content Fragment data node when present (JCR JSON export).
-  const master = obj['jcr:content']?.data?.master ?? obj.data?.master ?? obj;
-
-  const arrayKey = OPTION_KEYS.find((key) => Array.isArray(master[key]));
-  if (arrayKey) return master[arrayKey];
-
-  // A single multiline string field → one option per line.
-  const multiline = Object.values(master).find((v) => typeof v === 'string' && v.includes('\n'));
-  if (multiline) return (multiline as string).split('\n');
-
-  // Otherwise, the first array-valued field on the fragment.
-  return (Object.values(master).find((v) => Array.isArray(v)) as unknown[]) ?? [];
-}
-
-/**
- * Runs the `ListCF` persisted GraphQL query for a Content Fragment path and
- * returns its raw list entries. Empty array when no path is authored or the
- * query cannot be loaded/parsed.
- */
-async function fetchRawList(path: string): Promise<unknown[]> {
-  if (!path) return [];
-  try {
-    // The persisted-query `;path=` parameter must be the RAW Content Fragment
-    // path. URL-encoding the slashes (e.g. `%2F`) makes the query match nothing
-    // and return an empty `items` array, so pass the path as-is.
-    const cfPath = path.replace(/\.json$/, '');
-    const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${cfPath}`;
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) return [];
-    return collectRawItems(await response.json());
-  } catch (error) {
-    console.error('Newsletter list fetch error:', path, error);
-    return [];
-  }
-}
-
-interface NormalizedProperty {
-  keys: string[];
-  name: string;
-  code: string;
-}
-
-/**
- * Normalises a raw property-mapping entry into { keys, name, code }. Accepts a
- * pipe string in either the 2-part `KEYS|CODE` form or the legacy 3-part
- * `KEYS|NAME|CODE` form — NAME is optional, only aids authoring readability, and
- * is NOT submitted (only `code` is). KEYS may list several comma/space separated
- * location keywords (e.g. `macau,macao|CPMAC`). Objects using
- * keys/key/location + code/source (+ optional name) style fields also work.
- */
-function normalizeProperty(item: unknown): NormalizedProperty | null {
-  let keysRaw: unknown;
-  let name = '';
-  let code: unknown;
-  if (typeof item === 'string') {
-    const parts = item.split('|').map((part) => part.trim());
-    // 3+ parts → KEYS|NAME|CODE (legacy); 2 parts → KEYS|CODE.
-    if (parts.length >= 3) {
-      [keysRaw, name, code] = [parts[0], parts[1] ?? '', parts[2]];
-    } else {
-      [keysRaw, code] = parts;
-    }
-  } else if (item && typeof item === 'object') {
-    const obj = item as Record<string, unknown>;
-    keysRaw = obj.keys ?? obj.key ?? obj.location ?? obj.slug;
-    name = String(obj.name ?? obj.property ?? obj.title ?? obj.label ?? '');
-    code = obj.code ?? obj.source ?? obj.value;
-  }
-  // Only `code` is mandatory now (it is the submitted value). `name` is optional.
-  if (!code) return null;
-  const keysStr = Array.isArray(keysRaw) ? keysRaw.join(' ') : String(keysRaw ?? name);
-  const keys = keysStr
-    .toLowerCase()
-    .split(/[,\s/_-]+/)
-    .filter(Boolean);
-  if (!keys.length) return null;
-  return { keys, name: String(name).trim(), code: String(code).trim() };
-}
-
-/**
- * Fetches the location → Property/Source mapping from a Content Fragment.
- */
-async function fetchProperties(path: string): Promise<NormalizedProperty[]> {
-  return (await fetchRawList(path)).map(normalizeProperty).filter((p): p is NormalizedProperty => !!p);
-}
-
-/**
- * Derives the Capella property from the current page URL by matching a known
- * location keyword in the path against the authored mapping. The path is
- * tokenised on slashes, hyphens and underscores, so a location matches whether
- * it stands alone (`/bangkok`) or is part of a larger slug (`/capella-bangkok/`).
- */
-function resolveProperty(properties: NormalizedProperty[]): NormalizedProperty | null {
-  if (!properties?.length) return null;
-  const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
-  const tokens = path.split(/[/_-]+/).filter(Boolean);
-  return properties.find(({ keys }) => keys.some((key) => tokens.includes(key))) ?? null;
-}
-
-/**
- * Fallback `property` code for non-hotel pages (no specific hotel matched from
- * the URL), evaluated in order:
- *   1. A Residence(s) page without a country/hotel in the path → `CHR`
- *      (Residences belong to Capella Hotels & Resorts), regardless of domain.
- *   2. The Capella Hotel Group site (`capellahotelgroup.com`) → `CHG`.
- *   3. Any other domain (e.g. `capellahotels.com`) → `CHR`.
- */
-function resolveFallbackCode(): string {
-  const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
-  const tokens = path.split(/[/_-]+/).filter(Boolean);
-  // Match both the singular (`residence`) and plural (`residences`) slugs.
-  if (tokens.includes('residences') || tokens.includes('residence')) return NON_HOTEL_PROPERTY_CODE;
-  const host = (typeof window !== 'undefined' ? window.location.hostname : '').toLowerCase();
-  return host.includes('capellahotelgroup') ? GROUP_PROPERTY_CODE : NON_HOTEL_PROPERTY_CODE;
 }
 
 /**
@@ -567,106 +373,48 @@ function flagInvalidFields(form: HTMLFormElement, message: HTMLElement): void {
 }
 
 interface SubmitConfig {
-  endpoint: string;
-  property: NormalizedProperty | null;
+  property: string;
   captcha: CaptchaController | null;
   captchaEnabled: boolean;
 }
 
-/**
- * Collects every form entry plus auto-mapped metadata and POSTs it as
- * application/x-www-form-urlencoded (so the Sling servlet's getParameter()
- * can read each field).
- */
 async function submitForm(
   form: HTMLFormElement,
   config: SubmitConfig,
   message: HTMLElement,
   submitBtn: HTMLButtonElement,
 ): Promise<void> {
-  // Gather all named fields the visitor entered, trimming whitespace so that
-  // spaces-only values (which satisfy HTML5 `required`) are treated as empty.
-  const payload: Record<string, string> = Object.fromEntries(
-    [...new FormData(form).entries()].map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
-  ) as Record<string, string>;
+  showMessage(message, '');
+  submitBtn.disabled = true;
+  const result = await submitNewsletterForm(form, {
+    property: config.property,
+    captchaEnabled: config.captchaEnabled,
+    captchaToken: config.captcha?.getToken() ?? '',
+  });
 
-  // All fields are mandatory: if any is missing or blank, fail fast and do not
-  // send the request.
-  const missing = REQUIRED_FIELDS.filter((field) => !payload[field]);
-  if (missing.length) {
-    showMessage(message, 'Please fill in all required fields.', 'error');
-    form.reportValidity();
+  if (result === 'success') {
+    form.reset();
+    showMessage(message, 'Thank you for subscribing!', 'success');
+    if (config.captcha) config.captcha.reset();
+    submitBtn.disabled = false;
     return;
   }
 
-  payload.captchaEnabled = String(config.captchaEnabled);
-
-  const countryCode = countryCodes.getAlpha2Code(payload.country ?? '', 'en');
-  if (!countryCode) {
+  if (result === 'missing-fields') {
+    flagInvalidFields(form, message);
+  } else if (result === 'invalid-country') {
     showMessage(message, 'Enter a valid country name.', 'error');
     const countryInput = form.querySelector<HTMLInputElement>('[name="country"]');
     if (countryInput) markInvalid(countryInput, message);
-    return;
-  }
-  payload.country = countryCode.toUpperCase();
-
-  // hCaptcha: require a solved token before sending (defence-in-depth on top of
-  // the disabled submit button). Skipped when captcha isn't configured/loaded.
-  const captchaToken = config.captcha ? config.captcha.getToken() : '';
-  if (config.captcha && !captchaToken) {
+  } else if (result === 'country-validation-unavailable') {
+    showMessage(message, 'Country validation is unavailable. Please try again later.', 'error');
+  } else if (result === 'captcha-required') {
     showMessage(message, 'Please complete the captcha.', 'error');
-    return;
-  }
-  if (captchaToken) payload.captchaValue = captchaToken;
-
-  // Auto-mapped metadata (not visitor-entered).
-  // Language: SFMC expects the 2-character code only. `getPageLang()` /
-  // <html lang> may hold a full BCP-47 tag (e.g. `en-US`, `ar-QA`), so take the
-  // primary subtag before the hyphen.
-  const langTag = document.documentElement.lang || getPageLang();
-  payload.language = (langTag.split('-')[0] ?? '').toLowerCase();
-  // Property: the hotel code resolved from the page URL against the authored CF
-  // mapping. On non-hotel pages (no match) fall back to a group code — CHR for a
-  // Residences page without a country, CHG on capellahotelgroup.com, else CHR.
-  // Source: a constant identifying which form was submitted.
-  const { property } = config;
-  payload.property = property ? property.code : resolveFallbackCode();
-  payload.source = FORM_SOURCE;
-
-  showMessage(message, '');
-  submitBtn.disabled = true;
-
-  try {
-    // The Sling servlet reads fields via request.getParameter(), which only
-    // parses form-encoded (or query-string / multipart) bodies — NOT a raw JSON
-    // body. Send application/x-www-form-urlencoded so every field is readable.
-    const response = await fetch(config.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-        Accept: 'application/json',
-      },
-      body: new URLSearchParams(payload).toString(),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Submission failed: ${response.status} ${response.statusText}`);
-    }
-
-    form.reset();
-    showMessage(message, 'Thank you for subscribing!', 'success');
-    // hCaptcha tokens are single-use: reset so a new solve is needed to submit
-    // again. This also re-disables the submit button.
-    if (config.captcha) config.captcha.reset();
-    else submitBtn.disabled = false;
-  } catch (error) {
+  } else {
     showMessage(message, 'Sorry, something went wrong. Please try again.', 'error');
-
-    console.error('Newsletter submission error:', error);
-    // The used token is now invalid; force a fresh challenge before retrying.
     if (config.captcha) config.captcha.reset();
-    else submitBtn.disabled = false;
   }
+  submitBtn.disabled = false;
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
@@ -692,12 +440,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     enableHCaptcha: rowText(rows, ROW.ENABLE_HCAPTCHA).toLowerCase() === 'true',
   };
 
-  // The property mapping remains Content Fragment-backed; dropdown options are
-  // read from the authored repeatable lists above.
-  const properties = await fetchProperties(cfg.propertyPath);
-
-  // Resolve the current page's property once, for use on submit.
-  const property = resolveProperty(properties);
+  const property = await resolveNewsletterProperty(cfg.propertyPath);
 
   // ── Build the real <form> ────────────────────────────────────────────────
   const form = document.createElement('form');
@@ -828,12 +571,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       flagInvalidFields(form, message);
       return;
     }
-    submitForm(
-      form,
-      { endpoint: API_ENDPOINT, property, captcha, captchaEnabled: cfg.enableHCaptcha },
-      message,
-      submitBtn,
-    );
+    submitForm(form, { property, captcha, captchaEnabled: cfg.enableHCaptcha }, message, submitBtn);
   });
 
   form.addEventListener('input', (event) => {

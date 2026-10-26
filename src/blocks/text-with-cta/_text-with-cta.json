@@ -176,7 +176,8 @@
           "name": "propertyOptions",
           "label": "Property Mapping (Content Fragment path)",
           "description": "Maps the current page to the Newsletter API property code.",
-          "valueType": "string"
+          "valueType": "string",
+          "required": true
         }
       ]
     }
