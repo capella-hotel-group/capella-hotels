@@ -61,7 +61,7 @@ function collectRawItems(data: unknown): unknown[] {
 async function fetchRawList(path: string): Promise<unknown[]> {
   if (!path) return [];
   try {
-    const cfPath = path.replace(/\.json$/, '');
+    const cfPath = path.replace(/\.(?:html|json)$/i, '');
     const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${cfPath}`;
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) return [];
