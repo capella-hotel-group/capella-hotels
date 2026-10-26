@@ -8,14 +8,16 @@ import {
   cleanGeneratedOutputs,
   copyBlockHtml,
   getPackageVersion,
+  toPosix,
 } from './vite.helpers.ts';
+import { SRC_DIR } from './config.ts';
 
 // Runtime build: emits scripts/*.js, styles/*.css, and blocks/<name>/<name>.{js,css}
 // at the repo root, matching the exact paths the AEM EDS runtime expects.
 export default defineConfig({
   resolve: {
     alias: {
-      '@': new URL('./src', import.meta.url).pathname,
+      '@': toPosix(SRC_DIR),
     },
   },
   build: {
