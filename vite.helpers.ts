@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, existsSync, readFileSync, unlinkSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readdirSync, existsSync, readFileSync, unlinkSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Plugin } from 'vite';
 import { ROOT, SRC_DIR, BLOCKS_DIR } from './config.ts';
@@ -96,6 +96,11 @@ export function assetFileNames(assetInfo: { name?: string; originalFileNames?: s
   return 'styles/[name][extname]';
 }
 
+/** Sources checked out with CRLF on Windows would otherwise leak CRLF into output; .gitattributes expects LF. */
+function toLf(content: string): string {
+  return content.replaceAll('\r\n', '\n');
+}
+
 function shortHash(content: string): string {
   return createHash('sha256').update(content).digest('hex').slice(0, 8);
 }
@@ -119,11 +124,11 @@ export function versionBannerPlugin(version: string): Plugin {
     generateBundle(_opts, bundle) {
       Object.values(bundle).forEach((file) => {
         if (file.type === 'chunk') {
-          const banner = `/*! v${version} | h${shortHash(file.code)} */`;
-          file.code = `${banner}\n${file.code}`;
+          const code = toLf(file.code);
+          file.code = `/*! v${version} | h${shortHash(code)} */\n${code}`;
         } else if (typeof file.source === 'string' && file.fileName.endsWith('.css')) {
-          const banner = `/*! v${version} | h${shortHash(file.source)} */`;
-          file.source = `${banner}\n${file.source}`;
+          const source = toLf(file.source);
+          file.source = `/*! v${version} | h${shortHash(source)} */\n${source}`;
         }
       });
     },
@@ -193,14 +198,14 @@ export function copyBlockHtml(): Plugin {
           const htmlFile = join(srcDir, 'index.html');
           if (existsSync(htmlFile)) {
             mkdirSync(outDir, { recursive: true });
-            copyFileSync(htmlFile, join(outDir, 'index.html'));
+            writeFileSync(join(outDir, 'index.html'), toLf(readFileSync(htmlFile, 'utf-8')));
           }
 
           const cssFile = join(srcDir, `${dir.name}.css`);
           const outCssFile = join(outDir, `${dir.name}.css`);
           if (existsSync(cssFile) && !existsSync(outCssFile)) {
             mkdirSync(outDir, { recursive: true });
-            copyFileSync(cssFile, outCssFile);
+            writeFileSync(outCssFile, toLf(readFileSync(cssFile, 'utf-8')));
           }
         });
     },
