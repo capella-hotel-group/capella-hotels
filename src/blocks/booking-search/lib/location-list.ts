@@ -4,7 +4,9 @@ import type { Location } from './types';
 
 export interface LocationList {
   list: HTMLUListElement;
+  scrollbar: HTMLDivElement;
   focusOption: (index?: number) => void;
+  updateScrollbar: () => void;
   /** Flags the picked location as `aria-selected`. */
   mark: (location?: Location) => void;
 }
@@ -17,6 +19,12 @@ export function buildLocationList(
   const list = el('ul', `${BLOCK}-options`);
   list.setAttribute('role', 'listbox');
   list.setAttribute('aria-label', label);
+
+  const scrollbar = el('div', `${BLOCK}-location-scrollbar`);
+  scrollbar.setAttribute('aria-hidden', 'true');
+  scrollbar.hidden = true;
+  const thumb = el('span', `${BLOCK}-location-scrollbar-thumb`);
+  scrollbar.append(thumb);
 
   const options = locations.map((location) => {
     const item = el('li', `${BLOCK}-option`, location.label);
@@ -64,11 +72,23 @@ export function buildLocationList(
     }
   });
 
+  const updateScrollbar = (): void => {
+    const maxScrollTop = list.scrollHeight - list.clientHeight;
+    scrollbar.hidden = maxScrollTop <= 0;
+    if (maxScrollTop <= 0) return;
+
+    const thumbTravel = scrollbar.clientHeight - thumb.offsetHeight;
+    const thumbOffset = (list.scrollTop / maxScrollTop) * thumbTravel;
+    thumb.style.transform = `translateY(${thumbOffset}px)`;
+  };
+
+  list.addEventListener('scroll', updateScrollbar);
+
   const mark = (selected?: Location): void => {
     options.forEach((option, index) => {
       option.setAttribute('aria-selected', String(locations[index] === selected));
     });
   };
 
-  return { list, focusOption, mark };
+  return { list, scrollbar, focusOption, updateScrollbar, mark };
 }

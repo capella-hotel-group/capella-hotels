@@ -271,22 +271,33 @@
     padding-inline-end: var(--dimension-spacing-general-m);
     overflow-y: auto;
     list-style: none;
-    scrollbar-color: var(--color-surface-brand-default) var(--color-surface-general-opaque);
-    scrollbar-width: thin;
+    scrollbar-width: none;
 }
 
 .booking-search .booking-search-options::-webkit-scrollbar {
-    width: 6px;
+    display: none;
 }
 
-.booking-search .booking-search-options::-webkit-scrollbar-track {
+.booking-search .booking-search-location-scrollbar {
+    position: absolute;
+    inset-block-start: 20px;
+    inset-inline-end: 10px;
+    z-index: 1;
+    width: 6px;
+    height: 100px;
+    padding: 0;
     border-radius: var(--corner-radius-round);
     background-color: var(--color-surface-general-opaque);
+    pointer-events: none;
 }
 
-.booking-search .booking-search-options::-webkit-scrollbar-thumb {
+.booking-search .booking-search-location-scrollbar-thumb {
+    display: block;
+    width: 6px;
+    height: 20px;
     border-radius: var(--corner-radius-round);
     background-color: var(--color-surface-brand-default);
+    transition: transform 0.15s ease;
 }
 
 .booking-search .booking-search-option {

@@ -52,7 +52,7 @@ export default function decorate(block: HTMLElement): void {
     locationList.mark(location);
     syncSubmit();
   });
-  locationField.panel.append(locationList.list);
+  locationField.panel.append(locationList.list, locationList.scrollbar);
 
   const calendar = buildCalendar(lang, selection, () => {
     const { arrival, departure } = selection;
@@ -93,7 +93,10 @@ export default function decorate(block: HTMLElement): void {
   const openField = (field: Field): void => {
     flyouts.open(field);
     if (field === datesField) calendar.sync();
-    if (field === locationField) locationList.mark(selection.location);
+    if (field === locationField) {
+      locationList.mark(selection.location);
+      locationList.updateScrollbar();
+    }
   };
 
   fields.forEach((field) => {
