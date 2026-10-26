@@ -193,6 +193,7 @@ describe('newsletter-form hCaptcha toggle', () => {
 
     const form = fillModalRequiredFields('Atlantis');
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(form.querySelector('.newsletter-message')?.textContent).toBe('Enter a valid country name.');
