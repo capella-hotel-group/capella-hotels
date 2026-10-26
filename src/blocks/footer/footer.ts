@@ -138,25 +138,31 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     inner.append(brandLogo);
   }
 
+  // DOM order = screen reader + Tab order: contact, social, key links, newsletter, legal.
+  // Visual placement at every breakpoint is set by footer.css (grid areas / flex order).
   const groups: Array<{ name: string; element: Element | null }> = [
     { name: 'contact', element: contactGroup },
+    { name: 'social', element: social },
     { name: 'nav', element: navGroup },
     { name: 'newsletter', element: newsletterGroup },
-    { name: 'social', element: social },
     { name: 'legal', element: legalGroup },
   ];
 
-  let lastSlot: string | null = null;
+  // Dividers keep their visual-order meaning (data-after) that footer.css keys on:
+  // contact | nav | newsletter | social | legal.
+  const visualOrder = ['contact', 'nav', 'newsletter', 'social', 'legal'];
+  const presentNames = visualOrder.filter((name) => groups.find((group) => group.name === name)?.element);
+  const dividerAfter = new Set(presentNames.slice(0, -1));
+
   groups.forEach(({ name, element }) => {
     if (!element) return;
-    if (lastSlot) {
+    inner.append(element);
+    if (dividerAfter.has(name)) {
       const divider = document.createElement('div');
       divider.className = 'footer-divider';
-      divider.dataset.after = lastSlot;
+      divider.dataset.after = name;
       inner.append(divider);
     }
-    inner.append(element);
-    lastSlot = name;
   });
 
   block.replaceChildren(inner);

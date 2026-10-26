@@ -347,13 +347,17 @@ footer.footer-theme-clean-white {
 }
 
 @media (width >= 1200px) {
+    /* social sits right under contact in column 1; nav/newsletter span both rows so the
+       filler 1fr row absorbs their extra height instead of pushing social down */
     .footer-inner {
         grid-template-areas:
             'brand brand brand brand'
             'contact nav1 nav2 newsletter'
-            'social . . .'
+            'social nav1 nav2 newsletter'
+            '. nav1 nav2 newsletter'
             'divider divider divider divider'
             'legal legal legal legal';
+        grid-template-rows: auto auto auto 1fr auto auto;
     }
 
     .footer-inner > .footer-social {
@@ -374,16 +378,20 @@ footer.footer-theme-clean-white {
     .footer-inner {
         grid-template-areas:
             'contact nav1 nav2 newsletter'
-            'social . . .'
+            'social nav1 nav2 newsletter'
+            '. nav1 nav2 newsletter'
             'divider divider divider divider'
             'legal legal legal legal';
+        grid-template-rows: auto auto 1fr auto auto;
     }
 
     .footer-inner.footer-inner-has-logo {
         grid-template-areas:
             'brand contact nav1 nav2 newsletter'
-            'brand social . . .'
+            'brand social nav1 nav2 newsletter'
+            'brand . nav1 nav2 newsletter'
             'divider divider divider divider divider'
             'legal legal legal legal legal';
+        grid-template-rows: auto auto 1fr auto auto;
     }
 }
