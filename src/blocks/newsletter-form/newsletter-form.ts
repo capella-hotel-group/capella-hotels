@@ -115,9 +115,8 @@ async function setupCaptcha(
       },
     });
   } catch (error) {
-    console.error('Newsletter captcha error:', error);
     onChange(false);
-    return { getToken: () => '', reset: () => {} };
+    throw error;
   }
 
   return {
@@ -544,8 +543,23 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     form.append(title, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
   }
 
-  // Render the captcha (if configured) and combine it with any consent gating.
-  const captcha = siteKey ? await setupCaptcha(captchaWrapper, siteKey, (ok) => gate.setCaptcha(ok)) : null;
+  let captcha: CaptchaController | null = null;
+  let captchaLoading = false;
+  const initializeCaptcha = (): void => {
+    if (!siteKey || captcha || captchaLoading) return;
+    captchaLoading = true;
+    void setupCaptcha(captchaWrapper, siteKey, (ok) => gate.setCaptcha(ok))
+      .then((controller) => {
+        captcha = controller;
+      })
+      .catch((error: unknown) => {
+        console.error('Newsletter captcha error:', error);
+        showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+      })
+      .finally(() => {
+        captchaLoading = false;
+      });
+  };
   if (cfg.enableHCaptcha && !siteKey) {
     showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
   }
@@ -560,9 +574,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       return;
     }
     if (blocked === 'captcha') {
+      initializeCaptcha();
       showMessage(
         message,
-        siteKey ? 'Please complete the captcha.' : 'CAPTCHA is unavailable. Please try again later.',
+        !siteKey
+          ? 'CAPTCHA is unavailable. Please try again later.'
+          : captchaLoading
+            ? 'CAPTCHA is loading. Please wait.'
+            : 'Please complete the captcha.',
         'error',
       );
       return;
@@ -579,17 +598,32 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     target.removeAttribute('aria-invalid');
     target.removeAttribute('aria-describedby');
   });
+  form.addEventListener('focusin', initializeCaptcha);
+  form.addEventListener('pointerdown', initializeCaptcha);
 
   if (cfg.layout === 'Inline') {
     // ── Replace authored rows with the form rendered directly in place ─────
     block.textContent = '';
     block.classList.add('newsletter-inline');
     block.append(form);
+    if (siteKey && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            observer.disconnect();
+            initializeCaptcha();
+          }
+        },
+        { rootMargin: '200px' },
+      );
+      observer.observe(captchaWrapper);
+    }
     return;
   }
 
   // ── Wrap the form in a modal, triggered by an on-page button ─────────────
   const { overlay, trigger } = buildModal(form, cfg.triggerLabel, cfg.title);
+  trigger.addEventListener('click', initializeCaptcha);
 
   // ── Replace authored rows with the trigger button + modal ────────────────
   block.textContent = '';

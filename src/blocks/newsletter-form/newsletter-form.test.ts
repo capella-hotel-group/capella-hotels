@@ -91,6 +91,10 @@ describe('newsletter-form hCaptcha toggle', () => {
     await decorate(buildBlock({ enableHCaptcha: 'true' }));
 
     const submit = document.querySelector<HTMLButtonElement>('.newsletter-submit')!;
+    expect(api.render).not.toHaveBeenCalled();
+    document.querySelector<HTMLButtonElement>('.newsletter-trigger')!.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(api.render).toHaveBeenCalledWith(
       document.querySelector('.newsletter-captcha'),
       expect.objectContaining({ sitekey: 'test-site-key' }),
@@ -174,6 +178,10 @@ describe('newsletter-form hCaptcha toggle', () => {
     }
 
     await decorate(buildBlock({ enableHCaptcha }));
+    if (enableHCaptcha === 'true') {
+      document.querySelector<HTMLButtonElement>('.newsletter-trigger')!.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     renderOptions?.callback('verified-token');
 
     const form = fillModalRequiredFields('Singapore');
