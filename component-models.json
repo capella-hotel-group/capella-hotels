@@ -2422,10 +2422,20 @@
         "value": "Salutation"
       },
       {
-        "component": "aem-content",
+        "component": "container",
         "name": "salutationOptions",
-        "label": "Salutation Options (Content Fragment path)",
-        "valueType": "string"
+        "label": "Salutation Options",
+        "description": "Add one choice per item (e.g., Mr, Mrs, Ms, Mx, Dr). If left empty, the dropdown defaults to Mr, Mrs, Ms, Mx, Dr.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "option",
+            "label": "Salutation",
+            "valueType": "string",
+            "required": true
+          }
+        ]
       },
       {
         "component": "text",
@@ -2456,10 +2466,12 @@
         "value": "Country"
       },
       {
-        "component": "aem-content",
-        "name": "countryOptions",
-        "label": "Country Options (Content Fragment path)",
-        "valueType": "string"
+        "component": "text",
+        "name": "countryPlaceholder",
+        "label": "Country Field Placeholder",
+        "description": "Enter a country name (e.g., Singapore).",
+        "valueType": "string",
+        "value": "Country (e.g., Singapore)"
       },
       {
         "component": "richtext",
@@ -2504,6 +2516,14 @@
             "value": "Inline"
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "enableHCaptcha",
+        "label": "Enable hCaptcha",
+        "description": "Require hCaptcha verification before submitting the form.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -3033,6 +3053,21 @@
         "description": "Require hCaptcha verification before showing the success message.",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "text",
+        "name": "errorMessage",
+        "label": "Error Message",
+        "valueType": "string",
+        "required": true,
+        "value": "Sorry, something went wrong. Please try again."
+      },
+      {
+        "component": "aem-content",
+        "name": "propertyOptions",
+        "label": "Property Mapping (Content Fragment path)",
+        "description": "Maps the current page to the Newsletter API property code.",
+        "valueType": "string"
       }
     ]
   },

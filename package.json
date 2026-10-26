@@ -50,12 +50,13 @@
     ]
   },
   "dependencies": {
-    "dompurify": "^3.4.14"
+    "dompurify": "^3.4.14",
+    "i18n-iso-countries": "7.14.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@types/jest": "29.5.14",
-    "@types/node": "26.2.0",
+    "@types/node": "~24",
     "eslint": "9.39.5",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-xwalk": "github:adobe-rnd/eslint-plugin-xwalk",
