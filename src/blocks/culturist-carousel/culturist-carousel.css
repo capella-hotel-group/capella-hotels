@@ -862,7 +862,7 @@
     }
 }
 
-/* Profile column stays centered in a 1920px frame; the carousel bleeds to the right viewport edge */
+/* From 1920px the profile stays pinned to the centered 1920px frame (1440 spec) and the carousel bleeds to the right edge */
 @media (width >= 1920px) {
     .culturist-carousel {
         background-color: var(--color-surface-general-light);
@@ -871,6 +871,7 @@
     .culturist-carousel-grid {
         padding-left: calc((100% - 1920px) / 2);
     }
+
     .culturist-carousel-info-col {
         padding: 64px 52px 64px 80px;
     }
@@ -878,4 +879,9 @@
     .culturist-carousel-info-slot {
         gap: 40px;
     }
+}
+
+/* Authored cards with no image and no title would render as an empty grey tile */
+.culturist-carousel-carousel-card:has(> .culturist-carousel-card-content:empty) {
+    display: none;
 }
