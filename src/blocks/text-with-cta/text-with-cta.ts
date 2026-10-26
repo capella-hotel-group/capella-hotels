@@ -2,6 +2,7 @@ import { moveInstrumentation } from '@/app/scripts.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getHCaptchaSiteKey, isUniversalEditor } from '@/utils/env.js';
 import { loadHCaptcha } from '@/utils/hcaptcha.js';
+import { resolveNewsletterProperty, submitNewsletterForm } from '@/utils/newsletter-submission.js';
 
 const BLOCK = 'text-with-cta';
 const ITEM_MODEL = 'text-with-cta-signup-form';
@@ -19,11 +20,19 @@ const FIELD = {
   submitLabel: 8,
   successMessage: 9,
   enableHCaptcha: 10,
+  errorMessage: 11,
+  propertyOptions: 12,
 } as const;
 
 let uid = 0;
 
 const textOf = (cell?: Element | null): string => cell?.textContent?.trim() || '';
+
+function linkOf(cell?: Element | null): string {
+  if (!cell) return '';
+  const link = cell.querySelector('a');
+  return (link?.getAttribute('href') || cell.textContent || '').trim();
+}
 
 /** Cells are always divs; a richtext field can emit bare paragraphs onto its row. */
 const cellsOf = (row: HTMLElement): HTMLElement[] => [...row.querySelectorAll<HTMLElement>(':scope > div')];
@@ -239,23 +248,66 @@ function buildSignupForm(row: Element): SignupFormBuild {
   panel.append(trigger, form);
 
   const successMessage = label(FIELD.successMessage, '');
+  const errorMessage = label(FIELD.errorMessage, 'Sorry, something went wrong. Please try again.');
+  const propertyPath = linkOf(cells[FIELD.propertyOptions]);
   let captchaToken = '';
   let captchaWidgetId: string | undefined;
   let captchaInitialized = false;
+  let captchaUnavailable = false;
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    if (enableHCaptcha && captchaUnavailable) {
+      status.textContent = 'CAPTCHA is unavailable. Please try again later.';
+      return;
+    }
     if (enableHCaptcha && !captchaToken) {
       status.textContent = 'Please complete the CAPTCHA verification.';
       return;
     }
-    status.textContent = successMessage;
-    form.reset();
-    if (enableHCaptcha) {
-      captchaToken = '';
-      submit.disabled = true;
-      if (window.hcaptcha && captchaWidgetId !== undefined) window.hcaptcha.reset(captchaWidgetId);
+
+    submit.disabled = true;
+    status.textContent = '';
+    const property = await resolveNewsletterProperty(propertyPath);
+    const result = await submitNewsletterForm(form, {
+      property,
+      captchaEnabled: enableHCaptcha,
+      captchaToken,
+    });
+
+    if (result === 'success') {
+      form.reset();
+      status.textContent = successMessage;
+      if (enableHCaptcha) {
+        captchaToken = '';
+        if (window.hcaptcha && captchaWidgetId !== undefined) window.hcaptcha.reset(captchaWidgetId);
+      }
+    } else if (result === 'missing-fields') {
+      status.textContent = 'Please fill in all required fields.';
+      form.reportValidity();
+    } else if (result === 'invalid-country') {
+      const country = form.querySelector<HTMLInputElement>('[name="country"]');
+      if (country) {
+        country.setAttribute('aria-invalid', 'true');
+        country.focus();
+      }
+      status.textContent = 'Enter a valid country name.';
+    } else if (result === 'country-validation-unavailable') {
+      status.textContent = 'Country validation is unavailable. Please try again later.';
+    } else if (result === 'captcha-required') {
+      status.textContent = 'Please complete the CAPTCHA verification.';
+    } else {
+      status.textContent = errorMessage;
+      if (enableHCaptcha) {
+        captchaToken = '';
+        if (window.hcaptcha && captchaWidgetId !== undefined) window.hcaptcha.reset(captchaWidgetId);
+      }
     }
+    submit.disabled = enableHCaptcha && !captchaToken;
   });
 
   const initializeCaptcha = (): void => {
@@ -268,6 +320,7 @@ function buildSignupForm(row: Element): SignupFormBuild {
       '';
 
     if (!siteKey) {
+      captchaUnavailable = true;
       status.textContent = 'CAPTCHA is unavailable. Please try again later.';
       return;
     }
@@ -296,6 +349,7 @@ function buildSignupForm(row: Element): SignupFormBuild {
       .catch((error: unknown) => {
         console.error('Text with CTA CAPTCHA error:', error);
         captchaToken = '';
+        captchaUnavailable = true;
         submit.disabled = true;
         status.textContent = 'CAPTCHA is unavailable. Please try again later.';
       });

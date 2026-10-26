@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, existsSync, readFileSync, unlinkSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readdirSync, existsSync, readFileSync, unlinkSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Plugin } from 'vite';
 import { ROOT, SRC_DIR, BLOCKS_DIR } from './config.ts';
@@ -18,6 +18,14 @@ const STYLE_ENTRIES: Record<string, string> = {
 
 /** Stable (non-hashed) chunk names, so head.html can modulepreload them directly. */
 const STABLE_CHUNKS = ['aem-core', 'env', 'dompurify'];
+
+/** Bundler module ids always use `/`, so OS paths (backslashes on Windows) must be converted before comparing. */
+export function toPosix(p: string): string {
+  return p.replaceAll('\\', '/');
+}
+
+const AEM_CORE_ID = toPosix(join(SRC_DIR, 'app', 'aem.ts'));
+const ENV_IDS = [toPosix(join(SRC_DIR, 'utils', 'env.ts')), toPosix(join(SRC_DIR, 'configs', 'env.ts'))];
 
 /**
  * Finds every block entry file whose name matches its parent block directory
@@ -58,10 +66,14 @@ export function getPackageVersion(): string {
  * Groups third-party dependencies and shared runtime helpers into named vendor
  * chunks instead of duplicating them across every block bundle that imports them.
  */
-export function manualChunks(id: string): string | undefined {
-  if (id.includes(join(SRC_DIR, 'app', 'aem.ts'))) return 'aem-core';
-  if (id.includes(join(SRC_DIR, 'utils', 'env.ts')) || id.includes(join(SRC_DIR, 'configs', 'env.ts'))) return 'env';
-  if (id.includes(join('node_modules', 'dompurify'))) return 'dompurify';
+export function manualChunks(rawId: string): string | undefined {
+  const id = toPosix(rawId);
+  if (id.includes(AEM_CORE_ID)) return 'aem-core';
+  if (ENV_IDS.some((envId) => id.includes(envId))) return 'env';
+  if (id.includes('node_modules/dompurify')) return 'dompurify';
+  if (id.includes('node_modules/i18n-iso-countries') || id.includes('node_modules/diacritics')) {
+    return 'newsletter-countries';
+  }
   if (!id.includes('node_modules')) return undefined;
   return 'aem-core';
 }
@@ -80,11 +92,16 @@ export function chunkFileNames(chunkInfo: { name: string }): string {
 export function assetFileNames(assetInfo: { name?: string; originalFileNames?: string[] }): string {
   const name = assetInfo.name ?? '';
   if (!name.endsWith('.css')) return 'assets/[name]-[hash][extname]';
-  const originalFile = (assetInfo.originalFileNames ?? [])[0] ?? '';
+  const originalFile = toPosix((assetInfo.originalFileNames ?? [])[0] ?? '');
   const blockMatch = originalFile.match(/src\/blocks\/([^/]+)\//);
   if (blockMatch) return `blocks/${blockMatch[1]}/${blockMatch[1]}.css`;
   if (name.startsWith('styles/')) return name;
   return 'styles/[name][extname]';
+}
+
+/** Sources checked out with CRLF on Windows would otherwise leak CRLF into output; .gitattributes expects LF. */
+function toLf(content: string): string {
+  return content.replaceAll('\r\n', '\n');
 }
 
 function shortHash(content: string): string {
@@ -110,11 +127,11 @@ export function versionBannerPlugin(version: string): Plugin {
     generateBundle(_opts, bundle) {
       Object.values(bundle).forEach((file) => {
         if (file.type === 'chunk') {
-          const banner = `/*! v${version} | h${shortHash(file.code)} */`;
-          file.code = `${banner}\n${file.code}`;
+          const code = toLf(file.code);
+          file.code = `/*! v${version} | h${shortHash(code)} */\n${code}`;
         } else if (typeof file.source === 'string' && file.fileName.endsWith('.css')) {
-          const banner = `/*! v${version} | h${shortHash(file.source)} */`;
-          file.source = `${banner}\n${file.source}`;
+          const source = toLf(file.source);
+          file.source = `/*! v${version} | h${shortHash(source)} */\n${source}`;
         }
       });
     },
@@ -122,37 +139,42 @@ export function versionBannerPlugin(version: string): Plugin {
 }
 
 /**
- * Removes previously generated entry outputs before each build so stale bundles
- * for renamed/removed blocks (or their CSS) don't linger in the delivered tree.
+ * After each write, removes generated files the bundle no longer emits (renamed/removed
+ * blocks, superseded hashed chunks). Pruning after the write, not before, means watch
+ * rebuilds never leave a window where files are missing and the dev server 404s.
  */
 export function cleanGeneratedOutputs(): Plugin {
   return {
     name: 'clean-generated-outputs',
-    buildStart() {
-      const staleFiles = [
-        ...Object.keys(APP_ENTRIES).map((name) => `${name}.js`),
-        ...Object.keys(STYLE_ENTRIES).map((name) => `${name}.css`),
-      ];
-      if (existsSync(BLOCKS_DIR)) {
-        readdirSync(BLOCKS_DIR, { withFileTypes: true })
-          .filter((d) => d.isDirectory())
-          .forEach((dir) => {
-            staleFiles.push(`blocks/${dir.name}/${dir.name}.js`, `blocks/${dir.name}/${dir.name}.css`);
-          });
-      }
-      staleFiles.forEach((name) => {
-        const outFile = join(ROOT, name);
-        if (existsSync(outFile)) unlinkSync(outFile);
-      });
-      // Runtime vendor/shared chunks get fresh content hashes every build, so stale ones must go.
-      // Only top-level files: chunks/editor/ belongs to the separate editor build and is not
-      // regenerated by the runtime build, so wiping it would leave editor-support.js dangling.
+    writeBundle(_options, bundle) {
+      const emitted = new Set(Object.keys(bundle).map(toPosix));
+      const candidates: string[] = [];
+
+      // Only top-level files: chunks/editor/ belongs to the separate editor build, which this
+      // build does not regenerate, so pruning it would leave editor-support.js dangling.
       const chunksDir = join(ROOT, 'chunks');
       if (existsSync(chunksDir)) {
         readdirSync(chunksDir, { withFileTypes: true })
           .filter((entry) => entry.isFile())
-          .forEach((entry) => unlinkSync(join(chunksDir, entry.name)));
+          .forEach((entry) => candidates.push(`chunks/${entry.name}`));
       }
+
+      // Scan the delivered blocks/ (not src/) so outputs of blocks deleted from src/ are pruned too.
+      const outBlocksDir = join(ROOT, 'blocks');
+      if (existsSync(outBlocksDir)) {
+        readdirSync(outBlocksDir, { withFileTypes: true })
+          .filter((d) => d.isDirectory())
+          .forEach((dir) => {
+            candidates.push(`blocks/${dir.name}/${dir.name}.js`, `blocks/${dir.name}/${dir.name}.css`);
+          });
+      }
+
+      candidates
+        .filter((name) => !emitted.has(name))
+        .forEach((name) => {
+          const outFile = join(ROOT, name);
+          if (existsSync(outFile)) unlinkSync(outFile);
+        });
     },
   };
 }
@@ -179,14 +201,14 @@ export function copyBlockHtml(): Plugin {
           const htmlFile = join(srcDir, 'index.html');
           if (existsSync(htmlFile)) {
             mkdirSync(outDir, { recursive: true });
-            copyFileSync(htmlFile, join(outDir, 'index.html'));
+            writeFileSync(join(outDir, 'index.html'), toLf(readFileSync(htmlFile, 'utf-8')));
           }
 
           const cssFile = join(srcDir, `${dir.name}.css`);
           const outCssFile = join(outDir, `${dir.name}.css`);
           if (existsSync(cssFile) && !existsSync(outCssFile)) {
             mkdirSync(outDir, { recursive: true });
-            copyFileSync(cssFile, outCssFile);
+            writeFileSync(outCssFile, toLf(readFileSync(cssFile, 'utf-8')));
           }
         });
     },

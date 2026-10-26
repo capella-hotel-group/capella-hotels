@@ -33,24 +33,22 @@
     width: 100%;
 }
 
-/* Fixed columns, sized from Figma's 227/286/219 frames to fit the longest city name (SHANGHAI) and a full date range, so picking a value never moves the bar. */
+/* Columns and divider gaps from Figma's 227/286/219 selectors: 11px gaps on desktop (776px fields), 1.5px on tablet (738px fields). */
 @media (width >= 768px) {
     .booking-search .booking-search-fields {
         display: grid;
         grid-template-columns:
-            minmax(0, 232fr) var(--stroke-weight-s) minmax(0, 327fr)
-            var(--stroke-weight-s) minmax(0, 220fr);
+            minmax(0, 227fr) var(--stroke-weight-s) minmax(0, 286fr)
+            var(--stroke-weight-s) minmax(0, 219fr);
         align-items: center;
-        gap: 0;
+        column-gap: 11px;
+        row-gap: 0;
     }
 }
 
-/* Tablet is as wide as Figma's own frame (227/286/219), so the columns barely move from it. */
 @media (768px <= width < 1200px) {
     .booking-search .booking-search-fields {
-        grid-template-columns:
-            minmax(0, 231.5fr) var(--stroke-weight-s) minmax(0, 286.3fr)
-            var(--stroke-weight-s) minmax(0, 218.5fr);
+        column-gap: 1.5px;
     }
 }
 
@@ -109,10 +107,10 @@
     cursor: pointer;
 }
 
-/* The tablet bar has no room for the year next to a full range. */
+/* Figma's tablet selected state shows the year and lets the label run up to 4px from the chevron. */
 @media (768px <= width < 1200px) {
-    .booking-search .booking-search-label-year {
-        display: none;
+    .booking-search .booking-search-trigger {
+        gap: var(--dimension-spacing-general-2xs);
     }
 }
 
@@ -140,6 +138,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     text-transform: uppercase;
+    letter-spacing: -0.01em;
 
     /* GoudyWtcT's caps sit about 3px above the line-box centre at 18px; nudge them level with the icon. */
     transform: translateY(0.175em);
@@ -272,22 +271,33 @@
     padding-inline-end: var(--dimension-spacing-general-m);
     overflow-y: auto;
     list-style: none;
-    scrollbar-color: var(--color-surface-brand-default) var(--color-surface-general-opaque);
-    scrollbar-width: thin;
+    scrollbar-width: none;
 }
 
 .booking-search .booking-search-options::-webkit-scrollbar {
-    width: 6px;
+    display: none;
 }
 
-.booking-search .booking-search-options::-webkit-scrollbar-track {
+.booking-search .booking-search-location-scrollbar {
+    position: absolute;
+    inset-block-start: 20px;
+    inset-inline-end: 10px;
+    z-index: 1;
+    width: 6px;
+    height: 100px;
+    padding: 0;
     border-radius: var(--corner-radius-round);
     background-color: var(--color-surface-general-opaque);
+    pointer-events: none;
 }
 
-.booking-search .booking-search-options::-webkit-scrollbar-thumb {
+.booking-search .booking-search-location-scrollbar-thumb {
+    display: block;
+    width: 6px;
+    height: 20px;
     border-radius: var(--corner-radius-round);
     background-color: var(--color-surface-brand-default);
+    transition: transform 0.15s ease;
 }
 
 .booking-search .booking-search-option {

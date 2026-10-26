@@ -1,6 +1,7 @@
 import type { HCaptchaApi, HCaptchaRenderOptions } from '@/types/hcaptcha.js';
 import { getHCaptchaSiteKey } from '@/utils/env.js';
 import { loadHCaptcha } from '@/utils/hcaptcha.js';
+import { resolveNewsletterProperty, submitNewsletterForm } from '@/utils/newsletter-submission.js';
 import decorate from './text-with-cta';
 
 jest.mock(
@@ -27,10 +28,17 @@ jest.mock('@/utils/hcaptcha.js', () => ({
   loadHCaptcha: jest.fn(),
 }));
 
+jest.mock('@/utils/newsletter-submission.js', () => ({
+  resolveNewsletterProperty: jest.fn(),
+  submitNewsletterForm: jest.fn(),
+}));
+
 const mockGetSiteKey = jest.mocked(getHCaptchaSiteKey);
 const mockLoadHCaptcha = jest.mocked(loadHCaptcha);
+const mockResolveProperty = jest.mocked(resolveNewsletterProperty);
+const mockSubmitNewsletterForm = jest.mocked(submitNewsletterForm);
 
-function buildBlock(enableHCaptcha?: string): HTMLElement {
+function buildBlock(enableHCaptcha?: string, propertyPath = '/content/dam/property-mapping'): HTMLElement {
   const block = document.createElement('div');
   block.className = 'text-with-cta';
 
@@ -49,7 +57,9 @@ function buildBlock(enableHCaptcha?: string): HTMLElement {
     'Sign up',
     'Thanks for subscribing.',
   ];
-  if (enableHCaptcha !== undefined) fields.push(enableHCaptcha);
+  if (enableHCaptcha !== undefined) {
+    fields.push(enableHCaptcha, 'Sorry, please try again.', `<a href="${propertyPath}">${propertyPath}</a>`);
+  }
 
   const itemRow = `<div data-aue-model="text-with-cta-signup-form">${fields
     .map((text) => `<div>${text}</div>`)
@@ -59,8 +69,19 @@ function buildBlock(enableHCaptcha?: string): HTMLElement {
   return block;
 }
 
-function dispatchSubmit(form: HTMLFormElement): void {
+function fillRequiredFields(form: HTMLFormElement): void {
+  form.querySelector<HTMLSelectElement>('select[name="salutation"]')!.value = 'Mr';
+  form.querySelector<HTMLInputElement>('input[name="firstName"]')!.value = 'Alex';
+  form.querySelector<HTMLInputElement>('input[name="lastName"]')!.value = 'Morgan';
+  form.querySelector<HTMLInputElement>('input[name="country"]')!.value = 'Singapore';
+  form.querySelector<HTMLInputElement>('input[name="email"]')!.value = 'alex@example.com';
+  const consent = form.querySelector<HTMLInputElement>('input[name="consent"]')!;
+  consent.checked = true;
+}
+
+async function dispatchSubmit(form: HTMLFormElement): Promise<void> {
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 describe('text-with-cta hCaptcha', () => {
@@ -71,10 +92,15 @@ describe('text-with-cta hCaptcha', () => {
     jest.clearAllMocks();
   });
 
+  beforeEach(() => {
+    mockResolveProperty.mockResolvedValue('CHR');
+    mockSubmitNewsletterForm.mockResolvedValue('success');
+  });
+
   it.each([
     ['legacy content', undefined],
     ['toggle off', 'false'],
-  ])('preserves the current form behavior for %s', (_label, value) => {
+  ])('uses the shared submission path with CAPTCHA off for %s', async (_label, value) => {
     const block = buildBlock(value);
 
     decorate(block);
@@ -85,8 +111,13 @@ describe('text-with-cta hCaptcha', () => {
     expect(submit.disabled).toBe(false);
     expect(mockLoadHCaptcha).not.toHaveBeenCalled();
 
-    dispatchSubmit(form);
+    fillRequiredFields(form);
+    await dispatchSubmit(form);
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Thanks for subscribing.');
+    expect(mockSubmitNewsletterForm).toHaveBeenCalledWith(
+      form,
+      expect.objectContaining({ captchaEnabled: false, captchaToken: '' }),
+    );
   });
 
   it('requires a solved CAPTCHA before showing success and resets it after submission', async () => {
@@ -118,14 +149,23 @@ describe('text-with-cta hCaptcha', () => {
     );
     expect(submit.disabled).toBe(true);
 
+    fillRequiredFields(form);
     dispatchSubmit(form);
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Please complete the CAPTCHA verification.');
 
     renderOptions.callback('verified-token');
     expect(submit.disabled).toBe(false);
-    dispatchSubmit(form);
+    await dispatchSubmit(form);
 
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Thanks for subscribing.');
+    expect(mockSubmitNewsletterForm).toHaveBeenCalledWith(
+      form,
+      expect.objectContaining({
+        property: 'CHR',
+        captchaEnabled: true,
+        captchaToken: 'verified-token',
+      }),
+    );
     expect(api.reset).toHaveBeenCalledWith('captcha-widget');
     expect(submit.disabled).toBe(true);
   });
@@ -185,5 +225,39 @@ describe('text-with-cta hCaptcha', () => {
     const form = block.querySelector<HTMLFormElement>('.text-with-cta-form')!;
     expect(form.querySelector<HTMLButtonElement>('.text-with-cta-submit')?.disabled).toBe(true);
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Please complete the CAPTCHA verification.');
+  });
+
+  it('uses the authored property mapping and error message on API failure', async () => {
+    mockResolveProperty.mockResolvedValue('CPMAC');
+    mockSubmitNewsletterForm.mockResolvedValue('request-failed');
+    const block = buildBlock('false', '/content/dam/property-mapping');
+
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('.text-with-cta-form')!;
+    block.querySelector<HTMLButtonElement>('.text-with-cta-trigger')!.click();
+    fillRequiredFields(form);
+    await dispatchSubmit(form);
+
+    expect(mockResolveProperty).toHaveBeenCalledWith('/content/dam/property-mapping');
+    expect(mockSubmitNewsletterForm).toHaveBeenCalledWith(
+      form,
+      expect.objectContaining({ property: 'CPMAC', captchaEnabled: false, captchaToken: '' }),
+    );
+    expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Sorry, please try again.');
+  });
+
+  it('shows a retry message when country validation cannot load', async () => {
+    mockSubmitNewsletterForm.mockResolvedValue('country-validation-unavailable');
+    const block = buildBlock('false');
+
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('.text-with-cta-form')!;
+    block.querySelector<HTMLButtonElement>('.text-with-cta-trigger')!.click();
+    fillRequiredFields(form);
+    await dispatchSubmit(form);
+
+    expect(form.querySelector('.text-with-cta-status')?.textContent).toBe(
+      'Country validation is unavailable. Please try again later.',
+    );
   });
 });
