@@ -18,6 +18,16 @@
     }
 }
 
+/* Past 1920 the content keeps its 1920 width and centres; the background stays full-bleed. */
+@media (width >= 1920px) {
+    .text-with-cta {
+        padding-inline: max(
+            var(--dimension-layout-module-padding-inline-l),
+            calc(50% - 960px + var(--dimension-layout-module-padding-inline-l))
+        );
+    }
+}
+
 /* text-container */
 
 .text-with-cta .text-with-cta-text {
