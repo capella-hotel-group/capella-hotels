@@ -128,6 +128,7 @@ describe('newsletter-form hCaptcha toggle', () => {
       await decorate(buildBlock({ layout: 'Inline', enableHCaptcha: 'true' }));
       const form = document.querySelector<HTMLFormElement>('.newsletter-form-element')!;
       expect(observe).toHaveBeenCalledWith(form);
+      expect(mockObserver).toHaveBeenCalledWith(expect.any(Function), { rootMargin: '100px' });
       expect(api.render).not.toHaveBeenCalled();
 
       notifyIntersection([{ isIntersecting: false } as IntersectionObserverEntry], observer);

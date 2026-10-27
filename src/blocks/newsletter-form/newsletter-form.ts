@@ -614,7 +614,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
             initializeCaptcha();
           }
         },
-        { rootMargin: '200px' },
+        { rootMargin: '100px' },
       );
       observer.observe(form);
     }
