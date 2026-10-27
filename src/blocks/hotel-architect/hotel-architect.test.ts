@@ -203,6 +203,75 @@ describe('hotel-architect with a single ritual', () => {
     expect(selected()).toBe(0);
   });
 
+  it('changes the slide on a horizontal swipe but leaves a scroll alone', () => {
+    const block = build(IDENTITY_ROWS + ritualRow('Resort', { images: 3 }));
+    decorate(block);
+
+    const frame = block.querySelector<HTMLElement>('.hotel-architect-frame')!;
+    const selected = (): number =>
+      [...block.querySelectorAll('.hotel-architect-slide')].findIndex((slide) =>
+        slide.classList.contains('is-selected'),
+      );
+    const swipe = (fromX: number, toX: number, toY = 0): void => {
+      const pointer = (type: string, clientX: number, clientY: number): void => {
+        const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY });
+        Object.assign(event, { pointerId: 1, pointerType: 'touch' });
+        frame.dispatchEvent(event);
+      };
+      pointer('pointerdown', fromX, 0);
+      pointer('pointerup', toX, toY);
+    };
+
+    swipe(200, 100);
+    expect(selected()).toBe(1);
+    swipe(100, 200);
+    expect(selected()).toBe(0);
+    // wraps backwards, like the arrows
+    swipe(100, 200);
+    expect(selected()).toBe(2);
+
+    // too short to be a swipe, and a drag that mostly went down the page
+    swipe(200, 180);
+    swipe(200, 100, 300);
+    expect(selected()).toBe(2);
+  });
+
+  it('drags the slides with the finger and snaps back from a short drag', () => {
+    const block = build(IDENTITY_ROWS + ritualRow('Resort', { images: 3 }));
+    decorate(block);
+
+    const frame = block.querySelector<HTMLElement>('.hotel-architect-frame')!;
+    const slides = [...block.querySelectorAll<HTMLElement>('.hotel-architect-slide')];
+    const pointer = (type: string, clientX: number): void => {
+      const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY: 0 });
+      Object.assign(event, { pointerId: 1, pointerType: 'touch' });
+      frame.dispatchEvent(event);
+    };
+
+    pointer('pointerdown', 200);
+    pointer('pointermove', 170);
+    // the next slide follows the finger in from the end side
+    expect(slides[0]!.style.transform).toBe('translateX(calc(0% + -30px))');
+    expect(slides[1]!.classList.contains('is-peeking')).toBe(true);
+    expect(slides[1]!.style.transform).toBe('translateX(calc(100% + -30px))');
+
+    pointer('pointermove', 230);
+    // reversing pulls the previous slide in instead, which wraps to the last one
+    expect(slides[1]!.classList.contains('is-peeking')).toBe(false);
+    expect(slides[2]!.style.transform).toBe('translateX(calc(-100% + 30px))');
+
+    pointer('pointerup', 230);
+    expect(slides[0]!.classList.contains('is-selected')).toBe(true);
+    expect(slides.every((slide) => slide.style.transform === '' && !slide.classList.contains('is-peeking'))).toBe(true);
+
+    // a scroll that the browser takes over cancels the drag
+    pointer('pointerdown', 200);
+    pointer('pointermove', 100);
+    pointer('pointercancel', 100);
+    expect(slides[0]!.classList.contains('is-selected')).toBe(true);
+    expect(slides[1]!.classList.contains('is-peeking')).toBe(false);
+  });
+
   it('drops the controls for a single image and the thumbnails when there are none', () => {
     const block = build(IDENTITY_ROWS + ritualRow('Resort', { images: 1, thumbnails: 0, secondary: false }));
 
@@ -213,6 +282,8 @@ describe('hotel-architect with a single ritual', () => {
     expect(block.querySelector('.hotel-architect-thumbs')).toBeNull();
     expect(block.querySelector('.hotel-architect-cta-divider')).toBeNull();
     expect(block.querySelector('.hotel-architect-slide')?.classList.contains('is-selected')).toBe(true);
+    // a lone image is not a carousel: no scrim and no swipe
+    expect(block.querySelector('.hotel-architect-frame')?.classList.contains('is-carousel')).toBe(false);
   });
 
   it('reads the card by cell content when an empty text field drops its cell', () => {
