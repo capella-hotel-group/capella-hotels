@@ -12,7 +12,7 @@ import { BLOCK, DEFAULT_ADULTS } from './lib/types';
 import type { Field, Selection } from './lib/types';
 
 export default function decorate(block: HTMLElement): void {
-  const { labels, locations, limits, bookingUrl, openInNewTab } = parseConfig(block);
+  const { labels, locations, limits, bookingUrl, openInNewTab, showLocation } = parseConfig(block);
   const lang = getPageLang();
   // Figma writes dates day-first ("30 Jul - 31 Jul 2026"), which plain `en` (US) would not.
   const dateLocale = lang === 'en' ? 'en-GB' : lang;
@@ -42,7 +42,7 @@ export default function decorate(block: HTMLElement): void {
   const locationField = buildField('location', labels.location, labels.location);
   const datesField = buildField('dates', labels.dates, labels.dates);
   const guestsField = buildField('guests', '', labels.guestPlural);
-  const fields = [locationField, datesField, guestsField];
+  const fields = showLocation ? [locationField, datesField, guestsField] : [datesField, guestsField];
   const flyouts = createFlyouts(block, fields);
 
   const locationList = buildLocationList(locations, labels.location, (location) => {
@@ -52,7 +52,7 @@ export default function decorate(block: HTMLElement): void {
     locationList.mark(location);
     syncSubmit();
   });
-  locationField.panel.append(locationList.list, locationList.scrollbar);
+  if (showLocation) locationField.panel.append(locationList.list, locationList.scrollbar);
 
   const calendar = buildCalendar(lang, selection, () => {
     const { arrival, departure } = selection;
@@ -105,12 +105,14 @@ export default function decorate(block: HTMLElement): void {
       else openField(field);
     });
   });
-  locationField.trigger.addEventListener('keydown', (event) => {
-    if (event.key !== 'ArrowDown') return;
-    event.preventDefault();
-    openField(locationField);
-    locationList.focusOption(selection.location ? locations.indexOf(selection.location) : 0);
-  });
+  if (showLocation) {
+    locationField.trigger.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      openField(locationField);
+      locationList.focusOption(selection.location ? locations.indexOf(selection.location) : 0);
+    });
+  }
   datesField.trigger.addEventListener('keydown', (event) => {
     if (event.key !== 'ArrowDown') return;
     event.preventDefault();
@@ -124,7 +126,12 @@ export default function decorate(block: HTMLElement): void {
     return line;
   };
   const fieldsWrapper = el('div', `${BLOCK}-fields`);
-  fieldsWrapper.append(locationField.root, divider(), datesField.root, divider(), guestsField.root);
+  if (showLocation) {
+    fieldsWrapper.append(locationField.root, divider(), datesField.root, divider(), guestsField.root);
+  } else {
+    fieldsWrapper.classList.add(`${BLOCK}-fields-no-location`);
+    fieldsWrapper.append(datesField.root, divider(), guestsField.root);
+  }
   const form = el('div', `${BLOCK}-form`);
   form.append(fieldsWrapper, submit);
   block.append(form);

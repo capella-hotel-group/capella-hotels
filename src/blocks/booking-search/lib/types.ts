@@ -37,6 +37,7 @@ export interface BookingConfig {
   limits: Limits;
   bookingUrl: string;
   openInNewTab: boolean;
+  showLocation: boolean;
 }
 
 export interface Selection {

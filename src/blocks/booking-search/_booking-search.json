@@ -151,6 +151,14 @@
           "description": "Highest child count the guests flyout allows (0-20).",
           "valueType": "number",
           "value": 3
+        },
+        {
+          "component": "boolean",
+          "name": "showLocation",
+          "label": "Show Location Selector",
+          "description": "When off, the Location selector is hidden and no location is sent to the booking engine.",
+          "valueType": "boolean",
+          "value": true
         }
       ]
     },
