@@ -46,9 +46,53 @@
     }
 }
 
+/* Without Location (Figma 9816:53284): selectors hug their label (286/219 in the frames); tablet stacks the link below, desktop keeps it on the row. */
 @media (width >= 768px) {
-    .booking-search .booking-search-fields.booking-search-fields-no-location {
-        grid-template-columns: minmax(0, 286fr) var(--stroke-weight-s) minmax(0, 219fr);
+    .booking-search .booking-search-form.booking-search-form-no-location {
+        flex-direction: column;
+        gap: var(--dimension-spacing-general-xl);
+        max-width: none;
+    }
+
+    .booking-search .booking-search-form-no-location .booking-search-fields {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 22.5px;
+        width: auto;
+    }
+
+    .booking-search .booking-search-form-no-location .booking-search-field {
+        flex: none;
+    }
+
+    .booking-search .booking-search-form-no-location .booking-search-trigger {
+        gap: var(--dimension-layout-carousel-item-gap-l);
+    }
+
+    /* Figma starts the guests flyout at the divider, not at the selector. */
+    .booking-search .booking-search-form-no-location .booking-search-panel-guests {
+        inset-inline: -22.5px auto;
+    }
+}
+
+@media (width >= 1200px) {
+    .booking-search .booking-search-form.booking-search-form-no-location {
+        flex-direction: row;
+        gap: var(--dimension-spacing-general-5xl);
+        max-width: 848px;
+    }
+
+    .booking-search .booking-search-form-no-location .booking-search-fields {
+        flex: 1 1 0;
+        justify-content: flex-start;
+        gap: var(--dimension-spacing-general-3xl);
+        min-width: 0;
+    }
+
+    .booking-search .booking-search-form-no-location .booking-search-panel-guests {
+        inset-inline-start: calc(-1 * var(--dimension-spacing-general-3xl));
     }
 }
 
