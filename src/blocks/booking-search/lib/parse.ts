@@ -18,8 +18,10 @@ const ROW = {
   doneLabel: 9,
   maxAdults: 10,
   maxChildren: 11,
+  showLocation: 12,
 } as const;
-const CONTENT_ROWS = Object.keys(ROW).length;
+/** `showLocation` is excluded: it is a trailing optional row, so pages authored without it keep their identity rows aligned. */
+const CONTENT_ROWS = ROW.showLocation;
 
 /** Upper bound on an authored maximum, so a typo cannot build a huge counter. */
 const MAX_ALLOWED = 20;
@@ -84,5 +86,7 @@ export function parseConfig(block: HTMLElement): BookingConfig {
     limits,
     bookingUrl: cellText(contentRows[ROW.bookingUrl]),
     openInNewTab: cellText(contentRows[ROW.checkRatesOpenInNewTab]).toLowerCase() === 'true',
+    // Rows authored before this field existed are empty, so the selector stays visible.
+    showLocation: cellText(contentRows[ROW.showLocation]).toLowerCase() !== 'false',
   };
 }
