@@ -105,6 +105,50 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(submit.hasAttribute('aria-disabled')).toBe(false);
   });
 
+  it('initializes inline CAPTCHA when the visible form approaches the viewport', async () => {
+    Object.assign(window, { hlx: { codeBasePath: '' } });
+    const originalObserver = window.IntersectionObserver;
+    const observe = jest.fn();
+    const disconnect = jest.fn();
+    let notifyIntersection!: IntersectionObserverCallback;
+    const observer = { observe, disconnect } as unknown as IntersectionObserver;
+    const mockObserver = jest.fn((callback: IntersectionObserverCallback) => {
+      notifyIntersection = callback;
+      return observer;
+    });
+    window.IntersectionObserver = mockObserver as unknown as typeof IntersectionObserver;
+    const api: HCaptchaApi = {
+      render: jest.fn(() => 'inline-captcha'),
+      reset: jest.fn(),
+    };
+    window.hcaptcha = api;
+    mockGetSiteKey.mockReturnValue('test-site-key');
+
+    try {
+      await decorate(buildBlock({ layout: 'Inline', enableHCaptcha: 'true' }));
+      const form = document.querySelector<HTMLFormElement>('.newsletter-form-element')!;
+      expect(observe).toHaveBeenCalledWith(form);
+      expect(mockObserver).toHaveBeenCalledWith(expect.any(Function), { rootMargin: '100px' });
+      expect(api.render).not.toHaveBeenCalled();
+
+      notifyIntersection([{ isIntersecting: false } as IntersectionObserverEntry], observer);
+      expect(api.render).not.toHaveBeenCalled();
+
+      notifyIntersection([{ isIntersecting: true } as IntersectionObserverEntry], observer);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(disconnect).toHaveBeenCalledTimes(1);
+      expect(api.render).toHaveBeenCalledTimes(1);
+      expect(api.render).toHaveBeenCalledWith(
+        form.querySelector('.newsletter-captcha'),
+        expect.objectContaining({ sitekey: 'test-site-key' }),
+      );
+      expect(form.querySelector('button')?.getAttribute('aria-disabled')).toBe('true');
+    } finally {
+      window.IntersectionObserver = originalObserver;
+    }
+  });
+
   it('keeps submission blocked when enabled but no site key is available', async () => {
     mockGetSiteKey.mockReturnValue('');
 
