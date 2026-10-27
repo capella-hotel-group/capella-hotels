@@ -616,7 +616,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
         },
         { rootMargin: '200px' },
       );
-      observer.observe(captchaWrapper);
+      observer.observe(form);
     }
     return;
   }
