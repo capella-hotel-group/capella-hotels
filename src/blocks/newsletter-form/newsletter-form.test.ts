@@ -91,6 +91,10 @@ describe('newsletter-form hCaptcha toggle', () => {
     await decorate(buildBlock({ enableHCaptcha: 'true' }));
 
     const submit = document.querySelector<HTMLButtonElement>('.newsletter-submit')!;
+    expect(api.render).not.toHaveBeenCalled();
+    document.querySelector<HTMLButtonElement>('.newsletter-trigger')!.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(api.render).toHaveBeenCalledWith(
       document.querySelector('.newsletter-captcha'),
       expect.objectContaining({ sitekey: 'test-site-key' }),
@@ -149,11 +153,11 @@ describe('newsletter-form hCaptcha toggle', () => {
 
     const form = fillModalRequiredFields('Singapore');
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(String(request.body)).toContain('country=SG');
-    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   it.each(['false', 'true'])('sends captchaEnabled=%s to the API', async (enableHCaptcha) => {
@@ -174,6 +178,10 @@ describe('newsletter-form hCaptcha toggle', () => {
     }
 
     await decorate(buildBlock({ enableHCaptcha }));
+    if (enableHCaptcha === 'true') {
+      document.querySelector<HTMLButtonElement>('.newsletter-trigger')!.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     renderOptions?.callback('verified-token');
 
     const form = fillModalRequiredFields('Singapore');
@@ -193,6 +201,7 @@ describe('newsletter-form hCaptcha toggle', () => {
 
     const form = fillModalRequiredFields('Atlantis');
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(form.querySelector('.newsletter-message')?.textContent).toBe('Enter a valid country name.');

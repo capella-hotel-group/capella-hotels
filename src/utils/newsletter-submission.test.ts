@@ -1,4 +1,4 @@
-import { submitNewsletterForm } from './newsletter-submission';
+import { resolveNewsletterProperty, submitNewsletterForm } from './newsletter-submission';
 
 jest.mock('@/app/scripts.js', () => ({ getPageLang: () => 'en-US' }));
 jest.mock('@/utils/env.js', () => ({ getBasePathBasedOnEnv: () => 'https://example.test' }));
@@ -27,6 +27,18 @@ describe('submitNewsletterForm', () => {
     });
     return form;
   }
+
+  it('removes the rendered .html suffix from property Content Fragment paths', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await resolveNewsletterProperty('/content/dam/capella-hotels/list-fragments/property-source-list.html');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://example.test/graphql/execute.json/capella-hotels/ListCF;path=/content/dam/capella-hotels/list-fragments/property-source-list',
+      { headers: { Accept: 'application/json' } },
+    );
+  });
 
   it.each([
     [false, ''],

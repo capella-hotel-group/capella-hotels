@@ -1,9 +1,23 @@
 import { getPageLang } from '@/app/scripts.js';
 import { getBasePathBasedOnEnv } from '@/utils/env.js';
-import { getAlpha2Code, registerLocale } from 'i18n-iso-countries';
-import englishCountryNames from 'i18n-iso-countries/langs/en.json';
 
-registerLocale(englishCountryNames);
+type CountryCodesApi = typeof import('i18n-iso-countries');
+let countryCodesPromise: Promise<CountryCodesApi> | undefined;
+
+function loadCountryCodes(): Promise<CountryCodesApi> {
+  if (!countryCodesPromise) {
+    countryCodesPromise = Promise.all([import('i18n-iso-countries'), import('i18n-iso-countries/langs/en.json')])
+      .then(([countryCodes, locale]) => {
+        countryCodes.registerLocale(locale.default);
+        return countryCodes;
+      })
+      .catch((error: unknown) => {
+        countryCodesPromise = undefined;
+        throw error;
+      });
+  }
+  return countryCodesPromise;
+}
 
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
@@ -25,7 +39,12 @@ export interface NewsletterSubmissionOptions {
 }
 
 export type NewsletterSubmissionResult =
-  'success' | 'missing-fields' | 'invalid-country' | 'captcha-required' | 'request-failed';
+  | 'success'
+  | 'missing-fields'
+  | 'invalid-country'
+  | 'country-validation-unavailable'
+  | 'captcha-required'
+  | 'request-failed';
 
 function collectRawItems(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
@@ -61,7 +80,7 @@ function collectRawItems(data: unknown): unknown[] {
 async function fetchRawList(path: string): Promise<unknown[]> {
   if (!path) return [];
   try {
-    const cfPath = path.replace(/\.json$/, '');
+    const cfPath = path.replace(/\.(?:html|json)$/i, '');
     const url = `${getBasePathBasedOnEnv()}${OPTIONS_GRAPHQL_QUERY};path=${cfPath}`;
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) return [];
@@ -127,13 +146,20 @@ export async function submitNewsletterForm(
 
   if (REQUIRED_FIELDS.some((field) => !payload[field])) return 'missing-fields';
 
-  const countryCode = getAlpha2Code(payload.country ?? '', 'en');
-  if (!countryCode) return 'invalid-country';
-  payload.country = countryCode.toUpperCase();
-
   if (captchaEnabled && !captchaToken) return 'captcha-required';
   payload.captchaEnabled = String(captchaEnabled);
   if (captchaToken) payload.captchaValue = captchaToken;
+
+  let countryCode: string | undefined;
+  try {
+    const countryCodes = await loadCountryCodes();
+    countryCode = countryCodes.getAlpha2Code(payload.country ?? '', 'en');
+  } catch (error) {
+    console.error('Country validation load error:', error);
+    return 'country-validation-unavailable';
+  }
+  if (!countryCode) return 'invalid-country';
+  payload.country = countryCode.toUpperCase();
 
   const langTag = document.documentElement.lang || getPageLang();
   payload.language = (langTag.split('-')[0] ?? '').toLowerCase();
