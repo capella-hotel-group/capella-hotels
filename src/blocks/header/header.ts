@@ -231,13 +231,17 @@ function readCategoryFromList(rootList: Element): NavCategory | null {
   };
 }
 
+function isWithinSeparator(element: Element): boolean {
+  return Boolean(element.closest('.separator'));
+}
+
 function readCategories(menuSection: Element): NavCategory[] {
   const categories: NavCategory[] = [];
   [...menuSection.children].forEach((wrapper) => {
     // decorateSections groups consecutive default content into ONE wrapper, so two
     // category lists with no Hero between them (a category with no promo) share a
     // wrapper — read every top-level <ul>, not just the first.
-    const rootLists = [...wrapper.querySelectorAll(':scope > ul')];
+    const rootLists = [...wrapper.querySelectorAll(':scope > ul')].filter((list) => !isWithinSeparator(list));
     if (rootLists.length) {
       rootLists.forEach((rootList) => {
         const category = readCategoryFromList(rootList);
@@ -245,7 +249,7 @@ function readCategories(menuSection: Element): NavCategory[] {
       });
       return;
     }
-    const heroBlock = wrapper.querySelector(':scope > div.hero');
+    const heroBlock = [...wrapper.querySelectorAll(':scope > div.hero')].find((hero) => !isWithinSeparator(hero));
     const lastCategory = categories[categories.length - 1];
     if (heroBlock && lastCategory && !lastCategory.promo) {
       lastCategory.promo = readPromo(heroBlock);

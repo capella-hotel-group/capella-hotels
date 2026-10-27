@@ -17,11 +17,13 @@ function buildBlock({
   layout = 'Modal',
   salutationValue = '<ul><li>Mr</li><li>Mrs</li><li>Ms</li></ul>',
   countryPlaceholder = '',
+  infoText = 'Submission in non-English is not supported',
 }: {
   enableHCaptcha?: string;
   layout?: string;
   salutationValue?: string;
   countryPlaceholder?: string;
+  infoText?: string;
 } = {}): HTMLElement {
   const values = [
     'Newsletter',
@@ -37,8 +39,9 @@ function buildBlock({
     '',
     'Subscribe',
     layout,
+    enableHCaptcha ?? '',
+    infoText,
   ];
-  if (enableHCaptcha !== undefined) values.push(enableHCaptcha);
 
   const block = document.createElement('div');
   block.className = 'newsletter-form';
@@ -75,6 +78,26 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(mockGetSiteKey).not.toHaveBeenCalled();
     expect(document.querySelector('.newsletter-captcha')?.childElementCount).toBe(0);
     expect(document.querySelector('script[src*="hcaptcha.com"]')).toBeNull();
+  });
+
+  it('renders the authored info text below the form title', async () => {
+    await decorate(buildBlock());
+
+    const title = document.querySelector('.newsletter-title');
+    const info = document.querySelector('.newsletter-info-text');
+    expect(title?.textContent).toBe('Newsletter');
+    expect(info?.textContent).toBe('Submission in non-English is not supported');
+    expect(title?.parentElement).toBe(info?.parentElement);
+    expect(title?.nextElementSibling).toBe(info);
+  });
+
+  it('omits the info text element when the field is blank', async () => {
+    await decorate(buildBlock({ infoText: '' }));
+
+    expect(document.querySelector('.newsletter-info-text')).toBeNull();
+    expect(
+      document.querySelector('.newsletter-title')?.parentElement?.classList.contains('newsletter-title-info'),
+    ).toBe(false);
   });
 
   it('renders hCaptcha and gates submission when enabled', async () => {

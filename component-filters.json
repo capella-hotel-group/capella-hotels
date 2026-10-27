@@ -46,7 +46,8 @@
       "footer-legal",
       "content-listing",
       "page-listing",
-      "booking-search"
+      "booking-search",
+      "separator"
     ]
   },
   {
@@ -57,7 +58,8 @@
       "button",
       "hero",
       "navigation-lists",
-      "link"
+      "link",
+      "separator"
     ]
   },
   {
