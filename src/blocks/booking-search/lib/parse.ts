@@ -20,7 +20,8 @@ const ROW = {
   maxChildren: 11,
   showLocation: 12,
 } as const;
-const CONTENT_ROWS = Object.keys(ROW).length;
+/** `showLocation` is excluded: it is a trailing optional row, so pages authored without it keep their identity rows aligned. */
+const CONTENT_ROWS = ROW.showLocation;
 
 /** Upper bound on an authored maximum, so a typo cannot build a huge counter. */
 const MAX_ALLOWED = 20;

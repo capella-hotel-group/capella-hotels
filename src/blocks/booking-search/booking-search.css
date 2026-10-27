@@ -150,6 +150,18 @@
     transform: translateY(0.175em);
 }
 
+/* Trimming the box to cap height centres the text on the icon and chevron whatever font actually renders. */
+@supports (text-box: trim-both cap alphabetic) {
+    .booking-search .booking-search-label {
+        text-box: trim-both cap alphabetic;
+        transform: none;
+
+        /* The trimmed box would clip descenders such as the slash in ARRIVAL/DEPART. */
+        padding-block: 0.2em;
+        margin-block: -0.2em;
+    }
+}
+
 .booking-search .booking-search-field {
     position: relative;
     min-width: 0;
