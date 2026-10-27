@@ -2532,6 +2532,14 @@
         "description": "Require hCaptcha verification before submitting the form.",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "text",
+        "name": "infoText",
+        "label": "Info Text",
+        "description": "Optional information shown directly below the form title. Leave blank to omit it.",
+        "valueType": "string",
+        "value": "Submission in non-English is not supported"
       }
     ]
   },
@@ -3194,6 +3202,14 @@
         "description": "Maps the current page to the Newsletter API property code.",
         "valueType": "string",
         "required": true
+      },
+      {
+        "component": "text",
+        "name": "infoText",
+        "label": "Info Text",
+        "description": "Optional information displayed above the sign-up form. Leave blank to omit it.",
+        "valueType": "string",
+        "value": "Submission in non-English is not supported"
       }
     ]
   },

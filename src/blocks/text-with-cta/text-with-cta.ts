@@ -22,6 +22,7 @@ const FIELD = {
   enableHCaptcha: 10,
   errorMessage: 11,
   propertyOptions: 12,
+  infoText: 13,
 } as const;
 
 let uid = 0;
@@ -177,7 +178,7 @@ interface SignupFormBuild {
   initializeCaptcha: () => void;
 }
 
-function buildSignupForm(row: Element): SignupFormBuild {
+function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupFormBuild {
   const cells = [...row.children];
   const formId = `${BLOCK}-form-${(uid += 1)}`;
   const label = (index: number, fallback: string): string => textOf(cells[index]) || fallback;
@@ -196,6 +197,15 @@ function buildSignupForm(row: Element): SignupFormBuild {
   form.noValidate = false;
 
   const fields = el('div', `${BLOCK}-form-fields`);
+  const infoTextCell = cells[FIELD.infoText] as HTMLElement | undefined;
+  const infoTextSource = infoTextCell && textOf(infoTextCell) ? infoTextCell : legacyInfoTextCell;
+  if (infoTextSource && textOf(infoTextSource)) {
+    const infoText = el('div', `${BLOCK}-form-info-text`);
+    moveInstrumentation(infoTextSource, infoText);
+    infoText.append(...infoTextSource.childNodes);
+    fields.append(infoText);
+  }
+
   const salutationOptions = label(FIELD.salutationOptions, '')
     .split(',')
     .map((option) => option.trim())
@@ -362,11 +372,8 @@ function buildSignupForm(row: Element): SignupFormBuild {
 export default function decorate(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
   const itemRows = findItemRows(rows);
-  const [titleRow, descriptionRow] = applyBlockIdentity(
-    block,
-    rows.filter((row) => !itemRows.includes(row)),
-    { contentRows: 2 },
-  );
+  const contentRows = rows.filter((row) => !itemRows.includes(row));
+  const [titleRow, descriptionRow, legacyInfoTextRow] = applyBlockIdentity(block, contentRows, { contentRows: 2 });
 
   const text = el('div', `${BLOCK}-text`);
 
@@ -383,7 +390,8 @@ export default function decorate(block: HTMLElement): void {
   }
 
   const aside = el('div', `${BLOCK}-aside`);
-  const signupForms = itemRows.map((row) => buildSignupForm(row));
+  const legacyInfoTextCell = contentOf(legacyInfoTextRow);
+  const signupForms = itemRows.map((row, index) => buildSignupForm(row, index === 0 ? legacyInfoTextCell : undefined));
   signupForms.forEach(({ panel }) => aside.append(panel));
 
   block.textContent = '';

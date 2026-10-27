@@ -172,6 +172,15 @@
     width: 100%;
 }
 
+.text-with-cta .text-with-cta-form-info-text {
+    margin: 0;
+    color: #6e6e6c;
+    font-family: var(--type-font-family-body);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 16px;
+}
+
 .text-with-cta .text-with-cta-captcha {
     max-width: 100%;
     overflow-x: auto;

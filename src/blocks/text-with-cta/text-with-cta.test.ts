@@ -38,13 +38,19 @@ const mockLoadHCaptcha = jest.mocked(loadHCaptcha);
 const mockResolveProperty = jest.mocked(resolveNewsletterProperty);
 const mockSubmitNewsletterForm = jest.mocked(submitNewsletterForm);
 
-function buildBlock(enableHCaptcha?: string, propertyPath = '/content/dam/property-mapping'): HTMLElement {
+function buildBlock(
+  enableHCaptcha?: string,
+  propertyPath = '/content/dam/property-mapping',
+  infoText = 'Submission in non-English is not supported',
+  legacyInfoText?: string,
+): HTMLElement {
   const block = document.createElement('div');
   block.className = 'text-with-cta';
 
   const contentRows = ['block-anchor', 'text-with-cta-test', 'Join Capella', 'Stay in the know'].map(
     (text) => `<div><div>${text}</div></div>`,
   );
+  if (legacyInfoText !== undefined) contentRows.push(`<div><div>${legacyInfoText}</div></div>`);
   const fields = [
     'Join now',
     'Title',
@@ -59,10 +65,13 @@ function buildBlock(enableHCaptcha?: string, propertyPath = '/content/dam/proper
   ];
   if (enableHCaptcha !== undefined) {
     fields.push(enableHCaptcha, 'Sorry, please try again.', `<a href="${propertyPath}">${propertyPath}</a>`);
+  } else {
+    fields.push('', '', '');
   }
+  fields.push(infoText);
 
   const itemRow = `<div data-aue-model="text-with-cta-signup-form">${fields
-    .map((text) => `<div>${text}</div>`)
+    .map((text, index) => `<div${index === 13 ? ' data-aue-prop="infoText"' : ''}>${text}</div>`)
     .join('')}</div>`;
   block.innerHTML = [...contentRows, itemRow].join('');
   document.body.append(block);
@@ -95,6 +104,41 @@ describe('text-with-cta hCaptcha', () => {
   beforeEach(() => {
     mockResolveProperty.mockResolvedValue('CHR');
     mockSubmitNewsletterForm.mockResolvedValue('success');
+  });
+
+  it('renders authored info text above the sign-up fields and preserves its editor instrumentation', () => {
+    const block = buildBlock();
+
+    decorate(block);
+
+    expect(block.querySelector('.text-with-cta-title')?.textContent).toBe('Join Capella');
+    expect(block.querySelector('.text-with-cta-info-text')).toBeNull();
+    const infoText = block.querySelector('.text-with-cta-form-info-text');
+    expect(infoText?.textContent).toBe('Submission in non-English is not supported');
+    expect(infoText?.getAttribute('data-aue-prop')).toBe('infoText');
+    expect(infoText?.parentElement?.classList.contains('text-with-cta-form-fields')).toBe(true);
+    expect(infoText?.nextElementSibling?.classList.contains('text-with-cta-form-row')).toBe(true);
+    expect(block.querySelector('.text-with-cta-description')?.textContent).toBe('Stay in the know');
+  });
+
+  it('omits the info text element when the field is blank', () => {
+    const block = buildBlock(undefined, undefined, '');
+
+    decorate(block);
+
+    expect(block.querySelector('.text-with-cta-form-info-text')).toBeNull();
+    expect(block.querySelector('.text-with-cta-info-text')).toBeNull();
+    expect(block.querySelector('.text-with-cta-heading')).toBeNull();
+    expect(block.querySelector('.text-with-cta-title')?.textContent).toBe('Join Capella');
+  });
+
+  it('moves legacy block-level info text into the sign-up form', () => {
+    const block = buildBlock(undefined, undefined, '', 'Legacy signup note');
+
+    decorate(block);
+
+    expect(block.querySelector('.text-with-cta-form-info-text')?.textContent).toBe('Legacy signup note');
+    expect(block.querySelector('.text-with-cta-description')?.textContent).toBe('Stay in the know');
   });
 
   it.each([

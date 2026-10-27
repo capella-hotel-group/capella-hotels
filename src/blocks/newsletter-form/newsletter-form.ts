@@ -26,6 +26,7 @@ const ROW = {
   TRIGGER_LABEL: 11,
   LAYOUT: 12,
   ENABLE_HCAPTCHA: 13,
+  INFO_TEXT: 14,
 };
 
 function rowText(rows: Element[], index: number): string {
@@ -437,6 +438,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     triggerLabel: rowText(rows, ROW.TRIGGER_LABEL) || 'Subscribe',
     layout: rowText(rows, ROW.LAYOUT) === 'Inline' ? 'Inline' : 'Modal',
     enableHCaptcha: rowText(rows, ROW.ENABLE_HCAPTCHA).toLowerCase() === 'true',
+    infoText: rowText(rows, ROW.INFO_TEXT),
   };
 
   const property = await resolveNewsletterProperty(cfg.propertyPath);
@@ -449,6 +451,19 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const title = document.createElement('h2');
   title.className = 'newsletter-title';
   title.textContent = cfg.title;
+
+  let titleContent: HTMLElement = title;
+  if (cfg.infoText) {
+    const titleInfo = document.createElement('div');
+    titleInfo.className = 'newsletter-title-info';
+
+    const infoText = document.createElement('div');
+    infoText.className = 'newsletter-info-text';
+    infoText.textContent = cfg.infoText;
+
+    titleInfo.append(title, infoText);
+    titleContent = titleInfo;
+  }
 
   // hCaptcha widget mount point. The submit button starts disabled whenever a
   // captcha is configured and/or (in `Inline`) consent is required, until the
@@ -491,7 +506,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     checkbox.addEventListener('change', () => gate.setConsent(checkbox.checked));
 
     form.append(
-      title,
+      titleContent,
       buildInlineRow([salutation, firstName, lastName]),
       buildInlineRow([country, email]),
       consent,
@@ -540,7 +555,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
     submitBtn.className = 'newsletter-submit';
 
-    form.append(title, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
+    form.append(titleContent, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
   }
 
   let captcha: CaptchaController | null = null;

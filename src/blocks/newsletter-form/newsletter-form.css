@@ -110,6 +110,23 @@ body.newsletter-modal-open {
     letter-spacing: 1.5px;
 }
 
+.newsletter-form-element .newsletter-title-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.newsletter-form-element .newsletter-info-text {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    color: #6e6e6c;
+    font-family: var(--body-font-family);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 16px;
+}
+
 .newsletter-form-element .newsletter-field {
     display: flex;
     flex-direction: column;

@@ -178,6 +178,14 @@
           "description": "Maps the current page to the Newsletter API property code.",
           "valueType": "string",
           "required": true
+        },
+        {
+          "component": "text",
+          "name": "infoText",
+          "label": "Info Text",
+          "description": "Optional information displayed above the sign-up form. Leave blank to omit it.",
+          "valueType": "string",
+          "value": "Submission in non-English is not supported"
         }
       ]
     }
