@@ -133,6 +133,7 @@ export default function decorate(block: HTMLElement): void {
     fieldsWrapper.append(datesField.root, divider(), guestsField.root);
   }
   const form = el('div', `${BLOCK}-form`);
+  if (!showLocation) form.classList.add(`${BLOCK}-form-no-location`);
   form.append(fieldsWrapper, submit);
   block.append(form);
 
