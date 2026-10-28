@@ -25,7 +25,8 @@ main .filters-grid::before {
 }
 
 main .filters-grid.filters-grid-theme-terracotta,
-main .filters-grid.filters-grid-theme-brown {
+main .filters-grid.filters-grid-theme-brown,
+main .filters-grid.filters-grid-theme-dark-brown {
     --filters-grid-background: #a57f61;
     --filters-grid-shade: rgb(86 64 46 / 45%);
     --filters-grid-shade-end: rgb(165 127 97 / 0%);
@@ -34,7 +35,8 @@ main .filters-grid.filters-grid-theme-brown {
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
-main .filters-grid.filters-grid-theme-sage-green {
+main .filters-grid.filters-grid-theme-sage-green,
+main .filters-grid.filters-grid-theme-green {
     --filters-grid-background: #cdcfbc;
     --filters-grid-shade: rgb(94 98 37 / 65%);
     --filters-grid-shade-end: rgb(215 165 126 / 0%);
@@ -43,7 +45,8 @@ main .filters-grid.filters-grid-theme-sage-green {
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
-main .filters-grid.filters-grid-theme-soft-blush {
+main .filters-grid.filters-grid-theme-soft-blush,
+main .filters-grid.filters-grid-theme-pink {
     --filters-grid-background: #e0d3d1;
     --filters-grid-shade: rgb(101 63 56 / 40%);
     --filters-grid-shade-end: rgb(224 211 209 / 0%);
@@ -52,7 +55,8 @@ main .filters-grid.filters-grid-theme-soft-blush {
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
 }
 
-main .filters-grid.filters-grid-theme-dark-navy-blue {
+main .filters-grid.filters-grid-theme-dark-navy-blue,
+main .filters-grid.filters-grid-theme-blue {
     --filters-grid-background: #213549;
     --filters-grid-shade: rgb(0 25 48 / 60%);
     --filters-grid-shade-end: rgb(176 197 222 / 0%);
@@ -62,13 +66,39 @@ main .filters-grid.filters-grid-theme-dark-navy-blue {
 }
 
 main .filters-grid.filters-grid-theme-light-neutral,
-main .filters-grid.filters-grid-theme-sand {
+main .filters-grid.filters-grid-theme-sand,
+main .filters-grid.filters-grid-theme-light-brown {
     --filters-grid-background: #dec5b0;
     --filters-grid-shade: rgb(92 56 24 / 50%);
     --filters-grid-shade-end: rgb(222 197 176 / 0%);
     --filters-grid-heading: var(--color-text-main-inverse-heading);
     --filters-grid-body: var(--color-text-main-inverse-body);
     --filters-grid-muted: var(--color-text-action-inverse-inactive);
+}
+
+main .filters-grid.filters-grid-theme-white {
+    --filters-grid-background: #fff;
+    --filters-grid-shade: transparent;
+    --filters-grid-shade-end: transparent;
+    --filters-grid-heading: var(--color-text-main-heading);
+    --filters-grid-body: var(--color-text-main-body);
+    --filters-grid-muted: var(--color-text-action-inactive);
+}
+
+main .filters-grid.filters-grid-theme-dark-brown {
+    --filters-grid-background: #75543c;
+    --filters-grid-shade: transparent;
+    --filters-grid-shade-end: transparent;
+}
+
+main .filters-grid.filters-grid-theme-light-brown,
+main .filters-grid.filters-grid-theme-green,
+main .filters-grid.filters-grid-theme-pink {
+    --filters-grid-shade: transparent;
+    --filters-grid-shade-end: transparent;
+    --filters-grid-heading: var(--color-text-main-heading);
+    --filters-grid-body: var(--color-text-main-body);
+    --filters-grid-muted: var(--color-text-action-inactive);
 }
 
 main .filters-grid .filters-grid-shell {
@@ -181,6 +211,18 @@ main .filters-grid .filters-grid-tab {
     pointer-events: auto;
     text-transform: uppercase;
     user-select: none;
+}
+
+main .filters-grid .filters-grid-mode-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    margin: 0;
+    padding: 4px 20px 4px 0;
+    color: var(--filters-grid-heading);
+    font-size: var(--typography-fontsize-body-m);
+    line-height: var(--typography-line-height-body-md);
+    text-transform: uppercase;
 }
 
 main .filters-grid .filters-grid-tab + .filters-grid-tab {
@@ -662,11 +704,15 @@ body.filters-grid-modal-open {
 
     main .filters-grid .filters-grid-layout {
         display: grid;
-        grid-template-rows: minmax(56px, auto) auto;
+        grid-template-rows: auto;
         grid-template-columns: 200px minmax(0, 440px);
         justify-content: space-between;
         column-gap: 80px;
         row-gap: 40px;
+    }
+
+    main .filters-grid .filters-grid-layout.has-mode-heading {
+        grid-template-rows: minmax(56px, auto) auto;
     }
 
     /* Spans both columns until the date picker claims row 1 / column 2. */
@@ -677,22 +723,36 @@ body.filters-grid-modal-open {
         justify-content: flex-start;
     }
 
+    main .filters-grid .filters-grid-mode-label {
+        grid-row: 1;
+        grid-column: 1 / -1;
+        align-self: center;
+    }
+
     main .filters-grid .filters-grid-filters {
-        grid-row: 2;
+        grid-row: 1;
         grid-column: 1;
         flex-direction: column;
         align-items: flex-start;
         overflow-x: clip;
         overflow-y: auto;
         height: 600px;
-        /* Figma's tablet artboard drops the filter list one step below the card grid. */
-        margin-top: var(--dimension-spacing-general-3xl);
+        margin-top: 0;
         padding-bottom: 0;
     }
 
     main .filters-grid .filters-grid-results {
-        grid-row: 2;
+        grid-row: 1;
         grid-column: 2;
+    }
+
+    main .filters-grid .filters-grid-layout.has-mode-heading .filters-grid-filters,
+    main .filters-grid .filters-grid-layout.has-mode-heading .filters-grid-results {
+        grid-row: 2;
+    }
+
+    main .filters-grid .filters-grid-layout:not(.has-filter-modes) .filters-grid-results {
+        grid-column: 1 / -1;
     }
 
     main .filters-grid .filters-grid-list {

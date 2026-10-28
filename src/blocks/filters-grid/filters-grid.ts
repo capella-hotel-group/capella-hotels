@@ -3,6 +3,7 @@ import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
 
 const PERSISTED_QUERY = '/graphql/execute.json/capella-hotels/Filter-grid-card';
 const PAGE_SIZE = 6;
+const CATEGORY_COLORS = new Set(['dark-brown', 'light-brown', 'green', 'pink', 'blue', 'white']);
 
 const ALLOWED_RICH_TEXT_TAGS = new Set(['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'blockquote']);
 
@@ -52,6 +53,12 @@ interface ModeSetting {
   isDefault?: boolean;
 }
 
+interface CategorySetting {
+  tag: string;
+  backgroundColor: string;
+  isDefault?: boolean;
+}
+
 interface AuthoredMode extends ModeSetting {
   filters: AuthoredFilter[];
 }
@@ -64,12 +71,18 @@ interface BlockConfig {
   revealMoreLabel: string;
   defaultMode: string;
   modeSettings: ModeSetting[];
+  categorySettings: CategorySetting[];
+  showModeLabels: boolean;
 }
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
 
 export function normalizeChoice(value?: string | null): string {
   return (value || '').trim().toLowerCase();
+}
+
+function normalizeColor(value: string): string {
+  return normalizeChoice(value).replace(/\s+/g, '-');
 }
 
 function referenceUrl(reference?: Reference | null): string {
@@ -219,6 +232,65 @@ function parseModeSettings(row: Element | undefined): ModeSetting[] {
   });
 }
 
+function parseCategorySettings(row: Element | undefined): CategorySetting[] {
+  if (!row) return [];
+  const field = row.querySelector('[data-aue-prop="categorySettings"]') || row.firstElementChild || row;
+  let entries: Element[] = [...field.querySelectorAll('li')].filter((entry) => !entry.parentElement?.closest('li'));
+  if (field.querySelector(':scope > hr')) {
+    entries = [];
+    let group = document.createElement('div');
+    [...field.childNodes].forEach((node) => {
+      if (node instanceof HTMLElement && node.tagName === 'HR') {
+        if (textOf(group)) entries.push(group);
+        group = document.createElement('div');
+      } else {
+        group.append(node.cloneNode(true));
+      }
+    });
+    if (textOf(group)) entries.push(group);
+  }
+  return entries.map((entry) => {
+    const walker = document.createTreeWalker(entry, NodeFilter.SHOW_TEXT);
+    const values: string[] = [];
+    while (walker.nextNode()) {
+      const value = walker.currentNode.textContent?.trim();
+      if (value) values.push(value);
+    }
+    const tag =
+      textOf(entry.querySelector('[data-aue-prop="categoryTag"]')) ||
+      entry.querySelector('a[href*="/content/cq:tags/"]')?.getAttribute('href') ||
+      values.find((value) => /^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value)) ||
+      '';
+    const checkbox = entry.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    const defaultValue =
+      textOf(entry.querySelector('[data-aue-prop="isDefaultCategory"]')) ||
+      values.find((value) => ['true', 'false'].includes(normalizeChoice(value)));
+    const isDefault = checkbox
+      ? checkbox.checked
+      : defaultValue === undefined
+        ? undefined
+        : normalizeChoice(defaultValue) === 'true';
+    const authoredColor =
+      textOf(entry.querySelector('[data-aue-prop="backgroundColor"]')) ||
+      values.find((value) => CATEGORY_COLORS.has(normalizeColor(value))) ||
+      'white';
+    const normalizedColor = normalizeColor(authoredColor);
+    return {
+      tag: normalizeTagId(tag),
+      backgroundColor: CATEGORY_COLORS.has(normalizedColor) ? normalizedColor : 'white',
+      isDefault,
+    };
+  });
+}
+
+function rowBoolean(row: Element | undefined, name: string, fallback: boolean): boolean {
+  if (!row) return fallback;
+  const checkbox = row.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (checkbox) return checkbox.checked;
+  const value = rowValue(row, name);
+  return value ? normalizeChoice(value) === 'true' : fallback;
+}
+
 function parseConfig(block: HTMLElement): BlockConfig {
   const allRows = [...block.children] as HTMLElement[];
   const legacy = allRows.length >= 10 && !block.querySelector('[data-aue-prop="filterModeLabels"]');
@@ -227,6 +299,40 @@ function parseConfig(block: HTMLElement): BlockConfig {
     const href = row.querySelector('a[href]')?.getAttribute('href');
     return /^(?:https?:\/\/[^/]+)?\/content\/dam(?:\/|$)/i.test(href || textOf(row));
   });
+  const themeOptions = new Set([
+    'white',
+    'terracotta',
+    'brown',
+    'sage-green',
+    'soft-blush',
+    'dark-navy-blue',
+    'light-neutral',
+    'sand',
+    'dark-brown',
+    'light-brown',
+    'green',
+    'pink',
+    'blue',
+  ]);
+  const firstValue = rowValue(allRows[0], 'id').toLowerCase();
+  const hasNewModel =
+    Boolean(block.querySelector('[data-aue-prop="categorySettings"], [data-aue-prop="showModeLabels"]')) ||
+    (rootIndex >= 0 && rootIndex <= 4 && allRows.length - rootIndex >= 5 && !themeOptions.has(firstValue));
+  if (hasNewModel) {
+    const contentRows = applyBlockIdentity(block, allRows, { contentRows: 7 });
+    const [eyebrow, title, cfRootPath, modeRow, categoryRow, showLabelsRow, revealRow] = contentRows;
+    return {
+      backgroundTheme: 'white',
+      eyebrow: rowValue(eyebrow, 'eyebrow'),
+      titleHtml: rowHtml(title, 'title'),
+      cfRootPath: rowHref(cfRootPath, 'cfRootPath'),
+      revealMoreLabel: rowValue(revealRow, 'revealMoreLabel') || 'Reveal More',
+      defaultMode: '',
+      modeSettings: parseModeSettings(modeRow),
+      categorySettings: parseCategorySettings(categoryRow),
+      showModeLabels: rowBoolean(showLabelsRow, 'showModeLabels', true),
+    };
+  }
   const hasLegacyDefault =
     legacy || (rootIndex >= 0 ? allRows.length - rootIndex === 4 : [7, 9].includes(allRows.length));
   const rowCount = legacy ? 10 : hasLegacyDefault ? 7 : 6;
@@ -260,6 +366,8 @@ function parseConfig(block: HTMLElement): BlockConfig {
     defaultMode: hasLegacyDefault ? rowValue(contentRows[4], 'defaultFilterMode') : '',
     revealMoreLabel: rowValue(contentRows[legacy ? 9 : modeRowIndex + 1], 'revealMoreLabel') || 'Reveal More',
     modeSettings,
+    categorySettings: [],
+    showModeLabels: true,
   };
 }
 
@@ -610,9 +718,16 @@ async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
 
 function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
   const requestedMode = normalizeChoice(config.defaultMode);
+  const defaultCategory = config.categorySettings.find(({ isDefault }) => isDefault)?.tag || '';
+  const defaultCategoryMode = modes.find(
+    ({ rootTag, filters }) =>
+      filters.some(({ tag }) => normalizeTagId(tag) === normalizeTagId(defaultCategory)) &&
+      (normalizeTagId(defaultCategory) === normalizeTagId(rootTag) || tagIsWithinRoot(defaultCategory, rootTag)),
+  );
   const checkboxDefault = modes.find(({ isDefault }) => isDefault);
   const hasDefaultCheckbox = modes.some(({ isDefault }) => isDefault !== undefined);
   const defaultMode =
+    defaultCategoryMode ||
     checkboxDefault ||
     (hasDefaultCheckbox
       ? modes[0]
@@ -649,6 +764,9 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   tabs.className = 'filters-grid-tabs';
   tabs.setAttribute('role', 'tablist');
   tabs.setAttribute('aria-label', 'Filter mode');
+  const modeLabel = document.createElement('p');
+  modeLabel.className = 'filters-grid-mode-label';
+  modeLabel.textContent = modes[0]?.label || '';
   const filters = document.createElement('div');
   filters.className = 'filters-grid-filters';
   const results = document.createElement('div');
@@ -663,7 +781,12 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const modal = createModal();
 
   const updateCards = () => {
-    const filtered = activeTag ? cards.filter((card) => cardMatchesFilter(card, activeMode, activeTag)) : [];
+    const filtered =
+      modes.length === 0
+        ? cards
+        : activeTag
+          ? cards.filter((card) => cardMatchesFilter(card, activeMode, activeTag))
+          : [];
     const selectedFilterLabel =
       modes.find(({ key }) => key === activeMode)?.filters.find(({ tag }) => tag === activeTag)?.label || '';
     const items = filtered.slice(0, visibleCount).map((card) => createCard(card, modal.open, selectedFilterLabel));
@@ -681,15 +804,23 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const updateFilters = () => {
     const mode = modes.find(({ key }) => key === activeMode);
     filters.replaceChildren();
-    activeTag = mode?.filters[0]?.tag || '';
+    const modeDefaultCategory =
+      defaultCategory &&
+      mode &&
+      (normalizeTagId(defaultCategory) === normalizeTagId(mode.rootTag) ||
+        tagIsWithinRoot(defaultCategory, mode.rootTag))
+        ? mode.filters.find(({ tag }) => normalizeTagId(tag) === normalizeTagId(defaultCategory))
+        : undefined;
+    activeTag = modeDefaultCategory?.tag || mode?.filters[0]?.tag || '';
     const filterButtons: HTMLButtonElement[] = [];
-    (mode?.filters || []).forEach(({ label, tag }, index) => {
+    (mode?.filters || []).forEach(({ label, tag }) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `filters-grid-filter${index === 0 ? ' is-active' : ''}`;
+      const selected = normalizeTagId(tag) === normalizeTagId(activeTag);
+      button.className = `filters-grid-filter${selected ? ' is-active' : ''}`;
       button.dataset.testid = 'filters-grid-filter';
       button.textContent = label || labelFromTag(tag);
-      button.setAttribute('aria-pressed', String(index === 0));
+      button.setAttribute('aria-pressed', String(selected));
       button.addEventListener('click', () => {
         activeTag = tag;
         visibleCount = PAGE_SIZE;
@@ -698,12 +829,39 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
           item.classList.toggle('is-active', selected);
           item.setAttribute('aria-pressed', String(selected));
         });
+        updateTheme();
         updateCards();
       });
       filterButtons.push(button);
       filters.append(button);
     });
+    updateTheme();
   };
+
+  function updateTheme() {
+    const categorySetting = config.categorySettings.find(
+      ({ tag }) => normalizeTagId(tag) === normalizeTagId(activeTag),
+    );
+    const theme =
+      categorySetting?.backgroundColor || (config.categorySettings.length ? 'white' : config.backgroundTheme);
+    const themeNames = [
+      'white',
+      'terracotta',
+      'brown',
+      'sage-green',
+      'soft-blush',
+      'dark-navy-blue',
+      'light-neutral',
+      'sand',
+      'dark-brown',
+      'light-brown',
+      'green',
+      'pink',
+      'blue',
+    ];
+    block.classList.remove(...themeNames.map((name) => `filters-grid-theme-${name}`));
+    block.classList.add(`filters-grid-theme-${normalizeColor(theme) || 'white'}`);
+  }
 
   const activateMode = (key: string, focus = false) => {
     const mode = modes.find(({ key: modeKey }) => modeKey === key);
@@ -736,34 +894,45 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     if (nextButton?.dataset.modeKey) activateMode(nextButton.dataset.modeKey, true);
   });
 
-  orderedModes.forEach((mode) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'filters-grid-tab';
-    button.dataset.testid = 'filters-grid-mode';
-    button.dataset.modeKey = mode.key;
-    button.textContent = mode.label;
-    button.setAttribute('role', 'tab');
-    button.setAttribute('aria-selected', String(mode.key === activeMode));
-    button.tabIndex = mode.key === activeMode ? 0 : -1;
-    button.addEventListener('click', () => activateMode(mode.key));
-    tabs.append(button);
-  });
+  if (config.showModeLabels && modes.length > 1) {
+    orderedModes.forEach((mode) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'filters-grid-tab';
+      button.dataset.testid = 'filters-grid-mode';
+      button.dataset.modeKey = mode.key;
+      button.textContent = mode.label;
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-selected', String(mode.key === activeMode));
+      button.tabIndex = mode.key === activeMode ? 0 : -1;
+      button.addEventListener('click', () => activateMode(mode.key));
+      tabs.append(button);
+    });
+  }
 
   reveal.addEventListener('click', () => {
     visibleCount += PAGE_SIZE;
     updateCards();
   });
-  controls.append(tabs, filters);
-  results.append(list, reveal);
-  layout.append(controls, results);
-  shell.append(layout);
-
-  block.classList.add(`filters-grid-theme-${normalizeChoice(config.backgroundTheme) || 'white'}`);
-  block.dataset.testid ||= 'filters-grid';
-  block.replaceChildren(shell);
   updateFilters();
   updateCards();
+  results.append(list, reveal);
+  if (modes.length) {
+    if (config.showModeLabels) {
+      if (modes.length === 1) controls.append(modeLabel);
+      else controls.append(tabs);
+    }
+    controls.append(filters);
+    layout.classList.add('has-filter-modes');
+    if (config.showModeLabels) layout.classList.add('has-mode-heading');
+    if (controls.childElementCount) layout.append(controls);
+  }
+  layout.append(results);
+  shell.append(layout);
+
+  updateTheme();
+  block.dataset.testid ||= 'filters-grid';
+  block.replaceChildren(shell);
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {

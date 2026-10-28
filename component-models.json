@@ -1449,40 +1449,6 @@
         "value": "filters-grid"
       },
       {
-        "component": "select",
-        "name": "backgroundTheme",
-        "label": "Background Theme Option",
-        "valueType": "string",
-        "required": true,
-        "value": "white",
-        "options": [
-          {
-            "name": "White",
-            "value": "white"
-          },
-          {
-            "name": "Terracotta / Brown",
-            "value": "terracotta"
-          },
-          {
-            "name": "Sage Green",
-            "value": "sage-green"
-          },
-          {
-            "name": "Soft Blush",
-            "value": "soft-blush"
-          },
-          {
-            "name": "Dark Navy Blue",
-            "value": "dark-navy-blue"
-          },
-          {
-            "name": "Light Neutral / Sand",
-            "value": "light-neutral"
-          }
-        ]
-      },
-      {
         "component": "text",
         "name": "eyebrow",
         "label": "Eyebrow",
@@ -1506,7 +1472,7 @@
         "component": "container",
         "name": "filterModeLabels",
         "label": "Filter Mode Labels",
-        "description": "Configures top mode toggler labels (e.g., EXPERIENCE, DESTINATION, BY INTEREST, BY TYPE) with their root tag. The checked default appears first; other modes retain authored order. All child tags are listed as filters.",
+        "description": "Add one entry per filter mode and select its root tag. When multiple modes are shown, provide a label for each. Child tags are used as category filters.",
         "multi": true,
         "fields": [
           {
@@ -1514,7 +1480,7 @@
             "name": "label",
             "label": "Mode Label",
             "valueType": "string",
-            "required": true
+            "required": false
           },
           {
             "component": "aem-tag",
@@ -1523,16 +1489,75 @@
             "valueType": "string",
             "multi": false,
             "required": true
+          }
+        ]
+      },
+      {
+        "component": "container",
+        "name": "categorySettings",
+        "label": "Category Settings",
+        "description": "Choose a category tag, its background colour, and optionally the default category. Suggested colours: Green for Nature.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-tag",
+            "name": "categoryTag",
+            "label": "Category Tag",
+            "valueType": "string",
+            "multi": false,
+            "required": true
+          },
+          {
+            "component": "select",
+            "name": "backgroundColor",
+            "label": "Background Color",
+            "valueType": "string",
+            "required": true,
+            "value": "white",
+            "options": [
+              {
+                "name": "Dark brown",
+                "value": "dark-brown"
+              },
+              {
+                "name": "Light brown",
+                "value": "light-brown"
+              },
+              {
+                "name": "Green",
+                "value": "green"
+              },
+              {
+                "name": "Pink",
+                "value": "pink"
+              },
+              {
+                "name": "Blue",
+                "value": "blue"
+              },
+              {
+                "name": "White",
+                "value": "white"
+              }
+            ]
           },
           {
             "component": "boolean",
-            "name": "isDefault",
-            "label": "Default Active Tab",
-            "description": "Select this mode as the initially active, first tab. Select only one mode. If several are selected, the first selected entry wins; if none are selected, the first mode is used.",
+            "name": "isDefaultCategory",
+            "label": "Default Category",
+            "description": "Select the category to show initially. Its mode will also be selected. If more than one is selected, the first one wins.",
             "valueType": "boolean",
             "value": false
           }
         ]
+      },
+      {
+        "component": "boolean",
+        "name": "showModeLabels",
+        "label": "Show Filter Mode Labels",
+        "description": "This setting applies to all mode labels. If enabled, provide labels when multiple modes are displayed. If hidden, the configured default category and its mode remain active.",
+        "valueType": "boolean",
+        "value": true
       },
       {
         "component": "text",
