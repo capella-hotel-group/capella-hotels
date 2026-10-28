@@ -1469,10 +1469,18 @@
         "required": true
       },
       {
+        "component": "boolean",
+        "name": "showModeLabels",
+        "label": "Show Filter Mode Labels",
+        "description": "This setting applies to all mode labels. If enabled, provide labels when multiple modes are displayed. If hidden, the configured default category and its mode remain active.",
+        "valueType": "boolean",
+        "value": true
+      },
+      {
         "component": "container",
         "name": "filterModeLabels",
         "label": "Filter Mode Labels",
-        "description": "Add one entry per filter mode and select its root tag. When multiple modes are shown, provide a label for each. Child tags are used as category filters.",
+        "description": "Add one entry per mode and select its root tag. Add each category filter explicitly in the Category Settings multifield. When multiple modes are shown, provide a label for each.",
         "multi": true,
         "fields": [
           {
@@ -1486,78 +1494,71 @@
             "component": "aem-tag",
             "name": "rootTag",
             "label": "Root Tag",
-            "valueType": "string",
-            "multi": false,
-            "required": true
-          }
-        ]
-      },
-      {
-        "component": "container",
-        "name": "categorySettings",
-        "label": "Category Settings",
-        "description": "Choose a category tag, its background colour, and optionally the default category. Suggested colours: Green for Nature.",
-        "multi": true,
-        "fields": [
-          {
-            "component": "aem-tag",
-            "name": "categoryTag",
-            "label": "Category Tag",
+            "description": "Identifies this filter mode. Its child tags are not automatically added as filters.",
             "valueType": "string",
             "multi": false,
             "required": true
           },
           {
-            "component": "select",
-            "name": "backgroundColor",
-            "label": "Background Color",
-            "valueType": "string",
-            "required": true,
-            "value": "white",
-            "options": [
+            "component": "container",
+            "name": "categorySettings",
+            "label": "Category Settings",
+            "description": "Choose a category tag, its background colour, and optionally the default category. Suggested colours: Green for Nature.",
+            "multi": true,
+            "fields": [
               {
-                "name": "Dark brown",
-                "value": "dark-brown"
+                "component": "aem-tag",
+                "name": "categoryTag",
+                "label": "Category Tag",
+                "valueType": "string",
+                "multi": false,
+                "required": true
               },
               {
-                "name": "Light brown",
-                "value": "light-brown"
+                "component": "select",
+                "name": "backgroundColor",
+                "label": "Background Color",
+                "valueType": "string",
+                "required": true,
+                "value": "white",
+                "options": [
+                  {
+                    "name": "Dark brown",
+                    "value": "dark-brown"
+                  },
+                  {
+                    "name": "Light brown",
+                    "value": "light-brown"
+                  },
+                  {
+                    "name": "Green",
+                    "value": "green"
+                  },
+                  {
+                    "name": "Pink",
+                    "value": "pink"
+                  },
+                  {
+                    "name": "Blue",
+                    "value": "blue"
+                  },
+                  {
+                    "name": "White",
+                    "value": "white"
+                  }
+                ]
               },
               {
-                "name": "Green",
-                "value": "green"
-              },
-              {
-                "name": "Pink",
-                "value": "pink"
-              },
-              {
-                "name": "Blue",
-                "value": "blue"
-              },
-              {
-                "name": "White",
-                "value": "white"
+                "component": "boolean",
+                "name": "isDefaultCategory",
+                "label": "Default Category",
+                "description": "Select the category to show initially. Its mode will also be selected. If more than one is selected, the first one wins.",
+                "valueType": "boolean",
+                "value": false
               }
             ]
-          },
-          {
-            "component": "boolean",
-            "name": "isDefaultCategory",
-            "label": "Default Category",
-            "description": "Select the category to show initially. Its mode will also be selected. If more than one is selected, the first one wins.",
-            "valueType": "boolean",
-            "value": false
           }
         ]
-      },
-      {
-        "component": "boolean",
-        "name": "showModeLabels",
-        "label": "Show Filter Mode Labels",
-        "description": "This setting applies to all mode labels. If enabled, provide labels when multiple modes are displayed. If hidden, the configured default category and its mode remain active.",
-        "valueType": "boolean",
-        "value": true
       },
       {
         "component": "text",

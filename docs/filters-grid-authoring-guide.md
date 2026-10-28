@@ -2,24 +2,26 @@
 
 ## Filter Modes And Labels
 
-Add one entry per mode in **Filter Mode Labels**. Each entry requires a **Root Tag**; **Mode Label** is optional. When a label is blank, it is derived from the root tag.
+Add one entry per mode in **Filter Mode Labels**. Each entry requires a **Root Tag**; **Mode Label** is optional. When a label is blank, it is derived from the root tag. Add each selectable category under that mode's **Category Settings** multifield. Filters are read from these authored entries; the Root Tag no longer supplies the filter list.
 
 Use **Show Filter Mode Labels** to show or hide all mode labels together:
 
 - With no modes configured, all cards in the Content Fragment scope are shown, with no mode or category controls.
-- With one mode, its label is shown as plain text when labels are enabled. Its child tags remain available as category filters.
-- With two or more modes, labels are shown as tabs when enabled. The active mode is determined by the default category when it belongs to that mode; otherwise, the first authored mode is used.
+- With one mode, its label is shown as plain text when labels are enabled. Its authored categories are available as filters.
+- With two or more modes, labels are shown as tabs when enabled. The mode containing the default category is selected initially; otherwise, the first authored mode is used.
 - When labels are hidden, the active mode remains available for filtering, but no mode labels or tabs are displayed.
 
-Hiding labels also removes the space reserved for them. A root can use either `capella-hotels:destination` or `/content/cq:tags/capella-hotels/destination` format. The API supplies the child-filter labels and order, including tags that have no matching cards.
+Hiding labels also removes the space reserved for them. Choose each filter tag explicitly and add one category entry for every filter to display. The tag's title is used for its filter label; if it is unavailable, the label is derived from the tag path. Legacy mode configurations that have only a Root Tag continue to load their child tags automatically.
 
 ## Category Settings And Default Category
 
-Add entries in **Category Settings** to associate a category tag with a **Background Color**. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
+Within each filter mode, add entries in **Category Settings** to select the category tag, its **Background Color**, and optionally mark it as the **Default Category**. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
 
-Select **Default Category** for the category that should be active on load. The mode containing that tag is selected as well. If multiple categories are marked as default, the first one wins. If no default is selected or the tag is not returned by the tag API, the first authored mode and its first category are used.
+The default category is active on load, and its mode is selected as well. If multiple categories are marked as default, the first one wins. If no default is selected, the first authored mode and its first category are used.
 
-Categories without an authored colour use White. Filter matching uses the full tag ID, not its display title.
+Categories without an authored colour use White. Filter matching uses the full tag ID, not its display title. The tag picker is not currently scoped with a `rootPath`; authors should select a tag from the intended mode's taxonomy.
+
+The current model nests a repeatable Category Settings container inside the repeatable Filter Mode Labels container. The runtime can read this structure, but nested multifield authoring support must be verified in the target Universal Editor before rollout.
 
 ## Popup Content
 
