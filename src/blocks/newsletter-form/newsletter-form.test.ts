@@ -218,6 +218,27 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(String(request.body)).toContain('country=SG');
   });
 
+  it.each([true, false])('shows the submit spinner until response (ok=%s)', async (ok) => {
+    let finish!: (value: { ok: boolean }) => void;
+    global.fetch = jest.fn(
+      () =>
+        new Promise<{ ok: boolean }>((resolve) => {
+          finish = resolve;
+        }),
+    ) as unknown as typeof fetch;
+    await decorate(buildBlock());
+    const form = fillModalRequiredFields('Singapore');
+    const submit = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(submit.getAttribute('aria-busy')).toBe('true');
+    expect(submit.disabled).toBe(true);
+    finish({ ok });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(submit.hasAttribute('aria-busy')).toBe(false);
+    expect(submit.disabled).toBe(false);
+  });
+
   it.each(['false', 'true'])('sends captchaEnabled=%s to the API', async (enableHCaptcha) => {
     const fetchMock = jest.fn().mockResolvedValue({ ok: true });
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -250,6 +271,14 @@ describe('newsletter-form hCaptcha toggle', () => {
     const payload = new URLSearchParams(String(request.body));
     expect(payload.get('captchaEnabled')).toBe(enableHCaptcha);
     expect(payload.get('captchaValue')).toBe(enableHCaptcha === 'true' ? 'verified-token' : null);
+    const captcha = form.querySelector<HTMLElement>('.newsletter-captcha')!;
+    expect(captcha.hidden).toBe(true);
+    if (enableHCaptcha === 'true') {
+      expect(window.hcaptcha?.reset).toHaveBeenCalledWith('newsletter-captcha');
+      document.querySelector<HTMLButtonElement>('.newsletter-trigger')!.click();
+      expect(captcha.hidden).toBe(false);
+      expect(window.hcaptcha?.render).toHaveBeenCalledTimes(1);
+    }
   });
 
   it('blocks submission for an unrecognized country name', async () => {

@@ -274,6 +274,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submit.getAttribute('aria-busy') === 'true') return;
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
@@ -288,6 +289,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
     }
 
     submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
     status.textContent = '';
     const property = await resolveNewsletterProperty(propertyPath);
     const result = await submitNewsletterForm(form, {
@@ -295,9 +297,11 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
       captchaEnabled: enableHCaptcha,
       captchaToken,
     });
+    submit.removeAttribute('aria-busy');
 
     if (result === 'success') {
       form.reset();
+      captcha.hidden = true;
       status.textContent = successMessage;
       if (enableHCaptcha) {
         captchaToken = '';
@@ -324,11 +328,13 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
         if (window.hcaptcha && captchaWidgetId !== undefined) window.hcaptcha.reset(captchaWidgetId);
       }
     }
-    submit.disabled = enableHCaptcha && !captchaToken;
+    submit.disabled = result !== 'success' && enableHCaptcha && !captchaToken;
   });
 
   const initializeCaptcha = (): void => {
-    if (!enableHCaptcha || captchaInitialized) return;
+    if (!enableHCaptcha) return;
+    captcha.hidden = false;
+    if (captchaInitialized) return;
     captchaInitialized = true;
 
     const siteKey =
@@ -348,7 +354,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
           sitekey: siteKey,
           callback: (token) => {
             captchaToken = token;
-            submit.disabled = false;
+            submit.disabled = submit.getAttribute('aria-busy') === 'true';
             status.textContent = '';
           },
           'expired-callback': () => {

@@ -386,16 +386,20 @@ async function submitForm(
 ): Promise<void> {
   showMessage(message, '');
   submitBtn.disabled = true;
+  submitBtn.setAttribute('aria-busy', 'true');
   const result = await submitNewsletterForm(form, {
     property: config.property,
     captchaEnabled: config.captchaEnabled,
     captchaToken: config.captcha?.getToken() ?? '',
   });
+  submitBtn.removeAttribute('aria-busy');
 
   if (result === 'success') {
     form.reset();
     showMessage(message, 'Thank you for subscribing!', 'success');
     if (config.captcha) config.captcha.reset();
+    const captchaContainer = form.querySelector<HTMLElement>('.newsletter-captcha');
+    if (captchaContainer) captchaContainer.hidden = true;
     submitBtn.disabled = false;
     return;
   }
@@ -571,7 +575,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     });
   };
   const initializeCaptcha = (): void => {
-    if (!siteKey || captcha || captchaLoading) return;
+    if (!siteKey) return;
+    captchaWrapper.hidden = false;
+    if (captcha || captchaLoading) return;
     captchaLoading = true;
     void setupCaptcha(captchaWrapper, siteKey, (ok) => gate.setCaptcha(ok))
       .then((controller) => {
