@@ -220,6 +220,57 @@ describe('filters-grid child tag filters', () => {
     return block;
   }
 
+  function createConfiguredBlock(
+    modes: Array<[string, string]>,
+    categories: Array<[string, string, boolean]>,
+    showModeLabels = true,
+  ): HTMLElement {
+    const block = document.createElement('div');
+    const rows = ['configured-grid', 'filters-grid', 'Discover', 'Experiences', '/content/dam/cards'];
+    rows.forEach((value) => {
+      const row = document.createElement('div');
+      row.innerHTML = `<div>${value}</div>`;
+      block.append(row);
+    });
+
+    const modesRow = document.createElement('div');
+    const modesList = document.createElement('ul');
+    modes.forEach(([label, rootTag]) => {
+      const entry = document.createElement('li');
+      [label, rootTag].forEach((value) => {
+        const field = document.createElement('p');
+        field.textContent = value;
+        entry.append(field);
+      });
+      modesList.append(entry);
+    });
+    modesRow.append(modesList);
+    block.append(modesRow);
+
+    const categoriesRow = document.createElement('div');
+    const categoriesList = document.createElement('ul');
+    categories.forEach(([tag, backgroundColor, isDefault]) => {
+      const entry = document.createElement('li');
+      [tag, backgroundColor, String(isDefault)].forEach((value) => {
+        const field = document.createElement('p');
+        field.textContent = value;
+        entry.append(field);
+      });
+      categoriesList.append(entry);
+    });
+    categoriesRow.append(categoriesList);
+    block.append(categoriesRow);
+
+    const showLabelsRow = document.createElement('div');
+    showLabelsRow.innerHTML = `<div>${showModeLabels}</div>`;
+    block.append(showLabelsRow);
+    const revealRow = document.createElement('div');
+    revealRow.innerHTML = '<div>Show More</div>';
+    block.append(revealRow);
+    document.body.append(block);
+    return block;
+  }
+
   it.each([
     [false, true, 'Destination'],
     [true, false, 'Experience'],
@@ -391,8 +442,8 @@ describe('filters-grid child tag filters', () => {
   it.each(['', 'unknown mode'])('falls back to the first authored mode for default %s', async (defaultMode) => {
     const block = createDynamicBlock(defaultMode, [['Only Mode', 'capella-hotels:experience']]);
     await decorate(block);
-    expect(block.querySelectorAll('[role="tab"]')).toHaveLength(1);
-    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Only Mode');
+    expect(block.querySelectorAll('[role="tab"]')).toHaveLength(0);
+    expect(block.querySelector('.filters-grid-mode-label')?.textContent).toBe('Only Mode');
   });
 
   it('honors both legacy defaults with identity rows present', async () => {
@@ -415,7 +466,62 @@ describe('filters-grid child tag filters', () => {
     const block = createDynamicBlock('', []);
     await decorate(block);
     expect(block.querySelectorAll('[role="tab"]')).toHaveLength(0);
-    expect(block.querySelector('.filters-grid-empty')?.textContent).toBe('No matching results.');
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+    expect(block.querySelector('.filters-grid-filter')).toBeNull();
+    expect(block.querySelector('.filters-grid-controls')).toBeNull();
+  });
+
+  it('uses the configured default category to select its mode and category colour', async () => {
+    const block = createConfiguredBlock(
+      [
+        ['Experience', 'capella-hotels:experience'],
+        ['Destination', 'capella-hotels:destination'],
+      ],
+      [
+        ['capella-hotels:experience/nature', 'Green', false],
+        ['/content/cq:tags/capella-hotels/destination/bangkok', 'Dark brown', true],
+      ],
+    );
+    await decorate(block);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Bangkok Title');
+    expect(block.classList.contains('filters-grid-theme-dark-brown')).toBe(true);
+    block.querySelector<HTMLButtonElement>('.filters-grid-filter:not([aria-pressed="true"])')?.click();
+    expect(block.classList.contains('filters-grid-theme-white')).toBe(true);
+  });
+
+  it('falls back to the first authored mode when the default category is unavailable', async () => {
+    const block = createConfiguredBlock(
+      [
+        ['Experience', 'capella-hotels:experience'],
+        ['Destination', 'capella-hotels:destination'],
+      ],
+      [['capella-hotels:destination/singapore', 'blue', true]],
+    );
+    await decorate(block);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Experience');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Local Culture');
+  });
+
+  it('shows a single mode as text and hides all mode labels with the global setting', async () => {
+    const visible = createConfiguredBlock([['Experience', 'capella-hotels:experience']], []);
+    await decorate(visible);
+    expect(visible.querySelector('.filters-grid-mode-label')?.textContent).toBe('Experience');
+    expect(visible.querySelector('[role="tab"]')).toBeNull();
+    expect(visible.querySelector('.filters-grid-filter')?.textContent).toBe('Local Culture');
+
+    const hidden = createConfiguredBlock(
+      [
+        ['Experience', 'capella-hotels:experience'],
+        ['Destination', 'capella-hotels:destination'],
+      ],
+      [['capella-hotels:destination/bangkok', 'blue', true]],
+      false,
+    );
+    await decorate(hidden);
+    expect(hidden.querySelector('.filters-grid-mode-label, [role="tab"]')).toBeNull();
+    expect(hidden.querySelector('.filters-grid-filter')?.textContent).toBe('Bangkok Title');
+    expect(hidden.classList.contains('filters-grid-theme-blue')).toBe(true);
   });
 
   it('does not match a child slug from a different root', async () => {
