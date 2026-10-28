@@ -560,6 +560,16 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   let captcha: CaptchaController | null = null;
   let captchaLoading = false;
+  let captchaPreloaded = false;
+  const preloadCaptcha = (): void => {
+    if (!siteKey || captchaPreloaded) return;
+    captchaPreloaded = true;
+    void loadHCaptcha().catch((error: unknown) => {
+      captchaPreloaded = false;
+      console.error('Newsletter captcha error:', error);
+      showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+    });
+  };
   const initializeCaptcha = (): void => {
     if (!siteKey || captcha || captchaLoading) return;
     captchaLoading = true;
@@ -589,7 +599,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       return;
     }
     if (blocked === 'captcha') {
-      initializeCaptcha();
+      if (cfg.layout !== 'Inline') initializeCaptcha();
       showMessage(
         message,
         !siteKey
@@ -612,27 +622,23 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const target = event.target as HTMLElement;
     target.removeAttribute('aria-invalid');
     target.removeAttribute('aria-describedby');
+    if (cfg.layout === 'Inline' && target instanceof HTMLInputElement && target.type !== 'checkbox') {
+      preloadCaptcha();
+    }
   });
-  form.addEventListener('focusin', initializeCaptcha);
-  form.addEventListener('pointerdown', initializeCaptcha);
+  if (cfg.layout === 'Inline' && consentCheckbox) {
+    consentCheckbox.addEventListener('click', initializeCaptcha);
+    consentCheckbox.addEventListener('change', initializeCaptcha);
+  } else {
+    form.addEventListener('focusin', initializeCaptcha);
+    form.addEventListener('pointerdown', initializeCaptcha);
+  }
 
   if (cfg.layout === 'Inline') {
     // ── Replace authored rows with the form rendered directly in place ─────
     block.textContent = '';
     block.classList.add('newsletter-inline');
     block.append(form);
-    if (siteKey && 'IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((entry) => entry.isIntersecting)) {
-            observer.disconnect();
-            initializeCaptcha();
-          }
-        },
-        { rootMargin: '100px' },
-      );
-      observer.observe(form);
-    }
     return;
   }
 

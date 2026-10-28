@@ -128,18 +128,8 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(submit.hasAttribute('aria-disabled')).toBe(false);
   });
 
-  it('initializes inline CAPTCHA when the visible form approaches the viewport', async () => {
+  it.each(['click', 'change'])('renders inline CAPTCHA only on consent %s after typing', async (eventType) => {
     Object.assign(window, { hlx: { codeBasePath: '' } });
-    const originalObserver = window.IntersectionObserver;
-    const observe = jest.fn();
-    const disconnect = jest.fn();
-    let notifyIntersection!: IntersectionObserverCallback;
-    const observer = { observe, disconnect } as unknown as IntersectionObserver;
-    const mockObserver = jest.fn((callback: IntersectionObserverCallback) => {
-      notifyIntersection = callback;
-      return observer;
-    });
-    window.IntersectionObserver = mockObserver as unknown as typeof IntersectionObserver;
     const api: HCaptchaApi = {
       render: jest.fn(() => 'inline-captcha'),
       reset: jest.fn(),
@@ -147,29 +137,30 @@ describe('newsletter-form hCaptcha toggle', () => {
     window.hcaptcha = api;
     mockGetSiteKey.mockReturnValue('test-site-key');
 
-    try {
-      await decorate(buildBlock({ layout: 'Inline', enableHCaptcha: 'true' }));
-      const form = document.querySelector<HTMLFormElement>('.newsletter-form-element')!;
-      expect(observe).toHaveBeenCalledWith(form);
-      expect(mockObserver).toHaveBeenCalledWith(expect.any(Function), { rootMargin: '100px' });
-      expect(api.render).not.toHaveBeenCalled();
+    await decorate(buildBlock({ layout: 'Inline', enableHCaptcha: 'true' }));
+    const form = document.querySelector<HTMLFormElement>('.newsletter-form-element')!;
+    form.querySelector<HTMLInputElement>('[name="email"]')!.focus();
+    form.querySelector('[name="email"]')!.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(api.render).not.toHaveBeenCalled();
+    expect(document.querySelector('script[src*="hcaptcha.com"]')).toBeNull();
 
-      notifyIntersection([{ isIntersecting: false } as IntersectionObserverEntry], observer);
-      expect(api.render).not.toHaveBeenCalled();
+    const consent = form.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    consent.focus();
+    form.querySelector('[name="email"]')!.dispatchEvent(new Event('input', { bubbles: true }));
+    await Promise.resolve();
+    expect(api.render).not.toHaveBeenCalled();
+    consent.dispatchEvent(new Event(eventType));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
-      notifyIntersection([{ isIntersecting: true } as IntersectionObserverEntry], observer);
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(disconnect).toHaveBeenCalledTimes(1);
-      expect(api.render).toHaveBeenCalledTimes(1);
-      expect(api.render).toHaveBeenCalledWith(
-        form.querySelector('.newsletter-captcha'),
-        expect.objectContaining({ sitekey: 'test-site-key' }),
-      );
-      expect(form.querySelector('button')?.getAttribute('aria-disabled')).toBe('true');
-    } finally {
-      window.IntersectionObserver = originalObserver;
-    }
+    expect(api.render).toHaveBeenCalledTimes(1);
+    consent.dispatchEvent(new Event(eventType));
+    await Promise.resolve();
+    expect(api.render).toHaveBeenCalledTimes(1);
+    expect(api.render).toHaveBeenCalledWith(
+      form.querySelector('.newsletter-captcha'),
+      expect.objectContaining({ sitekey: 'test-site-key' }),
+    );
+    expect(form.querySelector('button')?.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('keeps submission blocked when enabled but no site key is available', async () => {
