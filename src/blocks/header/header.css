@@ -489,11 +489,11 @@ button.header-menu-category-trigger::after {
 
 .header-menu-merged-row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 107px);
+    grid-template-columns: repeat(auto-fill, minmax(107px, max-content));
     gap: 24px 48px;
 }
 
-/* Below desktop (Figma mobile/tablet) every region is a full-width label above one 107px link grid, so
+/* Below desktop (Figma mobile/tablet) every region is a full-width label above one 107-125px link grid, so
    the cells' labels and links flow straight into the row's grid instead of stacking as separate cells. */
 @media not all and (min-width: 1200px) {
     .header-menu-merged-cell {
@@ -534,9 +534,9 @@ button.header-menu-category-trigger::after {
 
 .header-menu-link-grid {
     display: grid;
-    /* Figma wraps fixed 107px link cells with a 24px/48px gap (2 per row on mobile, 3 on
-       tablet); columns drop to the next row instead of squeezing long labels. */
-    grid-template-columns: repeat(auto-fill, 107px);
+    /* Figma wraps link cells with a 24px/48px gap (2 per row on mobile, 3 on tablet). Each column is
+       107px, widening to fit its longest link up to 125px (the links' max-width below). */
+    grid-template-columns: repeat(auto-fill, minmax(107px, max-content));
     gap: 24px 48px;
     margin: 0;
     padding: 0;
@@ -548,6 +548,16 @@ button.header-menu-category-trigger::after {
     /* Grid items default to min-width:auto, which ignores the track's minmax(...) lower
        bound and can still force a column wider than intended. */
     min-width: 0;
+}
+
+/* Caps a link at Figma's wider 125px cell so a long label (e.g. "SHENZHEN(2029)") wraps
+   onto a second line instead of overflowing into the next column. */
+.header-menu-link-grid a,
+.header-menu-merged-cell a,
+.header-menu-link-grid .nav-link.is-disabled,
+.header-menu-merged-cell .nav-link.is-disabled {
+    max-width: 125px;
+    overflow-wrap: break-word;
 }
 
 .header-menu-link-grid a,
@@ -852,17 +862,6 @@ button.header-menu-category-trigger::after {
     .header-menu-promo-image {
         max-width: 240px;
         aspect-ratio: 240 / 300;
-    }
-
-    .header-menu-link-grid a,
-    .header-menu-merged-cell a,
-    .header-menu-link-grid .nav-link.is-disabled,
-    .header-menu-merged-cell .nav-link.is-disabled {
-        /* Caps a link's title to the column's own width so a long, unbreakable label
-           (e.g. "SHENZHEN(2029)") wraps onto a second line instead of overflowing past
-           the 107px column track into the next column. */
-        max-width: 107px;
-        overflow-wrap: break-word;
     }
 }
 
