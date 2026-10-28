@@ -271,6 +271,62 @@ describe('filters-grid child tag filters', () => {
     return block;
   }
 
+  function createNestedFilterBlock(): HTMLElement {
+    const block = document.createElement('div');
+    const values = ['nested-grid', 'filters-grid', 'Discover', 'Experiences', '/content/dam/cards', 'true'];
+    values.forEach((value, index) => {
+      const row = document.createElement('div');
+      row.innerHTML = `<div>${value}</div>`;
+      if (index === 4) {
+        row.firstElementChild!.innerHTML = '<a href="/content/dam/cards.html">Cards</a>';
+      }
+      block.append(row);
+    });
+
+    const modesRow = document.createElement('div');
+    modesRow.dataset.aueProp = 'filterModeLabels';
+    const modes = document.createElement('ul');
+    const addMode = (label: string, rootTag: string, categories: Array<[string, string, boolean]>) => {
+      const mode = document.createElement('li');
+      const modeLabel = document.createElement('p');
+      modeLabel.dataset.aueProp = 'label';
+      modeLabel.textContent = label;
+      const rootTagField = document.createElement('p');
+      rootTagField.dataset.aueProp = 'rootTag';
+      rootTagField.innerHTML = `<a href="/content/cq:tags/${rootTag.replace(':', '/')}">${rootTag}</a>`;
+      const categoryField = document.createElement('div');
+      categoryField.dataset.aueProp = 'categorySettings';
+      const categoryList = document.createElement('ul');
+      categories.forEach(([tag, backgroundColor, isDefault]) => {
+        const category = document.createElement('li');
+        const tagField = document.createElement('p');
+        tagField.dataset.aueProp = 'categoryTag';
+        tagField.innerHTML = `<a href="/content/cq:tags/${tag.replace(':', '/')}">${tag}</a>`;
+        const colorField = document.createElement('p');
+        colorField.dataset.aueProp = 'backgroundColor';
+        colorField.textContent = backgroundColor;
+        const defaultField = document.createElement('p');
+        defaultField.dataset.aueProp = 'isDefaultCategory';
+        defaultField.textContent = String(isDefault);
+        category.append(tagField, colorField, defaultField);
+        categoryList.append(category);
+      });
+      categoryField.append(categoryList);
+      mode.append(modeLabel, rootTagField, categoryField);
+      modes.append(mode);
+    };
+
+    addMode('Experience', 'capella-hotels:experience', [['capella-hotels:experience/culture', 'green', false]]);
+    addMode('Destination', 'capella-hotels:destination', [['capella-hotels:destination/bangkok', 'blue', true]]);
+    modesRow.append(modes);
+    block.append(modesRow);
+    const revealRow = document.createElement('div');
+    revealRow.innerHTML = '<div>Reveal More</div>';
+    block.append(revealRow);
+    document.body.append(block);
+    return block;
+  }
+
   it.each([
     [false, true, 'Destination'],
     [true, false, 'Experience'],
@@ -488,6 +544,38 @@ describe('filters-grid child tag filters', () => {
     expect(block.classList.contains('filters-grid-theme-dark-brown')).toBe(true);
     block.querySelector<HTMLButtonElement>('.filters-grid-filter:not([aria-pressed="true"])')?.click();
     expect(block.classList.contains('filters-grid-theme-white')).toBe(true);
+  });
+
+  it('uses authored nested categories per mode without requesting child tags', async () => {
+    const block = createNestedFilterBlock();
+    await decorate(block);
+
+    const tagRequests = fetchMock.mock.calls
+      .map(([input]) => new URL(input as string))
+      .filter((url) => url.pathname === '/content/servlet.childtags.json');
+    expect(tagRequests).toHaveLength(0);
+    expect(block.querySelectorAll('[role="tab"]')).toHaveLength(2);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Bangkok');
+    expect(block.classList.contains('filters-grid-theme-blue')).toBe(true);
+
+    block.querySelector<HTMLButtonElement>('[data-mode-key="mode-0"]')?.click();
+    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Culture');
+    expect(block.classList.contains('filters-grid-theme-green')).toBe(true);
+    expect(block.querySelector('.filters-grid-card-title')?.textContent).toBe('Bangkok Experience');
+  });
+
+  it('parses nested categories from published markup without editor instrumentation', async () => {
+    const block = createNestedFilterBlock();
+    block.querySelectorAll('[data-aue-prop]').forEach((field) => field.removeAttribute('data-aue-prop'));
+    await decorate(block);
+
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Bangkok');
+    expect(block.classList.contains('filters-grid-theme-blue')).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) => new URL(input as string).pathname === '/content/servlet.childtags.json'),
+    ).toBe(false);
   });
 
   it('falls back to the first authored mode when the default category is unavailable', async () => {
