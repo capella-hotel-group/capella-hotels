@@ -117,16 +117,20 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   }
   if (!fragment) return;
 
-  applyBackgroundTheme(block.closest('footer') as HTMLElement, fragment.querySelector('.footer'));
-  const brandLogo = buildBrandLogo(fragment.querySelector('.footer'));
+  const findComponent = (selector: string): Element | null =>
+    [...fragment.querySelectorAll(selector)].find((element) => !element.closest('.separator')) ?? null;
+
+  const footerConfig = findComponent('.footer');
+  applyBackgroundTheme(block.closest('footer') as HTMLElement, footerConfig);
+  const brandLogo = buildBrandLogo(footerConfig);
 
   // Each footer-* block decorates itself into the leaf class footer.css expects (see its own
   // .ts file); this only assembles the already-built pieces into the shared layout groups.
-  const navGroup = fragment.querySelector('.footer-nav-columns');
-  const contactInfo = fragment.querySelector('.footer-contact-info');
-  const social = fragment.querySelector('.footer-social');
-  const legalGroup = fragment.querySelector('.footer-legal');
-  const newsletterBlock = fragment.querySelector('.newsletter-form');
+  const navGroup = findComponent('.footer-nav-columns');
+  const contactInfo = findComponent('.footer-contact-info');
+  const social = findComponent('.footer-social');
+  const legalGroup = findComponent('.footer-legal');
+  const newsletterBlock = findComponent('.newsletter-form');
 
   const contactGroup = buildGroup('footer-contact', [contactInfo]);
   const newsletterGroup = buildGroup('footer-newsletter', [newsletterBlock]);

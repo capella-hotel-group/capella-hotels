@@ -494,3 +494,27 @@ body.newsletter-modal-open {
         padding-block: 0;
     }
 }
+.newsletter-form button[type='submit'][aria-busy='true']::after {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-inline-start: 8px;
+    border: 2px solid currentcolor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    vertical-align: middle;
+    content: '';
+    animation: newsletter-form-submit-spin 0.8s linear infinite;
+}
+
+@keyframes newsletter-form-submit-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .newsletter-form button[type='submit'][aria-busy='true']::after {
+        animation: none;
+    }
+}
