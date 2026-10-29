@@ -78,6 +78,10 @@
     pointer-events: none;
 }
 
+.hero-video-overlay--hidden {
+    display: none;
+}
+
 /* ── Intro phrase ────────────────────────────────────────────────────── */
 .hero-video-intro-phrase {
     position: absolute;
