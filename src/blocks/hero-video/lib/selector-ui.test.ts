@@ -50,7 +50,50 @@ describe('hero-video item button', () => {
 
     list.querySelector('button')?.click();
 
-    expect(onSelect).toHaveBeenCalledWith(0);
+    expect(onSelect).toHaveBeenCalledWith(0, 'pointer');
+  });
+
+  it('renders looping clones hidden from assistive tech, keeping originals in the middle cycle', () => {
+    const list = document.createElement('ul');
+    const ui = new SelectorUI(list, document.createElement('div'));
+    ui.renderItems([createItem(false), createItem(false), createItem(false)], 1);
+
+    const lis = [...list.children] as HTMLElement[];
+    const originals = lis.filter((li) => li.getAttribute('aria-hidden') !== 'true');
+    expect(lis).toHaveLength(21);
+    expect(originals).toHaveLength(3);
+    expect(originals.map((li) => li.dataset.slot)).toEqual(['9', '10', '11']);
+    expect(originals[1]?.getAttribute('aria-selected')).toBe('true');
+    lis
+      .filter((li) => li.getAttribute('aria-hidden') === 'true')
+      .forEach((li) => {
+        expect(li.hasAttribute('role')).toBe(false);
+        expect(li.querySelector('button')?.tabIndex).toBe(-1);
+      });
+  });
+
+  it('selects only after the scroll settles, not on programmatic moves', () => {
+    jest.useFakeTimers();
+    const list = document.createElement('ul');
+    const viewport = document.createElement('div');
+    viewport.append(list);
+    const ui = new SelectorUI(list, viewport);
+    ui.renderItems([createItem(false), createItem(false), createItem(false)], 0);
+    ui.setIntroComplete(true);
+    const onSelect = jest.fn();
+    ui.onSelect(onSelect);
+
+    ui.activateItem(2, true);
+    jest.advanceTimersByTime(1000);
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(list.querySelector('[data-slot="11"]')?.getAttribute('aria-selected')).toBe('true');
+
+    list.querySelector<HTMLButtonElement>('[data-slot="10"] button')?.click();
+    expect(onSelect).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(1000);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith(1, 'pointer');
+    jest.useRealTimers();
   });
 
   it('leaves item clicks to Universal Editor selection', () => {
