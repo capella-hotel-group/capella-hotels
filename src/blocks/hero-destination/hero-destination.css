@@ -220,20 +220,8 @@
     clip-path: polygon(15% 0%, 100% 50%, 15% 100%);
 }
 
-/* Figma caps the heading column: 482px content frame on tablet, 513px on desktop — both
-   include the 40px inline padding, giving the design's 402px / 433px text widths. */
 @media (width >= 768px) {
-    .hero-destination-heading {
-        max-width: 482px;
-    }
-
     .hero-destination-toggle {
         inset-inline-end: var(--dimension-layout-module-padding-inline-s);
-    }
-}
-
-@media (width >= 1200px) {
-    .hero-destination-heading {
-        max-width: 513px;
     }
 }
