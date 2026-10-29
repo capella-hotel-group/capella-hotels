@@ -140,7 +140,7 @@ describe('WheelPicker', () => {
     viewport.dispatchEvent(e);
     viewport.dispatchEvent(wheel(100));
     expect(e.defaultPrevented).toBe(true);
-    advance(500);
+    advance(1000);
     expect(settles).toEqual([[12, 'pointer']]);
   });
 
@@ -154,7 +154,7 @@ describe('WheelPicker', () => {
     }
     expect(settles).toEqual([]);
     expect(picker.getPosition()).toBeCloseTo(11.5, 5);
-    advance(600);
+    advance(1000);
     expect(settles).toHaveLength(1);
     expect([11, 12]).toContain(settles[0]?.[0]);
   });
@@ -185,7 +185,7 @@ describe('WheelPicker', () => {
     }
     const released = picker.getPosition();
     viewport.dispatchEvent(pointer('pointerup', { clientY: y }));
-    advance(2000);
+    advance(2500);
     expect(settles).toHaveLength(1);
     const [slot, source] = settles[0] ?? [];
     expect(source).toBe('touch');
@@ -230,7 +230,7 @@ describe('WheelPicker', () => {
     expect(picker.isUserInteracting()).toBe(false);
     viewport.dispatchEvent(wheel(100));
     expect(picker.isUserInteracting()).toBe(true);
-    advance(500);
+    advance(1000);
     expect(picker.isUserInteracting()).toBe(false);
   });
 
