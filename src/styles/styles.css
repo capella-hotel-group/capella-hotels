@@ -92,6 +92,8 @@ body {
     font-family: var(--body-font-family);
     font-size: var(--body-font-size-s);
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body.appear {

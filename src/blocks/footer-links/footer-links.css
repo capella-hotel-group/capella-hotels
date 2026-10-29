@@ -20,6 +20,7 @@
     margin: 0;
     font-family: var(--type-font-family-cta);
     font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-light);
     line-height: var(--typography-line-height-body-md);
     text-transform: uppercase;
 }
