@@ -58,6 +58,19 @@ Author the Text component as a bullet-list RTE. Use either supported structure:
 
 Link destinations that should navigate. Plain-text entries render as non-clickable items.
 
+### Menu type
+
+Set **Header Menu Type** in the menu section's properties:
+
+- **Global** (default) — the standard mega-menu.
+- **Destination** — for a destination site's `/nav` (e.g. `/bangkok/en/nav`). Adds a
+  **< BACK** link above the categories on desktop, and stacks links in a single column on
+  tablet and mobile. Author categories as two-level lists (category, then links).
+
+To customise the BACK link, add a **Button** at the top of the menu section: its label and
+link become the BACK label and destination (append ` | open-in-new-tab` to open a new tab).
+Without it, the link reads **BACK** and goes to the global home (`/global/{lang}`).
+
 ## 4. RTE markers
 
 Append one marker to the end of the logo-link Button, Book CTA, a language link, a category

@@ -109,6 +109,15 @@ function getFragmentBasePath(): string {
   return parts.length ? `/${parts.join('/')}` : '';
 }
 
+// Destination menus link back to the global home in the current language.
+function getGlobalHomePath(): string {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const siteIdx = segments.findIndex((s) => SUPPORTED_SITES.includes(s));
+  const rawLang = (siteIdx !== -1 ? segments[siteIdx + 1] : segments[0])?.toLowerCase() ?? '';
+  const isLang = rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0] ?? ''));
+  return `/global/${isLang ? rawLang : 'en'}`;
+}
+
 function getSiblingNavPath(): string {
   const segments = window.location.pathname.split('/').filter(Boolean);
   segments.pop();
@@ -764,13 +773,28 @@ function buildMenuCategories(
   return { list, activateInitial };
 }
 
+// Label/link come from the first Button authored in the menu section; falls back to BACK + global home.
+function buildBackLink(menuSection: Element): HTMLAnchorElement {
+  const source = menuSection.querySelector<HTMLAnchorElement>('.default-content-wrapper > p > a');
+  const { label, marker } = splitMarker(source?.textContent ?? '');
+  const back = document.createElement('a');
+  back.className = 'header-menu-back';
+  back.href = source?.getAttribute('href') || getGlobalHomePath();
+  back.textContent = label || 'BACK';
+  if (source) moveInstrumentation(source, back);
+  if (marker === 'open-in-new-tab') applyNewTab(back);
+  return back;
+}
+
 function buildMenuPanel(
   categories: NavCategory[],
   languages: NavLanguage[],
   activeLangLabel: string,
+  back: HTMLAnchorElement | null,
 ): { panel: HTMLElement; activateInitial: () => void } {
   const panel = document.createElement('nav');
   panel.className = 'header-menu-panel';
+  if (back) panel.classList.add('is-destination');
   panel.id = PANEL_ID;
   panel.setAttribute('aria-label', MAIN_NAV_LABEL);
   panel.inert = true;
@@ -778,6 +802,8 @@ function buildMenuPanel(
 
   const body = document.createElement('div');
   body.className = 'header-menu-body';
+
+  if (back) body.append(back);
 
   const promo = buildMenuPromo();
   const { list: categoryList, activateInitial } = buildMenuCategories(categories, promo);
@@ -850,7 +876,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
   const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');
-  const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel);
+  const back = (menuSection as HTMLElement).dataset.menu === 'destination' ? buildBackLink(menuSection) : null;
+  const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel, back);
 
   let previousOverflow = '';
   const setPageInert = (inert: boolean) => {
