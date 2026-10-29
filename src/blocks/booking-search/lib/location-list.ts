@@ -11,6 +11,8 @@ export interface LocationList {
   mark: (location?: Location) => void;
 }
 
+const SCROLL_TOLERANCE = 6;
+
 export function buildLocationList(
   locations: Location[],
   label: string,
@@ -74,8 +76,11 @@ export function buildLocationList(
 
   const updateScrollbar = (): void => {
     const maxScrollTop = list.scrollHeight - list.clientHeight;
-    scrollbar.hidden = maxScrollTop <= 0;
-    if (maxScrollTop <= 0) return;
+    // Trimmed line boxes overflow the list by a few px even when every option fits.
+    const scrollable = maxScrollTop > SCROLL_TOLERANCE;
+    list.classList.toggle('is-scrollable', scrollable);
+    scrollbar.hidden = !scrollable;
+    if (!scrollable) return;
 
     const thumbTravel = scrollbar.clientHeight - thumb.offsetHeight;
     const thumbOffset = (list.scrollTop / maxScrollTop) * thumbTravel;
