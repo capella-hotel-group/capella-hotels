@@ -3,6 +3,7 @@ import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
 
 const PERSISTED_QUERY = '/graphql/execute.json/capella-hotels/Filter-grid-card';
 const PAGE_SIZE = 6;
+const CATEGORY_COLORS = new Set(['dark-brown', 'light-brown', 'green', 'pink', 'blue', 'white']);
 
 const ALLOWED_RICH_TEXT_TAGS = new Set(['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'blockquote']);
 
@@ -43,12 +44,21 @@ export interface FilterGridCard {
 interface AuthoredFilter {
   label: string;
   tag: string;
+  backgroundColor?: string;
+  isDefault?: boolean;
 }
 
 interface ModeSetting {
   key: string;
   label: string;
   rootTag: string;
+  isDefault?: boolean;
+  filters?: AuthoredFilter[];
+}
+
+interface CategorySetting {
+  tag: string;
+  backgroundColor: string;
   isDefault?: boolean;
 }
 
@@ -64,12 +74,19 @@ interface BlockConfig {
   revealMoreLabel: string;
   defaultMode: string;
   modeSettings: ModeSetting[];
+  categorySettings: CategorySetting[];
+  showModeLabels: boolean;
+  useAuthoredFilters: boolean;
 }
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
 
 export function normalizeChoice(value?: string | null): string {
   return (value || '').trim().toLowerCase();
+}
+
+function normalizeColor(value: string): string {
+  return normalizeChoice(value).replace(/\s+/g, '-');
 }
 
 function referenceUrl(reference?: Reference | null): string {
@@ -167,23 +184,106 @@ function rowHref(row: Element | undefined, name: string): string {
   return resolvePickerPath(value, window.location.origin);
 }
 
-function parseModeSettings(row: Element | undefined): ModeSetting[] {
-  if (!row) return [];
-  const field = row.querySelector('[data-aue-prop="filterModeLabels"]') || row.firstElementChild || row;
-  let entries: Element[] = [...field.querySelectorAll('li')].filter((entry) => !entry.parentElement?.closest('li'));
+function multiFieldEntries(field: Element): Element[] {
   if (field.querySelector(':scope > hr')) {
-    entries = [];
+    const groups: Element[] = [];
     let group = document.createElement('div');
     [...field.childNodes].forEach((node) => {
       if (node instanceof HTMLElement && node.tagName === 'HR') {
-        if (textOf(group)) entries.push(group);
+        if (textOf(group)) groups.push(group);
         group = document.createElement('div');
       } else {
         group.append(node.cloneNode(true));
       }
     });
-    if (textOf(group)) entries.push(group);
+    if (textOf(group)) groups.push(group);
+    return groups;
   }
+
+  return [...field.querySelectorAll('li')].filter((entry) => {
+    let ancestor = entry.parentElement;
+    while (ancestor && ancestor !== field) {
+      if (ancestor.tagName === 'LI') return false;
+      ancestor = ancestor.parentElement;
+    }
+    return true;
+  });
+}
+
+function isTagValue(value: string): boolean {
+  return /^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value);
+}
+
+function parseCategoryEntry(entry: Element): AuthoredFilter | undefined {
+  const tagLink = entry.querySelector<HTMLAnchorElement>('a[href*="/content/cq:tags/"]');
+  const values = [...entry.querySelectorAll('*')]
+    .filter((element) => element.children.length === 0)
+    .map(textOf)
+    .filter(Boolean);
+  const tag =
+    tagLink?.getAttribute('href') ||
+    textOf(entry.querySelector('[data-aue-prop="categoryTag"]')) ||
+    values.find(isTagValue) ||
+    '';
+  if (!tag) return undefined;
+
+  const checkbox = entry.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  const defaultValue =
+    textOf(entry.querySelector('[data-aue-prop="isDefaultCategory"]')) ||
+    values.find((value) => ['true', 'false'].includes(normalizeChoice(value)));
+  const authoredColor =
+    textOf(entry.querySelector('[data-aue-prop="backgroundColor"]')) ||
+    values.find((value) => CATEGORY_COLORS.has(normalizeColor(value))) ||
+    'white';
+  const linkLabel = tagLink?.textContent?.trim() || '';
+  return {
+    tag: normalizeTagId(tag),
+    label: linkLabel && !isTagValue(linkLabel) ? linkLabel : labelFromTag(tag),
+    backgroundColor: CATEGORY_COLORS.has(normalizeColor(authoredColor)) ? normalizeColor(authoredColor) : 'white',
+    isDefault: checkbox
+      ? checkbox.checked
+      : defaultValue === undefined
+        ? false
+        : normalizeChoice(defaultValue) === 'true',
+  };
+}
+
+function parseModeCategorySettings(entry: Element, rootTag: string): AuthoredFilter[] {
+  const categoryField = entry.querySelector('[data-aue-prop="categorySettings"]');
+  if (categoryField) {
+    return multiFieldEntries(categoryField)
+      .map(parseCategoryEntry)
+      .filter((category): category is AuthoredFilter => Boolean(category));
+  }
+
+  const candidates = [...entry.querySelectorAll('li')].filter((item) => {
+    const tag =
+      item.querySelector<HTMLAnchorElement>('a[href*="/content/cq:tags/"]')?.getAttribute('href') ||
+      textOf(item.querySelector('[data-aue-prop="categoryTag"]')) ||
+      [...item.querySelectorAll('*')]
+        .filter((element) => element.children.length === 0)
+        .map(textOf)
+        .find(isTagValue) ||
+      '';
+    if (!tag || normalizeTagId(tag) === normalizeTagId(rootTag)) return false;
+    return ![...item.querySelectorAll('li')].some((child) => {
+      const childTag =
+        child.querySelector<HTMLAnchorElement>('a[href*="/content/cq:tags/"]')?.getAttribute('href') ||
+        [...child.querySelectorAll('*')]
+          .filter((element) => element.children.length === 0)
+          .map(textOf)
+          .find(isTagValue) ||
+        '';
+      return childTag && normalizeTagId(childTag) !== normalizeTagId(rootTag);
+    });
+  });
+  return candidates.map(parseCategoryEntry).filter((category): category is AuthoredFilter => Boolean(category));
+}
+
+function parseModeSettings(row: Element | undefined): ModeSetting[] {
+  if (!row) return [];
+  const field = row.querySelector('[data-aue-prop="filterModeLabels"]') || row.firstElementChild || row;
+  const entries = multiFieldEntries(field);
   return entries.map((entry, index) => {
     const walker = document.createTreeWalker(entry, NodeFilter.SHOW_TEXT);
     const values: string[] = [];
@@ -192,31 +292,63 @@ function parseModeSettings(row: Element | undefined): ModeSetting[] {
       if (value) values.push(value);
     }
     const rootTag =
-      textOf(entry.querySelector('[data-aue-prop="rootTag"]')) ||
       entry.querySelector('a[href*="/content/cq:tags/"]')?.getAttribute('href') ||
-      values.find((value) => /^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value)) ||
+      textOf(entry.querySelector('[data-aue-prop="rootTag"]')) ||
+      values.find(isTagValue) ||
       '';
+    const filters = parseModeCategorySettings(entry, rootTag);
     const checkbox = entry.querySelector<HTMLInputElement>('input[type="checkbox"]');
     const defaultValue =
       textOf(entry.querySelector('[data-aue-prop="isDefault"]')) ||
       values.find((value) => ['true', 'false'].includes(normalizeChoice(value)));
-    const isDefault = checkbox
-      ? checkbox.checked
-      : defaultValue === undefined
+    const isDefault =
+      filters.length > 0
         ? undefined
-        : normalizeChoice(defaultValue) === 'true';
+        : checkbox
+          ? checkbox.checked
+          : defaultValue === undefined
+            ? undefined
+            : normalizeChoice(defaultValue) === 'true';
     const label =
       textOf(entry.querySelector('[data-aue-prop="label"]')) ||
       values.find(
         (value) =>
           value !== rootTag &&
           !['true', 'false'].includes(normalizeChoice(value)) &&
-          !/^(\/content\/cq:tags\/|[^\s/:]+:)/.test(value),
+          !isTagValue(value) &&
+          !CATEGORY_COLORS.has(normalizeColor(value)),
       ) ||
       labelFromTag(rootTag) ||
       'Filter mode';
-    return { key: `mode-${index}`, label, rootTag, isDefault };
+    return {
+      key: `mode-${index}`,
+      label,
+      rootTag,
+      isDefault,
+      filters,
+    };
   });
+}
+
+function parseCategorySettings(row: Element | undefined): CategorySetting[] {
+  if (!row) return [];
+  const field = row.querySelector('[data-aue-prop="categorySettings"]') || row.firstElementChild || row;
+  return multiFieldEntries(field)
+    .map(parseCategoryEntry)
+    .filter((category): category is AuthoredFilter => Boolean(category))
+    .map(({ tag, backgroundColor, isDefault }) => ({
+      tag,
+      backgroundColor: backgroundColor || 'white',
+      isDefault,
+    }));
+}
+
+function rowBoolean(row: Element | undefined, name: string, fallback: boolean): boolean {
+  if (!row) return fallback;
+  const checkbox = row.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (checkbox) return checkbox.checked;
+  const value = rowValue(row, name);
+  return value ? normalizeChoice(value) === 'true' : fallback;
 }
 
 function parseConfig(block: HTMLElement): BlockConfig {
@@ -227,6 +359,48 @@ function parseConfig(block: HTMLElement): BlockConfig {
     const href = row.querySelector('a[href]')?.getAttribute('href');
     return /^(?:https?:\/\/[^/]+)?\/content\/dam(?:\/|$)/i.test(href || textOf(row));
   });
+  const themeOptions = new Set([
+    'white',
+    'terracotta',
+    'brown',
+    'sage-green',
+    'soft-blush',
+    'dark-navy-blue',
+    'light-neutral',
+    'sand',
+    'dark-brown',
+    'light-brown',
+    'green',
+    'pink',
+    'blue',
+  ]);
+  const firstValue = rowValue(allRows[0], 'id').toLowerCase();
+  const hasNewModel =
+    Boolean(block.querySelector('[data-aue-prop="categorySettings"], [data-aue-prop="showModeLabels"]')) ||
+    (rootIndex >= 0 && rootIndex <= 4 && allRows.length - rootIndex >= 4 && !themeOptions.has(firstValue));
+  if (hasNewModel) {
+    const rowsAfterRoot = rootIndex >= 0 ? allRows.length - rootIndex : 0;
+    const useAuthoredFilters = rowsAfterRoot === 4;
+    const contentRowCount = useAuthoredFilters ? 6 : 7;
+    const contentRows = applyBlockIdentity(block, allRows, { contentRows: contentRowCount });
+    const [eyebrow, title, cfRootPath] = contentRows;
+    const modeRow = contentRows[useAuthoredFilters ? 4 : 3];
+    const categoryRow = useAuthoredFilters ? undefined : contentRows[4];
+    const showLabelsRow = contentRows[useAuthoredFilters ? 3 : 5];
+    const revealRow = contentRows[useAuthoredFilters ? 5 : 6];
+    return {
+      backgroundTheme: 'white',
+      eyebrow: rowValue(eyebrow, 'eyebrow'),
+      titleHtml: rowHtml(title, 'title'),
+      cfRootPath: rowHref(cfRootPath, 'cfRootPath'),
+      revealMoreLabel: rowValue(revealRow, 'revealMoreLabel') || 'Reveal More',
+      defaultMode: '',
+      modeSettings: parseModeSettings(modeRow),
+      categorySettings: parseCategorySettings(categoryRow),
+      showModeLabels: rowBoolean(showLabelsRow, 'showModeLabels', true),
+      useAuthoredFilters,
+    };
+  }
   const hasLegacyDefault =
     legacy || (rootIndex >= 0 ? allRows.length - rootIndex === 4 : [7, 9].includes(allRows.length));
   const rowCount = legacy ? 10 : hasLegacyDefault ? 7 : 6;
@@ -240,11 +414,13 @@ function parseConfig(block: HTMLElement): BlockConfig {
           key: 'experience',
           label: rowValue(contentRows[5], 'experienceModeLabel') || 'Experience',
           rootTag: rowValue(contentRows[6], 'experienceRootTag'),
+          filters: [],
         },
         {
           key: 'destination',
           label: rowValue(contentRows[7], 'destinationModeLabel') || 'Destination',
           rootTag: rowValue(contentRows[8], 'destinationRootTag'),
+          filters: [],
         },
       ]
     : parseModeSettings(contentRows[modeRowIndex]);
@@ -260,6 +436,9 @@ function parseConfig(block: HTMLElement): BlockConfig {
     defaultMode: hasLegacyDefault ? rowValue(contentRows[4], 'defaultFilterMode') : '',
     revealMoreLabel: rowValue(contentRows[legacy ? 9 : modeRowIndex + 1], 'revealMoreLabel') || 'Reveal More',
     modeSettings,
+    categorySettings: [],
+    showModeLabels: true,
+    useAuthoredFilters: false,
   };
 }
 
@@ -583,9 +762,10 @@ function createCard(
   return item;
 }
 
-async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
+async function fetchModes(settings: ModeSetting[], useAuthoredFilters = false): Promise<AuthoredMode[]> {
   return Promise.all(
-    settings.map(async ({ key, label, rootTag, isDefault }) => {
+    settings.map(async ({ key, label, rootTag, isDefault, filters: authoredFilters = [] }) => {
+      if (useAuthoredFilters) return { key, label, rootTag, isDefault, filters: authoredFilters };
       if (!rootTag.trim()) return { key, label, rootTag, isDefault, filters: [] };
       const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
       url.searchParams.set('tag', rootTag.trim());
@@ -610,9 +790,19 @@ async function fetchModes(settings: ModeSetting[]): Promise<AuthoredMode[]> {
 
 function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
   const requestedMode = normalizeChoice(config.defaultMode);
+  const defaultFilterMode = modes.find(({ filters }) => filters.some(({ isDefault }) => isDefault));
+  const authoredDefaultCategory = defaultFilterMode?.filters.find(({ isDefault }) => isDefault)?.tag || '';
+  const defaultCategory =
+    authoredDefaultCategory || config.categorySettings.find(({ isDefault }) => isDefault)?.tag || '';
+  const defaultCategoryMode = modes.find(
+    ({ rootTag, filters }) =>
+      filters.some(({ tag }) => normalizeTagId(tag) === normalizeTagId(defaultCategory)) &&
+      (normalizeTagId(defaultCategory) === normalizeTagId(rootTag) || tagIsWithinRoot(defaultCategory, rootTag)),
+  );
   const checkboxDefault = modes.find(({ isDefault }) => isDefault);
   const hasDefaultCheckbox = modes.some(({ isDefault }) => isDefault !== undefined);
   const defaultMode =
+    defaultCategoryMode ||
     checkboxDefault ||
     (hasDefaultCheckbox
       ? modes[0]
@@ -628,7 +818,10 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     ...modes.filter(({ key }) => key === activeMode),
     ...modes.filter(({ key }) => key !== activeMode),
   ];
-  let activeTag = modes.find(({ key }) => key === activeMode)?.filters[0]?.tag || '';
+  let activeTag =
+    (modes.find(({ key }) => key === activeMode)?.filters || []).find(({ isDefault }) => isDefault)?.tag ||
+    modes.find(({ key }) => key === activeMode)?.filters[0]?.tag ||
+    '';
   let visibleCount = PAGE_SIZE;
 
   const shell = document.createElement('div');
@@ -649,6 +842,9 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   tabs.className = 'filters-grid-tabs';
   tabs.setAttribute('role', 'tablist');
   tabs.setAttribute('aria-label', 'Filter mode');
+  const modeLabel = document.createElement('p');
+  modeLabel.className = 'filters-grid-mode-label';
+  modeLabel.textContent = modes[0]?.label || '';
   const filters = document.createElement('div');
   filters.className = 'filters-grid-filters';
   const results = document.createElement('div');
@@ -663,7 +859,12 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const modal = createModal();
 
   const updateCards = () => {
-    const filtered = activeTag ? cards.filter((card) => cardMatchesFilter(card, activeMode, activeTag)) : [];
+    const filtered =
+      modes.length === 0
+        ? cards
+        : activeTag
+          ? cards.filter((card) => cardMatchesFilter(card, activeMode, activeTag))
+          : [];
     const selectedFilterLabel =
       modes.find(({ key }) => key === activeMode)?.filters.find(({ tag }) => tag === activeTag)?.label || '';
     const items = filtered.slice(0, visibleCount).map((card) => createCard(card, modal.open, selectedFilterLabel));
@@ -681,15 +882,25 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const updateFilters = () => {
     const mode = modes.find(({ key }) => key === activeMode);
     filters.replaceChildren();
-    activeTag = mode?.filters[0]?.tag || '';
+    const modeDefaultCategory = mode?.filters.find(({ isDefault }) => isDefault);
+    const configuredDefaultCategory =
+      defaultCategory &&
+      mode &&
+      (mode.filters.some(({ tag }) => normalizeTagId(tag) === normalizeTagId(defaultCategory)) ||
+        normalizeTagId(defaultCategory) === normalizeTagId(mode.rootTag) ||
+        tagIsWithinRoot(defaultCategory, mode.rootTag))
+        ? mode.filters.find(({ tag }) => normalizeTagId(tag) === normalizeTagId(defaultCategory))
+        : undefined;
+    activeTag = modeDefaultCategory?.tag || configuredDefaultCategory?.tag || mode?.filters[0]?.tag || '';
     const filterButtons: HTMLButtonElement[] = [];
-    (mode?.filters || []).forEach(({ label, tag }, index) => {
+    (mode?.filters || []).forEach(({ label, tag }) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `filters-grid-filter${index === 0 ? ' is-active' : ''}`;
+      const selected = normalizeTagId(tag) === normalizeTagId(activeTag);
+      button.className = `filters-grid-filter${selected ? ' is-active' : ''}`;
       button.dataset.testid = 'filters-grid-filter';
       button.textContent = label || labelFromTag(tag);
-      button.setAttribute('aria-pressed', String(index === 0));
+      button.setAttribute('aria-pressed', String(selected));
       button.addEventListener('click', () => {
         activeTag = tag;
         visibleCount = PAGE_SIZE;
@@ -698,12 +909,44 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
           item.classList.toggle('is-active', selected);
           item.setAttribute('aria-pressed', String(selected));
         });
+        updateTheme();
         updateCards();
       });
       filterButtons.push(button);
       filters.append(button);
     });
+    updateTheme();
   };
+
+  function updateTheme() {
+    const activeModeFilter = modes
+      .find(({ key }) => key === activeMode)
+      ?.filters.find(({ tag }) => normalizeTagId(tag) === normalizeTagId(activeTag));
+    const categorySetting = config.categorySettings.find(
+      ({ tag }) => normalizeTagId(tag) === normalizeTagId(activeTag),
+    );
+    const theme =
+      activeModeFilter?.backgroundColor ||
+      categorySetting?.backgroundColor ||
+      (config.categorySettings.length || activeModeFilter ? 'white' : config.backgroundTheme);
+    const themeNames = [
+      'white',
+      'terracotta',
+      'brown',
+      'sage-green',
+      'soft-blush',
+      'dark-navy-blue',
+      'light-neutral',
+      'sand',
+      'dark-brown',
+      'light-brown',
+      'green',
+      'pink',
+      'blue',
+    ];
+    block.classList.remove(...themeNames.map((name) => `filters-grid-theme-${name}`));
+    block.classList.add(`filters-grid-theme-${normalizeColor(theme) || 'white'}`);
+  }
 
   const activateMode = (key: string, focus = false) => {
     const mode = modes.find(({ key: modeKey }) => modeKey === key);
@@ -736,41 +979,55 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     if (nextButton?.dataset.modeKey) activateMode(nextButton.dataset.modeKey, true);
   });
 
-  orderedModes.forEach((mode) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'filters-grid-tab';
-    button.dataset.testid = 'filters-grid-mode';
-    button.dataset.modeKey = mode.key;
-    button.textContent = mode.label;
-    button.setAttribute('role', 'tab');
-    button.setAttribute('aria-selected', String(mode.key === activeMode));
-    button.tabIndex = mode.key === activeMode ? 0 : -1;
-    button.addEventListener('click', () => activateMode(mode.key));
-    tabs.append(button);
-  });
+  if (config.showModeLabels && modes.length > 1) {
+    orderedModes.forEach((mode) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'filters-grid-tab';
+      button.dataset.testid = 'filters-grid-mode';
+      button.dataset.modeKey = mode.key;
+      button.textContent = mode.label;
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-selected', String(mode.key === activeMode));
+      button.tabIndex = mode.key === activeMode ? 0 : -1;
+      button.addEventListener('click', () => activateMode(mode.key));
+      tabs.append(button);
+    });
+  }
 
   reveal.addEventListener('click', () => {
     visibleCount += PAGE_SIZE;
     updateCards();
   });
-  controls.append(tabs, filters);
-  results.append(list, reveal);
-  layout.append(controls, results);
-  shell.append(layout);
-
-  block.classList.add(`filters-grid-theme-${normalizeChoice(config.backgroundTheme) || 'white'}`);
-  block.dataset.testid ||= 'filters-grid';
-  block.replaceChildren(shell);
   updateFilters();
   updateCards();
+  results.append(list, reveal);
+  if (modes.length) {
+    if (config.showModeLabels) {
+      if (modes.length === 1) controls.append(modeLabel);
+      else controls.append(tabs);
+    }
+    controls.append(filters);
+    layout.classList.add('has-filter-modes');
+    if (config.showModeLabels) layout.classList.add('has-mode-heading');
+    if (controls.childElementCount) layout.append(controls);
+  }
+  layout.append(results);
+  shell.append(layout);
+
+  updateTheme();
+  block.dataset.testid ||= 'filters-grid';
+  block.replaceChildren(shell);
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
   block.setAttribute('aria-busy', 'true');
   try {
     const config = parseConfig(block);
-    const [cards, modes] = await Promise.all([fetchCards(config.cfRootPath), fetchModes(config.modeSettings)]);
+    const [cards, modes] = await Promise.all([
+      fetchCards(config.cfRootPath),
+      fetchModes(config.modeSettings, config.useAuthoredFilters),
+    ]);
     render(block, config, cards, modes);
   } catch (error) {
     console.error('[filters-grid] Failed to load card content', error);

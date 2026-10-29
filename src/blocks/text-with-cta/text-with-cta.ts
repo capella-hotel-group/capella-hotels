@@ -145,17 +145,11 @@ function buildRow(modifier: string, fields: HTMLElement[]): HTMLElement {
   return row;
 }
 
-function wireDisclosure(
-  trigger: HTMLButtonElement,
-  form: HTMLFormElement,
-  panel: HTMLElement,
-  onExpand: () => void,
-): void {
+function wireDisclosure(trigger: HTMLButtonElement, form: HTMLFormElement, panel: HTMLElement): void {
   const setExpanded = (expanded: boolean): void => {
     trigger.setAttribute('aria-expanded', String(expanded));
     form.hidden = !expanded;
     panel.classList.toggle('is-expanded', expanded);
-    if (expanded && form.isConnected) onExpand();
   };
 
   trigger.addEventListener('click', () => {
@@ -175,7 +169,6 @@ function wireDisclosure(
 
 interface SignupFormBuild {
   panel: HTMLElement;
-  initializeCaptcha: () => void;
 }
 
 function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupFormBuild {
@@ -211,6 +204,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
     .map((option) => option.trim())
     .filter(Boolean);
 
+  const consent = buildConsent(cells[FIELD.consentLabel], formId);
   fields.append(
     buildRow('three', [
       buildSelectField(label(FIELD.salutationLabel, 'Title'), salutationOptions, formId),
@@ -238,7 +232,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
         formId,
       ),
     ]),
-    buildConsent(cells[FIELD.consentLabel], formId),
+    consent,
   );
 
   const submit = el('button', `${BLOCK}-submit`, label(FIELD.submitLabel, 'Sign up'));
@@ -264,9 +258,23 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
   let captchaWidgetId: string | undefined;
   let captchaInitialized = false;
   let captchaUnavailable = false;
+  let captchaPreloaded = false;
+  form.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!enableHCaptcha || captchaPreloaded || !(target instanceof HTMLInputElement) || target.type === 'checkbox') {
+      return;
+    }
+    captchaPreloaded = true;
+    void loadHCaptcha().catch((error: unknown) => {
+      captchaPreloaded = false;
+      console.error('Text with CTA CAPTCHA error:', error);
+      status.textContent = 'CAPTCHA is unavailable. Please try again later.';
+    });
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submit.getAttribute('aria-busy') === 'true') return;
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
@@ -281,6 +289,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
     }
 
     submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
     status.textContent = '';
     const property = await resolveNewsletterProperty(propertyPath);
     const result = await submitNewsletterForm(form, {
@@ -288,9 +297,11 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
       captchaEnabled: enableHCaptcha,
       captchaToken,
     });
+    submit.removeAttribute('aria-busy');
 
     if (result === 'success') {
       form.reset();
+      captcha.hidden = true;
       status.textContent = successMessage;
       if (enableHCaptcha) {
         captchaToken = '';
@@ -317,11 +328,13 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
         if (window.hcaptcha && captchaWidgetId !== undefined) window.hcaptcha.reset(captchaWidgetId);
       }
     }
-    submit.disabled = enableHCaptcha && !captchaToken;
+    submit.disabled = result !== 'success' && enableHCaptcha && !captchaToken;
   });
 
   const initializeCaptcha = (): void => {
-    if (!enableHCaptcha || captchaInitialized) return;
+    if (!enableHCaptcha) return;
+    captcha.hidden = false;
+    if (captchaInitialized) return;
     captchaInitialized = true;
 
     const siteKey =
@@ -341,7 +354,7 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
           sitekey: siteKey,
           callback: (token) => {
             captchaToken = token;
-            submit.disabled = false;
+            submit.disabled = submit.getAttribute('aria-busy') === 'true';
             status.textContent = '';
           },
           'expired-callback': () => {
@@ -365,8 +378,11 @@ function buildSignupForm(row: Element, legacyInfoTextCell?: Element): SignupForm
       });
   };
 
-  wireDisclosure(trigger, form, panel, initializeCaptcha);
-  return { panel, initializeCaptcha };
+  const consentCheckbox = consent.querySelector('input')!;
+  consentCheckbox.addEventListener('click', initializeCaptcha);
+  consentCheckbox.addEventListener('change', initializeCaptcha);
+  wireDisclosure(trigger, form, panel);
+  return { panel };
 }
 
 export default function decorate(block: HTMLElement): void {
@@ -396,8 +412,4 @@ export default function decorate(block: HTMLElement): void {
 
   block.textContent = '';
   block.append(text, aside);
-  signupForms.forEach(({ panel, initializeCaptcha }) => {
-    const form = panel.querySelector('form');
-    if (form && !form.hidden) initializeCaptcha();
-  });
 }

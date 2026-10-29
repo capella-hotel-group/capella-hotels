@@ -1,22 +1,31 @@
 # Filters Grid Authoring
 
-## Filter Mode Labels
+## Filter Modes And Labels
 
-Add one entry per top-level mode in **Filter Mode Labels**. Each entry has:
+Add one entry per mode in **Filter Mode Labels**. Each entry requires a **Root Tag**; **Mode Label** is optional. When a label is blank, it is derived from the root tag. Add each selectable category under that mode's **Category Settings** multifield. Filters are read from these authored entries; the Root Tag no longer supplies the filter list.
 
-- **Mode Label**: the tab title, such as Experience, Destination, By Interest, or By Type.
-- **Root Tag**: the parent tag whose children the child-tags API lists as filters.
-- **Default Active Tab**: check this for the mode that should open first.
+Use **Show Filter Mode Labels** to show or hide all mode labels together:
 
-The number of tabs follows these entries. The default mode is displayed first; the remaining modes keep their authored order. A root can use either `capella-hotels:destination` or `/content/cq:tags/capella-hotels/destination` format. The API supplies the child-filter labels and order, including tags that have no matching cards.
+- With no modes configured, all cards in the Content Fragment scope are shown, with no mode or category controls.
+- With one mode, its label is shown as plain text when labels are enabled. Its authored categories are available as filters.
+- With two or more modes, labels are shown as tabs when enabled. The mode containing the default category is selected initially; otherwise, the first authored mode is used.
+- When labels are hidden, the active mode remains available for filtering, but no mode labels or tabs are displayed.
 
-## Default Active Tab
+Hiding labels also removes the space reserved for them. Choose each filter tag explicitly and add one category entry for every filter to display. The tag's title is used for its filter label; if it is unavailable, the label is derived from the tag path. Legacy mode configurations that have only a Root Tag continue to load their child tags automatically.
 
-Select **Default Active Tab** inside the desired **Filter Mode Labels** entry. The checked mode is selected on load and displayed first, even if its label is renamed. No label or root tag needs to be typed into a separate default field.
+## Category Settings And Default Category
 
-Select only one default. If multiple modes are checked, the first checked entry wins. If all mode checkboxes are unchecked, the first authored mode is used.
+Within each filter mode, add entries in **Category Settings** to select the category tag, its **Background Color**, and optionally mark it as the **Default Category**. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
 
-Universal Editor's standard repeated boolean fields are independent checkboxes; checking one does not automatically uncheck another entry. Cross-entry exclusivity requires a custom UE extension. The runtime always activates just one mode and uses the first checked entry if multiple are selected.
+The default category is active on load, and its mode is selected as well. If multiple categories are marked as default, the first one wins. If no default is selected, the first authored mode and its first category are used.
+
+Categories without an authored colour use White. Filter matching uses the full tag ID, not its display title. The tag picker is not currently scoped with a `rootPath`; authors should select a tag from the intended mode's taxonomy.
+
+The current model nests a repeatable Category Settings container inside the repeatable Filter Mode Labels container. The runtime can read this structure, but nested multifield authoring support must be verified in the target Universal Editor before rollout.
+
+## Popup Content
+
+Popup details are authored in a separate Content Fragment and selected from the main card Content Fragment. Configure the popup description, image layout, feature and carousel images with alt text, and optional CTA. Publish the referenced popup Content Fragment before testing the card.
 
 ## Card Matching And Empty States
 
