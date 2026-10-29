@@ -22,8 +22,8 @@ export interface WheelPickerOptions {
   now?: () => number;
 }
 
-export const STEP_MS = 310;
-const SNAP_MS = 250;
+export const STEP_MS = 585;
+const SNAP_MS = 495;
 const TAP_SLOP_MOUSE = 4;
 const TAP_SLOP_TOUCH = 10;
 const VELOCITY_WINDOW_MS = 100;
@@ -31,14 +31,16 @@ const RELEASE_STALE_MS = 50;
 const MAX_VELOCITY = 0.06; // slots per ms
 const MIN_FLING_VELOCITY = 0.0005;
 const MOMENTUM_TAU_MS = 325;
-const MOMENTUM_MIN_MS = 250;
-const MOMENTUM_MAX_MS = 1200;
+const MOMENTUM_MIN_MS = 520;
+const MOMENTUM_MAX_MS = 2080;
 const WHEEL_IDLE_MS = 150;
 const NOTCH_MIN_DELTA = 50;
 // Rows that may be visible on either side of center (371px mask / 44px smallest row, plus margin).
 const HALF_VISIBLE_ROWS = 6;
 
-const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3;
+type Easing = (t: number) => number;
+const easeInOutCubic: Easing = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+const easeOutQuint: Easing = (t) => 1 - (1 - t) ** 5;
 const clamp = (v: number, min: number, max: number): number => Math.min(max, Math.max(min, v));
 
 export function cycleLayout(count: number): { cycles: number; origin: number } {
@@ -57,6 +59,7 @@ interface Tween {
   start: number;
   duration: number;
   source: PickerInputSource | null;
+  easing: Easing;
 }
 
 interface Drag {
@@ -132,14 +135,14 @@ export class WheelPicker {
     return this.drag !== null || this.wheelTimer !== 0 || (this.tween !== null && this.tween.source !== null);
   }
 
-  scrollTo(target: number, duration: number, source: PickerInputSource | null): void {
+  scrollTo(target: number, duration: number, source: PickerInputSource | null, easing: Easing = easeInOutCubic): void {
     this.stop();
     if (duration <= 0 || this.reducedMotion || target === this.pos) {
       this.pos = target;
       this.finish(source);
       return;
     }
-    this.tween = { from: this.pos, to: target, start: this.now(), duration, source };
+    this.tween = { from: this.pos, to: target, start: this.now(), duration, source, easing };
     this.rafId = this.raf(this.frame);
   }
 
@@ -182,7 +185,7 @@ export class WheelPicker {
     const t = this.tween;
     if (!t) return;
     const progress = Math.min(1, (this.now() - t.start) / t.duration);
-    this.pos = progress >= 1 ? t.to : t.from + (t.to - t.from) * easeOutCubic(progress);
+    this.pos = progress >= 1 ? t.to : t.from + (t.to - t.from) * t.easing(progress);
     if (progress >= 1) {
       this.tween = null;
       this.finish(t.source);
@@ -221,9 +224,9 @@ export class WheelPicker {
       this.scrollTo(snap, SNAP_MS, source);
       return;
     }
-    // Ease-out cubic starts at 3·d/T, so this T continues the release velocity seamlessly.
-    const duration = clamp((3 * Math.abs(distance)) / Math.abs(v), MOMENTUM_MIN_MS, MOMENTUM_MAX_MS);
-    this.scrollTo(target, duration, source);
+    // Ease-out quint starts at 5·d/T, so this T continues the release velocity seamlessly.
+    const duration = clamp((5 * Math.abs(distance)) / Math.abs(v), MOMENTUM_MIN_MS, MOMENTUM_MAX_MS);
+    this.scrollTo(target, duration, source, easeOutQuint);
   }
 
   private onPointerDown = (e: PointerEvent): void => {
