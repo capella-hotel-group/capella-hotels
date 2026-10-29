@@ -342,6 +342,12 @@ header .header-cta:active {
     background: var(--color-surface-action-inverse-pressed, #deddde);
 }
 
+/* Menu open: the cream surface makes the inverse (white) button vanish, so switch to the default action surface. */
+header:has(.header-menu-panel.is-open) .header-cta {
+    color: var(--color-text-on-action-default, #fff);
+    background: var(--color-surface-action-default, #1b364b);
+}
+
 .header-menu-panel {
     position: fixed;
     top: 0;
