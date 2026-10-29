@@ -322,6 +322,17 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   selectorUI.renderItems(items, state.activeIndex);
 
   let pendingAdvance: number | null = null;
+  const syncSuffixLink = (): void => {
+    dom.suffixEl.classList.toggle(
+      'hero-video-suffix--link',
+      !isAuthoring && state.introComplete && dom.mediaLinkEl.hasAttribute('href'),
+    );
+  };
+  // "with new eyes ›" is a pointer shortcut to the media link (which stays the keyboard/AT target).
+  dom.suffixEl.addEventListener('click', () => {
+    if (dom.suffixEl.classList.contains('hero-video-suffix--link')) dom.mediaLinkEl.click();
+  });
+
   const autoAdvance = new AutoAdvance(isAuthoring ? 0 : items.length, (next) => {
     // Never yank the wheel out from under the user; advance once they let it settle.
     if (selectorUI.isUserInteracting()) {
@@ -338,6 +349,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     if (!item) return;
     state.activeIndex = index;
     applyMediaLink(dom.mediaLinkEl, item, isAuthoring);
+    syncSuffixLink();
     autoAdvance.cancel();
     media
       .switchTo(item, { restartIfSame })
@@ -436,6 +448,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     selectorUI.setIntroComplete(true);
     state.introComplete = true;
     dom.mediaLinkEl.tabIndex = 0;
+    syncSuffixLink();
     autoAdvance.setReady(true);
   };
 
@@ -460,6 +473,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       selectorUI.setIntroComplete(true);
       state.introComplete = true;
       dom.mediaLinkEl.tabIndex = 0;
+      syncSuffixLink();
       autoAdvance.setReady(true);
 
       // Preload metadata for next item to reduce switching latency
