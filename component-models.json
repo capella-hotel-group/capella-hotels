@@ -1449,40 +1449,6 @@
         "value": "filters-grid"
       },
       {
-        "component": "select",
-        "name": "backgroundTheme",
-        "label": "Background Theme Option",
-        "valueType": "string",
-        "required": true,
-        "value": "white",
-        "options": [
-          {
-            "name": "White",
-            "value": "white"
-          },
-          {
-            "name": "Terracotta / Brown",
-            "value": "terracotta"
-          },
-          {
-            "name": "Sage Green",
-            "value": "sage-green"
-          },
-          {
-            "name": "Soft Blush",
-            "value": "soft-blush"
-          },
-          {
-            "name": "Dark Navy Blue",
-            "value": "dark-navy-blue"
-          },
-          {
-            "name": "Light Neutral / Sand",
-            "value": "light-neutral"
-          }
-        ]
-      },
-      {
         "component": "text",
         "name": "eyebrow",
         "label": "Eyebrow",
@@ -1503,10 +1469,18 @@
         "required": true
       },
       {
+        "component": "boolean",
+        "name": "showModeLabels",
+        "label": "Show Filter Mode Labels",
+        "description": "This setting applies to all mode labels. If enabled, provide labels when multiple modes are displayed. If hidden, the configured default category and its mode remain active.",
+        "valueType": "boolean",
+        "value": true
+      },
+      {
         "component": "container",
         "name": "filterModeLabels",
         "label": "Filter Mode Labels",
-        "description": "Configures top mode toggler labels (e.g., EXPERIENCE, DESTINATION, BY INTEREST, BY TYPE) with their root tag. The checked default appears first; other modes retain authored order. All child tags are listed as filters.",
+        "description": "Add one entry per mode and select its root tag. Add each category filter explicitly in the Category Settings multifield. When multiple modes are shown, provide a label for each.",
         "multi": true,
         "fields": [
           {
@@ -1514,23 +1488,75 @@
             "name": "label",
             "label": "Mode Label",
             "valueType": "string",
-            "required": true
+            "required": false
           },
           {
             "component": "aem-tag",
             "name": "rootTag",
             "label": "Root Tag",
+            "description": "Identifies this filter mode. Its child tags are not automatically added as filters.",
             "valueType": "string",
             "multi": false,
             "required": true
           },
           {
-            "component": "boolean",
-            "name": "isDefault",
-            "label": "Default Active Tab",
-            "description": "Select this mode as the initially active, first tab. Select only one mode. If several are selected, the first selected entry wins; if none are selected, the first mode is used.",
-            "valueType": "boolean",
-            "value": false
+            "component": "container",
+            "name": "categorySettings",
+            "label": "Category Settings",
+            "description": "Choose a category tag, its background colour, and optionally the default category. Suggested colours: Green for Nature.",
+            "multi": true,
+            "fields": [
+              {
+                "component": "aem-tag",
+                "name": "categoryTag",
+                "label": "Category Tag",
+                "valueType": "string",
+                "multi": false,
+                "required": true
+              },
+              {
+                "component": "select",
+                "name": "backgroundColor",
+                "label": "Background Color",
+                "valueType": "string",
+                "required": true,
+                "value": "white",
+                "options": [
+                  {
+                    "name": "Dark brown",
+                    "value": "dark-brown"
+                  },
+                  {
+                    "name": "Light brown",
+                    "value": "light-brown"
+                  },
+                  {
+                    "name": "Green",
+                    "value": "green"
+                  },
+                  {
+                    "name": "Pink",
+                    "value": "pink"
+                  },
+                  {
+                    "name": "Blue",
+                    "value": "blue"
+                  },
+                  {
+                    "name": "White",
+                    "value": "white"
+                  }
+                ]
+              },
+              {
+                "component": "boolean",
+                "name": "isDefaultCategory",
+                "label": "Default Category",
+                "description": "Select the category to show initially. Its mode will also be selected. If more than one is selected, the first one wins.",
+                "valueType": "boolean",
+                "value": false
+              }
+            ]
           }
         ]
       },
@@ -2532,6 +2558,14 @@
         "description": "Require hCaptcha verification before submitting the form.",
         "valueType": "boolean",
         "value": false
+      },
+      {
+        "component": "text",
+        "name": "infoText",
+        "label": "Info Text",
+        "description": "Optional information shown directly below the form title. Leave blank to omit it.",
+        "valueType": "string",
+        "value": "Submission in non-English is not supported"
       }
     ]
   },
@@ -2798,6 +2832,123 @@
         "valueType": "string",
         "required": true,
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "separator",
+    "fields": [
+      {
+        "component": "select",
+        "name": "topPadding",
+        "label": "Top Padding",
+        "valueType": "string",
+        "value": "10px",
+        "options": [
+          {
+            "name": "10px",
+            "value": "10px"
+          },
+          {
+            "name": "20px",
+            "value": "20px"
+          },
+          {
+            "name": "30px",
+            "value": "30px"
+          },
+          {
+            "name": "40px",
+            "value": "40px"
+          },
+          {
+            "name": "50px",
+            "value": "50px"
+          },
+          {
+            "name": "60px",
+            "value": "60px"
+          },
+          {
+            "name": "70px",
+            "value": "70px"
+          },
+          {
+            "name": "80px",
+            "value": "80px"
+          },
+          {
+            "name": "90px",
+            "value": "90px"
+          },
+          {
+            "name": "100px",
+            "value": "100px"
+          }
+        ]
+      },
+      {
+        "component": "select",
+        "name": "bottomPadding",
+        "label": "Bottom Padding",
+        "valueType": "string",
+        "value": "10px",
+        "options": [
+          {
+            "name": "10px",
+            "value": "10px"
+          },
+          {
+            "name": "20px",
+            "value": "20px"
+          },
+          {
+            "name": "30px",
+            "value": "30px"
+          },
+          {
+            "name": "40px",
+            "value": "40px"
+          },
+          {
+            "name": "50px",
+            "value": "50px"
+          },
+          {
+            "name": "60px",
+            "value": "60px"
+          },
+          {
+            "name": "70px",
+            "value": "70px"
+          },
+          {
+            "name": "80px",
+            "value": "80px"
+          },
+          {
+            "name": "90px",
+            "value": "90px"
+          },
+          {
+            "name": "100px",
+            "value": "100px"
+          }
+        ]
+      },
+      {
+        "component": "boolean",
+        "name": "visibleInPublish",
+        "label": "Visible in Publish",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "boolean",
+        "name": "visibleSeparator",
+        "label": "Visible Separator",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -3077,6 +3228,14 @@
         "description": "Maps the current page to the Newsletter API property code.",
         "valueType": "string",
         "required": true
+      },
+      {
+        "component": "text",
+        "name": "infoText",
+        "label": "Info Text",
+        "description": "Optional information displayed above the sign-up form. Leave blank to omit it.",
+        "valueType": "string",
+        "value": "Submission in non-English is not supported"
       }
     ]
   },

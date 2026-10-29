@@ -133,6 +133,14 @@
           "description": "Require hCaptcha verification before submitting the form.",
           "valueType": "boolean",
           "value": false
+        },
+        {
+          "component": "text",
+          "name": "infoText",
+          "label": "Info Text",
+          "description": "Optional information shown directly below the form title. Leave blank to omit it.",
+          "valueType": "string",
+          "value": "Submission in non-English is not supported"
         }
       ]
     }

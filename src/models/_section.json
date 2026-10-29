@@ -163,12 +163,13 @@
         "footer-legal",
         "content-listing",
         "page-listing",
-        "booking-search"
+        "booking-search",
+        "separator"
       ]
     },
     {
       "id": "header-section",
-      "components": ["text", "image", "button", "hero", "navigation-lists", "link"]
+      "components": ["text", "image", "button", "hero", "navigation-lists", "link", "separator"]
     }
   ]
 }

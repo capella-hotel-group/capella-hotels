@@ -26,6 +26,7 @@ const ROW = {
   TRIGGER_LABEL: 11,
   LAYOUT: 12,
   ENABLE_HCAPTCHA: 13,
+  INFO_TEXT: 14,
 };
 
 function rowText(rows: Element[], index: number): string {
@@ -385,16 +386,20 @@ async function submitForm(
 ): Promise<void> {
   showMessage(message, '');
   submitBtn.disabled = true;
+  submitBtn.setAttribute('aria-busy', 'true');
   const result = await submitNewsletterForm(form, {
     property: config.property,
     captchaEnabled: config.captchaEnabled,
     captchaToken: config.captcha?.getToken() ?? '',
   });
+  submitBtn.removeAttribute('aria-busy');
 
   if (result === 'success') {
     form.reset();
     showMessage(message, 'Thank you for subscribing!', 'success');
     if (config.captcha) config.captcha.reset();
+    const captchaContainer = form.querySelector<HTMLElement>('.newsletter-captcha');
+    if (captchaContainer) captchaContainer.hidden = true;
     submitBtn.disabled = false;
     return;
   }
@@ -437,6 +442,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     triggerLabel: rowText(rows, ROW.TRIGGER_LABEL) || 'Subscribe',
     layout: rowText(rows, ROW.LAYOUT) === 'Inline' ? 'Inline' : 'Modal',
     enableHCaptcha: rowText(rows, ROW.ENABLE_HCAPTCHA).toLowerCase() === 'true',
+    infoText: rowText(rows, ROW.INFO_TEXT),
   };
 
   const property = await resolveNewsletterProperty(cfg.propertyPath);
@@ -449,6 +455,19 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const title = document.createElement('h2');
   title.className = 'newsletter-title';
   title.textContent = cfg.title;
+
+  let titleContent: HTMLElement = title;
+  if (cfg.infoText) {
+    const titleInfo = document.createElement('div');
+    titleInfo.className = 'newsletter-title-info';
+
+    const infoText = document.createElement('div');
+    infoText.className = 'newsletter-info-text';
+    infoText.textContent = cfg.infoText;
+
+    titleInfo.append(title, infoText);
+    titleContent = titleInfo;
+  }
 
   // hCaptcha widget mount point. The submit button starts disabled whenever a
   // captcha is configured and/or (in `Inline`) consent is required, until the
@@ -491,7 +510,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     checkbox.addEventListener('change', () => gate.setConsent(checkbox.checked));
 
     form.append(
-      title,
+      titleContent,
       buildInlineRow([salutation, firstName, lastName]),
       buildInlineRow([country, email]),
       consent,
@@ -540,13 +559,25 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
     submitBtn.className = 'newsletter-submit';
 
-    form.append(title, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
+    form.append(titleContent, salutation, nameRow, email, country, consentWrapper, captchaWrapper, submitBtn, message);
   }
 
   let captcha: CaptchaController | null = null;
   let captchaLoading = false;
+  let captchaPreloaded = false;
+  const preloadCaptcha = (): void => {
+    if (!siteKey || captchaPreloaded) return;
+    captchaPreloaded = true;
+    void loadHCaptcha().catch((error: unknown) => {
+      captchaPreloaded = false;
+      console.error('Newsletter captcha error:', error);
+      showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+    });
+  };
   const initializeCaptcha = (): void => {
-    if (!siteKey || captcha || captchaLoading) return;
+    if (!siteKey) return;
+    captchaWrapper.hidden = false;
+    if (captcha || captchaLoading) return;
     captchaLoading = true;
     void setupCaptcha(captchaWrapper, siteKey, (ok) => gate.setCaptcha(ok))
       .then((controller) => {
@@ -574,7 +605,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       return;
     }
     if (blocked === 'captcha') {
-      initializeCaptcha();
+      if (cfg.layout !== 'Inline') initializeCaptcha();
       showMessage(
         message,
         !siteKey
@@ -597,27 +628,23 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const target = event.target as HTMLElement;
     target.removeAttribute('aria-invalid');
     target.removeAttribute('aria-describedby');
+    if (cfg.layout === 'Inline' && target instanceof HTMLInputElement && target.type !== 'checkbox') {
+      preloadCaptcha();
+    }
   });
-  form.addEventListener('focusin', initializeCaptcha);
-  form.addEventListener('pointerdown', initializeCaptcha);
+  if (cfg.layout === 'Inline' && consentCheckbox) {
+    consentCheckbox.addEventListener('click', initializeCaptcha);
+    consentCheckbox.addEventListener('change', initializeCaptcha);
+  } else {
+    form.addEventListener('focusin', initializeCaptcha);
+    form.addEventListener('pointerdown', initializeCaptcha);
+  }
 
   if (cfg.layout === 'Inline') {
     // ── Replace authored rows with the form rendered directly in place ─────
     block.textContent = '';
     block.classList.add('newsletter-inline');
     block.append(form);
-    if (siteKey && 'IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((entry) => entry.isIntersecting)) {
-            observer.disconnect();
-            initializeCaptcha();
-          }
-        },
-        { rootMargin: '200px' },
-      );
-      observer.observe(captchaWrapper);
-    }
     return;
   }
 

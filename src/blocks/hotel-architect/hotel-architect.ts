@@ -308,6 +308,89 @@ interface Slide {
   label: string;
 }
 
+const SLIDE_MS = 500;
+const SLIDE_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
+
+/** Places a slide `slots` frame widths along the track, plus whatever a finger has dragged it. */
+const offset = (slots: number, dragged = 0): string => `translateX(calc(${slots * 100}% + ${dragged}px))`;
+
+function animates(element: Element): boolean {
+  return typeof element.animate === 'function' && !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+}
+
+interface SwipeHandlers {
+  start: () => void;
+  drag: (distance: number) => void;
+  /** Receives the distance travelled when the gesture counts as a swipe, or 0 to snap back. */
+  release: (distance: number) => void;
+}
+
+/**
+ * Lets a touch drag the gallery sideways. The frame limits touch panning to the
+ * vertical axis, so the browser keeps scrolling the page (and cancels the gesture
+ * here) while only a horizontal drag moves the slides. A drag shorter than the
+ * threshold, or one that travelled further down the page than across it, snaps back.
+ */
+function enableSwipe(frame: HTMLElement, { start, drag, release }: SwipeHandlers): void {
+  const THRESHOLD = 40;
+  const DEAD_ZONE = 6;
+  let pointerId: number | null = null;
+  let startX = 0;
+  let startY = 0;
+  let dragging = false;
+  let swallowClick = false;
+
+  frame.addEventListener('pointerdown', (event) => {
+    // a mouse has the arrows, and claiming its drag would take the click that
+    // selects a slide in the editor
+    if (event.pointerType === 'mouse') return;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    dragging = false;
+  });
+
+  frame.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== pointerId) return;
+    const distanceX = event.clientX - startX;
+    if (!dragging) {
+      if (Math.abs(distanceX) < DEAD_ZONE || Math.abs(distanceX) <= Math.abs(event.clientY - startY)) return;
+      dragging = true;
+      start();
+    }
+    drag(distanceX);
+  });
+
+  frame.addEventListener('pointerup', (event) => {
+    if (event.pointerId !== pointerId) return;
+    pointerId = null;
+    const distanceX = event.clientX - startX;
+    const swiped = Math.abs(distanceX) >= THRESHOLD && Math.abs(distanceX) > Math.abs(event.clientY - startY);
+    if (dragging || swiped) release(swiped ? distanceX : 0);
+    // a drag that started on an arrow must not also press it
+    swallowClick = dragging;
+    dragging = false;
+  });
+
+  frame.addEventListener('pointercancel', (event) => {
+    if (event.pointerId !== pointerId) return;
+    pointerId = null;
+    if (dragging) release(0);
+    dragging = false;
+  });
+
+  frame.addEventListener(
+    'click',
+    (event) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    true,
+  );
+}
+
 function buildDots(slides: Slide[]): HTMLOListElement {
   const list = document.createElement('ol');
   list.className = 'hotel-architect-dots';
@@ -328,8 +411,10 @@ function buildDots(slides: Slide[]): HTMLOListElement {
 }
 
 /**
- * Builds one primary media carousel. The arrows (and, in the single-ritual layout,
- * the dots) only appear for two or more slides; selection wraps at either end.
+ * Builds one primary media carousel. A lone image is not a carousel: it keeps the
+ * frame but gets no controls, no scrim and no swipe. From two images up the arrows
+ * (and, in the single-ritual layout, the dots) appear and selection wraps at either
+ * end.
  */
 function buildGallery(cell: Element | null | undefined, { dots: withDots }: { dots: boolean }): HTMLElement {
   const track = buildList(cell, 'hotel-architect-track');
@@ -347,6 +432,7 @@ function buildGallery(cell: Element | null | undefined, { dots: withDots }: { do
 
   const frame = document.createElement('div');
   frame.className = 'hotel-architect-frame';
+  frame.classList.toggle('is-carousel', interactive);
   frame.append(track);
   if (prev && next) frame.append(prev, next);
   if (dots) frame.append(dots);
@@ -357,32 +443,117 @@ function buildGallery(cell: Element | null | undefined, { dots: withDots }: { do
 
   if (!slides.length) return media;
 
-  const dotButtons = [...(dots?.querySelectorAll<HTMLElement>('.hotel-architect-dot') ?? [])];
-  let selected = -1;
+  if (!interactive) {
+    slides[0]!.element.classList.add('is-selected');
+    return media;
+  }
 
-  const select = (index: number): void => {
-    // wraps, so the arrows keep working at either end of the gallery
+  const dotButtons = [...(dots?.querySelectorAll<HTMLElement>('.hotel-architect-dot') ?? [])];
+  const elementAt = (index: number): HTMLElement => slides[(index + slides.length) % slides.length]!.element;
+  let selected = 0;
+  let running: Animation[] = [];
+  // the neighbour a drag has pulled into view, and how far
+  let peeking: { element: HTMLElement; direction: number; dragged: number } | null = null;
+
+  /** Ends any slide in motion and puts every slide back at rest. */
+  const settle = (): void => {
+    running.forEach((animation) => animation.cancel());
+    running = [];
+    peeking = null;
+    slides.forEach(({ element }) => {
+      element.classList.remove('is-leaving', 'is-peeking');
+      element.style.transform = '';
+    });
+  };
+
+  const slide = (element: HTMLElement, from: string, to: string, done?: () => void): void => {
+    // held at its end until `done` has hidden it, so it cannot flash back to rest
+    const animation = element.animate(
+      { transform: [from, to] },
+      { duration: SLIDE_MS, easing: SLIDE_EASING, fill: 'forwards' },
+    );
+    running.push(animation);
+    animation.finished
+      .then(() => {
+        done?.();
+        animation.cancel();
+        running = running.filter((item) => item !== animation);
+      })
+      .catch(() => {});
+  };
+
+  /**
+   * Moves to a slide, wrapping at either end. `direction` is the side the new slide
+   * enters from (1 the end side, -1 the start side), and `dragged` how far a finger
+   * already moved both slides, so the animation carries on from there.
+   */
+  const select = (index: number, direction: number, dragged = 0): void => {
     const target = (index + slides.length) % slides.length;
     if (target === selected) return;
-    selected = target;
+    const outgoing = slides[selected]!.element;
+    const incoming = slides[target]!.element;
 
-    slides.forEach((slide, i) => slide.element.classList.toggle('is-selected', i === selected));
+    settle();
+    selected = target;
+    slides.forEach(({ element }, i) => element.classList.toggle('is-selected', i === selected));
     dotButtons.forEach((button) => {
       const active = Number(button.dataset.index) === selected;
       if (active) button.setAttribute('aria-current', 'true');
       else button.removeAttribute('aria-current');
     });
+
+    if (!animates(incoming)) return;
+    outgoing.classList.add('is-leaving');
+    slide(incoming, offset(direction, dragged), offset(0));
+    slide(outgoing, offset(0, dragged), offset(-direction), () => outgoing.classList.remove('is-leaving'));
   };
 
-  prev?.addEventListener('click', () => select(selected - 1));
-  next?.addEventListener('click', () => select(selected + 1));
+  prev?.addEventListener('click', () => select(selected - 1, -1));
+  next?.addEventListener('click', () => select(selected + 1, 1));
 
   dots?.addEventListener('click', (event) => {
     const button = (event.target as HTMLElement).closest<HTMLElement>('button[data-index]');
-    if (button) select(Number(button.dataset.index));
+    if (!button) return;
+    const index = Number(button.dataset.index);
+    select(index, index < selected ? -1 : 1);
   });
 
-  select(0);
+  enableSwipe(frame, {
+    start: settle,
+    drag: (distance) => {
+      // dragging towards the start pulls the next slide in from the end side
+      const direction = distance < 0 ? 1 : -1;
+      const neighbour = elementAt(selected + direction);
+      if (peeking && peeking.element !== neighbour) {
+        peeking.element.classList.remove('is-peeking');
+        peeking.element.style.transform = '';
+      }
+      peeking = { element: neighbour, direction, dragged: distance };
+      neighbour.classList.add('is-peeking');
+      neighbour.style.transform = offset(direction, distance);
+      slides[selected]!.element.style.transform = offset(0, distance);
+    },
+    release: (distance) => {
+      if (distance) {
+        const direction = distance < 0 ? 1 : -1;
+        select(selected + direction, direction, distance);
+        return;
+      }
+
+      const current = slides[selected]!.element;
+      const held = peeking;
+      settle();
+      if (!held || !animates(current)) return;
+      held.element.classList.add('is-peeking');
+      slide(current, offset(0, held.dragged), offset(0));
+      slide(held.element, offset(held.direction, held.dragged), offset(held.direction), () =>
+        held.element.classList.remove('is-peeking'),
+      );
+    },
+  });
+
+  slides[0]!.element.classList.add('is-selected');
+  dotButtons[0]?.setAttribute('aria-current', 'true');
   return media;
 }
 

@@ -17,11 +17,13 @@ function buildBlock({
   layout = 'Modal',
   salutationValue = '<ul><li>Mr</li><li>Mrs</li><li>Ms</li></ul>',
   countryPlaceholder = '',
+  infoText = 'Submission in non-English is not supported',
 }: {
   enableHCaptcha?: string;
   layout?: string;
   salutationValue?: string;
   countryPlaceholder?: string;
+  infoText?: string;
 } = {}): HTMLElement {
   const values = [
     'Newsletter',
@@ -37,8 +39,9 @@ function buildBlock({
     '',
     'Subscribe',
     layout,
+    enableHCaptcha ?? '',
+    infoText,
   ];
-  if (enableHCaptcha !== undefined) values.push(enableHCaptcha);
 
   const block = document.createElement('div');
   block.className = 'newsletter-form';
@@ -77,6 +80,26 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(document.querySelector('script[src*="hcaptcha.com"]')).toBeNull();
   });
 
+  it('renders the authored info text below the form title', async () => {
+    await decorate(buildBlock());
+
+    const title = document.querySelector('.newsletter-title');
+    const info = document.querySelector('.newsletter-info-text');
+    expect(title?.textContent).toBe('Newsletter');
+    expect(info?.textContent).toBe('Submission in non-English is not supported');
+    expect(title?.parentElement).toBe(info?.parentElement);
+    expect(title?.nextElementSibling).toBe(info);
+  });
+
+  it('omits the info text element when the field is blank', async () => {
+    await decorate(buildBlock({ infoText: '' }));
+
+    expect(document.querySelector('.newsletter-info-text')).toBeNull();
+    expect(
+      document.querySelector('.newsletter-title')?.parentElement?.classList.contains('newsletter-title-info'),
+    ).toBe(false);
+  });
+
   it('renders hCaptcha and gates submission when enabled', async () => {
     let renderOptions!: HCaptchaRenderOptions;
     const api: HCaptchaApi = {
@@ -103,6 +126,41 @@ describe('newsletter-form hCaptcha toggle', () => {
 
     renderOptions.callback('verified-token');
     expect(submit.hasAttribute('aria-disabled')).toBe(false);
+  });
+
+  it.each(['click', 'change'])('renders inline CAPTCHA only on consent %s after typing', async (eventType) => {
+    Object.assign(window, { hlx: { codeBasePath: '' } });
+    const api: HCaptchaApi = {
+      render: jest.fn(() => 'inline-captcha'),
+      reset: jest.fn(),
+    };
+    window.hcaptcha = api;
+    mockGetSiteKey.mockReturnValue('test-site-key');
+
+    await decorate(buildBlock({ layout: 'Inline', enableHCaptcha: 'true' }));
+    const form = document.querySelector<HTMLFormElement>('.newsletter-form-element')!;
+    form.querySelector<HTMLInputElement>('[name="email"]')!.focus();
+    form.querySelector('[name="email"]')!.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(api.render).not.toHaveBeenCalled();
+    expect(document.querySelector('script[src*="hcaptcha.com"]')).toBeNull();
+
+    const consent = form.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    consent.focus();
+    form.querySelector('[name="email"]')!.dispatchEvent(new Event('input', { bubbles: true }));
+    await Promise.resolve();
+    expect(api.render).not.toHaveBeenCalled();
+    consent.dispatchEvent(new Event(eventType));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(api.render).toHaveBeenCalledTimes(1);
+    consent.dispatchEvent(new Event(eventType));
+    await Promise.resolve();
+    expect(api.render).toHaveBeenCalledTimes(1);
+    expect(api.render).toHaveBeenCalledWith(
+      form.querySelector('.newsletter-captcha'),
+      expect.objectContaining({ sitekey: 'test-site-key' }),
+    );
+    expect(form.querySelector('button')?.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('keeps submission blocked when enabled but no site key is available', async () => {
@@ -160,6 +218,27 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(String(request.body)).toContain('country=SG');
   });
 
+  it.each([true, false])('shows the submit spinner until response (ok=%s)', async (ok) => {
+    let finish!: (value: { ok: boolean }) => void;
+    global.fetch = jest.fn(
+      () =>
+        new Promise<{ ok: boolean }>((resolve) => {
+          finish = resolve;
+        }),
+    ) as unknown as typeof fetch;
+    await decorate(buildBlock());
+    const form = fillModalRequiredFields('Singapore');
+    const submit = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(submit.getAttribute('aria-busy')).toBe('true');
+    expect(submit.disabled).toBe(true);
+    finish({ ok });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(submit.hasAttribute('aria-busy')).toBe(false);
+    expect(submit.disabled).toBe(false);
+  });
+
   it.each(['false', 'true'])('sends captchaEnabled=%s to the API', async (enableHCaptcha) => {
     const fetchMock = jest.fn().mockResolvedValue({ ok: true });
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -192,6 +271,14 @@ describe('newsletter-form hCaptcha toggle', () => {
     const payload = new URLSearchParams(String(request.body));
     expect(payload.get('captchaEnabled')).toBe(enableHCaptcha);
     expect(payload.get('captchaValue')).toBe(enableHCaptcha === 'true' ? 'verified-token' : null);
+    const captcha = form.querySelector<HTMLElement>('.newsletter-captcha')!;
+    expect(captcha.hidden).toBe(true);
+    if (enableHCaptcha === 'true') {
+      expect(window.hcaptcha?.reset).toHaveBeenCalledWith('newsletter-captcha');
+      document.querySelector<HTMLButtonElement>('.newsletter-trigger')!.click();
+      expect(captcha.hidden).toBe(false);
+      expect(window.hcaptcha?.render).toHaveBeenCalledTimes(1);
+    }
   });
 
   it('blocks submission for an unrecognized country name', async () => {

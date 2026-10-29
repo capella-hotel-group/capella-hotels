@@ -14,6 +14,14 @@ blocks. Each piece of content is its own block, added as a normal section
 component — **there is no fixed section count or order**; add only the blocks you
 need, in any order, and the page renders correctly either way.
 
+You may insert **Separator** blocks between the footer components to make the
+authored `/footer` page easier to read in Universal Editor. Leave **Visible in
+Publish** off (the default) for author-only spacing. The assembled site footer
+explicitly removes Separator blocks and their wrappers from the loaded fragment
+before assembling its DOM, even when **Visible in Publish** is enabled. This does
+not remove them from the authored `/footer` page in UE. Its existing layout
+dividers are unaffected.
+
 ## 2. Available blocks
 
 | Block                  | Purpose                                                                                                        | Repeatable child                                                                                       |
@@ -24,6 +32,7 @@ need, in any order, and the page renders correctly either way.
 | **Footer Links**       | Nav link column group title + number of items before wrapping to a second column                               | **Footer Link** — label, URL, open-in-new-tab                                                          |
 | **Footer Legal**       | Copyright text                                                                                                 | **Footer Legal Link** — label, URL, open-in-new-tab                                                    |
 | **Newsletter Form**    | Embedded lead-capture form (existing block, set Layout to Inline to render in place without the modal trigger) | —                                                                                                      |
+| **Separator**          | Authoring spacing between footer components; omitted from the assembled site footer                            | —                                                                                                      |
 
 Add each block once per page, with as many repeatable items (social/nav/legal
 links) inside its container as needed — use the **+** button on the container

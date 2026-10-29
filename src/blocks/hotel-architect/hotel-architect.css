@@ -300,6 +300,12 @@
         height: var(--hotel-architect-media-height);
         overflow: hidden;
         background-color: #000;
+
+        /* a swipe changes the slide, so only the vertical pan is left to the
+           browser; pinch-zoom stays with it */
+        &.is-carousel {
+            touch-action: pan-y pinch-zoom;
+        }
     }
 
     .hotel-architect-track {
@@ -310,36 +316,26 @@
         list-style: none;
     }
 
+    /* Slides rest stacked on the frame. Changing slide moves the outgoing one out and
+       the incoming one in side by side (driven from script, which also lets a finger
+       drag them), so only the selected slide and the ones in motion are visible. */
     .hotel-architect-slide {
         position: absolute;
         inset: 0;
         visibility: hidden;
-        opacity: 0;
 
-        &.is-selected {
-            /* keeps the incoming image above the one fading out */
-            z-index: 1;
+        &.is-selected,
+        &.is-leaving,
+        &.is-peeking {
             visibility: visible;
-            opacity: 1;
         }
 
         /* dark scrim that keeps the white carousel arrows legible */
-        &::after {
+        .hotel-architect-frame.is-carousel &::after {
             content: '';
             position: absolute;
             inset: 0;
             background-color: rgb(0 0 0 / 40%);
-        }
-
-        @media (prefers-reduced-motion: no-preference) {
-            /* visibility flips only once the fade-out has finished */
-            transition:
-                opacity 0.5s ease,
-                visibility 0s linear 0.5s;
-
-            &.is-selected {
-                transition: opacity 0.5s ease;
-            }
         }
     }
 
