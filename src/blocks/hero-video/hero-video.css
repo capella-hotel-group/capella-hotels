@@ -163,15 +163,34 @@
     -webkit-mask-image: linear-gradient(180deg, rgba(0 0 0 / 0%) 0%, #000 50%, rgba(0 0 0 / 0%) 100%);
 }
 
+/* Set once the intro finishes: the wheel picker owns vertical gestures here (page scroll stays
+   available everywhere else in the hero). */
+.hero-video .hero-video-items-viewport--interactive {
+    pointer-events: auto;
+    touch-action: none;
+    overscroll-behavior: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+@media (pointer: fine) {
+    .hero-video .hero-video-items-viewport--interactive {
+        cursor: grab;
+    }
+
+    .hero-video .hero-video-items-viewport--dragging,
+    .hero-video .hero-video-items-viewport--dragging .hero-video-item-btn {
+        cursor: grabbing;
+    }
+}
+
 .hero-video-items {
     list-style: none;
     margin: 0;
     padding: 0;
     pointer-events: auto;
     text-align: center;
-}
-
-.hero-video-items--animating {
     will-change: transform;
 }
 
@@ -324,6 +343,11 @@
         font-size: var(--typography-fontsize-heading-h3);
         line-height: var(--typography-line-height-heading-h3);
         min-height: 44px;
+    }
+
+    /* Exactly 7 rows (3 above, active, 3 below) of the 44px mobile row. */
+    .hero-video-items-viewport {
+        height: calc(7 * 44px);
     }
 
     .hero-video-controls {

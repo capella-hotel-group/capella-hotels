@@ -389,7 +389,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const selectorUI = new SelectorUI(dom.itemListEl, dom.itemsViewportEl);
   selectorUI.renderItems(items, state.activeIndex);
 
+  let pendingAdvance: number | null = null;
   const autoAdvance = new AutoAdvance(isAuthoring ? 0 : items.length, (next) => {
+    // Never yank the wheel out from under the user; advance once they let it settle.
+    if (selectorUI.isUserInteracting()) {
+      pendingAdvance = next;
+      return;
+    }
     selectorUI.activateItem(next, true);
     goTo(next, true);
   });
@@ -463,12 +469,21 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   ro.observe(block);
 
   // Wire item selection to media switch
-  selectorUI.onSelect((index) => {
+  selectorUI.onSelect((index, source) => {
+    const queued = pendingAdvance;
+    pendingAdvance = null;
+    if (index === state.activeIndex) {
+      if (queued !== null) {
+        selectorUI.activateItem(queued, true);
+        goTo(queued, true);
+      }
+      return;
+    }
     const prevItem = items[state.activeIndex];
     const item = items[index];
     if (item) {
       goTo(index, false);
-      emitItemSelect(prevItem?.label ?? '', item.label, 'pointer');
+      emitItemSelect(prevItem?.label ?? '', item.label, source);
     }
   });
 
