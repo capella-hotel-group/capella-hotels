@@ -20,7 +20,7 @@ const CURSOR_FOLLOW_ENABLED = false;
 function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
   // Each block-level field renders as its own single-cell row, in model declaration order:
   //   0=prefix, 1=suffix, 2=transition, 3=destinationLabel, 4=destinationUrl,
-  //   5=experienceLabel, 6=experienceUrl. The authored value lives in row.children[0].
+  //   5=experienceLabel, 6=experienceUrl, 7=showOverlay. The authored value lives in row.children[0].
   const cellText = (i: number): string => configRows[i]?.children[0]?.textContent?.trim() ?? '';
   const cellAnchor = (i: number): HTMLAnchorElement | null =>
     configRows[i]?.children[0]?.querySelector<HTMLAnchorElement>('a') ?? null;
@@ -28,6 +28,10 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
   const rawTransition = cellText(2).toLowerCase();
   const transition: HeroVideoConfig['transition'] =
     rawTransition === 'slide' || rawTransition === 'cut' ? rawTransition : 'crossfade';
+
+  const showOverlayText = cellText(7).toLowerCase();
+  const showOverlay =
+    showOverlayText === 'false' || showOverlayText === '0' || showOverlayText === 'off' ? false : true;
 
   return {
     prefix: cellText(0) || 'See',
@@ -37,6 +41,7 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
     destinationHref: cellAnchor(4)?.getAttribute('href') || '/en/',
     experienceLabel: cellText(5) || 'Experiences',
     experienceHref: cellAnchor(6)?.getAttribute('href') || '/en/experience/',
+    showOverlay,
   };
 }
 
@@ -177,6 +182,9 @@ function buildDOM(
   const overlayEl = document.createElement('div');
   overlayEl.className = 'hero-video-overlay';
   overlayEl.setAttribute('aria-hidden', 'true');
+  if (!config.showOverlay) {
+    overlayEl.classList.add('hero-video-overlay--hidden');
+  }
 
   // ── Intro phrase (single centered sentence, visible during intro only) ────
   // Prefix/suffix are wrapped in spans so the split can hand each word off to the real prefix/

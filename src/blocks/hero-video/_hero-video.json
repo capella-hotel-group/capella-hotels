@@ -85,6 +85,13 @@
           "component": "aem-content",
           "name": "experienceUrl",
           "label": "Experience Page"
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "showOverlay",
+          "label": "Show Media Overlay",
+          "value": true
         }
       ]
     },
