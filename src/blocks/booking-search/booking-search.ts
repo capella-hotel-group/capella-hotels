@@ -51,6 +51,8 @@ export default function decorate(block: HTMLElement): void {
     locationField.label.title = location.label;
     locationList.mark(location);
     syncSubmit();
+    flyouts.closeAll();
+    locationField.trigger.focus();
   });
   if (showLocation) locationField.panel.append(locationList.list, locationList.scrollbar);
 
@@ -81,14 +83,16 @@ export default function decorate(block: HTMLElement): void {
   );
   guestsField.panel.append(counters);
 
-  fields.forEach((field) => {
-    field.panel.append(
-      buildDoneButton(labels.done, () => {
-        flyouts.closeAll();
-        field.trigger.focus();
-      }),
-    );
-  });
+  fields
+    .filter((field) => field !== locationField)
+    .forEach((field) => {
+      field.panel.append(
+        buildDoneButton(labels.done, () => {
+          flyouts.closeAll();
+          field.trigger.focus();
+        }),
+      );
+    });
 
   const openField = (field: Field): void => {
     flyouts.open(field);
