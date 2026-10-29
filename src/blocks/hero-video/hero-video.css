@@ -152,6 +152,27 @@
         center / 100% 100% no-repeat;
 }
 
+.hero-video-suffix--link {
+    cursor: pointer;
+}
+
+@keyframes hero-video-arrow-nudge {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(8px);
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .hero-video-suffix--link:hover::after {
+        animation: hero-video-arrow-nudge 1s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+}
+
 /* Figma "Rectangle 2" mask (Hero/navigationtoggle, node 4158:5068): fades destinations out as they
    move away from the active center row instead of a hard cut. Height is a fixed window (not tied
    to item count) so the fade always spans a fixed span around the always-centered active item. */
@@ -482,6 +503,13 @@
     --soft-nav-easing: cubic-bezier(0.22, 1, 0.36, 1);
     --soft-nav-scale-out: 1.02;
     --soft-nav-scale-in: 1.02;
+}
+
+/* The intro drives these with WAAPI and commits final values inline; Safari would replay that
+   commit as a CSS transition (double fade-in, stale FLIP positions), so keep them transition-free. */
+.hero-video > .hero-video-intro-phrase[data-soft-nav],
+.hero-video > .hero-video-controls[data-soft-nav] {
+    transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
