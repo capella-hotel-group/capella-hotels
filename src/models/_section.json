@@ -70,6 +70,22 @@
               "value": "destinations"
             }
           ]
+        },
+        {
+          "component": "select",
+          "name": "menu",
+          "label": "Header Menu Type",
+          "description": "Only used on the menu section (second section) of a /nav page",
+          "options": [
+            {
+              "name": "Global",
+              "value": ""
+            },
+            {
+              "name": "Destination",
+              "value": "destination"
+            }
+          ]
         }
       ]
     },
