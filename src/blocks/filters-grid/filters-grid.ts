@@ -1,9 +1,11 @@
+import { moveInstrumentation } from '@/app/scripts.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
 
 const PERSISTED_QUERY = '/graphql/execute.json/capella-hotels/Filter-grid-card';
 const PAGE_SIZE = 6;
 const CATEGORY_COLORS = new Set(['dark-brown', 'light-brown', 'green', 'pink', 'blue', 'white']);
+const ITEM_MODEL = 'filters-grid-tab';
 
 const ALLOWED_RICH_TEXT_TAGS = new Set(['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'blockquote']);
 
@@ -54,6 +56,8 @@ interface ModeSetting {
   rootTag: string;
   isDefault?: boolean;
   filters?: AuthoredFilter[];
+  source?: HTMLElement;
+  labelElement?: Element;
 }
 
 interface CategorySetting {
@@ -77,6 +81,9 @@ interface BlockConfig {
   categorySettings: CategorySetting[];
   showModeLabels: boolean;
   useAuthoredFilters: boolean;
+  itemLayout?: boolean;
+  headingElements?: Element[];
+  revealElement?: Element;
 }
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
@@ -353,6 +360,71 @@ function rowBoolean(row: Element | undefined, name: string, fallback: boolean): 
 
 function parseConfig(block: HTMLElement): BlockConfig {
   const allRows = [...block.children] as HTMLElement[];
+  let itemRows = allRows.filter((row) =>
+    row.dataset.aueModel ? row.dataset.aueModel === ITEM_MODEL : row.children.length > 1,
+  );
+  let parentRows = allRows.filter((row) => !itemRows.includes(row));
+  const parentRootIndex = parentRows.findIndex((row) => {
+    if (row.querySelector('[data-aue-prop="cfRootPath"]')) return true;
+    const value = row.querySelector('a[href]')?.getAttribute('href') || textOf(row);
+    return /^(?:https?:\/\/[^/]+)?\/content\/dam(?:\/|$)/i.test(value);
+  });
+  const hasParentItemFields =
+    parentRootIndex >= 0 &&
+    !parentRows[parentRootIndex + 2]?.querySelector('hr, ul, ol, [data-aue-prop="filterModeLabels"]') &&
+    (parentRows.length - parentRootIndex === 3 || Boolean(textOf(parentRows[parentRootIndex + 2]))) &&
+    (['true', 'false'].includes(normalizeChoice(textOf(parentRows[parentRootIndex + 1]))) ||
+      Boolean(parentRows[parentRootIndex + 1]?.querySelector('input[type="checkbox"]')));
+  if (hasParentItemFields) {
+    const revealRow = parentRows[parentRootIndex + 2];
+    const firstItemIndex = revealRow ? allRows.indexOf(revealRow) + 1 : allRows.length;
+    itemRows = allRows.slice(firstItemIndex);
+    parentRows = allRows.slice(0, firstItemIndex);
+  }
+  const hasItemLayout = itemRows.length > 0 || hasParentItemFields;
+  if (hasItemLayout) {
+    const rows = applyBlockIdentity(block, parentRows, { contentRows: 5, hiddenClass: 'filters-grid-config' });
+    const [eyebrow, title, root, showLabels, reveal] = rows;
+    rows.forEach((row) => row.classList.add('filters-grid-config'));
+    return {
+      eyebrow: rowValue(eyebrow, 'eyebrow'),
+      titleHtml: rowHtml(title, 'title'),
+      cfRootPath: rowHref(root, 'cfRootPath'),
+      showModeLabels: rowBoolean(showLabels, 'showModeLabels', true),
+      revealMoreLabel: rowValue(reveal, 'revealMoreLabel') || 'Reveal More',
+      backgroundTheme: 'white',
+      defaultMode: '',
+      categorySettings: [],
+      useAuthoredFilters: true,
+      itemLayout: true,
+      headingElements: [eyebrow?.firstElementChild, title?.firstElementChild].filter((element): element is Element =>
+        Boolean(element),
+      ),
+      revealElement: reveal?.firstElementChild || undefined,
+      modeSettings: itemRows.map((row, index) => {
+        const cells = [...row.children];
+        const categoryCell =
+          row.querySelector('[data-aue-prop="categorySettings"]') ||
+          cells.find((cell) => cell.querySelector('hr, ul, ol')) ||
+          cells[1];
+        const labelElement =
+          row.querySelector('[data-aue-prop="label"]') || cells.find((cell) => cell !== categoryCell);
+        const filters = categoryCell
+          ? multiFieldEntries(categoryCell)
+              .map(parseCategoryEntry)
+              .filter((filter): filter is AuthoredFilter => Boolean(filter))
+          : [];
+        return {
+          key: `mode-${index}`,
+          label: textOf(labelElement) || 'Filter mode',
+          rootTag: '',
+          filters,
+          source: row,
+          labelElement,
+        };
+      }),
+    };
+  }
   const legacy = allRows.length >= 10 && !block.querySelector('[data-aue-prop="filterModeLabels"]');
   const rootIndex = allRows.findIndex((row) => {
     if (row.querySelector('[data-aue-prop="cfRootPath"]')) return true;
@@ -764,8 +836,9 @@ function createCard(
 
 async function fetchModes(settings: ModeSetting[], useAuthoredFilters = false): Promise<AuthoredMode[]> {
   return Promise.all(
-    settings.map(async ({ key, label, rootTag, isDefault, filters: authoredFilters = [] }) => {
-      if (useAuthoredFilters) return { key, label, rootTag, isDefault, filters: authoredFilters };
+    settings.map(async (setting) => {
+      const { key, label, rootTag, isDefault, filters: authoredFilters = [] } = setting;
+      if (useAuthoredFilters) return { ...setting, filters: authoredFilters };
       if (!rootTag.trim()) return { key, label, rootTag, isDefault, filters: [] };
       const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
       url.searchParams.set('tag', rootTag.trim());
@@ -802,6 +875,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const checkboxDefault = modes.find(({ isDefault }) => isDefault);
   const hasDefaultCheckbox = modes.some(({ isDefault }) => isDefault !== undefined);
   const defaultMode =
+    defaultFilterMode ||
     defaultCategoryMode ||
     checkboxDefault ||
     (hasDefaultCheckbox
@@ -830,8 +904,19 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   // pull this out of the shell's padding box and break alignment with the tabs and filters.
   const heading = document.createElement('div');
   heading.className = 'filters-grid-heading';
-  appendText(heading, 'p', 'filters-grid-eyebrow', config.eyebrow);
-  appendRichTitle(heading, config.titleHtml);
+  if (config.headingElements) {
+    config.headingElements.forEach((element, index) => {
+      element.classList.add(index === 0 ? 'filters-grid-eyebrow' : 'filters-grid-title');
+      if (index === 1) {
+        element.setAttribute('role', 'heading');
+        element.setAttribute('aria-level', '2');
+      }
+      if (textOf(element) || element.hasAttribute('data-aue-prop')) heading.append(element);
+    });
+  } else {
+    appendText(heading, 'p', 'filters-grid-eyebrow', config.eyebrow);
+    appendRichTitle(heading, config.titleHtml);
+  }
   if (heading.childElementCount) shell.append(heading);
 
   const layout = document.createElement('div');
@@ -846,7 +931,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   modeLabel.className = 'filters-grid-mode-label';
   modeLabel.textContent = modes[0]?.label || '';
   const filters = document.createElement('div');
-  filters.className = 'filters-grid-filters';
+  filters.className = config.itemLayout ? 'filters-grid-mode-items' : 'filters-grid-filters';
   const results = document.createElement('div');
   results.className = 'filters-grid-results';
   const list = document.createElement('ul');
@@ -856,9 +941,56 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   reveal.className = 'filters-grid-reveal';
   reveal.dataset.testid = 'filters-grid-reveal-more';
   reveal.textContent = config.revealMoreLabel;
+  if (config.revealElement) moveInstrumentation(config.revealElement, reveal);
   const modal = createModal();
+  const itemFilterButtons = new Map<HTMLButtonElement, { modeKey: string; tag: string }>();
 
-  const updateCards = () => {
+  if (config.itemLayout) {
+    modes.forEach((mode) => {
+      const row = mode.source;
+      if (!row) return;
+      row.classList.add('filters-grid-mode-item');
+      [...row.children].forEach((cell) => cell.classList.add('filters-grid-config'));
+      mode.labelElement?.classList.add('filters-grid-item-label');
+      const filterList = document.createElement('div');
+      filterList.className = 'filters-grid-filters';
+      mode.filters.forEach(({ tag, label }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'filters-grid-filter';
+        button.dataset.testid = 'filters-grid-filter';
+        button.textContent = label;
+        button.addEventListener('click', () => {
+          activateMode(mode.key);
+          activeTag = tag;
+          updateItemSelection();
+          updateTheme();
+          updateCards();
+        });
+        itemFilterButtons.set(button, { modeKey: mode.key, tag });
+        filterList.append(button);
+      });
+      if (!mode.filters.length) {
+        const placeholder = document.createElement('p');
+        placeholder.className = 'filters-grid-item-placeholder';
+        placeholder.textContent = `${mode.label}: add categories to configure filters.`;
+        filterList.append(placeholder);
+      }
+      row.append(filterList);
+      filters.append(row);
+    });
+  }
+
+  function updateItemSelection() {
+    modes.forEach(({ key, source }) => source?.classList.toggle('is-inactive', key !== activeMode));
+    itemFilterButtons.forEach(({ modeKey, tag }, button) => {
+      const selected = modeKey === activeMode && normalizeTagId(tag) === normalizeTagId(activeTag);
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  }
+
+  function updateCards() {
     const filtered =
       modes.length === 0
         ? cards
@@ -877,11 +1009,11 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     list.replaceChildren(...items);
     reveal.hidden = filtered.length <= visibleCount;
     results.dataset.resultCount = String(filtered.length);
-  };
+  }
 
   const updateFilters = () => {
     const mode = modes.find(({ key }) => key === activeMode);
-    filters.replaceChildren();
+    if (!config.itemLayout) filters.replaceChildren();
     const modeDefaultCategory = mode?.filters.find(({ isDefault }) => isDefault);
     const configuredDefaultCategory =
       defaultCategory &&
@@ -892,6 +1024,11 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
         ? mode.filters.find(({ tag }) => normalizeTagId(tag) === normalizeTagId(defaultCategory))
         : undefined;
     activeTag = modeDefaultCategory?.tag || configuredDefaultCategory?.tag || mode?.filters[0]?.tag || '';
+    if (config.itemLayout) {
+      updateItemSelection();
+      updateTheme();
+      return;
+    }
     const filterButtons: HTMLButtonElement[] = [];
     (mode?.filters || []).forEach(({ label, tag }) => {
       const button = document.createElement('button');
@@ -928,7 +1065,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     const theme =
       activeModeFilter?.backgroundColor ||
       categorySetting?.backgroundColor ||
-      (config.categorySettings.length || activeModeFilter ? 'white' : config.backgroundTheme);
+      (config.categorySettings.length || config.useAuthoredFilters ? 'white' : config.backgroundTheme);
     const themeNames = [
       'white',
       'terracotta',
@@ -948,7 +1085,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     block.classList.add(`filters-grid-theme-${normalizeColor(theme) || 'white'}`);
   }
 
-  const activateMode = (key: string, focus = false) => {
+  function activateMode(key: string, focus = false) {
     const mode = modes.find(({ key: modeKey }) => modeKey === key);
     if (!mode) return;
 
@@ -962,7 +1099,16 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
     });
     updateFilters();
     updateCards();
-  };
+  }
+
+  if (config.itemLayout) {
+    block.addEventListener('aue:ui-select', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const mode = modes.find(({ source }) => source?.contains(target));
+      if (mode) activateMode(mode.key);
+    });
+  }
 
   tabs.addEventListener('keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -1004,8 +1150,9 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   results.append(list, reveal);
   if (modes.length) {
     if (config.showModeLabels) {
-      if (modes.length === 1) controls.append(modeLabel);
-      else controls.append(tabs);
+      if (modes.length === 1) {
+        controls.append(modeLabel);
+      } else controls.append(tabs);
     }
     controls.append(filters);
     layout.classList.add('has-filter-modes');
@@ -1017,7 +1164,8 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
 
   updateTheme();
   block.dataset.testid ||= 'filters-grid';
-  block.replaceChildren(shell);
+  if (config.itemLayout) block.append(shell);
+  else block.replaceChildren(shell);
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {

@@ -131,6 +131,12 @@
     "customErrorMsg": "Add at least 1 slide."
   },
   {
+    "id": "filters-grid",
+    "components": [
+      "filters-grid-tab"
+    ]
+  },
+  {
     "id": "footer-legal",
     "components": [
       "footer-legal-link"
