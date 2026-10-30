@@ -2460,6 +2460,31 @@
     ]
   },
   {
+    "id": "nav-region-rte",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Region Title",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "mergeColumns",
+        "label": "Merge with Next Region",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "richtext",
+        "name": "links",
+        "label": "Links",
+        "description": "One link per list item. No link = disabled item. Use the class dropdown for \"Open in new tab\" (on the item) and \"Note\" (on selected text, e.g. (2029)).",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
     "id": "nav-region",
     "fields": [
       {
@@ -2482,17 +2507,17 @@
         "multi": true,
         "fields": [
           {
+            "component": "text",
+            "name": "label",
+            "label": "Link Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
             "component": "aem-content",
             "name": "link",
             "label": "Link URL — empty shows a disabled item",
             "valueType": "string"
-          },
-          {
-            "component": "text",
-            "name": "linkText",
-            "label": "Link Label",
-            "valueType": "string",
-            "required": true
           },
           {
             "component": "text",
