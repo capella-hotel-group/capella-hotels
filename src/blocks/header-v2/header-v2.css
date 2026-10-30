@@ -1,4 +1,10 @@
 /* Header v2 additions on top of the header block styles (header.css). */
+/* Universal Editor: authored sections are re-parented into the rendered header; keep them box-neutral. */
+.header-v2-authoring .section {
+    margin: 0;
+    padding: 0;
+}
+
 header .header-menu-back {
     margin-bottom: var(--dimension-layout-module-gutter-s, 16px);
 }

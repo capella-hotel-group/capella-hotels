@@ -244,7 +244,8 @@ function readCategory(section: HTMLElement): Category {
   };
 }
 
-function readModel(root: Element): HeaderModel | null {
+// Authoring keeps every authored category (even empty or new ones) so each stays visible and selectable.
+function readModel(root: Element, authoring: boolean): HeaderModel | null {
   const top = root.querySelector('.nav-top');
   if (!top) return null;
   const cells = [...top.children].map((row) => row.firstElementChild ?? row);
@@ -253,12 +254,19 @@ function readModel(root: Element): HeaderModel | null {
 
   const languages = readLanguages(cell(TOP_ROW.languages));
   const categories = [...root.querySelectorAll<HTMLElement>(':scope > .section')]
-    .filter((section) => section.dataset.title)
+    .filter((section) => section.dataset.title || (authoring && section.dataset.aueModel === 'nav-category'))
     .map(readCategory)
-    .filter((category) => category.href || category.regions.some((region) => region.links.length));
-  if (!languages.length || !categories.length) return null;
+    .filter((category) => authoring || category.href || category.regions.some((region) => region.links.length));
+  if (authoring) {
+    categories.forEach((category) => {
+      category.label ||= '(Category title)';
+    });
+  } else if (!languages.length || !categories.length) {
+    return null;
+  }
 
-  const active = findActiveLanguage(languages) ?? (languages[0] as Language);
+  const fallbackLanguage: Language = { label: 'English', short: 'EN', code: 'en', href: '/', newTab: false };
+  const active = findActiveLanguage(languages) ?? languages[0] ?? fallbackLanguage;
   const home = cell(TOP_ROW.home);
   const cta = cell(TOP_ROW.cta);
   const ctaAnchor = cta?.querySelector('a[href]');
@@ -454,10 +462,12 @@ function buildNavLink(item: Link): HTMLElement {
 
 let regionLabelCount = 0;
 
-function buildRegion(region: Region): HTMLDivElement {
-  const el = document.createElement('div');
-  el.className = 'header-menu-region header-menu-block';
-  moveInstrumentation(region.source, el);
+function buildRegion(region: Region, authoring: boolean): HTMLElement {
+  // In authoring the authored block itself becomes the region, so the content tree is unchanged.
+  const el = authoring ? (region.source as HTMLElement) : document.createElement('div');
+  if (authoring) el.replaceChildren();
+  else moveInstrumentation(region.source, el);
+  el.classList.add('header-menu-region', 'header-menu-block');
   const grid = document.createElement('ul');
   grid.className = 'header-menu-link-grid';
   if (region.label) {
@@ -517,7 +527,7 @@ function buildMergedRows(regions: Region[]): HTMLDivElement[] {
   return rows;
 }
 
-function buildCategoryContent(category: Category): HTMLDivElement {
+function buildCategoryContent(category: Category, authoring: boolean): HTMLDivElement {
   const content = document.createElement('div');
   content.className = 'header-menu-category-content';
   content.inert = true;
@@ -527,11 +537,12 @@ function buildCategoryContent(category: Category): HTMLDivElement {
   for (let i = 0; i < regions.length; i += 1) {
     const region = regions[i] as Region;
     const next = regions[i + 1];
-    if (region.merge && next && mergeSlots([region, next]).length <= MERGE_ROW_COLUMNS) {
+    // Merging two blocks into shared rows would hide one of them from selection, so authoring keeps them apart.
+    if (!authoring && region.merge && next && mergeSlots([region, next]).length <= MERGE_ROW_COLUMNS) {
       inner.append(...buildMergedRows([region, next]));
       i += 1;
     } else {
-      inner.append(buildRegion(region));
+      inner.append(buildRegion(region, authoring));
     }
   }
   content.append(inner);
@@ -588,7 +599,7 @@ function showPromo(view: PromoView, promo: Promo | null): void {
   }
 }
 
-function buildPanel(model: HeaderModel): { panel: HTMLElement; activateFirst: () => void } {
+function buildPanel(model: HeaderModel, authoring: boolean): { panel: HTMLElement; activateFirst: () => void } {
   const panel = document.createElement('nav');
   panel.className = 'header-menu-panel';
   panel.id = PANEL_ID;
@@ -615,22 +626,28 @@ function buildPanel(model: HeaderModel): { panel: HTMLElement; activateFirst: ()
   const entries = model.categories.map((category, index) => {
     const li = document.createElement('li');
     li.className = 'header-menu-category';
-    moveInstrumentation(category.source, li);
+    // Authoring keeps the authored section as the category's wrapper (inside the <li>) instead of moving its instrumentation.
+    const holder = authoring ? (category.source as HTMLElement) : li;
+    if (authoring) {
+      holder.style.display = '';
+      li.append(holder);
+    } else {
+      moveInstrumentation(category.source, li);
+    }
+    list.append(li);
     if (!category.regions.length) {
-      li.append(link(category.href || '#', category.label, false, 'header-menu-category-trigger'));
-      list.append(li);
+      holder.replaceChildren(link(category.href || '#', category.label, false, 'header-menu-category-trigger'));
       return { category, li, trigger: null, content: null };
     }
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'header-menu-category-trigger';
     trigger.textContent = category.label;
-    const content = buildCategoryContent(category);
+    const content = buildCategoryContent(category, authoring);
     content.id = `header-menu-category-content-${index}`;
     trigger.setAttribute('aria-controls', content.id);
     trigger.setAttribute('aria-expanded', 'false');
-    li.append(trigger, content);
-    list.append(li);
+    holder.replaceChildren(trigger, content);
     return { category, li, trigger, content };
   });
 
@@ -672,9 +689,9 @@ function buildPanel(model: HeaderModel): { panel: HTMLElement; activateFirst: ()
   return { panel, activateFirst: () => first !== -1 && setActive(first) };
 }
 
-function render(block: HTMLElement, model: HeaderModel): { openMenu: () => void } {
+function render(block: HTMLElement, model: HeaderModel, authoring: boolean): { openMenu: () => void } {
   const toggle = buildToggle(model.menu);
-  const { panel, activateFirst } = buildPanel(model);
+  const { panel, activateFirst } = buildPanel(model, authoring);
 
   const tools = document.createElement('div');
   tools.className = 'header-tools';
@@ -685,13 +702,26 @@ function render(block: HTMLElement, model: HeaderModel): { openMenu: () => void 
     tools.append(cta);
   }
 
-  const inner = document.createElement('div');
-  inner.className = 'header-inner';
-  moveInstrumentation(model.source, inner);
-  inner.append(toggle, buildLogo(model.logo), tools);
-  block.replaceChildren(inner, panel);
+  const inner = authoring ? (model.source as HTMLElement) : document.createElement('div');
+  inner.classList.add('header-inner');
+  if (authoring) {
+    // Render inside main, in content order: nav-top's section first, then the category sections in the panel.
+    // The wrapper elements carry no instrumentation, so the content tree still shows main > section > block.
+    inner.replaceChildren(toggle, buildLogo(model.logo), tools);
+    const shell = document.createElement('header');
+    shell.className = 'header-v2-authoring';
+    const main = inner.closest('main');
+    main?.prepend(shell);
+    shell.append(inner.closest('.section') ?? inner, panel);
+    (block.closest('header') ?? block).hidden = true;
+  } else {
+    moveInstrumentation(model.source, inner);
+    inner.append(toggle, buildLogo(model.logo), tools);
+    block.replaceChildren(inner, panel);
+  }
 
   const setPageInert = (inert: boolean) => {
+    if (authoring) return;
     document.querySelectorAll<HTMLElement>('body > main, body > footer').forEach((el) => {
       el.inert = inert;
     });
@@ -709,7 +739,7 @@ function render(block: HTMLElement, model: HeaderModel): { openMenu: () => void 
     toggle.setAttribute('aria-label', model.menu.close);
     setPageInert(true);
     previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (!authoring) document.body.style.overflow = 'hidden';
     panel.focus();
   };
   const closeMenu = () => {
@@ -730,12 +760,11 @@ function render(block: HTMLElement, model: HeaderModel): { openMenu: () => void 
   return { openMenu };
 }
 
-// Universal Editor on the /nav page itself: the rendered header is the editing surface.
-function enableAuthoring(block: HTMLElement, main: HTMLElement, openMenu: () => void): void {
-  main.hidden = true;
+// Universal Editor on the /nav page itself: the in-place rendered header is the editing surface.
+function enableAuthoring(openMenu: () => void): void {
   openMenu();
-  // The header is built from main, so any content change needs a fresh render; capturing on window
-  // runs before editor-support's main listener, which would only re-decorate the hidden main.
+  // The header is rendered from the authored content, so any change needs a fresh render; capturing on
+  // window runs before editor-support's main listener, which would re-decorate the raw markup.
   AUE_CONTENT_EVENTS.forEach((type) =>
     window.addEventListener(
       type,
@@ -750,11 +779,11 @@ function enableAuthoring(block: HTMLElement, main: HTMLElement, openMenu: () => 
   document.addEventListener('aue:ui-select', (event) => {
     const { resource, selected } = (event as CustomEvent).detail ?? {};
     if (!selected || !resource) return;
-    const category = block
+    const category = document
       .querySelector(`[data-aue-resource="${resource}"]`)
       ?.closest<HTMLElement>('.header-menu-category');
     if (category && category.dataset.active !== 'true') {
-      category.querySelector<HTMLButtonElement>(':scope > button.header-menu-category-trigger')?.click();
+      category.querySelector<HTMLButtonElement>('button.header-menu-category-trigger')?.click();
     }
   });
 }
@@ -764,13 +793,13 @@ export default async function decorateHeaderV2(
   root: HTMLElement,
   authoring: boolean,
 ): Promise<boolean> {
-  const model = readModel(root);
+  const model = readModel(root, authoring);
   if (!model) {
     console.warn('[header-v2] Nav structure invalid. Check /nav document.');
     return false;
   }
   loadCSS(`${window.hlx.codeBasePath}/blocks/header-v2/header-v2.css`);
-  const { openMenu } = render(block, model);
-  if (authoring) enableAuthoring(block, root, openMenu);
+  const { openMenu } = render(block, model, authoring);
+  if (authoring) enableAuthoring(openMenu);
   return true;
 }
