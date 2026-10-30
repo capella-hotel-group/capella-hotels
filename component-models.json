@@ -2403,6 +2403,58 @@
     ]
   },
   {
+    "id": "nav-region",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Region Title",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "mergeColumns",
+        "label": "Merge with Next Region",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "container",
+        "name": "links",
+        "label": "Links",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "Link URL — empty shows a disabled item",
+            "valueType": "string"
+          },
+          {
+            "component": "text",
+            "name": "linkText",
+            "label": "Link Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "note",
+            "label": "Note (e.g. (2029))",
+            "valueType": "string"
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "nav-top",
     "fields": [
       {
