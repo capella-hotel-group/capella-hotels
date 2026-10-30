@@ -293,6 +293,63 @@
     ]
   },
   {
+    "id": "nav-category",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Section Name",
+        "description": "The label shown for this section in the Content Tree",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Category Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Category Link — only for a category without regions",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "promoImage",
+        "label": "Promo Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "promoImageDescription",
+        "label": "Promo Image Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "promoCtaLabel",
+        "label": "Promo CTA Label",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "promoLink",
+        "label": "Promo CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "promoOpenInNewTab",
+        "label": "Promo CTA: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "awards-list",
     "fields": [
       {
@@ -2399,6 +2456,219 @@
         "name": "description",
         "label": "Description",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "nav-region",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Region Title",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "mergeColumns",
+        "label": "Merge with Next Region",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "container",
+        "name": "links",
+        "label": "Links",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "Link URL — empty shows a disabled item",
+            "valueType": "string"
+          },
+          {
+            "component": "text",
+            "name": "linkText",
+            "label": "Link Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "note",
+            "label": "Note (e.g. (2029))",
+            "valueType": "string"
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nav-top",
+    "fields": [
+      {
+        "component": "select",
+        "name": "classes",
+        "label": "Nav Type",
+        "valueType": "string",
+        "required": true,
+        "value": "global",
+        "options": [
+          {
+            "name": "Global",
+            "value": "global"
+          },
+          {
+            "name": "Destination",
+            "value": "destination"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "logo",
+        "label": "Logo (menu closed)",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "logoAlt",
+        "label": "Logo Alt Text (brand name)",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "logoActive",
+        "label": "Logo (menu open) — empty uses Logo",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "reference",
+        "name": "logoSimple",
+        "label": "Logo (sticky) — empty uses Logo",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "aem-content",
+        "name": "home_link",
+        "label": "Logo Link — empty uses current language home",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "home_openInNewTab",
+        "label": "Logo Link: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "menu_openLabel",
+        "label": "Menu Button Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Menu"
+      },
+      {
+        "component": "text",
+        "name": "menu_closeLabel",
+        "label": "Close Button Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Close"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "label": "CTA Link",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "cta_linkText",
+        "label": "CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Book"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "label": "CTA: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "aem-content",
+        "name": "back_link",
+        "label": "Back Link",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "classes"
+            },
+            "destination"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "back_linkText",
+        "label": "Back Label — empty shows \"BACK\"",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "classes"
+            },
+            "destination"
+          ]
+        }
+      },
+      {
+        "component": "container",
+        "name": "languages",
+        "label": "Languages",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "Language URL",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "linkText",
+            "label": "Language Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
       }
     ]
   },

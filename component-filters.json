@@ -3,7 +3,8 @@
     "id": "main",
     "components": [
       "section",
-      "header-section"
+      "header-section",
+      "nav-category"
     ]
   },
   {
@@ -47,7 +48,8 @@
       "content-listing",
       "page-listing",
       "booking-search",
-      "separator"
+      "separator",
+      "nav-top"
     ]
   },
   {
@@ -60,6 +62,12 @@
       "navigation-lists",
       "link",
       "separator"
+    ]
+  },
+  {
+    "id": "nav-category",
+    "components": [
+      "nav-region"
     ]
   },
   {
