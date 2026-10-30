@@ -91,6 +91,22 @@
               }
             }
           }
+        },
+        {
+          "title": "Nav Category (Demo)",
+          "id": "nav-category",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/section/v1/section",
+                "template": {
+                  "name": "Nav Category",
+                  "model": "nav-category",
+                  "filter": "nav-category"
+                }
+              }
+            }
+          }
         }
       ]
     },

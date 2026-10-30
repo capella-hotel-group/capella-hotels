@@ -293,6 +293,63 @@
     ]
   },
   {
+    "id": "nav-category",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Section Name",
+        "description": "The label shown for this section in the Content Tree",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Category Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Category Link — only for a category without regions",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "promoImage",
+        "label": "Promo Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "promoImageDescription",
+        "label": "Promo Image Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "promoCtaLabel",
+        "label": "Promo CTA Label",
+        "valueType": "string"
+      },
+      {
+        "component": "aem-content",
+        "name": "promoLink",
+        "label": "Promo CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "promoOpenInNewTab",
+        "label": "Promo CTA: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "awards-list",
     "fields": [
       {
