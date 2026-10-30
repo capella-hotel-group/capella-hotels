@@ -236,9 +236,11 @@ async function loadLazy(doc: Document): Promise<void> {
   // regular UE pages and standalone preview/live pages keep their chrome.
   const isFragmentAuthoring =
     isUniversalEditor() && /\/(?:nav|header|footer)(?:\.html)?\/?$/.test(window.location.pathname);
+  // A v2 /nav (nav-top block) is edited through the rendered header itself.
+  const isNavV2Authoring = isFragmentAuthoring && !!doc.querySelector('main .nav-top');
   const header = doc.querySelector<HTMLElement>('header');
   if (header) {
-    if (isFragmentAuthoring) header.hidden = true;
+    if (isFragmentAuthoring && !isNavV2Authoring) header.hidden = true;
     else loadHeader(header);
   }
 

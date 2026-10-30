@@ -40,17 +40,17 @@
           "multi": true,
           "fields": [
             {
+              "component": "text",
+              "name": "label",
+              "label": "Link Label",
+              "valueType": "string",
+              "required": true
+            },
+            {
               "component": "aem-content",
               "name": "link",
               "label": "Link URL — empty shows a disabled item",
               "valueType": "string"
-            },
-            {
-              "component": "text",
-              "name": "linkText",
-              "label": "Link Label",
-              "valueType": "string",
-              "required": true
             },
             {
               "component": "text",
