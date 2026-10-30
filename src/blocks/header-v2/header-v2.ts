@@ -165,25 +165,17 @@ function findActiveLanguage(languages: Language[]): Language | undefined {
   return languages[index];
 }
 
-// nav-region-rte: one list item (or paragraph) per link; RTE classes mark new tab (item or text) and the note.
+// nav-region-rte: one list item (or paragraph) per link, default RTE (delivery keeps only text, href and title).
 function readRteLinks(field: Element | null | undefined): Link[] {
   if (!field) return [];
   const items = field.querySelector('li') ? [...field.querySelectorAll('li')] : [...field.querySelectorAll('p')];
   return items
-    .map((item) => {
-      const anchor = item.querySelector('a[href]');
-      const withoutNote = item.cloneNode(true) as Element;
-      withoutNote.querySelectorAll('.nav-note').forEach((note) => note.remove());
-      return {
-        label: textOf(withoutNote),
-        note: textOf(item.querySelector('.nav-note')),
-        href: anchor?.getAttribute('href') ?? '',
-        newTab:
-          item.classList.contains('nav-new-tab') ||
-          !!item.querySelector('.nav-new-tab') ||
-          anchor?.getAttribute('target') === '_blank',
-      };
-    })
+    .map((item) => ({
+      label: textOf(item),
+      note: '',
+      href: item.querySelector('a[href]')?.getAttribute('href') ?? '',
+      newTab: false,
+    }))
     .filter((link) => link.label);
 }
 

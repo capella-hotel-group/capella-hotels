@@ -2479,7 +2479,7 @@
         "component": "richtext",
         "name": "links",
         "label": "Links",
-        "description": "One link per list item. No link = disabled item. Use the class dropdown for \"Open in new tab\" (on the item) and \"Note\" (on selected text, e.g. (2029)).",
+        "description": "One link per list item (or paragraph). An item without a link is shown disabled.",
         "valueType": "string"
       }
     ]
