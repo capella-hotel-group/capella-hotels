@@ -165,14 +165,38 @@ function findActiveLanguage(languages: Language[]): Language | undefined {
   return languages[index];
 }
 
+// nav-region-rte: one list item (or paragraph) per link; RTE classes mark new tab (item or text) and the note.
+function readRteLinks(field: Element | null | undefined): Link[] {
+  if (!field) return [];
+  const items = field.querySelector('li') ? [...field.querySelectorAll('li')] : [...field.querySelectorAll('p')];
+  return items
+    .map((item) => {
+      const anchor = item.querySelector('a[href]');
+      const withoutNote = item.cloneNode(true) as Element;
+      withoutNote.querySelectorAll('.nav-note').forEach((note) => note.remove());
+      return {
+        label: textOf(withoutNote),
+        note: textOf(item.querySelector('.nav-note')),
+        href: anchor?.getAttribute('href') ?? '',
+        newTab:
+          item.classList.contains('nav-new-tab') ||
+          !!item.querySelector('.nav-new-tab') ||
+          anchor?.getAttribute('target') === '_blank',
+      };
+    })
+    .filter((link) => link.label);
+}
+
 function readRegion(block: Element): Region {
   const cells = [...block.children].map((row) => row.firstElementChild);
   return {
     label: textOf(cells[0]),
     merge: isTrue(cells[1]),
-    links: multiFieldEntries(cells[2])
-      .map(readLink)
-      .filter((link) => link.label),
+    links: block.classList.contains('nav-region-rte')
+      ? readRteLinks(cells[2])
+      : multiFieldEntries(cells[2])
+          .map(readLink)
+          .filter((link) => link.label),
     source: block,
   };
 }
@@ -206,7 +230,7 @@ function readCategory(section: HTMLElement): Category {
   return {
     label: data.title ?? '',
     href: data.link ?? '',
-    regions: [...section.querySelectorAll('.nav-region')].map(readRegion),
+    regions: [...section.querySelectorAll('.nav-region, .nav-region-rte')].map(readRegion),
     promo:
       imageSrc || (ctaLabel && ctaHref)
         ? {

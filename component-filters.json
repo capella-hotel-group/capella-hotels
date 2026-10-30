@@ -67,7 +67,8 @@
   {
     "id": "nav-category",
     "components": [
-      "nav-region"
+      "nav-region",
+      "nav-region-rte"
     ]
   },
   {
@@ -180,6 +181,47 @@
       "hotel-architect-ritual",
       "hotel-architect-card"
     ]
+  },
+  {
+    "id": "nav-region-rte",
+    "components": [],
+    "rte": {
+      "toolbar": {
+        "list": [
+          "bullet_list"
+        ],
+        "insert": [
+          "link",
+          "unlink"
+        ],
+        "advanced": [
+          "classes"
+        ],
+        "sections": [
+          "list",
+          "insert",
+          "advanced"
+        ]
+      },
+      "actions": {
+        "link": {
+          "hideTarget": false
+        },
+        "classes": {
+          "label": "Nav link option",
+          "options": [
+            {
+              "value": "nav-new-tab",
+              "label": "Open in new tab"
+            },
+            {
+              "value": "nav-note",
+              "label": "Note (e.g. (2029))"
+            }
+          ]
+        }
+      }
+    }
   },
   {
     "id": "navigation-lists",

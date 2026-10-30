@@ -79,7 +79,7 @@
   "filters": [
     {
       "id": "nav-category",
-      "components": ["nav-region"]
+      "components": ["nav-region", "nav-region-rte"]
     }
   ]
 }
