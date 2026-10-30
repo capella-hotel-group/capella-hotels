@@ -151,9 +151,10 @@ function readLanguages(field: Element | null | undefined): Language[] {
   return multiFieldEntries(field)
     .map(readLink)
     .filter((link) => link.href && link.label)
-    .map(({ label, href, newTab }) => {
+    .map(({ label, note: shortLabel, href, newTab }) => {
       const code = langFromHref(href);
-      return { label, href, newTab, code, short: (code.split('-')[0] || label.slice(0, 2)).toUpperCase() };
+      const short = shortLabel || (code.split('-')[0] || label.slice(0, 2)).toUpperCase();
+      return { label, href, newTab, code, short };
     });
 }
 

@@ -152,6 +152,13 @@
               "required": true
             },
             {
+              "component": "text",
+              "name": "shortLabel",
+              "label": "Short Label (e.g. EN, JP, 中文)",
+              "description": "Shown on the language button. Empty: derived from the language in the URL.",
+              "valueType": "string"
+            },
+            {
               "component": "boolean",
               "name": "openInNewTab",
               "label": "Open in New Tab",
