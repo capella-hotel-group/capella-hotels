@@ -36,3 +36,12 @@ header .header-menu-back a {
     text-decoration: underline;
     text-underline-offset: 0.205em;
 }
+
+/* Grid tracks can snap below a label's fractional width (e.g. 114px for 114.5px) and wrap it;
+   sizing the link to its content keeps one line, header.css's 125px max-width still wraps long labels. */
+header .header-menu-link-grid a,
+header .header-menu-link-grid .nav-link.is-disabled,
+header .header-menu-merged-cell a,
+header .header-menu-merged-cell .nav-link.is-disabled {
+    width: max-content;
+}
