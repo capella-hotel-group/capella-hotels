@@ -6,7 +6,21 @@
 }
 
 header .header-menu-back {
-    margin-bottom: var(--dimension-layout-module-gutter-s, 16px);
+    padding: 24px var(--site-header-inline) 0;
+}
+
+@media (min-width: 768px) {
+    header .header-menu-back {
+        padding-top: 48px;
+    }
+}
+
+/* Same box as the desktop .header-menu-body so the link lines up with the category rail. */
+@media (min-width: 1200px) {
+    header .header-menu-back {
+        max-width: 1440px;
+        margin-inline: auto;
+    }
 }
 
 header .header-menu-back a {
