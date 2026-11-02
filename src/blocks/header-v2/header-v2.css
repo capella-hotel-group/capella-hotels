@@ -5,6 +5,19 @@
     padding: 0;
 }
 
+/* Universal Editor: inactive category panes share the active one's box on desktop; take them out of layout
+   so the editor's overlay can't pick a hidden category's regions. */
+.header-v2-authoring .header-menu-category-content:not([data-expanded='true']) {
+    display: none;
+}
+
+/* Universal Editor: a merged region pair shown side by side (same gap as the merged-row grid). */
+.header-v2-authoring .header-v2-merged-regions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 48px;
+}
+
 header .header-menu-back {
     padding: 24px var(--site-header-inline) 0;
 }
