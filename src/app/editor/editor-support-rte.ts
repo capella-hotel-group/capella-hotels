@@ -24,7 +24,9 @@ document.addEventListener('aue:ui-select', (event) => {
   const { resource, selected } = (event as CustomEvent<{ resource?: string; selected?: boolean }>).detail ?? {};
   document.querySelectorAll<HTMLElement>('[data-nav-rte-help]').forEach((help) => {
     const field = help.previousElementSibling as HTMLElement | null;
-    help.hidden = !selected || field?.dataset.aueResource !== resource;
+    const fieldResource =
+      field?.dataset.aueResource ?? field?.closest<HTMLElement>('[data-aue-resource]')?.dataset.aueResource;
+    help.hidden = !selected || fieldResource !== resource;
   });
 });
 
