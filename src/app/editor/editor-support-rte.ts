@@ -2,6 +2,32 @@
 // This must execute after decorateMain() and every subsequent decorateBlocks() call,
 // but before the Universal Editor CORS script and any block being loaded.
 
+const NAV_RTE_HELP_TEXT =
+  'Header navigation markers: | open-in-new-tab opens a link in a new tab; | open-in-same-tab keeps it in the current tab (default); | merge-columns joins this region with the next when the combined output has four or fewer columns. These are text markers, not CSS classes.';
+
+function addNavRteHelp(container: Document | HTMLElement): void {
+  if (!/\/nav\/?$/.test(window.location.pathname)) return;
+
+  container.querySelectorAll<HTMLElement>('[data-aue-type="richtext"]').forEach((field) => {
+    if (field.nextElementSibling?.hasAttribute('data-nav-rte-help')) return;
+
+    const help = document.createElement('div');
+    help.dataset.navRteHelp = '';
+    help.setAttribute('role', 'note');
+    help.hidden = true;
+    help.textContent = NAV_RTE_HELP_TEXT;
+    field.insertAdjacentElement('afterend', help);
+  });
+}
+
+document.addEventListener('aue:ui-select', (event) => {
+  const { resource, selected } = (event as CustomEvent<{ resource?: string; selected?: boolean }>).detail ?? {};
+  document.querySelectorAll<HTMLElement>('[data-nav-rte-help]').forEach((help) => {
+    const field = help.previousElementSibling as HTMLElement | null;
+    help.hidden = !selected || field?.dataset.aueResource !== resource;
+  });
+});
+
 export function decorateRichtext(container: Document | HTMLElement = document): void {
   function deleteInstrumentation(element: HTMLElement): void {
     delete element.dataset.richtextResource;
@@ -63,6 +89,8 @@ export function decorateRichtext(container: Document | HTMLElement = document): 
       group.append(element, ...siblings);
     }
   }
+
+  addNavRteHelp(container);
 }
 
 export default decorateRichtext;

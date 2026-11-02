@@ -195,6 +195,20 @@ main:has(.hero-banner) {
     padding-top: 1080px;
 }
 
+.adobe-ue-edit [data-nav-rte-help] {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-inline-start: 3px solid var(--color-stroke-main-primary, #898987);
+    background: var(--color-surface-general-subtle, #f9f6f6);
+    color: var(--color-text-main-body, #262727);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.adobe-ue-edit [data-nav-rte-help][hidden] {
+    display: none;
+}
+
 main > .section:has(.hero-banner) {
     position: fixed;
     top: 0;

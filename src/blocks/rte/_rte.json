@@ -24,6 +24,7 @@
           "component": "richtext",
           "name": "content",
           "label": "Content",
+          "description": "For header navigation, append | open-in-new-tab to open a link in a new tab or | open-in-same-tab to keep it in the current tab (default). Add | merge-columns to a region heading to merge it with the next region, up to four columns. These are text markers, not CSS classes.",
           "valueType": "string",
           "value": "",
           "filter": "richtext"
