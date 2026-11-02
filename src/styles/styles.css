@@ -205,6 +205,21 @@ main:has(.hero-banner) {
     line-height: 1.4;
 }
 
+.adobe-ue-edit [data-nav-rte-help] > p {
+    margin: 0 0 4px;
+    font-weight: 700;
+}
+
+.adobe-ue-edit [data-nav-rte-help] ul {
+    margin: 0;
+    padding-inline-start: 1.25em;
+    list-style: disc;
+}
+
+.adobe-ue-edit [data-nav-rte-help] li + li {
+    margin-block-start: 2px;
+}
+
 .adobe-ue-edit [data-nav-rte-help][hidden] {
     display: none;
 }

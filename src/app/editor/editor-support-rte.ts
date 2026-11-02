@@ -2,8 +2,11 @@
 // This must execute after decorateMain() and every subsequent decorateBlocks() call,
 // but before the Universal Editor CORS script and any block being loaded.
 
-const NAV_RTE_HELP_TEXT =
-  'Header navigation markers: | open-in-new-tab opens a link in a new tab; | open-in-same-tab keeps it in the current tab (default); | merge-columns joins this region with the next when the combined output has four or fewer columns. These are text markers, not CSS classes.';
+const NAV_RTE_HELP_ITEMS = [
+  '| open-in-new-tab: Opens a link in a new tab.',
+  '| open-in-same-tab: Keeps a link in the current tab (default).',
+  '| merge-columns: Joins this region with the next when the combined output has four or fewer columns.',
+];
 
 function addNavRteHelp(container: Document | HTMLElement): void {
   if (!/\/nav(?:\.html)?\/?$/i.test(window.location.pathname)) return;
@@ -15,7 +18,15 @@ function addNavRteHelp(container: Document | HTMLElement): void {
     help.dataset.navRteHelp = '';
     help.setAttribute('role', 'note');
     help.hidden = true;
-    help.textContent = NAV_RTE_HELP_TEXT;
+    const heading = document.createElement('p');
+    heading.textContent = 'Navigation links:';
+    const list = document.createElement('ul');
+    NAV_RTE_HELP_ITEMS.forEach((text) => {
+      const item = document.createElement('li');
+      item.textContent = text;
+      list.append(item);
+    });
+    help.append(heading, list);
     field.insertAdjacentElement('afterend', help);
   });
 }
