@@ -84,16 +84,36 @@
        a 65px fade over the trailing edge while more tabs are out of view. It is the
        first child of the copy column, so that column's padding sits above it. */
     .hotel-architect-tabs {
+        /* how far the bar reaches back over the copy column's padding, so its scroll
+           viewport is as wide as Figma's and the fade lands on the column edge */
+        --hotel-architect-tabs-bleed-start: 0px;
+        --hotel-architect-tabs-bleed-end: 0px;
+        --hotel-architect-tabs-inset-start: calc(
+            var(--hotel-architect-tabs-bleed-start) + var(--dimension-spacing-general-2xl)
+        );
+        --hotel-architect-tabs-inset-end: calc(
+            var(--hotel-architect-tabs-bleed-end) + var(--dimension-spacing-general-2xl)
+        );
+
         display: flex;
         gap: var(--dimension-layout-module-gutter-l);
         min-width: 0;
         margin-block-end: var(--dimension-spacing-heading-to-content);
+        margin-inline: calc(-1 * var(--hotel-architect-tabs-bleed-start))
+            calc(-1 * var(--hotel-architect-tabs-bleed-end));
         padding-block: 10px;
-        padding-inline: var(--dimension-spacing-general-2xl);
+        padding-inline: var(--hotel-architect-tabs-inset-start) var(--hotel-architect-tabs-inset-end);
         overflow-x: auto;
         overscroll-behavior-inline: contain;
-        scroll-padding-inline: var(--dimension-spacing-general-2xl);
+        scroll-padding-inline: var(--hotel-architect-tabs-inset-start) var(--hotel-architect-tabs-inset-end);
         scrollbar-width: none;
+
+        /* Figma ends the fade on the copy column's trailing edge, against the media,
+           rather than 52px short of it where the column's padding stops */
+        @media (width >= 1200px) {
+            --hotel-architect-tabs-bleed-start: var(--dimension-layout-module-padding-inline-s);
+            --hotel-architect-tabs-bleed-end: var(--dimension-layout-module-padding-inline-xs);
+        }
 
         &::-webkit-scrollbar {
             display: none;
