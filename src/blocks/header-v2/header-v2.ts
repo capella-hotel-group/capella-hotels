@@ -2,7 +2,7 @@
 // sections, nav-region blocks). Self-contained; reuses only the existing header CSS class names.
 import { createOptimizedPicture, loadCSS } from '@/app/aem.js';
 import { getPageLang, LANG_MAP, moveInstrumentation, VALID_LANG_PRIMARIES } from '@/app/scripts.js';
-import { resolveDAMUrl } from '@/utils/env';
+import { isUniversalEditor, resolveDAMUrl } from '@/utils/env';
 
 interface Link {
   label: string;
@@ -63,6 +63,17 @@ const MERGE_ROW_COLUMNS = 4;
 const PROMO_SWAP_MS = 150;
 // nav-top row order, fixed by the model (empty fields keep their row in delivered markup).
 const TOP_ROW = { logo: 0, logoActive: 1, logoSimple: 2, home: 3, menu: 4, cta: 5, back: 6, languages: 7 };
+// First field of each row; in Universal Editor a conditionally hidden row may be missing, so rows are found by field.
+const TOP_ROW_PROP = [
+  'logo',
+  'logoActive',
+  'logoSimple',
+  'home_link',
+  'menu_openLabel',
+  'cta_link',
+  'back_link',
+  'languages',
+];
 const AUE_CONTENT_EVENTS = [
   'aue:content-patch',
   'aue:content-update',
@@ -200,7 +211,8 @@ function buildPromoPicture(src: string, alt: string): HTMLPictureElement {
   if (src.includes('/content/dam/')) {
     picture = document.createElement('picture');
     const img = document.createElement('img');
-    img.src = resolveDAMUrl(src);
+    // The editor runs on author, which serves DAM assets itself (they may not be published yet).
+    img.src = isUniversalEditor() ? src : resolveDAMUrl(src);
     img.alt = alt;
     picture.append(img);
   } else {
@@ -242,7 +254,10 @@ function readModel(root: Element, authoring: boolean): HeaderModel | null {
   const top = root.querySelector('.nav-top');
   if (!top) return null;
   const cells = [...top.children].map((row) => row.firstElementChild ?? row);
-  const cell = (index: number) => cells[index] ?? null;
+  const cell = (index: number) =>
+    top.querySelector(`[data-aue-prop="${TOP_ROW_PROP[index]}"]`)?.closest('.nav-top > div > div') ??
+    cells[index] ??
+    null;
   const img = (index: number) => cell(index)?.querySelector('img') ?? null;
 
   const languages = readLanguages(cell(TOP_ROW.languages));
@@ -463,12 +478,14 @@ function buildRegion(region: Region, authoring: boolean): HTMLElement {
   el.classList.add('header-menu-region', 'header-menu-block');
   const grid = document.createElement('ul');
   grid.className = 'header-menu-link-grid';
-  if (region.label) {
+  // A new, still-empty region would have no size in the editor and could not be selected.
+  const label = region.label || (authoring && !region.links.length ? '(Region)' : '');
+  if (label) {
     regionLabelCount += 1;
     const heading = document.createElement('p');
     heading.className = 'header-menu-region-label';
     heading.id = `header-menu-region-label-${regionLabelCount}`;
-    heading.textContent = region.label;
+    heading.textContent = label;
     grid.setAttribute('aria-labelledby', heading.id);
     el.append(heading);
   }
@@ -530,9 +547,20 @@ function buildCategoryContent(category: Category, authoring: boolean): HTMLDivEl
   for (let i = 0; i < regions.length; i += 1) {
     const region = regions[i] as Region;
     const next = regions[i + 1];
-    // Merging two blocks into shared rows would hide one of them from selection, so authoring keeps them apart.
-    if (!authoring && region.merge && next && mergeSlots([region, next]).length <= MERGE_ROW_COLUMNS) {
-      inner.append(...buildMergedRows([region, next]));
+    if (region.merge && next && mergeSlots([region, next]).length <= MERGE_ROW_COLUMNS) {
+      if (authoring) {
+        // Shared slots would split the two authored blocks; place them side by side instead so each stays selectable.
+        const row = document.createElement('div');
+        row.className = 'header-menu-block header-v2-merged-regions';
+        [region, next].forEach((item) => {
+          const el = buildRegion(item, true);
+          el.classList.remove('header-menu-block');
+          row.append(el);
+        });
+        inner.append(row);
+      } else {
+        inner.append(...buildMergedRows([region, next]));
+      }
       i += 1;
     } else {
       inner.append(buildRegion(region, authoring));
@@ -645,6 +673,7 @@ function buildPanel(model: HeaderModel, authoring: boolean): { panel: HTMLElemen
     return { category, li, trigger, content };
   });
 
+  const storageKey = `header-v2-active:${window.location.pathname}`;
   const setActive = (index: number) => {
     entries.forEach(({ li, trigger, content }, i) => {
       if (!trigger || !content) return;
@@ -655,10 +684,18 @@ function buildPanel(model: HeaderModel, authoring: boolean): { panel: HTMLElemen
       content.inert = !isActive;
     });
     showPromo(promo, entries[index]?.category.promo ?? null);
+    // Edits reload the editor; remember the open category (by resource, so adding/moving categories can't shift it).
+    const resource = (entries[index]?.category.source as HTMLElement | undefined)?.dataset.aueResource;
+    if (authoring && resource) sessionStorage.setItem(storageKey, resource);
   };
 
   const first = entries.findIndex((entry) => entry.trigger);
-  let lastActive = first;
+  const storedResource = authoring ? sessionStorage.getItem(storageKey) : null;
+  const stored = entries.findIndex(
+    (entry) => entry.trigger && (entry.category.source as HTMLElement).dataset.aueResource === storedResource,
+  );
+  const initial = stored !== -1 ? stored : first;
+  let lastActive = initial;
   entries.forEach(({ li, trigger }, index) => {
     trigger?.addEventListener('click', () => {
       const isActive = li.dataset.active === 'true';
@@ -680,7 +717,7 @@ function buildPanel(model: HeaderModel, authoring: boolean): { panel: HTMLElemen
   bottomLang.append(buildLangZone(model.languages, model.active));
   body.append(list, promo.root, bottomLang);
   panel.append(body);
-  return { panel, activateFirst: () => first !== -1 && setActive(first) };
+  return { panel, activateFirst: () => initial !== -1 && setActive(initial) };
 }
 
 function render(block: HTMLElement, model: HeaderModel, authoring: boolean): { openMenu: () => void } {
@@ -704,6 +741,10 @@ function render(block: HTMLElement, model: HeaderModel, authoring: boolean): { o
     inner.replaceChildren(toggle, buildLogo(model.logo), tools);
     const shell = document.createElement('header');
     shell.className = 'header-v2-authoring';
+    // Following a nav link would navigate the editor frame away from the page being edited.
+    shell.addEventListener('click', (event) => {
+      if ((event.target as Element).closest('a')) event.preventDefault();
+    });
     const main = inner.closest('main');
     main?.prepend(shell);
     shell.append(inner.closest('.section') ?? inner, panel);
@@ -737,7 +778,8 @@ function render(block: HTMLElement, model: HeaderModel, authoring: boolean): { o
     panel.focus();
   };
   const closeMenu = () => {
-    if (!panel.classList.contains('is-open')) return;
+    // In the editor the open menu is the editing surface; closing it would hide every category.
+    if (authoring || !panel.classList.contains('is-open')) return;
     const hadFocus = panel.contains(document.activeElement);
     panel.classList.remove('is-open');
     panel.inert = true;
