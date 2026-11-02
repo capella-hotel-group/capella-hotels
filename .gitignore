@@ -18,6 +18,11 @@ helix-importer-ui
 .vscode/*
 !.vscode/tasks.json
 
+# Local secrets
+.env
+.env.*
+!.env.example
+
 # Ensure these files are tracked
 !CLAUDE.md
 !AGENTS.md
