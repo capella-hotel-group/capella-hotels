@@ -607,13 +607,14 @@ function buildPanel(model: HeaderModel, authoring: boolean): { panel: HTMLElemen
   const promo = buildPromoView();
   const desktop = window.matchMedia('(min-width: 1200px)');
 
+  // Own row above the menu body: inside the body it would push the rail below the absolutely placed region pane.
   if (model.back) {
-    const item = document.createElement('li');
-    item.className = 'header-menu-back';
+    const row = document.createElement('div');
+    row.className = 'header-menu-back';
     const anchor = link(model.back.href, model.back.label, false);
     anchor.dataset.testid = 'header-menu-back';
-    item.append(anchor);
-    list.append(item);
+    row.append(anchor);
+    panel.append(row);
   }
 
   const entries = model.categories.map((category, index) => {

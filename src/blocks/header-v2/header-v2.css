@@ -6,7 +6,21 @@
 }
 
 header .header-menu-back {
-    margin-bottom: var(--dimension-layout-module-gutter-s, 16px);
+    padding: 24px var(--site-header-inline) 0;
+}
+
+@media (min-width: 768px) {
+    header .header-menu-back {
+        padding-top: 48px;
+    }
+}
+
+/* Same box as the desktop .header-menu-body so the link lines up with the category rail. */
+@media (min-width: 1200px) {
+    header .header-menu-back {
+        max-width: 1440px;
+        margin-inline: auto;
+    }
 }
 
 header .header-menu-back a {
@@ -21,4 +35,13 @@ header .header-menu-back a {
     text-transform: uppercase;
     text-decoration: underline;
     text-underline-offset: 0.205em;
+}
+
+/* Grid tracks can snap below a label's fractional width (e.g. 114px for 114.5px) and wrap it;
+   sizing the link to its content keeps one line, header.css's 125px max-width still wraps long labels. */
+header .header-menu-link-grid a,
+header .header-menu-link-grid .nav-link.is-disabled,
+header .header-menu-merged-cell a,
+header .header-menu-merged-cell .nav-link.is-disabled {
+    width: max-content;
 }
