@@ -6,7 +6,7 @@ const NAV_RTE_HELP_TEXT =
   'Header navigation markers: | open-in-new-tab opens a link in a new tab; | open-in-same-tab keeps it in the current tab (default); | merge-columns joins this region with the next when the combined output has four or fewer columns. These are text markers, not CSS classes.';
 
 function addNavRteHelp(container: Document | HTMLElement): void {
-  if (!/\/nav\/?$/.test(window.location.pathname)) return;
+  if (!/\/nav(?:\.html)?\/?$/i.test(window.location.pathname)) return;
 
   container.querySelectorAll<HTMLElement>('[data-aue-type="richtext"]').forEach((field) => {
     if (field.nextElementSibling?.hasAttribute('data-nav-rte-help')) return;
