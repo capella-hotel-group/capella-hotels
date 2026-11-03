@@ -10,7 +10,9 @@ header {
     background: transparent;
     /* Kept in lockstep with .header-menu-panel's clip-path transition below so the
        header's surface and the panel read as one continuous block, not two effects. */
-    transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Figma's open-menu overlay uses a subtle cream surface for the whole panel,
@@ -989,7 +991,10 @@ header .header-cta:focus-visible,
 
 /* The bar stays put while the open panel scrolls under it; an opaque surface stops menu content showing through the logo and buttons. */
 .header-inner {
-    transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        padding-bottom 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 header:has(.header-menu-panel.is-open) .header-inner {
@@ -1012,8 +1017,35 @@ header:has(.header-menu-panel.is-open) .header-inner {
 }
 
 /* Sticky compact state once the page is scrolled (Figma menu-top Type=Scroll, inverse=no). */
+/* The scroll icon is stacked over the default logo and cross-faded, so the swap animates instead of snapping. */
+.header-logo {
+    position: relative;
+    transition: min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-logo img {
+    transition:
+        height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.3s ease;
+}
+
 .header-logo img.header-logo-img-scroll {
-    display: none;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: auto;
+    height: 52px;
+    opacity: 0;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.header-menu-toggle,
+.header-lang-trigger,
+header .header-cta {
+    transition:
+        color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 header.is-scrolled {
@@ -1028,21 +1060,19 @@ header.is-scrolled .header-inner {
 }
 
 header.is-scrolled .header-logo {
-    width: auto;
     min-height: 0;
 }
 
 header.is-scrolled .header-logo img {
-    width: auto;
     height: 52px;
 }
 
-header.is-scrolled .header-logo:has(.header-logo-img-scroll) > img:not(.header-logo-img-scroll) {
-    display: none;
+header.is-scrolled:not(:has(.header-menu-panel.is-open)) .header-logo img.header-logo-img-default {
+    opacity: 0;
 }
 
-header.is-scrolled .header-logo img.header-logo-img-scroll {
-    display: block;
+header.is-scrolled:not(:has(.header-menu-panel.is-open)) .header-logo img.header-logo-img-scroll {
+    opacity: 1;
 }
 
 header.is-scrolled .header-menu-toggle,
