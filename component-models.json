@@ -1578,20 +1578,13 @@
         "multi": true,
         "fields": [
           {
-            "component": "boolean",
-            "name": "isDefaultCategory",
-            "label": "Default Category",
-            "description": "Show this category first and activate its tab. For multiple defaults, use the first tab with a default and its first default category.",
-            "valueType": "boolean",
-            "value": false
-          },
-          {
             "component": "aem-tag",
             "name": "categoryTag",
             "label": "Category Tag",
+            "description": "Select one tag per category. Complete this field before publishing.",
             "valueType": "string",
             "multi": false,
-            "required": true
+            "required": false
           },
           {
             "component": "select",
@@ -1599,7 +1592,7 @@
             "label": "Background Color",
             "description": "Suggested colour: Green for Nature.",
             "valueType": "string",
-            "required": true,
+            "required": false,
             "value": "white",
             "options": [
               {
@@ -1627,6 +1620,14 @@
                 "value": "white"
               }
             ]
+          },
+          {
+            "component": "boolean",
+            "name": "isDefaultCategory",
+            "label": "Default Category",
+            "description": "Select to show this category first and open its tab on load. Choose one default; if several are selected, the first tab with a default and its first default category are used.",
+            "valueType": "boolean",
+            "value": false
           }
         ]
       }
