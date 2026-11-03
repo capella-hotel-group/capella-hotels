@@ -3042,6 +3042,23 @@
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
         "value": false
+      },
+      {
+        "component": "select",
+        "name": "darkOverlay",
+        "label": "Dark Image Overlay",
+        "valueType": "string",
+        "value": "true",
+        "options": [
+          {
+            "name": "Enabled",
+            "value": "true"
+          },
+          {
+            "name": "Disabled",
+            "value": "false"
+          }
+        ]
       }
     ]
   },

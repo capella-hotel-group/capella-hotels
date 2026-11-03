@@ -26,7 +26,8 @@
     display: grid;
     gap: var(--dimension-spacing-eyebrow-to-title);
     width: 100%;
-    text-align: left;
+    min-width: 0;
+    text-align: start;
 }
 
 .offers-carousel .offers-carousel-eyebrow {
@@ -127,6 +128,10 @@
     position: absolute;
     inset: 0;
     background: rgb(0 0 0 / 40%);
+}
+
+.offers-carousel .offers-carousel-card-media.offers-carousel-card-media-no-overlay::after {
+    background: transparent;
 }
 
 .offers-carousel .offers-carousel-card-media > p {
@@ -415,8 +420,8 @@
 
     /* the stack is flush against the copy column and 80px off the page edge */
     .offers-carousel .offers-carousel-stage {
-        padding: var(--dimension-layout-module-padding-top) var(--dimension-layout-module-padding-inline-s)
-            var(--dimension-layout-module-padding-top) 0;
+        padding-block: var(--dimension-layout-module-padding-top);
+        padding-inline: 0 var(--dimension-layout-module-padding-inline-s);
     }
 
     .offers-carousel .offers-carousel-cards {
