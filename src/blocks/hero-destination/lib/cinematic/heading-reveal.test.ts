@@ -66,4 +66,19 @@ describe('scheduleHeadingReveal', () => {
     await jest.advanceTimersByTimeAsync(1500);
     expect(t.revealed()).toBe(true);
   });
+
+  it('uses the first playback outcome when playing resolves after failure', async () => {
+    const t = setup();
+    t.failed.resolve();
+    await Promise.resolve();
+    t.playing.resolve();
+    await jest.advanceTimersByTimeAsync(3000);
+    expect(t.revealed()).toBe(false);
+
+    t.expanded.resolve();
+    await jest.advanceTimersByTimeAsync(1499);
+    expect(t.revealed()).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(t.revealed()).toBe(true);
+  });
 });

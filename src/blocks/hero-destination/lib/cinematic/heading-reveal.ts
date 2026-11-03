@@ -19,15 +19,15 @@ export function buildHeading(text: string, sourceCell: HTMLElement | null): HTML
   return heading;
 }
 
-/** Heading waits for the expansion AND (video playing + delay, or failure → expansion + delay). */
+/** Heading waits for expansion and the delay scheduled by the first playback outcome. */
 export function scheduleHeadingReveal(
   heading: HTMLElement,
   { expanded, playing, failed, delayMs }: RevealTriggers,
 ): Promise<void> {
-  const afterPlayback = Promise.race([
-    playing.then(() => wait(delayMs)),
-    failed.then(() => expanded).then(() => wait(delayMs)),
-  ]);
+  const playbackOutcome = Promise.race([playing.then(() => 'playing' as const), failed.then(() => 'failed' as const)]);
+  const afterPlayback = playbackOutcome.then((outcome) =>
+    outcome === 'playing' ? wait(delayMs) : expanded.then(() => wait(delayMs)),
+  );
   return Promise.all([expanded, afterPlayback]).then(() => {
     heading.classList.add('is-revealed');
   });
