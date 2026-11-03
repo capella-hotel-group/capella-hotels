@@ -205,35 +205,6 @@ footer.footer-theme-clean-white {
     }
 }
 
-@media (width >= 1920px) {
-    /* no brand logo: the Figma frame has no brand column, contact takes the 440px first column */
-    .footer-inner {
-        grid-template-columns: 440px 280px 280px 383px;
-        grid-template-areas:
-            'contact nav1 nav2 newsletter'
-            'divider divider divider divider'
-            'legal legal legal legal';
-        column-gap: 0;
-        justify-content: space-between;
-    }
-
-    .footer-inner.footer-inner-has-logo {
-        grid-template-columns: 136px 340px 280px 280px 383px;
-        grid-template-areas:
-            'brand contact nav1 nav2 newsletter'
-            'divider divider divider divider divider'
-            'legal legal legal legal legal';
-    }
-
-    .footer-brand-logo {
-        margin-block-end: 0;
-    }
-
-    .footer-brand-logo picture {
-        width: min(100%, 136px);
-    }
-}
-
 /* ---------- screen-reader-only text (e.g. "opens in a new tab") ---------- */
 
 .footer-sr-only {
@@ -371,27 +342,5 @@ footer.footer-theme-clean-white {
 
     .footer-inner > .footer-divider[data-after='social'] {
         grid-area: divider;
-    }
-}
-
-@media (width >= 1920px) {
-    .footer-inner {
-        grid-template-areas:
-            'contact nav1 nav2 newsletter'
-            'social nav1 nav2 newsletter'
-            '. nav1 nav2 newsletter'
-            'divider divider divider divider'
-            'legal legal legal legal';
-        grid-template-rows: auto auto 1fr auto auto;
-    }
-
-    .footer-inner.footer-inner-has-logo {
-        grid-template-areas:
-            'brand contact nav1 nav2 newsletter'
-            'brand social nav1 nav2 newsletter'
-            'brand . nav1 nav2 newsletter'
-            'divider divider divider divider divider'
-            'legal legal legal legal legal';
-        grid-template-rows: auto auto 1fr auto auto;
     }
 }

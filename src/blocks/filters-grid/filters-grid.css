@@ -170,6 +170,28 @@ main .filters-grid .filters-grid-controls {
     width: 100%;
 }
 
+main .filters-grid .filters-grid-config,
+main .filters-grid .filters-grid-mode-item.is-inactive {
+    display: none;
+}
+
+main .filters-grid .filters-grid-mode-items,
+main .filters-grid .filters-grid-mode-item {
+    width: 100%;
+    min-width: 0;
+}
+
+.adobe-ue-edit main .filters-grid .filters-grid-mode-item.is-inactive,
+.adobe-ue-edit main .filters-grid .filters-grid-item-label {
+    display: block;
+}
+
+.adobe-ue-edit main .filters-grid .filters-grid-mode-items {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
 main .filters-grid .filters-grid-tabs {
     position: relative;
     z-index: 3;

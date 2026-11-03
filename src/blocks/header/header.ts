@@ -7,6 +7,7 @@ import {
   LANG_MAP,
   VALID_LANG_PRIMARIES,
 } from '@/app/scripts.js';
+import { isUniversalEditor } from '@/utils/env';
 
 if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
   document.documentElement.classList.add('no-touch');
@@ -819,6 +820,14 @@ function buildMenuPanel(
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
+  // Universal Editor on a header v2 /nav page: header-v2 renders from the page being edited.
+  const navAuthoringMain = isUniversalEditor() ? document.querySelector<HTMLElement>('main:has(.nav-top)') : null;
+  if (navAuthoringMain) {
+    const { default: decorateHeaderV2 } = await import('@/blocks/header-v2/header-v2.js');
+    await decorateHeaderV2(block, navAuthoringMain, true);
+    return;
+  }
+
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : null;
   const hide = () => {
@@ -833,6 +842,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   }
   if (!fragment) {
     hide();
+    return;
+  }
+
+  if (fragment.querySelector('.nav-top')) {
+    const { default: decorateHeaderV2 } = await import('@/blocks/header-v2/header-v2.js');
+    if (!(await decorateHeaderV2(block, fragment, false))) hide();
     return;
   }
 

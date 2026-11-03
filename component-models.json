@@ -309,6 +309,64 @@
     ]
   },
   {
+    "id": "nav-category",
+    "fields": [
+      {
+        "component": "text",
+        "name": "name",
+        "label": "Section Name",
+        "description": "The label shown for this section in the Content Tree",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Category Title",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "aem-content",
+        "name": "link",
+        "label": "Category Link — only for a category without regions",
+        "valueType": "string"
+      },
+      {
+        "component": "reference",
+        "name": "promoImage",
+        "label": "Promo Image",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "promoImageDescription",
+        "label": "Promo Image Alt Text",
+        "valueType": "string"
+      },
+      {
+        "component": "text",
+        "name": "promoCtaLabel",
+        "label": "Promo CTA Label",
+        "valueType": "string",
+        "value": "EXPLORE MORE"
+      },
+      {
+        "component": "aem-content",
+        "name": "promoLink",
+        "label": "Promo CTA Link",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "promoOpenInNewTab",
+        "label": "Promo CTA: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      }
+    ]
+  },
+  {
     "id": "awards-list",
     "fields": [
       {
@@ -1493,95 +1551,83 @@
         "value": true
       },
       {
-        "component": "container",
-        "name": "filterModeLabels",
-        "label": "Filter Mode Labels",
-        "description": "Add one entry per mode and select its root tag. Add each category filter explicitly in the Category Settings multifield. When multiple modes are shown, provide a label for each.",
-        "multi": true,
-        "fields": [
-          {
-            "component": "text",
-            "name": "label",
-            "label": "Mode Label",
-            "valueType": "string",
-            "required": false
-          },
-          {
-            "component": "aem-tag",
-            "name": "rootTag",
-            "label": "Root Tag",
-            "description": "Identifies this filter mode. Its child tags are not automatically added as filters.",
-            "valueType": "string",
-            "multi": false,
-            "required": true
-          },
-          {
-            "component": "container",
-            "name": "categorySettings",
-            "label": "Category Settings",
-            "description": "Choose a category tag, its background colour, and optionally the default category. Suggested colours: Green for Nature.",
-            "multi": true,
-            "fields": [
-              {
-                "component": "aem-tag",
-                "name": "categoryTag",
-                "label": "Category Tag",
-                "valueType": "string",
-                "multi": false,
-                "required": true
-              },
-              {
-                "component": "select",
-                "name": "backgroundColor",
-                "label": "Background Color",
-                "valueType": "string",
-                "required": true,
-                "value": "white",
-                "options": [
-                  {
-                    "name": "Dark brown",
-                    "value": "dark-brown"
-                  },
-                  {
-                    "name": "Light brown",
-                    "value": "light-brown"
-                  },
-                  {
-                    "name": "Green",
-                    "value": "green"
-                  },
-                  {
-                    "name": "Pink",
-                    "value": "pink"
-                  },
-                  {
-                    "name": "Blue",
-                    "value": "blue"
-                  },
-                  {
-                    "name": "White",
-                    "value": "white"
-                  }
-                ]
-              },
-              {
-                "component": "boolean",
-                "name": "isDefaultCategory",
-                "label": "Default Category",
-                "description": "Select the category to show initially. Its mode will also be selected. If more than one is selected, the first one wins.",
-                "valueType": "boolean",
-                "value": false
-              }
-            ]
-          }
-        ]
-      },
-      {
         "component": "text",
         "name": "revealMoreLabel",
         "label": "Reveal More CTA Text",
         "valueType": "string",
         "value": "Reveal More"
+      }
+    ]
+  },
+  {
+    "id": "filters-grid-tab",
+    "fields": [
+      {
+        "component": "text",
+        "name": "label",
+        "label": "Mode Label",
+        "description": "Provide a label when multiple modes are displayed.",
+        "valueType": "string",
+        "required": false
+      },
+      {
+        "component": "container",
+        "name": "categorySettings",
+        "label": "Category Settings",
+        "description": "Add one entry per filter, in display order. Suggested colours: Green for Nature.",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-tag",
+            "name": "categoryTag",
+            "label": "Category Tag",
+            "valueType": "string",
+            "multi": false,
+            "required": true
+          },
+          {
+            "component": "select",
+            "name": "backgroundColor",
+            "label": "Background Color",
+            "valueType": "string",
+            "required": true,
+            "value": "white",
+            "options": [
+              {
+                "name": "Dark brown",
+                "value": "dark-brown"
+              },
+              {
+                "name": "Light brown",
+                "value": "light-brown"
+              },
+              {
+                "name": "Green",
+                "value": "green"
+              },
+              {
+                "name": "Pink",
+                "value": "pink"
+              },
+              {
+                "name": "Blue",
+                "value": "blue"
+              },
+              {
+                "name": "White",
+                "value": "white"
+              }
+            ]
+          },
+          {
+            "component": "boolean",
+            "name": "isDefaultCategory",
+            "label": "Default Category",
+            "description": "Select the category to show initially. Its mode will also be selected. If multiple defaults are selected, the first mode with a default wins; within each mode, its first default is used.",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
       }
     ]
   },
@@ -2104,6 +2150,13 @@
         "component": "aem-content",
         "name": "experienceUrl",
         "label": "Experience Page"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "showOverlay",
+        "label": "Show Media Overlay",
+        "value": true
       }
     ]
   },
@@ -2420,6 +2473,251 @@
         "name": "description",
         "label": "Description",
         "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "nav-region-rte",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Region Title",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "mergeColumns",
+        "label": "Merge with Next Region",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "richtext",
+        "name": "links",
+        "label": "Links",
+        "description": "One link per list item (or paragraph). An item without a link is shown disabled.",
+        "valueType": "string"
+      }
+    ]
+  },
+  {
+    "id": "nav-region",
+    "fields": [
+      {
+        "component": "text",
+        "name": "title",
+        "label": "Region Title",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "mergeColumns",
+        "label": "Merge with Next Region",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "container",
+        "name": "links",
+        "label": "Links",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "label",
+            "label": "Link Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "Link URL — empty shows a disabled item",
+            "valueType": "string"
+          },
+          {
+            "component": "text",
+            "name": "note",
+            "label": "Note (e.g. (2029))",
+            "valueType": "string"
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nav-top",
+    "fields": [
+      {
+        "component": "select",
+        "name": "classes",
+        "label": "Nav Type",
+        "valueType": "string",
+        "required": true,
+        "value": "global",
+        "options": [
+          {
+            "name": "Global",
+            "value": "global"
+          },
+          {
+            "name": "Destination",
+            "value": "destination"
+          }
+        ]
+      },
+      {
+        "component": "reference",
+        "name": "logo",
+        "label": "Logo (menu closed)",
+        "valueType": "string",
+        "required": true,
+        "multi": false
+      },
+      {
+        "component": "text",
+        "name": "logoAlt",
+        "label": "Logo Alt Text (brand name)",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "reference",
+        "name": "logoActive",
+        "label": "Logo (menu open) — empty uses Logo",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "reference",
+        "name": "logoSimple",
+        "label": "Logo (sticky) — empty uses Logo",
+        "valueType": "string",
+        "multi": false
+      },
+      {
+        "component": "aem-content",
+        "name": "home_link",
+        "label": "Logo Link — empty uses current language home",
+        "valueType": "string"
+      },
+      {
+        "component": "boolean",
+        "name": "home_openInNewTab",
+        "label": "Logo Link: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "text",
+        "name": "menu_openLabel",
+        "label": "Menu Button Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Menu"
+      },
+      {
+        "component": "text",
+        "name": "menu_closeLabel",
+        "label": "Close Button Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Close"
+      },
+      {
+        "component": "aem-content",
+        "name": "cta_link",
+        "label": "CTA Link",
+        "valueType": "string",
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "cta_linkText",
+        "label": "CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Book"
+      },
+      {
+        "component": "boolean",
+        "name": "cta_openInNewTab",
+        "label": "CTA: Open in New Tab",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "aem-content",
+        "name": "back_link",
+        "label": "Back Link",
+        "valueType": "string",
+        "required": true,
+        "condition": {
+          "===": [
+            {
+              "var": "classes"
+            },
+            "destination"
+          ]
+        }
+      },
+      {
+        "component": "text",
+        "name": "back_linkText",
+        "label": "Back Label — empty shows \"BACK\"",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "classes"
+            },
+            "destination"
+          ]
+        }
+      },
+      {
+        "component": "container",
+        "name": "languages",
+        "label": "Languages",
+        "multi": true,
+        "fields": [
+          {
+            "component": "aem-content",
+            "name": "link",
+            "label": "Language URL",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "linkText",
+            "label": "Language Label",
+            "valueType": "string",
+            "required": true
+          },
+          {
+            "component": "text",
+            "name": "shortLabel",
+            "label": "Short Label (e.g. EN, JP, 中文)",
+            "description": "Shown on the language button. Empty: derived from the language in the URL.",
+            "valueType": "string"
+          },
+          {
+            "component": "boolean",
+            "name": "openInNewTab",
+            "label": "Open in New Tab",
+            "valueType": "boolean",
+            "value": false
+          }
+        ]
       }
     ]
   },

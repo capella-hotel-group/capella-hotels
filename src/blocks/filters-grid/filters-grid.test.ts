@@ -1,5 +1,16 @@
 import decorate, { resolvePickerPath } from './filters-grid';
 
+jest.mock('@/app/scripts.js', () => ({
+  moveInstrumentation: (from: Element, to: Element) => {
+    [...from.attributes]
+      .filter(({ name }) => name.startsWith('data-aue-'))
+      .forEach(({ name, value }) => {
+        to.setAttribute(name, value);
+        from.removeAttribute(name);
+      });
+  },
+}));
+
 jest.mock('@/utils/env.js', () => ({
   getPublishBaseUrl: () => 'https://publish.example.com',
   resolveDAMUrl: (value: string) => value,
@@ -326,6 +337,194 @@ describe('filters-grid child tag filters', () => {
     document.body.append(block);
     return block;
   }
+
+  function createItemBlock(instrumented = true, showLabels = true): HTMLElement {
+    const block = document.createElement('div');
+    block.className = 'filters-grid';
+    const values = [
+      'item-grid',
+      'filters-grid',
+      'Discover',
+      'Experiences',
+      '/content/dam/cards',
+      String(showLabels),
+      'More',
+    ];
+    values.forEach((value) => {
+      const row = document.createElement('div');
+      row.innerHTML = `<div>${value}</div>`;
+      block.append(row);
+    });
+    const modes = [
+      [
+        'Experience',
+        [
+          ['capella-hotels:experience/culture', 'green', false],
+          ['capella-hotels:experience/nature', 'pink', false],
+        ],
+      ],
+      [
+        'Destination',
+        [
+          ['capella-hotels:destination/hanoi', 'light-brown', false],
+          ['capella-hotels:destination/bangkok', 'blue', true],
+        ],
+      ],
+    ] as const;
+    modes.forEach(([label, categories], index) => {
+      const row = document.createElement('div');
+      if (instrumented) {
+        row.dataset.aueModel = 'filters-grid-tab';
+        row.dataset.aueResource = `urn:aemconnection:/content/grid/item${index}`;
+      }
+      const labelCell = document.createElement('div');
+      labelCell.textContent = label;
+      const categoryCell = document.createElement('div');
+      if (instrumented) {
+        labelCell.dataset.aueProp = 'label';
+        categoryCell.dataset.aueProp = 'categorySettings';
+      }
+      categories.forEach(([tag, color, isDefault]) => {
+        const separator = document.createElement('hr');
+        const tagList = document.createElement('ul');
+        const tagItem = document.createElement('li');
+        tagItem.textContent = tag;
+        tagList.append(tagItem);
+        const colorField = document.createElement('p');
+        colorField.textContent = color;
+        const defaultField = document.createElement('p');
+        defaultField.textContent = String(isDefault);
+        categoryCell.append(separator, tagList, colorField, defaultField);
+      });
+      categoryCell.append(document.createElement('hr'));
+      row.append(labelCell, categoryCell);
+      block.append(row);
+    });
+    document.body.append(block);
+    return block;
+  }
+
+  it.each([true, false])(
+    'reads child tab items with instrumentation %s and keeps all authored filters',
+    async (instrumented) => {
+      const block = createItemBlock(instrumented);
+      await decorate(block);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(block.id).toBe('item-grid');
+      expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
+      expect(
+        [...block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')].map(
+          (filter) => filter.textContent,
+        ),
+      ).toEqual(['Hanoi', 'Bangkok']);
+      expect(block.classList.contains('filters-grid-theme-blue')).toBe(true);
+      block.querySelector<HTMLButtonElement>('[data-mode-key="mode-0"]')!.click();
+      expect(
+        [...block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')].map(
+          (filter) => filter.textContent,
+        ),
+      ).toEqual(['Culture', 'Nature']);
+      expect(block.querySelector('.filters-grid-card-title')?.textContent).toBe('Bangkok Experience');
+      block
+        .querySelectorAll<HTMLButtonElement>('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')[1]!
+        .click();
+      expect(block.classList.contains('filters-grid-theme-pink')).toBe(true);
+      expect(block.querySelector('.filters-grid-empty')?.textContent).toBe('No matching results.');
+      if (instrumented) expect(block.querySelectorAll('[data-aue-model="filters-grid-tab"]')).toHaveLength(2);
+    },
+  );
+
+  it('keeps new empty child items and activates an item selected in Universal Editor', async () => {
+    const block = createItemBlock(true, false);
+    const item = block.lastElementChild as HTMLElement;
+    item.replaceChildren();
+    await decorate(block);
+    expect(block.contains(item)).toBe(true);
+    expect(item.textContent).toContain('Filter mode');
+    expect(block.querySelector('[role="tab"]')).toBeNull();
+    item.dispatchEvent(new CustomEvent('aue:ui-select', { bubbles: true }));
+    expect(item.classList.contains('is-inactive')).toBe(false);
+  });
+
+  it.each([0, 1, 2])('reads child-item configuration with %i identity rows', async (identityCount) => {
+    const block = createItemBlock(false);
+    for (let index = identityCount; index < 2; index += 1) block.firstElementChild!.remove();
+    await decorate(block);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
+    expect(block.querySelectorAll('.filters-grid-mode-item')).toHaveLength(2);
+  });
+
+  it('shows all scoped cards without child items and removes the controls', async () => {
+    const block = createItemBlock(false);
+    block.lastElementChild!.remove();
+    block.lastElementChild!.remove();
+    await decorate(block);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+    expect(block.querySelector('.filters-grid-controls')).toBeNull();
+  });
+
+  it.each([true, false])('renders a single item with show labels %s', async (showLabels) => {
+    const block = createItemBlock(false, showLabels);
+    block.lastElementChild!.remove();
+    await decorate(block);
+    expect(block.querySelector('[role="tab"]')).toBeNull();
+    expect(block.querySelector('.filters-grid-mode-label')?.textContent ?? null).toBe(showLabels ? 'Experience' : null);
+    expect(block.querySelectorAll('.filters-grid-filter')).toHaveLength(2);
+    expect(block.classList.contains('filters-grid-theme-green')).toBe(true);
+    expect(block.querySelector('.has-mode-heading') !== null).toBe(showLabels);
+  });
+
+  it('retains the item field instrumentation under the correct item resource', async () => {
+    const block = createItemBlock();
+    const rows = [...block.querySelectorAll('[data-aue-model="filters-grid-tab"]')];
+    const labels = rows.map((row) => row.querySelector('[data-aue-prop="label"]'));
+    const categories = rows.map((row) => row.querySelector('[data-aue-prop="categorySettings"]'));
+    await decorate(block);
+    rows.forEach((row, index) => {
+      expect(block.contains(row)).toBe(true);
+      expect(row.contains(labels[index]!)).toBe(true);
+      expect(row.contains(categories[index]!)).toBe(true);
+    });
+    expect(block.querySelectorAll('[data-aue-prop="label"]')).toHaveLength(2);
+  });
+
+  it('renders a published item whose empty category cell was omitted', async () => {
+    const block = createItemBlock(false);
+    block.lastElementChild!.lastElementChild!.remove();
+    await decorate(block);
+    expect(block.querySelectorAll('[role="tab"]')).toHaveLength(2);
+    block.querySelector<HTMLButtonElement>('[data-mode-key="mode-1"]')!.click();
+    expect(block.querySelector('.filters-grid-mode-item:not(.is-inactive)')?.textContent).toContain('add categories');
+  });
+
+  it('reveals six more cards and resets the count when switching item filters', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          filterGridCardDetailsList: {
+            items: Array.from({ length: 14 }, (_, index) => ({
+              cardHeadline: `Card ${index}`,
+              associatedFilterTags: ['capella-hotels:experience/culture', 'capella-hotels:experience/nature'],
+            })),
+          },
+        },
+      }),
+    });
+    const block = createItemBlock(false);
+    block.lastElementChild!.remove();
+    await decorate(block);
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(6);
+    block.querySelector<HTMLButtonElement>('.filters-grid-reveal')!.click();
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(12);
+    block.querySelector<HTMLButtonElement>('.filters-grid-reveal')!.click();
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(14);
+    expect(block.querySelector<HTMLButtonElement>('.filters-grid-reveal')!.hidden).toBe(true);
+    block.querySelectorAll<HTMLButtonElement>('.filters-grid-filter')[1]!.click();
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(6);
+  });
 
   it.each([
     [false, true, 'Destination'],

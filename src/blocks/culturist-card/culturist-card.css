@@ -301,9 +301,15 @@
     }
 
     .culturist-card-media {
+        position: relative;
         order: 2;
-        height: 946px;
+        min-height: 946px;
         aspect-ratio: auto;
+    }
+
+    .culturist-card-media picture {
+        position: absolute;
+        inset: 0;
     }
 
     .culturist-card-panel {

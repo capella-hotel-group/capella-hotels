@@ -2,6 +2,7 @@
 import { isUniversalEditor } from '@/utils/env';
 import { emitHeroImpression, emitItemSelect, emitMediaError } from './lib/analytics';
 import { AutoAdvance } from './lib/auto-advance';
+import { CursorController } from './lib/cursor-controller';
 import { runIntro, shouldSkipIntro, skipIntro } from './lib/intro';
 import { MediaManager } from './lib/media-manager';
 import { applyMediaLink } from './lib/media-link';
@@ -11,84 +12,15 @@ import { initSoftNav } from './lib/soft-nav';
 import type { HeroVideoConfig, HeroVideoElement, HeroVideoState, IntroElements } from './lib/types';
 import { TOGGLE_INDICATOR_SHIFT } from './lib/types';
 
-// ── Cursor controller ─────────────────────────────────────────────────────────
-
-const CURSOR_LERP = 0.12;
-
-class CursorController {
-  private container: HTMLElement;
-  private cursorEl: HTMLElement;
-  private rafId = 0;
-  private targetX = 0;
-  private targetY = 0;
-  private currentX = 0;
-  private currentY = 0;
-  private isActive = false;
-  private mounted = false;
-
-  constructor(container: HTMLElement, cursorEl: HTMLElement) {
-    this.container = container;
-    this.cursorEl = cursorEl;
-  }
-
-  mount(): void {
-    if (this.mounted) return;
-    if (!window.matchMedia('(pointer: fine)').matches) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    this.mounted = true;
-    this.cursorEl.style.display = 'block';
-    this.container.addEventListener('mouseenter', this.onEnter);
-    this.container.addEventListener('mouseleave', this.onLeave);
-    this.container.addEventListener('mousemove', this.onMove);
-  }
-
-  private onEnter = (): void => {
-    this.isActive = true;
-    this.cursorEl.style.opacity = '1';
-    this.tick();
-  };
-
-  private onLeave = (): void => {
-    this.isActive = false;
-    this.cursorEl.style.opacity = '0';
-    cancelAnimationFrame(this.rafId);
-    this.rafId = 0;
-  };
-
-  private onMove = (e: MouseEvent): void => {
-    const rect = this.container.getBoundingClientRect();
-    this.targetX = e.clientX - rect.left;
-    this.targetY = e.clientY - rect.top;
-  };
-
-  private tick = (): void => {
-    this.currentX += (this.targetX - this.currentX) * CURSOR_LERP;
-    this.currentY += (this.targetY - this.currentY) * CURSOR_LERP;
-    this.cursorEl.style.transform = `translate(${this.currentX}px, ${this.currentY}px)`;
-    if (this.isActive) {
-      this.rafId = requestAnimationFrame(this.tick);
-    }
-  };
-
-  destroy(): void {
-    this.isActive = false;
-    cancelAnimationFrame(this.rafId);
-    this.rafId = 0;
-    if (this.mounted) {
-      this.container.removeEventListener('mouseenter', this.onEnter);
-      this.container.removeEventListener('mouseleave', this.onLeave);
-      this.container.removeEventListener('mousemove', this.onMove);
-      this.mounted = false;
-    }
-  }
-}
+// Set to false to disable the circle that follows the mouse over the hero.
+const CURSOR_FOLLOW_ENABLED = false;
 
 // ── DOM parsing ───────────────────────────────────────────────────────────────
 
 function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
   // Each block-level field renders as its own single-cell row, in model declaration order:
   //   0=prefix, 1=suffix, 2=transition, 3=destinationLabel, 4=destinationUrl,
-  //   5=experienceLabel, 6=experienceUrl. The authored value lives in row.children[0].
+  //   5=experienceLabel, 6=experienceUrl, 7=showOverlay. The authored value lives in row.children[0].
   const cellText = (i: number): string => configRows[i]?.children[0]?.textContent?.trim() ?? '';
   const cellAnchor = (i: number): HTMLAnchorElement | null =>
     configRows[i]?.children[0]?.querySelector<HTMLAnchorElement>('a') ?? null;
@@ -96,6 +28,10 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
   const rawTransition = cellText(2).toLowerCase();
   const transition: HeroVideoConfig['transition'] =
     rawTransition === 'slide' || rawTransition === 'cut' ? rawTransition : 'crossfade';
+
+  const showOverlayText = cellText(7).toLowerCase();
+  const showOverlay =
+    showOverlayText === 'false' || showOverlayText === '0' || showOverlayText === 'off' ? false : true;
 
   return {
     prefix: cellText(0) || 'See',
@@ -105,6 +41,7 @@ function parseConfig(configRows: HTMLElement[]): HeroVideoConfig {
     destinationHref: cellAnchor(4)?.getAttribute('href') || '/en/',
     experienceLabel: cellText(5) || 'Experiences',
     experienceHref: cellAnchor(6)?.getAttribute('href') || '/en/experience/',
+    showOverlay,
   };
 }
 
@@ -245,6 +182,9 @@ function buildDOM(
   const overlayEl = document.createElement('div');
   overlayEl.className = 'hero-video-overlay';
   overlayEl.setAttribute('aria-hidden', 'true');
+  if (!config.showOverlay) {
+    overlayEl.classList.add('hero-video-overlay--hidden');
+  }
 
   // ── Intro phrase (single centered sentence, visible during intro only) ────
   // Prefix/suffix are wrapped in spans so the split can hand each word off to the real prefix/
@@ -370,7 +310,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (!isAuthoring) initSoftNav([dom.destLink, dom.expLink]);
 
   const cursor = new CursorController(block, dom.cursorEl);
-  if (!isAuthoring) cursor.mount();
+  if (!isAuthoring && CURSOR_FOLLOW_ENABLED) cursor.mount();
 
   const media = new MediaManager(dom.videoA, dom.videoB, dom.posterEl);
   media.setTransition(config.transition);
@@ -389,7 +329,24 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const selectorUI = new SelectorUI(dom.itemListEl, dom.itemsViewportEl);
   selectorUI.renderItems(items, state.activeIndex);
 
+  let pendingAdvance: number | null = null;
+  const syncSuffixLink = (): void => {
+    dom.suffixEl.classList.toggle(
+      'hero-video-suffix--link',
+      !isAuthoring && state.introComplete && dom.mediaLinkEl.hasAttribute('href'),
+    );
+  };
+  // "with new eyes ›" is a pointer shortcut to the media link (which stays the keyboard/AT target).
+  dom.suffixEl.addEventListener('click', () => {
+    if (dom.suffixEl.classList.contains('hero-video-suffix--link')) dom.mediaLinkEl.click();
+  });
+
   const autoAdvance = new AutoAdvance(isAuthoring ? 0 : items.length, (next) => {
+    // Never yank the wheel out from under the user; advance once they let it settle.
+    if (selectorUI.isUserInteracting()) {
+      pendingAdvance = next;
+      return;
+    }
     selectorUI.activateItem(next, true);
     goTo(next, true);
   });
@@ -400,6 +357,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     if (!item) return;
     state.activeIndex = index;
     applyMediaLink(dom.mediaLinkEl, item, isAuthoring);
+    syncSuffixLink();
     autoAdvance.cancel();
     media
       .switchTo(item, { restartIfSame })
@@ -463,12 +421,21 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   ro.observe(block);
 
   // Wire item selection to media switch
-  selectorUI.onSelect((index) => {
+  selectorUI.onSelect((index, source) => {
+    const queued = pendingAdvance;
+    pendingAdvance = null;
+    if (index === state.activeIndex) {
+      if (queued !== null) {
+        selectorUI.activateItem(queued, true);
+        goTo(queued, true);
+      }
+      return;
+    }
     const prevItem = items[state.activeIndex];
     const item = items[index];
     if (item) {
       goTo(index, false);
-      emitItemSelect(prevItem?.label ?? '', item.label, 'pointer');
+      emitItemSelect(prevItem?.label ?? '', item.label, source);
     }
   });
 
@@ -489,6 +456,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     selectorUI.setIntroComplete(true);
     state.introComplete = true;
     dom.mediaLinkEl.tabIndex = 0;
+    syncSuffixLink();
     autoAdvance.setReady(true);
   };
 
@@ -513,6 +481,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       selectorUI.setIntroComplete(true);
       state.introComplete = true;
       dom.mediaLinkEl.tabIndex = 0;
+      syncSuffixLink();
       autoAdvance.setReady(true);
 
       // Preload metadata for next item to reduce switching latency

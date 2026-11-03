@@ -3,7 +3,8 @@
     "id": "main",
     "components": [
       "section",
-      "header-section"
+      "header-section",
+      "nav-category"
     ]
   },
   {
@@ -47,7 +48,8 @@
       "content-listing",
       "page-listing",
       "booking-search",
-      "separator"
+      "separator",
+      "nav-top"
     ]
   },
   {
@@ -60,6 +62,13 @@
       "navigation-lists",
       "link",
       "separator"
+    ]
+  },
+  {
+    "id": "nav-category",
+    "components": [
+      "nav-region",
+      "nav-region-rte"
     ]
   },
   {
@@ -129,6 +138,12 @@
     ],
     "minItems": 1,
     "customErrorMsg": "Add at least 1 slide."
+  },
+  {
+    "id": "filters-grid",
+    "components": [
+      "filters-grid-tab"
+    ]
   },
   {
     "id": "footer-legal",

@@ -2,6 +2,45 @@
 // This must execute after decorateMain() and every subsequent decorateBlocks() call,
 // but before the Universal Editor CORS script and any block being loaded.
 
+const NAV_RTE_HELP_ITEMS = [
+  '| open-in-new-tab: Opens a link in a new tab.',
+  '| open-in-same-tab: Keeps a link in the current tab (default).',
+  '| merge-columns: Joins this region with the next when the combined output has four or fewer columns.',
+];
+
+function addNavRteHelp(container: Document | HTMLElement): void {
+  if (!/\/nav(?:\.html)?\/?$/i.test(window.location.pathname)) return;
+
+  container.querySelectorAll<HTMLElement>('[data-aue-type="richtext"]').forEach((field) => {
+    if (field.nextElementSibling?.hasAttribute('data-nav-rte-help')) return;
+
+    const help = document.createElement('div');
+    help.dataset.navRteHelp = '';
+    help.setAttribute('role', 'note');
+    help.hidden = true;
+    const heading = document.createElement('p');
+    heading.textContent = 'Navigation links:';
+    const list = document.createElement('ul');
+    NAV_RTE_HELP_ITEMS.forEach((text) => {
+      const item = document.createElement('li');
+      item.textContent = text;
+      list.append(item);
+    });
+    help.append(heading, list);
+    field.insertAdjacentElement('afterend', help);
+  });
+}
+
+document.addEventListener('aue:ui-select', (event) => {
+  const { resource, selected } = (event as CustomEvent<{ resource?: string; selected?: boolean }>).detail ?? {};
+  document.querySelectorAll<HTMLElement>('[data-nav-rte-help]').forEach((help) => {
+    const field = help.previousElementSibling as HTMLElement | null;
+    const fieldResource =
+      field?.dataset.aueResource ?? field?.closest<HTMLElement>('[data-aue-resource]')?.dataset.aueResource;
+    help.hidden = !selected || fieldResource !== resource;
+  });
+});
+
 export function decorateRichtext(container: Document | HTMLElement = document): void {
   function deleteInstrumentation(element: HTMLElement): void {
     delete element.dataset.richtextResource;
@@ -63,6 +102,8 @@ export function decorateRichtext(container: Document | HTMLElement = document): 
       group.append(element, ...siblings);
     }
   }
+
+  addNavRteHelp(container);
 }
 
 export default decorateRichtext;
