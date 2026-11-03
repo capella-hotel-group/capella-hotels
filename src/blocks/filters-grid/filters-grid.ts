@@ -19,6 +19,7 @@ interface ModalDetails {
   modalImageAspectRatioVariant?: string | null;
   modalFeatureImageAsset?: Reference | null;
   modalFeatureImageAssetAltText?: string | null;
+  modalFeatureImageDarkImageOverlay?: boolean | null;
   carouselImages?: Array<Reference | null> | null;
   carouselImagesAltText?: Array<string | null> | null;
   modalCtaUrlType?: string | null;
@@ -34,6 +35,7 @@ export interface FilterGridCard {
   cardHeadline?: string | null;
   cardBackgroundPhoto?: Reference | null;
   cardBackgroundPhotoAltText?: string | null;
+  CardBackgroundPhotoDarkImageOverlay?: boolean | null;
   associatedFilterTags?: string[] | null;
   cardClickActionBehavior?: string | null;
   directDestinationUrlType?: string | null;
@@ -229,6 +231,13 @@ function parseCategoryEntry(entry: Element): AuthoredFilter | undefined {
     .filter((element) => element.children.length === 0)
     .map(textOf)
     .filter(Boolean);
+  const tags = new Set([
+    ...[...entry.querySelectorAll<HTMLAnchorElement>('a[href*="/content/cq:tags/"]')].map((link) =>
+      normalizeTagId(link.getAttribute('href') || ''),
+    ),
+    ...values.filter(isTagValue).map(normalizeTagId),
+  ]);
+  if (tags.size > 1) throw new Error('Select only one tag per Category Settings entry.');
   const tag =
     tagLink?.getAttribute('href') ||
     textOf(entry.querySelector('[data-aue-prop="categoryTag"]')) ||
@@ -416,9 +425,11 @@ function parseConfig(block: HTMLElement): BlockConfig {
               .map(parseCategoryEntry)
               .filter((filter): filter is AuthoredFilter => Boolean(filter))
           : [];
+        const label = textOf(labelElement) || `Filter Tab ${index + 1}`;
+        row.dataset.aueLabel = label;
         return {
           key: `mode-${index}`,
-          label: textOf(labelElement) || 'Filter tab',
+          label,
           rootTag: '',
           filters,
           source: row,
@@ -720,6 +731,9 @@ function createModal() {
       gallery.className = 'filters-grid-modal-gallery';
       const featurePanel = document.createElement('div');
       featurePanel.className = 'filters-grid-modal-feature';
+      if (details.modalFeatureImageDarkImageOverlay === false) {
+        featurePanel.classList.add('filters-grid-modal-no-overlay');
+      }
       if (placeholder) featurePanel.style.backgroundImage = placeholder;
       if (feature) featurePanel.append(feature);
       featurePanel.append(mediaCopy);
@@ -731,6 +745,9 @@ function createModal() {
     } else {
       const media = document.createElement('div');
       media.className = 'filters-grid-modal-media';
+      if (details.modalFeatureImageDarkImageOverlay === false) {
+        media.classList.add('filters-grid-modal-no-overlay');
+      }
       if (placeholder) media.style.backgroundImage = placeholder;
       const bannerImages = [feature, ...carouselImages].filter((image): image is HTMLImageElement => Boolean(image));
       if (bannerImages.length) {
@@ -818,6 +835,7 @@ function createCard(
   if (image) article.append(image);
   const shade = document.createElement('span');
   shade.className = 'filters-grid-card-shade';
+  if (card.CardBackgroundPhotoDarkImageOverlay === false) shade.classList.add('filters-grid-card-shade-disabled');
   article.append(shade);
   const copy = document.createElement('span');
   copy.className = 'filters-grid-card-copy';

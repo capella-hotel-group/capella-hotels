@@ -4,7 +4,7 @@
 
 Add a **Filter Tab** child item to the Filters Grid for each tab (for example, Experience or Destination). Each item has:
 
-- **Tab Label**: optional, but provide meaningful labels when multiple tabs are displayed. A blank label displays "Filter tab".
+- **Tab Label**: optional, but provide meaningful labels when multiple tabs are displayed. The editor item label uses this text; a blank label displays "Filter Tab 1", "Filter Tab 2", etc.
 - **Category Settings**: one repeatable field containing Category Tag, Background Color, and Default Category.
 
 The child item itself represents the mode, so there is no repeatable Filter Mode Labels container around these fields and no Root Tag is needed. Filters come only from the item's authored Category Settings entries. The default category appears first; remaining categories keep their authored order.
@@ -20,7 +20,11 @@ Hiding labels also removes the space reserved for them. Choose each filter tag e
 
 ## Category Settings And Default Category
 
-Within each filter mode, each **Category Settings** entry starts with **Default Category**, followed by **Category Tag** and **Background Color**. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White, with White selected by default. These simple names retain the original shades and gradients. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
+Within each filter mode, each **Category Settings** entry contains **Category Tag**, **Background Color**, and **Default Category**, in that order. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White, with White selected by default. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
+
+New entries may remain incomplete while editing, without immediate required-field validation. Select exactly one category tag before publishing; entries without a tag do not become filters. The picker is configured with `multi: false`. Delivered entries containing more than one distinct tag show an explicit configuration error instead of silently selecting one.
+
+The properties panel is owned by Universal Editor, not the page's CSS. A custom separator between multifield entries is not currently configured because the documented model fields do not provide a separator component.
 
 The first mode containing a default category is selected on load. Within each mode, its first default category is used, or its first category if no default is selected. If no defaults are selected anywhere, the first authored mode and its first category are used.
 
@@ -33,6 +37,17 @@ The five coloured backgrounds use the supplied Figma gradient angles, stops, and
 ## Popup Content
 
 Popup details are authored in a separate Content Fragment and selected from the main card Content Fragment. Configure the popup description, image layout, feature and carousel images with alt text, and optional CTA. Publish the referenced popup Content Fragment before testing the card.
+
+## Dark Image Overlay
+
+The persisted `Filter-grid-card` query must return two independent boolean fields, with exact casing:
+
+- `CardBackgroundPhotoDarkImageOverlay` on each card: controls the listing image overlay.
+- `modalFeatureImageDarkImageOverlay` inside `modalDetails`: controls the popup feature image overlay (the wide popup uses this setting for its banner area).
+
+Publish the updated AEM-managed models/query and fragments. These definitions are not stored in this repository.
+
+Enabled cards use a 20% black image overlay, increasing to 30% on hover/focus, like Destination Cards. Disabled cards have no dark overlay, including on hover/focus. The modal setting independently enables or disables its existing 40% overlay. A missing or null value preserves the existing enabled overlay for each surface.
 
 ## Card Matching And Empty States
 

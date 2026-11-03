@@ -405,7 +405,8 @@ describe('filters-grid authored filters', () => {
     item.replaceChildren();
     await decorate(block);
     expect(block.contains(item)).toBe(true);
-    expect(item.textContent).toContain('Filter tab');
+    expect(item.textContent).toContain('Filter Tab 2');
+    expect(item.dataset.aueLabel).toBe('Filter Tab 2');
     expect(block.querySelector('[role="tab"]')).toBeNull();
     item.dispatchEvent(new CustomEvent('aue:ui-select', { bubbles: true }));
     expect(item.classList.contains('is-inactive')).toBe(false);
@@ -453,6 +454,100 @@ describe('filters-grid authored filters', () => {
       expect(row.contains(categories[index]!)).toBe(true);
     });
     expect(block.querySelectorAll('[data-aue-prop="label"]')).toHaveLength(2);
+    expect(rows.map((row) => row.getAttribute('data-aue-label'))).toEqual(['Experience', 'Destination']);
+  });
+
+  it('keeps a newly added category draft without showing a configuration error', async () => {
+    const block = createItemBlock();
+    const categories = block.lastElementChild!.lastElementChild!;
+    categories.insertAdjacentHTML('beforeend', '<p>white</p><p>false</p><hr>');
+    await decorate(block);
+    expect(block.querySelector('[role="alert"]')).toBeNull();
+    expect(block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')).toHaveLength(2);
+  });
+
+  it('reports multiple tags in one category instead of picking one silently', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const block = createItemBlock();
+    block.lastElementChild!.lastElementChild!.innerHTML = `
+      <hr><ul><li>capella-hotels:destination/hanoi</li><li>capella-hotels:destination/bangkok</li></ul>
+      <p>white</p><p>false</p><hr>
+    `;
+    await decorate(block);
+    expect(block.querySelector('[role="alert"]')?.textContent).toBe('Select only one tag per Category Settings entry.');
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it.each([true, false, null, undefined])(
+    'reads the card overlay value %s',
+    async (CardBackgroundPhotoDarkImageOverlay) => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            filterGridCardDetailsList: {
+              items: [
+                {
+                  cardHeadline: 'Overlay card',
+                  associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                  CardBackgroundPhotoDarkImageOverlay,
+                },
+              ],
+            },
+          },
+        }),
+      });
+      const block = createItemBlock();
+      await decorate(block);
+      expect(
+        block.querySelector('.filters-grid-card-shade')?.classList.contains('filters-grid-card-shade-disabled'),
+      ).toBe(CardBackgroundPhotoDarkImageOverlay === false);
+    },
+  );
+
+  it.each([
+    ['square', true],
+    ['square', false],
+    ['square', null],
+    ['square', undefined],
+    ['wide', true],
+    ['wide', false],
+    ['wide', null],
+    ['wide', undefined],
+  ])('reads the independent %s modal overlay value %s', async (variant, modalFeatureImageDarkImageOverlay) => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          filterGridCardDetailsList: {
+            items: [
+              {
+                cardHeadline: 'Overlay popup',
+                associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                CardBackgroundPhotoDarkImageOverlay: modalFeatureImageDarkImageOverlay !== false ? false : true,
+                cardClickActionBehavior: 'popup',
+                modalDetails: {
+                  modalImageAspectRatioVariant: variant,
+                  modalFeatureImageDarkImageOverlay,
+                  modalFeatureImageAsset: { _path: '/feature.jpg' },
+                },
+              },
+            ],
+          },
+        },
+      }),
+    });
+    const block = createItemBlock();
+    await decorate(block);
+    block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    const media = document.querySelector(
+      variant === 'square' ? '.filters-grid-modal-feature' : '.filters-grid-modal-media',
+    )!;
+    expect(media.classList.contains('filters-grid-modal-no-overlay')).toBe(modalFeatureImageDarkImageOverlay === false);
+    expect(block.querySelector('.filters-grid-card-shade-disabled') !== null).toBe(
+      modalFeatureImageDarkImageOverlay !== false,
+    );
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   });
 
   it('renders a published item whose empty category cell was omitted', async () => {

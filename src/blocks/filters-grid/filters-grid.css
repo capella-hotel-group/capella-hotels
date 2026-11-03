@@ -332,6 +332,17 @@ main .filters-grid .filters-grid-card-shade {
     background: rgb(0 0 0 / 20%);
 }
 
+main .filters-grid .filters-grid-card-shade.filters-grid-card-shade-disabled {
+    background: transparent;
+}
+
+main
+    .filters-grid
+    .filters-grid-card-action:is(:hover, :focus-within)
+    .filters-grid-card-shade:not(.filters-grid-card-shade-disabled) {
+    background: rgb(0 0 0 / 30%);
+}
+
 main .filters-grid .filters-grid-card-copy {
     position: absolute;
     /* The grid card pins 20px in Figma; only the modal's image-card uses the card padding token. */
@@ -548,6 +559,11 @@ main .filters-grid .filters-grid-error {
     background: rgb(0 0 0 / 40%);
     content: '';
     pointer-events: none;
+}
+
+.filters-grid-modal-feature.filters-grid-modal-no-overlay::after,
+.filters-grid-modal-media.filters-grid-modal-no-overlay::after {
+    background: transparent;
 }
 
 .filters-grid-modal-feature > img,
