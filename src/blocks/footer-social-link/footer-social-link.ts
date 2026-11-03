@@ -13,7 +13,6 @@ function hrefFromCell(cell: Element | null): string {
 
 interface SocialEntry {
   row: Element;
-  platform: string;
   icon: Element | null;
   iconAlt: string;
   href: string;
@@ -22,17 +21,19 @@ interface SocialEntry {
 
 // `footer-social-item`: the icon reference field auto-sets its paired `iconAlt` label onto the
 // rendered `<img alt>` (verified against footer.plain.html — there is no separate iconAlt cell).
-// Cells: [0] platform, [1] icon (picture), [2] link, [3] openInNewTab.
+// Find the icon and URL independently of the removed leading dropdown cell.
 function parseItemRow(row: Element): SocialEntry | null {
   const cells = [...row.children];
-  const platform = cells[0]?.textContent?.trim() || '';
-  const icon = cells[1]?.querySelector('picture') ?? null;
+  const icon = row.querySelector('picture');
   const iconAlt = icon?.querySelector('img')?.getAttribute('alt') || '';
-  const href = hrefFromCell(cells[2] ?? null);
-  const openInNewTab = isEnabled(cells[3]?.textContent?.trim());
+  const linkCell =
+    cells.find((cell) => !cell.querySelector('picture') && cell.querySelector('a[href]')) ||
+    cells.find((cell) => !cell.querySelector('picture') && /^(?:https?:\/\/|\/)/i.test(cell.textContent?.trim() || ''));
+  const href = hrefFromCell(linkCell ?? null);
+  const openInNewTab = isEnabled(linkCell ? cells[cells.indexOf(linkCell) + 1]?.textContent?.trim() : undefined);
 
-  if (!href && !platform) return null;
-  return { row, platform, icon, iconAlt, href, openInNewTab };
+  if (!href) return null;
+  return { row, icon, iconAlt, href, openInNewTab };
 }
 
 function buildListItem(entry: SocialEntry): HTMLLIElement {
@@ -46,11 +47,11 @@ function buildListItem(entry: SocialEntry): HTMLLIElement {
     iconWrap.className = 'icon';
     const picture = entry.icon.cloneNode(true) as HTMLElement;
     const img = picture.querySelector('img');
-    if (img) img.alt = entry.iconAlt || entry.platform || 'Social media icon';
+    if (img) img.alt = entry.iconAlt || 'Social media icon';
     iconWrap.append(picture);
     anchor.append(iconWrap);
   } else {
-    anchor.append(entry.platform || 'Link');
+    anchor.append('Link');
   }
 
   if (entry.href && entry.openInNewTab) anchor.append(newTabHint());

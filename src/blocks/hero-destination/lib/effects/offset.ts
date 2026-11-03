@@ -11,3 +11,8 @@ export function loopOffset(index: number, activeIndex: number, total: number): n
   if (raw < -half) return raw + total;
   return raw;
 }
+
+/** Horizontal direction multiplier: upcoming slides enter from the inline-end side. */
+export function dirSign(track: HTMLElement): 1 | -1 {
+  return getComputedStyle(track).direction === 'rtl' ? -1 : 1;
+}

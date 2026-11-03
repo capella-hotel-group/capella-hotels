@@ -3,21 +3,30 @@ import { moveInstrumentation } from '@/app/scripts.js';
 import { buildMedia } from './media';
 import type { HeroDestinationItem } from './types';
 
-export function buildSlide(item: HeroDestinationItem, index: number, idPrefix: string): HTMLLIElement {
+export function buildSlide(
+  item: HeroDestinationItem,
+  index: number,
+  idPrefix: string,
+  total: number,
+  headingTag: 'h1' | 'h2' = 'h2',
+): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'hero-destination-slide';
-  slide.id = `${idPrefix}-panel-${index}`;
-  slide.setAttribute('role', 'tabpanel');
-  slide.setAttribute('aria-labelledby', `${idPrefix}-tab-${index}`);
   slide.setAttribute('aria-hidden', index === 0 ? 'false' : 'true');
-  // Panels hold no focusable content, so the active one takes focus itself (APG tabs).
-  if (index === 0) slide.tabIndex = 0;
+  // A lone slide has no tab to label it, so it stays a plain list item.
+  if (total > 1) {
+    slide.id = `${idPrefix}-panel-${index}`;
+    slide.setAttribute('role', 'tabpanel');
+    slide.setAttribute('aria-labelledby', `${idPrefix}-tab-${index}`);
+    // Panels hold no focusable content, so the active one takes focus itself (APG tabs).
+    if (index === 0) slide.tabIndex = 0;
+  }
   moveInstrumentation(item.sourceRow, slide);
 
-  const media = buildMedia(item);
+  const media = buildMedia(item, index === 0);
   if (!item.showOverlay) media.classList.add('hero-destination-media--no-overlay');
 
-  const heading = document.createElement('h2');
+  const heading = document.createElement(headingTag);
   heading.className = 'hero-destination-heading';
   heading.textContent = item.heading;
 

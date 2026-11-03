@@ -1032,3 +1032,24 @@ header.is-scrolled .header-cta {
     color: var(--color-text-on-action-default, #fff);
     background: var(--color-surface-action-default, #1b364b);
 }
+
+/* Cinematic hero intro (hero-destination video variant): the off-white intro surface would hide
+   the white header, so mirror the open-menu theme until the hero has expanded ("done"). */
+body[data-hero-intro='intro'] header .header-menu-toggle,
+body[data-hero-intro='intro'] header .header-lang-trigger {
+    color: var(--site-header-text);
+}
+
+body[data-hero-intro='intro'] header .header-cta {
+    color: var(--color-text-on-action-default, #fff);
+    background: var(--color-surface-action-default, #1b364b);
+}
+
+/* Only swap when a dark logo variant is authored; otherwise keep the single default logo. */
+body[data-hero-intro='intro'] header .header-logo:has(.header-logo-img-active) img.header-logo-img-default {
+    display: none;
+}
+
+body[data-hero-intro='intro'] header .header-logo img.header-logo-img-active {
+    display: block;
+}
