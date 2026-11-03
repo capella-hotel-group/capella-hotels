@@ -16,6 +16,8 @@ if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
 const NEW_TAB_LABEL = 'opens in a new tab';
 const MAIN_NAV_LABEL = 'Main navigation';
 const PANEL_ID = 'header-menu-panel';
+// Sticky compact header appears once scrolled past this share of the viewport height.
+const SCROLLED_VIEWPORT_RATIO = 0.45;
 const LANGUAGE_LABEL = 'Language';
 
 // Marks a link as opening a new tab and tells assistive technology about it.
@@ -387,6 +389,7 @@ function buildLogo(
   pictureAlt: string,
   darkSrc: string,
   darkAlt: string,
+  scrollSrc: string,
   href: string,
   label: string,
 ): HTMLAnchorElement {
@@ -411,6 +414,16 @@ function buildLogo(
       darkImg.alt = darkAlt || pictureAlt || 'Capella';
       darkImg.setAttribute('aria-hidden', 'true');
       logo.append(darkImg);
+    }
+
+    // Icon-only logo shown once the page is scrolled (sticky compact header).
+    if (scrollSrc) {
+      const scrollImg = document.createElement('img');
+      scrollImg.className = 'header-logo-img-scroll';
+      scrollImg.src = scrollSrc;
+      scrollImg.alt = '';
+      scrollImg.setAttribute('aria-hidden', 'true');
+      logo.append(scrollImg);
     }
     return logo;
   }
@@ -866,7 +879,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     return;
   }
 
-  const [logoImg, logoImgDark] = chromeSection.querySelectorAll('picture img');
+  // Image order in /nav: default logo, menu-open logo, scroll icon.
+  const [logoImg, logoImgDark, scrollIcon] = chromeSection.querySelectorAll('picture img');
   const chromeLinks = [...chromeSection.querySelectorAll<HTMLAnchorElement>('.default-content-wrapper > p > a')];
   const logoLinkAnchor = chromeLinks[0];
   const { label: logoLinkLabel, marker: logoLinkMarker } = splitMarker(logoLinkAnchor?.textContent ?? '');
@@ -883,6 +897,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     logoImg?.getAttribute('alt') ?? '',
     logoImgDark?.getAttribute('src') ?? '',
     logoImgDark?.getAttribute('alt') ?? '',
+    // The scrolled header sits on a cream surface; falls back to the menu-open logo.
+    (scrollIcon ?? logoImgDark)?.getAttribute('src') ?? '',
     logoLinkAnchor?.getAttribute('href') || activeLang.href,
     logoLinkLabel,
   );
@@ -891,7 +907,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
   const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');
-  const back = (menuSection as HTMLElement).dataset.menu === 'destination' ? buildBackLink(menuSection) : null;
+  // `global` or unset (legacy pages) both render the standard menu.
+  const menuType = (menuSection as HTMLElement).dataset.menu === 'destination' ? 'destination' : 'global';
+  const back = menuType === 'destination' ? buildBackLink(menuSection) : null;
   const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel, back);
 
   let previousOverflow = '';
@@ -948,4 +966,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   inner.append(menuToggle, logo, tools);
 
   block.replaceChildren(inner, panel);
+
+  const headerElement = block.closest('header');
+  if (headerElement) {
+    const updateScrolled = () =>
+      headerElement.classList.toggle('is-scrolled', window.scrollY > window.innerHeight * SCROLLED_VIEWPORT_RATIO);
+    window.addEventListener('scroll', updateScrolled, { passive: true });
+    updateScrolled();
+  }
 }

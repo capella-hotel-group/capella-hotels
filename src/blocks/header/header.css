@@ -20,7 +20,7 @@ header:has(.header-menu-panel.is-open) {
 }
 
 header {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -1009,4 +1009,53 @@ header:has(.header-menu-panel.is-open) .header-inner {
     .header-menu-promo.is-swapping .header-menu-promo-cta {
         opacity: 1;
     }
+}
+
+/* Sticky compact state once the page is scrolled (Figma menu-top Type=Scroll, inverse=no). */
+.header-logo img.header-logo-img-scroll {
+    display: none;
+}
+
+header.is-scrolled {
+    --site-header-height: 104px;
+    --site-header-focus: var(--site-header-text);
+
+    background: var(--site-header-surface);
+}
+
+header.is-scrolled .header-inner {
+    padding-bottom: 12px;
+}
+
+header.is-scrolled .header-logo {
+    width: auto;
+    min-height: 0;
+}
+
+header.is-scrolled .header-logo img {
+    width: auto;
+    height: 52px;
+}
+
+header.is-scrolled .header-logo:has(.header-logo-img-scroll) > img:not(.header-logo-img-scroll) {
+    display: none;
+}
+
+header.is-scrolled .header-logo img.header-logo-img-scroll {
+    display: block;
+}
+
+header.is-scrolled .header-menu-toggle,
+header.is-scrolled .header-lang-trigger {
+    color: var(--site-header-text);
+}
+
+header.is-scrolled .header-lang-trigger:hover,
+header.is-scrolled .header-lang-trigger[aria-expanded='true'] {
+    color: var(--color-text-action-hover, #183144);
+}
+
+header.is-scrolled .header-cta {
+    color: var(--color-text-on-action-default, #fff);
+    background: var(--color-surface-action-default, #1b364b);
 }
