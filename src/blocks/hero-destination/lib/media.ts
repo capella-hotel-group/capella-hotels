@@ -12,7 +12,7 @@ function buildImageMedia(item: HeroDestinationImageItem): HTMLElement {
   const applyPicture = (): void => {
     const picture = (mqMobile.matches && item.mobilePicture) || item.desktopPicture;
     const img = picture.querySelector('img');
-    if (img) img.alt = item.imageAlt;
+    if (img && item.imageAlt) img.alt = item.imageAlt;
     wrapper.replaceChildren(picture);
   };
 
@@ -21,13 +21,14 @@ function buildImageMedia(item: HeroDestinationImageItem): HTMLElement {
   return wrapper;
 }
 
-function buildVideoMedia(item: HeroDestinationVideoItem): HTMLElement {
+function buildVideoMedia(item: HeroDestinationVideoItem, eager: boolean): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'hero-destination-media';
 
+  // Playback is driven by the slider so only the active slide's video runs.
   const video = document.createElement('video');
   video.className = 'hero-destination-video';
-  video.autoplay = true;
+  video.preload = eager ? 'auto' : 'none';
   video.muted = true;
   video.loop = true;
   video.setAttribute('muted', '');
@@ -43,8 +44,10 @@ function buildVideoMedia(item: HeroDestinationVideoItem): HTMLElement {
   mqMobile.addEventListener('change', () => {
     const next = pickSrc();
     if (source.src !== next) {
+      const wasPlaying = !video.paused;
       source.src = next;
       video.load();
+      if (wasPlaying) video.play()?.catch(() => {});
     }
   });
 
@@ -58,8 +61,8 @@ function buildEmptyMedia(): HTMLElement {
   return wrapper;
 }
 
-export function buildMedia(item: HeroDestinationItem): HTMLElement {
-  if (item.mediaType === 'video') return buildVideoMedia(item);
+export function buildMedia(item: HeroDestinationItem, eager: boolean): HTMLElement {
+  if (item.mediaType === 'video') return buildVideoMedia(item, eager);
   if (item.mediaType === 'image') return buildImageMedia(item);
   return buildEmptyMedia();
 }

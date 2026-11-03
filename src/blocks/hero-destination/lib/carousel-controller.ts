@@ -16,6 +16,9 @@ export interface CarouselControllerOptions {
   autoplay: boolean;
   loop: boolean;
   effect: EffectController;
+  onChange?: (index: number) => void;
+  /** Fired when a non-looping autoplay stops on the last slide. */
+  onAutoplayEnd?: () => void;
 }
 
 export class CarouselController {
@@ -27,12 +30,25 @@ export class CarouselController {
   private readonly loop: boolean;
   private readonly canAutoplay: boolean;
   private readonly effect: EffectController;
+  private readonly onChange?: (index: number) => void;
+  private readonly onAutoplayEnd?: () => void;
   private readonly pauseReasons = new Set<CarouselPauseReason>();
   private activeIndex = 0;
   private finished = false;
   private timerId: ReturnType<typeof setInterval> | null = null;
 
-  constructor({ track, slides, mediaEls, dots, intervalSeconds, autoplay, loop, effect }: CarouselControllerOptions) {
+  constructor({
+    track,
+    slides,
+    mediaEls,
+    dots,
+    intervalSeconds,
+    autoplay,
+    loop,
+    effect,
+    onChange,
+    onAutoplayEnd,
+  }: CarouselControllerOptions) {
     this.track = track;
     this.slides = slides;
     this.mediaEls = mediaEls;
@@ -40,6 +56,8 @@ export class CarouselController {
     this.intervalMs = intervalSeconds * 1000;
     this.loop = loop;
     this.effect = effect;
+    this.onChange = onChange;
+    this.onAutoplayEnd = onAutoplayEnd;
     this.canAutoplay = autoplay && slides.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -57,7 +75,21 @@ export class CarouselController {
     this.effect.init(this.track, this.mediaEls);
     this.setActive(0);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    // Size-dependent effects (cube) must re-measure: the page is still hidden at decorate time.
+    let lastWidth = this.track.offsetWidth;
+    new ResizeObserver(() => {
+      const width = this.track.offsetWidth;
+      if (width === lastWidth) return;
+      lastWidth = width;
+      this.effect.render(this.track, this.mediaEls, this.activeIndex);
+    }).observe(this.track);
     this.start();
+  }
+
+  /** Replays a non-looping autoplay that already ran to its end, from the first slide. */
+  restart(): void {
+    this.finished = false;
+    this.goTo(0);
   }
 
   /** Manual navigation (e.g. dot click): jump to a slide and restart the autoplay countdown. */
@@ -112,12 +144,13 @@ export class CarouselController {
     const activeSlide = this.slides[this.activeIndex];
     const activeDot = this.dots[this.activeIndex];
     activeSlide?.setAttribute('aria-hidden', 'false');
-    activeSlide?.setAttribute('tabindex', '0');
+    if (this.dots.length > 0) activeSlide?.setAttribute('tabindex', '0');
     activeDot?.classList.add('is-active');
     activeDot?.setAttribute('aria-selected', 'true');
     if (activeDot) activeDot.tabIndex = 0;
 
     this.effect.render(this.track, this.mediaEls, this.activeIndex);
+    this.onChange?.(this.activeIndex);
   }
 
   private start(): void {
@@ -140,6 +173,7 @@ export class CarouselController {
       this.finished = true;
       this.stop();
       this.syncLiveRegion();
+      this.onAutoplayEnd?.();
       return;
     }
     this.setActive((this.activeIndex + 1) % this.slides.length);
