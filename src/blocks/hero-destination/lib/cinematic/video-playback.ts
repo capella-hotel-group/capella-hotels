@@ -13,7 +13,7 @@ export interface VideoPlaybackOptions {
 
 export interface VideoPlayback {
   element: HTMLVideoElement;
-  /** True once the video can play; false if it failed or timed out first. */
+  /** Resolves for the selected source; a source change creates a new readiness promise. */
   ready: Promise<boolean>;
   playing: Promise<void>;
   /** Error, timeout before ready, or a rejected play(). Once failed, always failed. */
@@ -48,31 +48,51 @@ export function createVideoPlayback({
   source.setAttribute('src', pickUrl());
   video.append(source);
 
-  const ready = deferred<boolean>();
+  let currentReady = deferred<boolean>();
+  let sourceReady = false;
+  let outcome: 'pending' | 'playing' | 'failed' = 'pending';
   const playing = deferred();
   const failed = deferred();
-  let state: 'pending' | 'ready' | 'failed' = 'pending';
   let timer = 0;
 
   const markFailed = (): void => {
-    if (state === 'failed') return;
-    state = 'failed';
+    if (outcome === 'failed') return;
+    outcome = 'failed';
+    sourceReady = false;
     window.clearTimeout(timer);
-    ready.resolve(false);
+    currentReady.resolve(false);
     failed.resolve();
   };
   const markReady = (): void => {
-    if (state !== 'pending') return;
-    state = 'ready';
+    if (outcome === 'failed' || sourceReady) return;
+    sourceReady = true;
     window.clearTimeout(timer);
-    ready.resolve(true);
+    currentReady.resolve(true);
+  };
+  const restartReadiness = (): void => {
+    const previousReady = currentReady;
+    currentReady = deferred<boolean>();
+    sourceReady = false;
+    if (outcome !== 'failed') {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(markFailed, timeoutMs);
+    }
+    previousReady.resolve(false);
   };
 
   timer = window.setTimeout(markFailed, timeoutMs);
   video.addEventListener('canplay', markReady);
   video.addEventListener('error', markFailed);
   source.addEventListener('error', markFailed);
-  video.addEventListener('playing', () => playing.resolve(), { once: true });
+  video.addEventListener(
+    'playing',
+    () => {
+      markReady();
+      if (outcome === 'pending') outcome = 'playing';
+      playing.resolve();
+    },
+    { once: true },
+  );
   if (video.readyState >= HAVE_FUTURE_DATA) markReady();
 
   mq.addEventListener('change', () => {
@@ -80,19 +100,22 @@ export function createVideoPlayback({
     if (source.getAttribute('src') === url) return;
     const wasPlaying = !video.paused;
     source.setAttribute('src', url);
+    if (outcome !== 'failed') restartReadiness();
     video.load();
-    if (wasPlaying) video.play()?.catch(markFailed);
+    if (outcome === 'playing' || wasPlaying) video.play()?.catch(markFailed);
   });
 
   return {
     element: video,
-    ready: ready.promise,
+    get ready() {
+      return currentReady.promise;
+    },
     playing: playing.promise,
     failed: failed.promise,
     play() {
-      if (state === 'failed') return;
+      if (outcome === 'failed') return;
       video.play()?.catch(markFailed);
     },
-    isReady: () => state === 'ready',
+    isReady: () => sourceReady,
   };
 }

@@ -105,4 +105,51 @@ describe('createVideoPlayback', () => {
     mqListener?.();
     expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(1);
   });
+
+  it('resets readiness for a new source before playback settles', async () => {
+    const playback = create({ timeoutMs: 1000 });
+    playback.element.dispatchEvent(new Event('canplay'));
+    expect(playback.isReady()).toBe(true);
+    const desktopReady = playback.ready;
+
+    mqMatches = true;
+    mqListener?.();
+
+    expect(playback.isReady()).toBe(false);
+    expect(playback.ready).not.toBe(desktopReady);
+    const mobileReady = playback.ready;
+    playback.element.dispatchEvent(new Event('canplay'));
+    await expect(mobileReady).resolves.toBe(true);
+    expect(playback.isReady()).toBe(true);
+  });
+
+  it('restarts the readiness timeout for the selected source', async () => {
+    const playback = create({ timeoutMs: 1000 });
+    const failed = flag(playback.failed);
+    await jest.advanceTimersByTimeAsync(800);
+
+    mqMatches = true;
+    mqListener?.();
+    await jest.advanceTimersByTimeAsync(800);
+    expect(failed.done).toBe(false);
+
+    await jest.advanceTimersByTimeAsync(200);
+    expect(failed.done).toBe(true);
+    await expect(playback.ready).resolves.toBe(false);
+    expect(playback.isReady()).toBe(false);
+  });
+
+  it('loads and resumes a new source after playback has already started', () => {
+    const playback = create();
+    playback.element.dispatchEvent(new Event('canplay'));
+    playback.play();
+    playback.element.dispatchEvent(new Event('playing'));
+    Object.defineProperty(playback.element, 'paused', { configurable: true, value: false });
+
+    mqMatches = true;
+    mqListener?.();
+
+    expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(1);
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
+  });
 });

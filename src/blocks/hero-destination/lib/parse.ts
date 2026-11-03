@@ -125,14 +125,23 @@ export function parseVideoHero(rows: HTMLElement[]): HeroDestinationVideoConfig 
 
   return {
     introPicture,
+    introPictureCell: at(0),
+    introImageAltCell: hasAltRow ? (cells[1] ?? null) : null,
     introPictureMobile: pictureAt(1),
+    introPictureMobileCell: at(1),
     desktopVideoUrl,
+    desktopVideoCell: at(2),
     mobileVideoUrl: cellVideoUrl(at(3)) || desktopVideoUrl,
+    mobileVideoCell: at(3),
     posterPicture: pictureAt(4),
+    posterCell: at(4),
     loop: parseBoolean(at(5), true),
+    loopCell: at(5),
     showOverlay: parseBoolean(at(6), true),
+    showOverlayCell: at(6),
     heading: cellText(at(7)),
     headingCell: at(7),
     headingDelayMs: Number.isFinite(rawDelay) && rawDelay >= 0 ? rawDelay : DEFAULT_HEADING_DELAY_MS,
+    headingDelayCell: at(8),
   };
 }

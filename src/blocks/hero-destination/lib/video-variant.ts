@@ -1,5 +1,6 @@
 // Rows (authored, one cell each): 0=introImage (+collapsed alt), 1=introImageMobile, 2=video,
 // 3=videoMobile, 4=poster, 5=loop, 6=showOverlay, 7=heading, 8=headingDelay — see parseVideoHero.
+import { moveInstrumentation } from '@/app/scripts.js';
 import { buildHeading, scheduleHeadingReveal } from './cinematic/heading-reveal';
 import { buildIntroMedia } from './cinematic/intro-media';
 import { deferred, wait } from './cinematic/timing';
@@ -10,6 +11,14 @@ const MIN_INTRO_MS = 500;
 const MAX_INTRO_WAIT_MS = 3000;
 const EXPAND_MS = 900;
 const CROSSFADE_PLAY_AT_MS = 225;
+
+function transferInstrumentation(sourceCell: HTMLElement | null, target: Element | null): void {
+  if (!sourceCell || !target) return;
+  const source = sourceCell.hasAttribute('data-aue-prop')
+    ? sourceCell
+    : (sourceCell.querySelector('[data-aue-prop]') ?? sourceCell);
+  if (source !== target) moveInstrumentation(source, target);
+}
 
 function isEditorOrFramed(): boolean {
   return document.documentElement.classList.contains('adobe-ue-edit') || window.self !== window.top;
@@ -50,6 +59,39 @@ export default function decorateVideo(block: HTMLElement): void {
 
   const frame = document.createElement('div');
   frame.className = 'hero-destination-video-frame';
+  const createFieldTarget = (): HTMLElement => document.createElement('span');
+  const targetFor = (sourceCell: HTMLElement | null, target: Element | null): Element | null => {
+    if (!sourceCell || target) return target;
+    const marker = createFieldTarget();
+    frame.append(marker);
+    return marker;
+  };
+  const videoSource = playback?.element.querySelector('source') ?? null;
+
+  transferInstrumentation(config.introPictureCell, targetFor(config.introPictureCell, config.introPicture));
+  transferInstrumentation(
+    config.introImageAltCell,
+    targetFor(config.introImageAltCell, config.introPicture?.querySelector('img') ?? null),
+  );
+  transferInstrumentation(
+    config.introPictureMobileCell,
+    targetFor(config.introPictureMobileCell, intro?.element ?? config.introPictureMobile),
+  );
+  transferInstrumentation(
+    config.desktopVideoCell,
+    targetFor(config.desktopVideoCell, playback?.element ?? intro?.element ?? null),
+  );
+  transferInstrumentation(config.mobileVideoCell, targetFor(config.mobileVideoCell, videoSource));
+  transferInstrumentation(config.posterCell, targetFor(config.posterCell, config.posterPicture));
+  transferInstrumentation(config.loopCell, targetFor(config.loopCell, null));
+  transferInstrumentation(config.showOverlayCell, block);
+  transferInstrumentation(config.headingDelayCell, targetFor(config.headingDelayCell, null));
+
+  if (config.posterPicture && playback) playback.element.append(config.posterPicture);
+  if (config.posterPicture && !playback && !intro?.element.contains(config.posterPicture)) {
+    config.posterPicture.hidden = true;
+    frame.append(config.posterPicture);
+  }
   if (playback) frame.append(playback.element);
   if (intro) frame.append(intro.element);
   block.replaceChildren(frame, heading);
@@ -86,16 +128,48 @@ export default function decorateVideo(block: HTMLElement): void {
 
   Promise.all([wait(MIN_INTRO_MS), Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)])]).then(async () => {
     block.dataset.state = 'expanding';
-    if (playback?.isReady()) {
-      block.classList.add('is-crossfading');
-      setTimeout(() => playback.play(), CROSSFADE_PLAY_AT_MS);
-    } else if (playback) {
-      playback.ready.then((ok) => {
-        if (!ok) return;
-        block.classList.add('is-late-crossfade');
-        playback.play();
+    let playbackFailed = false;
+    let crossfadeStarted = false;
+    let waitForCurrentSource: () => void = () => {};
+    const startCrossfade = (late: boolean): void => {
+      if (crossfadeStarted) return;
+      if (!playback || playbackFailed || !playback.isReady()) {
+        if (playback && !playbackFailed) waitForCurrentSource();
+        return;
+      }
+      crossfadeStarted = true;
+      block.classList.add(late ? 'is-late-crossfade' : 'is-crossfading');
+      if (late) playback.play();
+      else {
+        setTimeout(() => {
+          if (!playback.isReady()) {
+            block.classList.remove('is-crossfading');
+            crossfadeStarted = false;
+            waitForCurrentSource();
+            return;
+          }
+          playback.play();
+        }, CROSSFADE_PLAY_AT_MS);
+      }
+    };
+    playback?.failed.then(() => {
+      playbackFailed = true;
+    });
+    waitForCurrentSource = (): void => {
+      if (!playback || playbackFailed) return;
+      if (playback.isReady()) {
+        startCrossfade(true);
+        return;
+      }
+      playback.ready.then((ready) => {
+        if (!playback || playbackFailed) return;
+        if (ready && playback.isReady()) startCrossfade(true);
+        else if (!playbackFailed) waitForCurrentSource();
       });
-    }
+    };
+
+    if (playback?.isReady()) startCrossfade(false);
+    else if (playback) waitForCurrentSource();
     await wait(EXPAND_MS);
     block.dataset.state = 'expanded';
     if (controlsHeader) document.body.dataset.heroIntro = 'done';

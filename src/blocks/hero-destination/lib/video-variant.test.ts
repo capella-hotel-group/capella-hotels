@@ -1,4 +1,15 @@
-jest.mock('@/app/scripts.js', () => ({ moveInstrumentation: () => {} }));
+const mockMoveInstrumentation = jest.fn((from: Element, to: Element | null) => {
+  if (!to) return;
+  [...from.attributes]
+    .filter(({ name }) => name.startsWith('data-aue-') || name.startsWith('data-richtext-'))
+    .forEach(({ name, value }) => {
+      to.setAttribute(name, value);
+      from.removeAttribute(name);
+    });
+});
+jest.mock('@/app/scripts.js', () => ({
+  moveInstrumentation: (...args: [Element, Element | null]) => mockMoveInstrumentation(...args),
+}));
 jest.mock('@/utils/env.js', () => ({ resolveDAMUrl: (url: string) => url }));
 
 type Decorate = (block: HTMLElement) => void;
@@ -10,13 +21,21 @@ const CELLS = [pic('/intro.jpg', 'Tea'), '', link('/v.mp4'), '', pic('/poster.jp
 describe('hero-destination video variant', () => {
   let decorate: Decorate;
   let reducedMotion: boolean;
+  let mobileViewport: boolean;
+  let breakpointListeners: Array<() => void>;
 
   beforeEach(async () => {
     jest.useFakeTimers();
     reducedMotion = false;
+    mobileViewport = false;
+    breakpointListeners = [];
     window.matchMedia = jest.fn().mockImplementation((query: string) => ({
-      matches: query.includes('reduced-motion') ? reducedMotion : false,
-      addEventListener: jest.fn(),
+      get matches() {
+        return query.includes('reduced-motion') ? reducedMotion : query.includes('max-width') && mobileViewport;
+      },
+      addEventListener: (_type: string, listener: () => void) => {
+        if (query.includes('max-width')) breakpointListeners.push(listener);
+      },
       removeEventListener: jest.fn(),
     }));
     HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined);
@@ -33,13 +52,18 @@ describe('hero-destination video variant', () => {
     delete (navigator as unknown as { connection?: unknown }).connection;
   });
 
-  function build(cells = CELLS, { firstSection = true } = {}): HTMLElement {
+  function build(cells = CELLS, { firstSection = true, properties = [] as string[] } = {}): HTMLElement {
     const lead = firstSection ? '' : '<div class="section"></div>';
     document.body.innerHTML = `<main>${lead}<div class="section"><div class="hero-destination video"></div></div></main>`;
     const block = document.querySelector('.hero-destination') as HTMLElement;
-    cells.forEach((html) => {
+    cells.forEach((html, index) => {
       const row = document.createElement('div');
       row.innerHTML = `<div>${html}</div>`;
+      if (properties[index]) {
+        const cell = row.firstElementChild as HTMLElement;
+        cell.setAttribute('data-aue-prop', properties[index]);
+        cell.setAttribute('data-aue-label', properties[index]);
+      }
       block.append(row);
     });
     return block;
@@ -59,6 +83,71 @@ describe('hero-destination video variant', () => {
     expect(block.querySelector('h2')?.textContent).toBe('Kyoto');
     expect(block.querySelector('.hero-destination-track')).toBeNull();
     expect(document.body.dataset.heroIntro).toBe('intro');
+  });
+
+  it('preserves instrumentation for every video-variant property', () => {
+    const cells = [
+      pic('/intro.jpg', 'Tea'),
+      'Tea ceremony',
+      pic('/intro-mobile.jpg'),
+      link('/video.mp4'),
+      link('/video-mobile.mp4'),
+      pic('/poster.jpg'),
+      'true',
+      'true',
+      'Kyoto',
+      '1500',
+    ];
+    const properties = [
+      'introImage',
+      'introImageAlt',
+      'introImageMobile',
+      'video',
+      'videoMobile',
+      'poster',
+      'loop',
+      'showOverlay',
+      'heading',
+      'headingDelay',
+    ];
+    const block = build(cells, { properties });
+    decorate(block);
+
+    expect(block.getAttribute('data-testid')).toBe('hero-destination-video');
+    expect(block.querySelector('.hero-destination-video-intro picture')?.getAttribute('data-aue-prop')).toBe(
+      'introImage',
+    );
+    expect(block.querySelector('.hero-destination-video-intro img')?.getAttribute('data-aue-prop')).toBe(
+      'introImageAlt',
+    );
+    expect(block.querySelector('.hero-destination-video-intro[data-aue-prop="introImageMobile"]')).not.toBeNull();
+    expect(video(block).getAttribute('data-aue-prop')).toBe('video');
+    expect(video(block).querySelector('source')?.getAttribute('data-aue-prop')).toBe('videoMobile');
+    expect(video(block).querySelector('picture[data-aue-prop="poster"]')).not.toBeNull();
+    expect(block.querySelector('[data-aue-prop="loop"]')).not.toBeNull();
+    expect(block.getAttribute('data-aue-prop')).toBe('showOverlay');
+    expect(block.querySelector('.hero-destination-video-heading')?.getAttribute('data-aue-prop')).toBe('heading');
+    expect(block.querySelector('[data-aue-prop="headingDelay"]')).not.toBeNull();
+  });
+
+  it('waits for the newly selected source before late-crossfading', async () => {
+    const cells = [...CELLS];
+    cells[3] = link('/video-mobile.mp4');
+    const block = build(cells);
+    decorate(block);
+    video(block).dispatchEvent(new Event('canplay'));
+    mobileViewport = true;
+    breakpointListeners.forEach((listener) => listener());
+    introImg(block).dispatchEvent(new Event('load'));
+
+    await jest.advanceTimersByTimeAsync(500);
+    expect(block.classList.contains('is-crossfading')).toBe(false);
+    expect(block.classList.contains('is-late-crossfade')).toBe(false);
+
+    video(block).dispatchEvent(new Event('canplay'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(block.classList.contains('is-late-crossfade')).toBe(true);
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
   });
 
   it('runs intro → crossfade → expanded → heading when the video is ready early', async () => {
@@ -84,6 +173,31 @@ describe('hero-destination video variant', () => {
     expect(revealed(block)).toBe(false);
     await jest.advanceTimersByTimeAsync(1);
     expect(revealed(block)).toBe(true);
+  });
+
+  it('resumes a changed source after playback without replaying the intro transition', async () => {
+    const cells = [...CELLS];
+    cells[3] = link('/video-mobile.mp4');
+    const block = build(cells);
+    decorate(block);
+    video(block).dispatchEvent(new Event('canplay'));
+    introImg(block).dispatchEvent(new Event('load'));
+    await jest.advanceTimersByTimeAsync(500 + 225);
+    video(block).dispatchEvent(new Event('playing'));
+    await jest.advanceTimersByTimeAsync(675 + 1500);
+    expect(block.dataset.state).toBe('expanded');
+    expect(revealed(block)).toBe(true);
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+
+    mobileViewport = true;
+    breakpointListeners.forEach((listener) => listener());
+
+    expect(video(block).querySelector('source')?.getAttribute('src')).toBe('/video-mobile.mp4');
+    expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(1);
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
+    expect(block.dataset.state).toBe('expanded');
+    expect(revealed(block)).toBe(true);
+    expect(block.classList.contains('is-late-crossfade')).toBe(false);
   });
 
   it('starts expanding after 3s even if the intro image never loads', async () => {
@@ -164,6 +278,17 @@ describe('hero-destination video variant', () => {
     video(block).dispatchEvent(new Event('playing'));
     await jest.advanceTimersByTimeAsync(1500);
     expect(revealed(block)).toBe(true);
+  });
+
+  it('keeps video field instrumentation in the intro wrapper when Save-Data disables playback', () => {
+    Object.defineProperty(navigator, 'connection', { configurable: true, value: { saveData: true } });
+    const block = build(CELLS, { properties: ['introImage', '', 'video', '', 'poster'] });
+    decorate(block);
+
+    expect(block.querySelector('video')).toBeNull();
+    expect(block.querySelector('.hero-destination-video-intro')?.getAttribute('data-aue-prop')).toBe('video');
+    expect(block.querySelector('picture[data-aue-prop="poster"]')).not.toBeNull();
+    expect(block.getAttribute('data-testid')).toBe('hero-destination-video');
   });
 
   it('does not load a video when Save-Data is on', async () => {
