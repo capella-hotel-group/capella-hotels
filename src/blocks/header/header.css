@@ -10,7 +10,9 @@ header {
     background: transparent;
     /* Kept in lockstep with .header-menu-panel's clip-path transition below so the
        header's surface and the panel read as one continuous block, not two effects. */
-    transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Figma's open-menu overlay uses a subtle cream surface for the whole panel,
@@ -20,7 +22,7 @@ header:has(.header-menu-panel.is-open) {
 }
 
 header {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -342,6 +344,12 @@ header .header-cta:active {
     background: var(--color-surface-action-inverse-pressed, #deddde);
 }
 
+/* Menu open: the cream surface makes the inverse (white) button vanish, so switch to the default action surface. */
+header:has(.header-menu-panel.is-open) .header-cta {
+    color: var(--color-text-on-action-default, #fff);
+    background: var(--color-surface-action-default, #1b364b);
+}
+
 .header-menu-panel {
     position: fixed;
     top: 0;
@@ -489,11 +497,11 @@ button.header-menu-category-trigger::after {
 
 .header-menu-merged-row {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 107px);
+    grid-template-columns: repeat(auto-fill, minmax(107px, max-content));
     gap: 24px 48px;
 }
 
-/* Below desktop (Figma mobile/tablet) every region is a full-width label above one 107px link grid, so
+/* Below desktop (Figma mobile/tablet) every region is a full-width label above one 107-125px link grid, so
    the cells' labels and links flow straight into the row's grid instead of stacking as separate cells. */
 @media not all and (min-width: 1200px) {
     .header-menu-merged-cell {
@@ -534,9 +542,9 @@ button.header-menu-category-trigger::after {
 
 .header-menu-link-grid {
     display: grid;
-    /* Figma wraps fixed 107px link cells with a 24px/48px gap (2 per row on mobile, 3 on
-       tablet); columns drop to the next row instead of squeezing long labels. */
-    grid-template-columns: repeat(auto-fill, 107px);
+    /* Figma wraps link cells with a 24px/48px gap (2 per row on mobile, 3 on tablet). Each column is
+       107px, widening to fit its longest link up to 125px (the links' max-width below). */
+    grid-template-columns: repeat(auto-fill, minmax(107px, max-content));
     gap: 24px 48px;
     margin: 0;
     padding: 0;
@@ -548,6 +556,16 @@ button.header-menu-category-trigger::after {
     /* Grid items default to min-width:auto, which ignores the track's minmax(...) lower
        bound and can still force a column wider than intended. */
     min-width: 0;
+}
+
+/* Caps a link at Figma's wider 125px cell so a long label (e.g. "SHENZHEN(2029)") wraps
+   onto a second line instead of overflowing into the next column. */
+.header-menu-link-grid a,
+.header-menu-merged-cell a,
+.header-menu-link-grid .nav-link.is-disabled,
+.header-menu-merged-cell .nav-link.is-disabled {
+    max-width: 125px;
+    overflow-wrap: break-word;
 }
 
 .header-menu-link-grid a,
@@ -853,17 +871,6 @@ button.header-menu-category-trigger::after {
         max-width: 240px;
         aspect-ratio: 240 / 300;
     }
-
-    .header-menu-link-grid a,
-    .header-menu-merged-cell a,
-    .header-menu-link-grid .nav-link.is-disabled,
-    .header-menu-merged-cell .nav-link.is-disabled {
-        /* Caps a link's title to the column's own width so a long, unbreakable label
-           (e.g. "SHENZHEN(2029)") wraps onto a second line instead of overflowing past
-           the 107px column track into the next column. */
-        max-width: 107px;
-        overflow-wrap: break-word;
-    }
 }
 
 header {
@@ -882,6 +889,63 @@ header .header-cta:focus-visible,
 .header-menu-link-grid a:focus-visible,
 .header-menu-merged-cell a:focus-visible,
 .header-menu-promo-cta:focus-visible {
+    outline: 2px solid var(--site-header-focus);
+    outline-offset: 2px;
+}
+
+/* Destination menu (Figma 4241:12265 / 6562:46016 / 4241:13087): BACK link on desktop only, single-column links below desktop. */
+.header-menu-back {
+    display: none;
+}
+
+@media not all and (min-width: 1200px) {
+    .is-destination .header-menu-link-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 1200px) {
+    .is-destination .header-menu-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        margin-bottom: 48px;
+        color: var(--color-text-action-default, #1b364b);
+        font-family: var(--type-font-family-cta, sans-serif);
+        font-size: var(--typography-fontsize-body-m, 16px);
+        font-weight: var(--type-font-weight-text-link, 300);
+        line-height: var(--typography-line-height-body-md, 16px);
+        text-transform: uppercase;
+        text-decoration: none;
+    }
+
+    .is-destination .header-menu-back::before {
+        content: '';
+        width: 20px;
+        height: 20px;
+        background: currentcolor;
+        mask: url('/icons/chevron-down-20.svg') center / 20px 20px no-repeat;
+        transform: rotate(90deg);
+    }
+
+    [dir='rtl'] .is-destination .header-menu-back::before {
+        transform: rotate(-90deg);
+    }
+
+    .is-destination .header-menu-back:hover {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+
+    /* Rail content and promo are absolutely placed, so shift them below the BACK row (48px padding + 40px link + 48px gap). */
+    .is-destination .header-menu-category-content,
+    .is-destination .header-menu-promo {
+        top: 136px;
+    }
+}
+
+.header-menu-back:focus-visible {
     outline: 2px solid var(--site-header-focus);
     outline-offset: 2px;
 }
@@ -927,7 +991,10 @@ header .header-cta:focus-visible,
 
 /* The bar stays put while the open panel scrolls under it; an opaque surface stops menu content showing through the logo and buttons. */
 .header-inner {
-    transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        padding-bottom 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 header:has(.header-menu-panel.is-open) .header-inner {
@@ -947,4 +1014,99 @@ header:has(.header-menu-panel.is-open) .header-inner {
     .header-menu-promo.is-swapping .header-menu-promo-cta {
         opacity: 1;
     }
+}
+
+/* Sticky compact state once the page is scrolled (Figma menu-top Type=Scroll, inverse=no). */
+/* The scroll icon is stacked over the default logo and cross-faded, so the swap animates instead of snapping. */
+.header-logo {
+    position: relative;
+    transition: min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-logo img {
+    transition:
+        height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.3s ease;
+}
+
+.header-logo img.header-logo-img-scroll {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: auto;
+    height: 52px;
+    opacity: 0;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.header-menu-toggle,
+.header-lang-trigger,
+header .header-cta {
+    transition:
+        color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+header.is-scrolled {
+    --site-header-height: 104px;
+    --site-header-focus: var(--site-header-text);
+
+    background: var(--site-header-surface);
+}
+
+header.is-scrolled .header-inner {
+    padding-bottom: 12px;
+}
+
+header.is-scrolled .header-logo {
+    min-height: 0;
+}
+
+header.is-scrolled .header-logo img {
+    height: 52px;
+}
+
+header.is-scrolled:not(:has(.header-menu-panel.is-open)) .header-logo img.header-logo-img-default {
+    opacity: 0;
+}
+
+header.is-scrolled:not(:has(.header-menu-panel.is-open)) .header-logo img.header-logo-img-scroll {
+    opacity: 1;
+}
+
+header.is-scrolled .header-menu-toggle,
+header.is-scrolled .header-lang-trigger {
+    color: var(--site-header-text);
+}
+
+header.is-scrolled .header-lang-trigger:hover,
+header.is-scrolled .header-lang-trigger[aria-expanded='true'] {
+    color: var(--color-text-action-hover, #183144);
+}
+
+header.is-scrolled .header-cta {
+    color: var(--color-text-on-action-default, #fff);
+    background: var(--color-surface-action-default, #1b364b);
+}
+
+/* Cinematic hero intro (hero-destination video variant): the off-white intro surface would hide
+   the white header, so mirror the open-menu theme until the hero has expanded ("done"). */
+body[data-hero-intro='intro'] header .header-menu-toggle,
+body[data-hero-intro='intro'] header .header-lang-trigger {
+    color: var(--site-header-text);
+}
+
+body[data-hero-intro='intro'] header .header-cta {
+    color: var(--color-text-on-action-default, #fff);
+    background: var(--color-surface-action-default, #1b364b);
+}
+
+/* Only swap when a dark logo variant is authored; otherwise keep the single default logo. */
+body[data-hero-intro='intro'] header .header-logo:has(.header-logo-img-active) img.header-logo-img-default {
+    display: none;
+}
+
+body[data-hero-intro='intro'] header .header-logo img.header-logo-img-active {
+    display: block;
 }

@@ -32,7 +32,9 @@ export function createFlyouts(block: HTMLElement, fields: Field[]): Flyouts {
     if (next && !block.contains(next)) closeAll();
   });
   document.addEventListener('pointerdown', (event) => {
-    if (!block.contains(event.target as Node)) closeAll();
+    const target = event.target as Node;
+    const opened = fields.find(isOpen);
+    if (!opened?.root.contains(target)) closeAll();
   });
 
   return { closeAll, open };

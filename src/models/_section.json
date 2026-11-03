@@ -70,6 +70,22 @@
               "value": "destinations"
             }
           ]
+        },
+        {
+          "component": "select",
+          "name": "menu",
+          "label": "Header Menu Type",
+          "description": "Only used on the menu section (second section) of a /nav page",
+          "options": [
+            {
+              "name": "Global",
+              "value": "global"
+            },
+            {
+              "name": "Destination",
+              "value": "destination"
+            }
+          ]
         }
       ]
     },
@@ -152,6 +168,7 @@
         "text-with-cta",
         "hero-video",
         "hero-destination",
+        "hero-destination-video",
         "rte",
         "choose-space",
         "culturist-card",
@@ -163,12 +180,14 @@
         "footer-legal",
         "content-listing",
         "page-listing",
-        "booking-search"
+        "booking-search",
+        "separator",
+        "nav-top"
       ]
     },
     {
       "id": "header-section",
-      "components": ["text", "image", "button", "hero", "navigation-lists", "link"]
+      "components": ["text", "image", "button", "hero", "navigation-lists", "link", "separator"]
     }
   ]
 }

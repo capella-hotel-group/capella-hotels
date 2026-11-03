@@ -2,9 +2,21 @@
 import { moveInstrumentation } from '@/app/scripts';
 import { isUniversalEditor } from '@/utils/env';
 import type { HeroVideoItem } from './types';
+import { cycleLayout, STEP_MS, WheelPicker } from './wheel-picker';
+import type { PickerInputSource } from './wheel-picker';
 
-const ANCHOR_MS = 310;
-const OPACITY_MS = 190;
+const INACTIVE_OPACITY = 0.5;
+const FALLBACK_ROW_HEIGHT = 56;
+
+const mod = (n: number, m: number): number => ((n % m) + m) % m;
+
+function clickSource(e: MouseEvent): PickerInputSource {
+  const { pointerType } = e as PointerEvent;
+  if (pointerType === 'touch') return 'touch';
+  // Keyboard-activated clicks (Enter/Space) carry an empty pointerType.
+  if (pointerType === '') return 'keyboard';
+  return 'pointer';
+}
 
 export class SelectorUI {
   private itemListEl: HTMLUListElement;
@@ -12,104 +24,102 @@ export class SelectorUI {
   private items: HeroVideoItem[] = [];
   private rowOffsets: number[] = [];
   private listHeight = 0;
-  private activeIndex = 0;
-  private selectCallbacks: Array<(index: number) => void> = [];
-  private pendingAnchorAnimations: Animation[] = [];
-  private pendingOpacityAnimations: Animation[] = [];
+  private origin = 0;
+  private picker: WheelPicker | null = null;
+  private selectCallbacks: Array<(index: number, source: PickerInputSource) => void> = [];
   private introComplete = false;
+  private authoring: boolean;
 
   constructor(itemListEl: HTMLUListElement, viewportEl: HTMLElement) {
     this.itemListEl = itemListEl;
     this.viewportEl = viewportEl;
+    this.authoring = isUniversalEditor();
+    if (!this.authoring) {
+      itemListEl.addEventListener('click', this.onClick);
+      itemListEl.addEventListener('keydown', this.onKeyDown);
+    }
   }
 
+  /** The wheel only accepts scroll/drag/keys once the intro has finished. */
   setIntroComplete(complete: boolean): void {
     this.introComplete = complete;
+    if (complete) this.picker?.enable();
+    this.viewportEl.classList.toggle('hero-video-items-viewport--interactive', complete && this.picker !== null);
   }
 
-  onSelect(cb: (index: number) => void): void {
+  /** Fires once per user gesture, when the wheel settles. */
+  onSelect(cb: (index: number, source: PickerInputSource) => void): void {
     this.selectCallbacks.push(cb);
   }
 
-  private emitSelect(index: number): void {
-    this.selectCallbacks.forEach((cb) => cb(index));
+  isUserInteracting(): boolean {
+    return this.picker?.isUserInteracting() ?? false;
   }
 
-  /** Render the item list for the given items, preserving pointer listeners. */
+  /** Render the items, plus hidden clone cycles around them so the wheel can loop endlessly. */
   renderItems(items: HeroVideoItem[], activeIndex: number): void {
+    this.picker?.destroy();
+    this.picker = null;
     this.items = items;
-    this.activeIndex = activeIndex;
+    this.rowOffsets = [];
+
+    const count = items.length;
+    const { cycles, origin } = this.authoring ? { cycles: 1, origin: 0 } : cycleLayout(count);
+    this.origin = origin;
 
     this.itemListEl.replaceChildren();
-    items.forEach((item, idx) => {
+    for (let slot = 0; slot < cycles * count; slot += 1) {
+      const index = slot % count;
+      const item = items[index] as HeroVideoItem;
+      const isOriginal = slot >= origin && slot < origin + count;
+
       const li = document.createElement('li');
       li.className = 'hero-video-item';
-      li.setAttribute('role', 'option');
-      li.setAttribute('aria-selected', idx === activeIndex ? 'true' : 'false');
-      li.dataset.index = String(idx);
-
-      // Carry Universal Editor instrumentation from the authored row
-      moveInstrumentation(item.sourceRow, li);
+      li.dataset.index = String(index);
+      li.dataset.slot = String(slot);
 
       const btn = document.createElement('button');
       btn.className = 'hero-video-item-btn';
       btn.type = 'button';
       btn.textContent = item.label;
-      // Set opacity via inline style so the active item is highlighted even if activateItem's
-      // WAAPI opacity animation misfires (which happens when decorate() runs on a detached block
-      // during mode-toggle soft-nav — `fill: forwards` doesn't retain after DOM adoption).
-      btn.style.opacity = idx === activeIndex ? '1' : '0.5';
 
-      if (!isUniversalEditor()) {
-        btn.addEventListener('keydown', (e) => this.handleKeyDown(e, idx));
-        btn.addEventListener('click', () => this.handleClick(idx));
+      if (isOriginal) {
+        li.setAttribute('role', 'option');
+        li.setAttribute('aria-selected', index === activeIndex ? 'true' : 'false');
+        moveInstrumentation(item.sourceRow, li);
+      } else {
+        li.setAttribute('aria-hidden', 'true');
+        btn.tabIndex = -1;
       }
 
       li.append(btn);
       this.itemListEl.append(li);
-    });
-  }
-
-  private handleKeyDown(e: KeyboardEvent, currentIndex: number): void {
-    if (!this.introComplete) return;
-    const count = this.items.length;
-    let next = currentIndex;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      next = Math.min(count - 1, currentIndex + 1);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      next = Math.max(0, currentIndex - 1);
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      next = 0;
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      next = count - 1;
-    } else return;
-
-    if (next !== currentIndex) {
-      this.activateItem(next, true);
-      this.emitSelect(next);
-      // Move focus to new item button
-      const btn = this.itemListEl.children[next]?.querySelector<HTMLButtonElement>('button');
-      btn?.focus();
     }
-  }
 
-  private handleClick(index: number): void {
-    if (!this.introComplete) return;
-    this.activateItem(index, true);
-    this.emitSelect(index);
+    if (cycles > 1) {
+      this.picker = new WheelPicker(
+        this.viewportEl,
+        {
+          render: (pos) => this.render(pos),
+          rowHeight: () => this.rowHeight(),
+          settle: (slot, source) => this.handleSettle(slot, source),
+        },
+        {
+          period: count,
+          origin,
+          reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
+        },
+      );
+      this.setIntroComplete(this.introComplete);
+    }
+
+    this.positionForItem(activeIndex);
   }
 
   /**
-   * Cache the Y offset (center of each row, relative to the list top) and the viewport's own
-   * height (the fixed, never-transformed mask window the list sits in — NOT the <ul>'s own
-   * height, which shrinks/grows with row count and font-size and would drift out of sync with
-   * the viewport's true center, e.g. at mobile's smaller row height). Call after font load and
-   * on resize.
+   * Cache each row's center (relative to the list top) and the viewport's own height — the fixed,
+   * never-transformed mask window whose center is where the active row must sit. Call after font
+   * load and on resize.
    */
   measureRows(): void {
     const listRect = this.itemListEl.getBoundingClientRect();
@@ -120,115 +130,102 @@ export class SelectorUI {
     });
   }
 
-  /**
-   * Vertical translate (px) that brings item[index] to the viewport's vertical
-   * center — which coincides with the fixed, centered prefix/suffix.
-   */
-  private translateForIndex(index: number): number | null {
-    if (this.rowOffsets.length === 0) this.measureRows();
-    const rowCenter = this.rowOffsets[index];
-    if (rowCenter === undefined) return null;
-    return this.listHeight / 2 - rowCenter;
-  }
-
-  /**
-   * Position the item list so item[index] is centered, without touching opacity.
-   * Used during intro: selector is invisible so we pre-position before fade-in.
-   */
+  /** Jump (no animation, no selection) so item[index] is centered; returns the list translateY. */
   positionForItem(index: number): number | null {
-    const translateY = this.translateForIndex(index);
-    if (translateY === null) return null;
-
-    this.pendingAnchorAnimations.forEach((a) => a.cancel());
-    this.pendingAnchorAnimations = [];
-
-    this.itemListEl.style.transform = `translateY(${translateY}px)`;
-    return translateY;
+    const slot = this.origin + index;
+    if (this.picker) this.picker.setPosition(slot);
+    else this.render(slot);
+    return this.translateForPos(slot);
   }
+
+  /** Programmatic move (intro, auto-advance): scrolls the shortest way round, never emits onSelect. */
   activateItem(index: number, animate: boolean): void {
-    const prev = this.activeIndex;
-    this.activeIndex = index;
-
-    // Update aria-selected
-    const lis = [...this.itemListEl.children] as HTMLElement[];
-    lis.forEach((li, i) => {
-      li.setAttribute('aria-selected', i === index ? 'true' : 'false');
-    });
-
-    // Opacity transitions
-    const prevBtn = lis[prev]?.querySelector<HTMLElement>('.hero-video-item-btn');
-    const nextBtn = lis[index]?.querySelector<HTMLElement>('.hero-video-item-btn');
-
-    // Cancel pending opacity animations (overwrite — latest wins)
-    this.pendingOpacityAnimations.forEach((a) => a.cancel());
-    this.pendingOpacityAnimations = [];
-
-    if (prevBtn && prev !== index) {
-      const prevStart = getComputedStyle(prevBtn).opacity || '1';
-      const prevOpacityAnim = prevBtn.animate([{ opacity: prevStart }, { opacity: 0.5 }], {
-        duration: animate ? OPACITY_MS : 0,
-        fill: 'forwards',
-      });
-      this.pendingOpacityAnimations.push(prevOpacityAnim);
-      prevOpacityAnim.finished
-        .then(() => {
-          prevBtn.style.opacity = '0.5';
-          prevOpacityAnim.cancel();
-          this.pendingOpacityAnimations = this.pendingOpacityAnimations.filter((a) => a !== prevOpacityAnim);
-        })
-        .catch(() => {});
+    if (!this.picker) {
+      this.render(this.origin + index);
+      this.setActive(index);
+      return;
     }
-    if (nextBtn) {
-      const nextStart = getComputedStyle(nextBtn).opacity || '0.5';
-      const nextOpacityAnim = nextBtn.animate([{ opacity: nextStart }, { opacity: 1 }], {
-        duration: animate ? OPACITY_MS : 0,
-        fill: 'forwards',
-      });
-      this.pendingOpacityAnimations.push(nextOpacityAnim);
-      nextOpacityAnim.finished
-        .then(() => {
-          nextBtn.style.opacity = '1';
-          nextOpacityAnim.cancel();
-          this.pendingOpacityAnimations = this.pendingOpacityAnimations.filter((a) => a !== nextOpacityAnim);
-        })
-        .catch(() => {});
-    }
-
-    // Slide the item list so the active row lands on the fixed center line
-    const targetTranslateY = this.translateForIndex(index);
-    if (targetTranslateY === null) return;
-
-    this.pendingAnchorAnimations.forEach((a) => a.cancel());
-    this.pendingAnchorAnimations = [];
-
-    const currentTranslateY = this.getCurrentTranslateY(this.itemListEl);
-    this.itemListEl.classList.add('hero-video-items--animating');
-    const listAnim = this.itemListEl.animate(
-      [{ transform: `translateY(${currentTranslateY}px)` }, { transform: `translateY(${targetTranslateY}px)` }],
-      { duration: animate ? ANCHOR_MS : 0, easing: 'ease-out', fill: 'forwards' },
-    );
-
-    this.pendingAnchorAnimations = [listAnim];
-
-    listAnim.finished
-      .then(() => {
-        this.itemListEl.style.transform = `translateY(${targetTranslateY}px)`;
-        this.itemListEl.classList.remove('hero-video-items--animating');
-        listAnim.cancel();
-      })
-      .catch(() => {
-        this.itemListEl.classList.remove('hero-video-items--animating');
-        /* cancelled by next activation */
-      });
-  }
-
-  private getCurrentTranslateY(el: HTMLElement): number {
-    const matrix = new DOMMatrix(getComputedStyle(el).transform);
-    return matrix.m42;
+    this.picker.scrollTo(this.picker.nearestSlot(index), animate ? STEP_MS : 0, null);
   }
 
   destroy(): void {
-    this.pendingAnchorAnimations.forEach((a) => a.cancel());
-    this.pendingOpacityAnimations.forEach((a) => a.cancel());
+    this.picker?.destroy();
+    this.picker = null;
   }
+
+  private emitSelect(index: number, source: PickerInputSource): void {
+    this.selectCallbacks.forEach((cb) => cb(index, source));
+  }
+
+  private handleSettle(slot: number, source: PickerInputSource | null): void {
+    const index = mod(slot - this.origin, this.items.length);
+    this.setActive(index);
+    if (!source) return;
+    // A tapped clone may hold focus; hand it to the original row now centered in its place.
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && this.itemListEl.contains(focused)) this.focusItem(index);
+    this.emitSelect(index, source);
+  }
+
+  private setActive(index: number): void {
+    this.itemListEl.querySelectorAll<HTMLElement>('[role="option"]').forEach((li) => {
+      li.setAttribute('aria-selected', li.dataset.index === String(index) ? 'true' : 'false');
+    });
+  }
+
+  private focusItem(index: number): void {
+    this.itemListEl
+      .querySelector<HTMLButtonElement>(`[role="option"][data-index="${index}"] button`)
+      ?.focus({ preventScroll: true });
+  }
+
+  private render(pos: number): void {
+    const lis = this.itemListEl.children;
+    for (let slot = 0; slot < lis.length; slot += 1) {
+      const btn = lis[slot]?.firstElementChild as HTMLElement | null;
+      const distance = Math.min(1, Math.abs(slot - pos));
+      if (btn) btn.style.opacity = String(1 - (1 - INACTIVE_OPACITY) * distance);
+    }
+    const translateY = this.translateForPos(pos);
+    if (translateY !== null) this.itemListEl.style.transform = `translateY(${translateY}px)`;
+  }
+
+  private translateForPos(pos: number): number | null {
+    if (this.rowOffsets.length !== this.itemListEl.children.length) this.measureRows();
+    const lo = this.rowOffsets[Math.floor(pos)];
+    const hi = this.rowOffsets[Math.ceil(pos)];
+    if (lo === undefined || hi === undefined) return null;
+    const center = lo + (hi - lo) * (pos - Math.floor(pos));
+    return this.listHeight / 2 - center;
+  }
+
+  private rowHeight(): number {
+    const [first, second] = this.rowOffsets;
+    if (first === undefined || second === undefined || second <= first) return FALLBACK_ROW_HEIGHT;
+    return second - first;
+  }
+
+  private onClick = (e: MouseEvent): void => {
+    if (!this.introComplete) return;
+    const li = (e.target as Element | null)?.closest<HTMLElement>('.hero-video-item');
+    if (!li || !this.itemListEl.contains(li)) return;
+    const slot = Number(li.dataset.slot);
+    const source = clickSource(e);
+    if (this.picker) this.picker.scrollTo(slot, STEP_MS, source);
+    else this.handleSettle(slot, source);
+  };
+
+  private onKeyDown = (e: KeyboardEvent): void => {
+    const { picker } = this;
+    if (!this.introComplete || !picker) return;
+    let slot: number;
+    if (e.key === 'ArrowDown') slot = picker.stepBy(1, 'keyboard');
+    else if (e.key === 'ArrowUp') slot = picker.stepBy(-1, 'keyboard');
+    else if (e.key === 'Home' || e.key === 'End') {
+      slot = picker.nearestSlot(e.key === 'Home' ? 0 : this.items.length - 1);
+      picker.scrollTo(slot, STEP_MS, 'keyboard');
+    } else return;
+    e.preventDefault();
+    this.focusItem(mod(slot - this.origin, this.items.length));
+  };
 }

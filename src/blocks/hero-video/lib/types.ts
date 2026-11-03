@@ -18,6 +18,7 @@ export interface HeroVideoConfig {
   destinationHref: string;
   experienceLabel: string;
   experienceHref: string;
+  showOverlay: boolean;
 }
 
 /** hero-video block element carrying the soft-nav readiness gate promise. */

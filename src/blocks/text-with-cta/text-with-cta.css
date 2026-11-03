@@ -172,6 +172,40 @@
     width: 100%;
 }
 
+.text-with-cta .text-with-cta-form-info-text {
+    display: flex;
+    align-items: center;
+    width: min(100%, 345px);
+    margin: 0;
+    color: var(--color-text-main-disabled);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-sm);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+}
+
+@media (width >= 768px) {
+    .text-with-cta .text-with-cta-form-info-text {
+        width: min(100%, 738px);
+        font-size: var(--typography-fontsize-body-s);
+        line-height: var(--typography-line-height-body-sm);
+    }
+}
+
+@media (width >= 1200px) {
+    .text-with-cta .text-with-cta-form-info-text {
+        width: min(100%, 383px);
+    }
+}
+
+@media (width >= 1920px) {
+    .text-with-cta .text-with-cta-form-info-text {
+        line-height: 16px;
+    }
+}
+
 .text-with-cta .text-with-cta-captcha {
     max-width: 100%;
     overflow-x: auto;
@@ -339,9 +373,14 @@
         color 0.2s ease;
 }
 
-.text-with-cta .text-with-cta-submit:hover {
+.text-with-cta .text-with-cta-submit:hover:not(:disabled) {
     background-color: var(--color-surface-action-default);
     color: var(--color-text-on-action-default);
+}
+
+.text-with-cta .text-with-cta-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .text-with-cta .text-with-cta-status {
@@ -354,4 +393,28 @@
 
 .text-with-cta .text-with-cta-status:empty {
     display: none;
+}
+.text-with-cta button[type='submit'][aria-busy='true']::after {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-inline-start: 8px;
+    border: 2px solid currentcolor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    vertical-align: middle;
+    content: '';
+    animation: text-with-cta-submit-spin 0.8s linear infinite;
+}
+
+@keyframes text-with-cta-submit-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .text-with-cta button[type='submit'][aria-busy='true']::after {
+        animation: none;
+    }
 }

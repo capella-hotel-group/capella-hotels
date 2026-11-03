@@ -14,6 +14,14 @@ blocks. Each piece of content is its own block, added as a normal section
 component — **there is no fixed section count or order**; add only the blocks you
 need, in any order, and the page renders correctly either way.
 
+You may insert **Separator** blocks between the footer components to make the
+authored `/footer` page easier to read in Universal Editor. Leave **Visible in
+Publish** off (the default) for author-only spacing. The assembled site footer
+explicitly removes Separator blocks and their wrappers from the loaded fragment
+before assembling its DOM, even when **Visible in Publish** is enabled. This does
+not remove them from the authored `/footer` page in UE. Its existing layout
+dividers are unaffected.
+
 ## 2. Available blocks
 
 | Block                  | Purpose                                                                                                        | Repeatable child                                                   |

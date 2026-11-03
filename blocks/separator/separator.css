@@ -1,0 +1,2 @@
+/*! v0.1.0 | h4a73ea9c */
+main .separator{padding-block:var(--separator-padding-top,10px) var(--separator-padding-bottom,10px)}main .separator>div,main .separator.separator--publish-hidden{display:none}.adobe-ue-edit main .separator.separator--publish-hidden{display:block}main .separator.separator--with-line:before{border-block-start:1px solid var(--color-stroke-main-primary,#898987);content:"";display:block}

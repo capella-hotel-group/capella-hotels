@@ -74,10 +74,12 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background:
-        radial-gradient(ellipse at center, transparent 20%, rgba(0 0 0 / 0.5) 100%),
-        linear-gradient(to bottom, rgba(0 0 0 / 0.25) 0%, transparent 35%);
+    background: rgba(0, 0, 0, 0.4);
     pointer-events: none;
+}
+
+.hero-video-overlay--hidden {
+    display: none;
 }
 
 /* ── Intro phrase ────────────────────────────────────────────────────── */
@@ -152,6 +154,27 @@
         center / 100% 100% no-repeat;
 }
 
+.hero-video-suffix--link {
+    cursor: pointer;
+}
+
+@keyframes hero-video-arrow-nudge {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(8px);
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .hero-video-suffix--link:hover::after {
+        animation: hero-video-arrow-nudge 1s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+}
+
 /* Figma "Rectangle 2" mask (Hero/navigationtoggle, node 4158:5068): fades destinations out as they
    move away from the active center row instead of a hard cut. Height is a fixed window (not tied
    to item count) so the fade always spans a fixed span around the always-centered active item. */
@@ -163,15 +186,34 @@
     -webkit-mask-image: linear-gradient(180deg, rgba(0 0 0 / 0%) 0%, #000 50%, rgba(0 0 0 / 0%) 100%);
 }
 
+/* Set once the intro finishes: the wheel picker owns vertical gestures here (page scroll stays
+   available everywhere else in the hero). */
+.hero-video .hero-video-items-viewport--interactive {
+    pointer-events: auto;
+    touch-action: none;
+    overscroll-behavior: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+@media (pointer: fine) {
+    .hero-video .hero-video-items-viewport--interactive {
+        cursor: grab;
+    }
+
+    .hero-video .hero-video-items-viewport--dragging,
+    .hero-video .hero-video-items-viewport--dragging .hero-video-item-btn {
+        cursor: grabbing;
+    }
+}
+
 .hero-video-items {
     list-style: none;
     margin: 0;
     padding: 0;
     pointer-events: auto;
     text-align: center;
-}
-
-.hero-video-items--animating {
     will-change: transform;
 }
 
@@ -326,6 +368,11 @@
         min-height: 44px;
     }
 
+    /* Exactly 7 rows (3 above, active, 3 below) of the 44px mobile row. */
+    .hero-video-items-viewport {
+        height: calc(7 * 44px);
+    }
+
     .hero-video-controls {
         padding: 0 1.5rem;
         bottom: calc(1.75rem + env(safe-area-inset-bottom));
@@ -458,6 +505,13 @@
     --soft-nav-easing: cubic-bezier(0.22, 1, 0.36, 1);
     --soft-nav-scale-out: 1.02;
     --soft-nav-scale-in: 1.02;
+}
+
+/* The intro drives these with WAAPI and commits final values inline; Safari would replay that
+   commit as a CSS transition (double fade-in, stale FLIP positions), so keep them transition-free. */
+.hero-video > .hero-video-intro-phrase[data-soft-nav],
+.hero-video > .hero-video-controls[data-soft-nav] {
+    transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

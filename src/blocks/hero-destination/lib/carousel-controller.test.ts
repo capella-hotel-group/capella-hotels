@@ -15,7 +15,13 @@ function build(count: number): { track: HTMLElement; slides: HTMLElement[]; dots
   return { track, slides, dots };
 }
 
-function controller({ count = 3, autoplay = true, loop = true } = {}): CarouselController {
+function controller({
+  count = 3,
+  autoplay = true,
+  loop = true,
+  onChange = undefined as ((index: number) => void) | undefined,
+  onAutoplayEnd = undefined as (() => void) | undefined,
+} = {}): CarouselController {
   const { track, slides, dots } = build(count);
   return new CarouselController({
     track,
@@ -26,8 +32,12 @@ function controller({ count = 3, autoplay = true, loop = true } = {}): CarouselC
     autoplay,
     loop,
     effect,
+    onChange,
+    onAutoplayEnd,
   });
 }
+
+let resizeCallback: () => void = () => {};
 
 /** Reads the active index from the last effect render the controller performed. */
 function active(): number {
@@ -41,6 +51,10 @@ describe('CarouselController autoplay pausing', () => {
     jest.clearAllMocks();
     Object.defineProperty(document, 'hidden', { configurable: true, value: false });
     window.matchMedia = jest.fn().mockReturnValue({ matches: false });
+    window.ResizeObserver = jest.fn().mockImplementation((callback: () => void) => {
+      resizeCallback = callback;
+      return { observe: jest.fn(), disconnect: jest.fn() };
+    });
   });
 
   afterEach(() => {
@@ -125,5 +139,60 @@ describe('CarouselController autoplay pausing', () => {
 
     window.matchMedia = jest.fn().mockReturnValue({ matches: true });
     expect(controller().autoplayEnabled).toBe(false);
+  });
+
+  it('reports every slide change through onChange', () => {
+    const onChange = jest.fn();
+    const carousel = controller({ onChange });
+    carousel.init();
+    carousel.goTo(2);
+    jest.advanceTimersByTime(5000);
+
+    expect(onChange.mock.calls.map(([index]) => index)).toEqual([0, 2, 0]);
+  });
+
+  it('signals the end of a non-looping autoplay and replays it on restart', () => {
+    const onAutoplayEnd = jest.fn();
+    const carousel = controller({ count: 2, loop: false, onAutoplayEnd });
+    carousel.init();
+
+    jest.advanceTimersByTime(10_000);
+    expect(onAutoplayEnd).toHaveBeenCalledTimes(1);
+    expect(active()).toBe(1);
+
+    carousel.restart();
+    expect(active()).toBe(0);
+    jest.advanceTimersByTime(5000);
+    expect(active()).toBe(1);
+  });
+
+  it('re-renders the effect only when the track width changes', () => {
+    const carousel = controller();
+    carousel.init();
+    const renders = (effect.render as jest.Mock).mock.calls.length;
+
+    resizeCallback();
+    expect((effect.render as jest.Mock).mock.calls.length).toBe(renders);
+
+    const track = (effect.render as jest.Mock).mock.calls[0][0] as HTMLElement;
+    Object.defineProperty(track, 'offsetWidth', { configurable: true, value: 1200 });
+    resizeCallback();
+    expect((effect.render as jest.Mock).mock.calls.length).toBe(renders + 1);
+  });
+
+  it('makes slides focusable only when they are tab panels', () => {
+    const { track, slides } = build(2);
+    new CarouselController({
+      track,
+      slides,
+      mediaEls: slides,
+      dots: [],
+      intervalSeconds: 5,
+      autoplay: false,
+      loop: true,
+      effect,
+    }).init();
+
+    expect(slides.map((slide) => slide.getAttribute('tabindex'))).toEqual([null, null]);
   });
 });

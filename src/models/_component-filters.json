@@ -1,10 +1,13 @@
 [
   {
     "id": "main",
-    "components": ["section", "header-section"]
+    "components": ["section", "header-section", "nav-category"]
   },
   {
     "...": "./_section.json#/filters"
+  },
+  {
+    "...": "./_nav-category.json#/filters"
   },
   {
     "...": "../blocks/*/_*.json#/filters"

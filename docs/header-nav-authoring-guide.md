@@ -8,7 +8,14 @@
 Site header content (logo, language switcher, Book CTA, and the mega-menu) is authored
 on the shared `/nav` page for each site/language, using standard page components —
 there is no dedicated "Nav" component. The page must have exactly two sections, in order:
-the header bar first, followed by the destination menu.
+the header bar first, followed by the destination menu. You may insert a **Separator**
+block between components in either section to add visual spacing.
+
+The Separator has independent **Top Padding** and **Bottom Padding** options (10–100px
+in 10px increments). **Visible in Publish** defaults to off, so the block only creates
+space in the editor unless enabled. **Visible Separator** defaults to off; enable it to
+show a horizontal line. Both the line and spacing follow the **Visible in Publish**
+setting on published pages.
 
 ## 2. Section 1 — Header bar
 
@@ -36,8 +43,8 @@ accessible label.
 
 ## 3. Section 2 — Menu
 
-For each destination/category, add a **Text** component followed immediately by a **Hero**
-block. The Hero supplies that category's promo image and CTA label/link.
+For each destination/category, add a **Text** component followed by a **Hero** block. The
+Hero supplies that category's promo image and CTA label/link.
 
 Author the Text component as a bullet-list RTE. Use either supported structure:
 
@@ -50,6 +57,19 @@ Author the Text component as a bullet-list RTE. Use either supported structure:
     - [Overview](/global/en/overview)
 
 Link destinations that should navigate. Plain-text entries render as non-clickable items.
+
+### Menu type
+
+Set **Header Menu Type** in the menu section's properties:
+
+- **Global** (default) — the standard mega-menu.
+- **Destination** — for a destination site's `/nav` (e.g. `/bangkok/en/nav`). Adds a
+  **< BACK** link above the categories on desktop, and stacks links in a single column on
+  tablet and mobile. Author categories as two-level lists (category, then links).
+
+To customise the BACK link, add a **Button** at the top of the menu section: its label and
+link become the BACK label and destination (append ` | open-in-new-tab` to open a new tab).
+Without it, the link reads **BACK** and goes to the global home (`/global/{lang}`).
 
 ## 4. RTE markers
 
@@ -89,8 +109,8 @@ rendered label.
 
 ## 5. Rules
 
-- **Order matters.** Each Hero block belongs to the immediately preceding category Text
-  component; do not put another component between them.
+- **Order matters.** Each Hero block belongs to the preceding category Text component.
+  Separator blocks may be placed between them without changing that association.
 - **Exactly two sections, in that order.** The first section is always the header bar,
   the second is always the menu.
 - **Every category needs at least one link** (either the category itself linked, or at

@@ -1,0 +1,21 @@
+main .separator {
+    padding-block: var(--separator-padding-top, 10px) var(--separator-padding-bottom, 10px);
+}
+
+main .separator > div {
+    display: none;
+}
+
+main .separator.separator--publish-hidden {
+    display: none;
+}
+
+.adobe-ue-edit main .separator.separator--publish-hidden {
+    display: block;
+}
+
+main .separator.separator--with-line::before {
+    display: block;
+    border-block-start: 1px solid var(--color-stroke-main-primary, #898987);
+    content: '';
+}

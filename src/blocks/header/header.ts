@@ -7,6 +7,7 @@ import {
   LANG_MAP,
   VALID_LANG_PRIMARIES,
 } from '@/app/scripts.js';
+import { isUniversalEditor } from '@/utils/env';
 
 if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
   document.documentElement.classList.add('no-touch');
@@ -15,6 +16,8 @@ if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
 const NEW_TAB_LABEL = 'opens in a new tab';
 const MAIN_NAV_LABEL = 'Main navigation';
 const PANEL_ID = 'header-menu-panel';
+// Sticky compact header appears once scrolled past this share of the viewport height.
+const SCROLLED_VIEWPORT_RATIO = 0.45;
 const LANGUAGE_LABEL = 'Language';
 
 // Marks a link as opening a new tab and tells assistive technology about it.
@@ -107,6 +110,15 @@ function getFragmentBasePath(): string {
 
   const parts = [site, lang].filter(Boolean);
   return parts.length ? `/${parts.join('/')}` : '';
+}
+
+// Destination menus link back to the global home in the current language.
+function getGlobalHomePath(): string {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const siteIdx = segments.findIndex((s) => SUPPORTED_SITES.includes(s));
+  const rawLang = (siteIdx !== -1 ? segments[siteIdx + 1] : segments[0])?.toLowerCase() ?? '';
+  const isLang = rawLang && (LANG_MAP[rawLang] || VALID_LANG_PRIMARIES.has(rawLang.split('-')[0] ?? ''));
+  return `/global/${isLang ? rawLang : 'en'}`;
 }
 
 function getSiblingNavPath(): string {
@@ -231,13 +243,17 @@ function readCategoryFromList(rootList: Element): NavCategory | null {
   };
 }
 
+function isWithinSeparator(element: Element): boolean {
+  return Boolean(element.closest('.separator'));
+}
+
 function readCategories(menuSection: Element): NavCategory[] {
   const categories: NavCategory[] = [];
   [...menuSection.children].forEach((wrapper) => {
     // decorateSections groups consecutive default content into ONE wrapper, so two
     // category lists with no Hero between them (a category with no promo) share a
     // wrapper — read every top-level <ul>, not just the first.
-    const rootLists = [...wrapper.querySelectorAll(':scope > ul')];
+    const rootLists = [...wrapper.querySelectorAll(':scope > ul')].filter((list) => !isWithinSeparator(list));
     if (rootLists.length) {
       rootLists.forEach((rootList) => {
         const category = readCategoryFromList(rootList);
@@ -245,7 +261,7 @@ function readCategories(menuSection: Element): NavCategory[] {
       });
       return;
     }
-    const heroBlock = wrapper.querySelector(':scope > div.hero');
+    const heroBlock = [...wrapper.querySelectorAll(':scope > div.hero')].find((hero) => !isWithinSeparator(hero));
     const lastCategory = categories[categories.length - 1];
     if (heroBlock && lastCategory && !lastCategory.promo) {
       lastCategory.promo = readPromo(heroBlock);
@@ -373,6 +389,7 @@ function buildLogo(
   pictureAlt: string,
   darkSrc: string,
   darkAlt: string,
+  scrollSrc: string,
   href: string,
   label: string,
 ): HTMLAnchorElement {
@@ -397,6 +414,16 @@ function buildLogo(
       darkImg.alt = darkAlt || pictureAlt || 'Capella';
       darkImg.setAttribute('aria-hidden', 'true');
       logo.append(darkImg);
+    }
+
+    // Icon-only logo shown once the page is scrolled (sticky compact header).
+    if (scrollSrc) {
+      const scrollImg = document.createElement('img');
+      scrollImg.className = 'header-logo-img-scroll';
+      scrollImg.src = scrollSrc;
+      scrollImg.alt = '';
+      scrollImg.setAttribute('aria-hidden', 'true');
+      logo.append(scrollImg);
     }
     return logo;
   }
@@ -760,13 +787,28 @@ function buildMenuCategories(
   return { list, activateInitial };
 }
 
+// Label/link come from the first Button authored in the menu section; falls back to BACK + global home.
+function buildBackLink(menuSection: Element): HTMLAnchorElement {
+  const source = menuSection.querySelector<HTMLAnchorElement>('.default-content-wrapper > p > a');
+  const { label, marker } = splitMarker(source?.textContent ?? '');
+  const back = document.createElement('a');
+  back.className = 'header-menu-back';
+  back.href = source?.getAttribute('href') || getGlobalHomePath();
+  back.textContent = label || 'BACK';
+  if (source) moveInstrumentation(source, back);
+  if (marker === 'open-in-new-tab') applyNewTab(back);
+  return back;
+}
+
 function buildMenuPanel(
   categories: NavCategory[],
   languages: NavLanguage[],
   activeLangLabel: string,
+  back: HTMLAnchorElement | null,
 ): { panel: HTMLElement; activateInitial: () => void } {
   const panel = document.createElement('nav');
   panel.className = 'header-menu-panel';
+  if (back) panel.classList.add('is-destination');
   panel.id = PANEL_ID;
   panel.setAttribute('aria-label', MAIN_NAV_LABEL);
   panel.inert = true;
@@ -774,6 +816,8 @@ function buildMenuPanel(
 
   const body = document.createElement('div');
   body.className = 'header-menu-body';
+
+  if (back) body.append(back);
 
   const promo = buildMenuPromo();
   const { list: categoryList, activateInitial } = buildMenuCategories(categories, promo);
@@ -789,6 +833,14 @@ function buildMenuPanel(
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
+  // Universal Editor on a header v2 /nav page: header-v2 renders from the page being edited.
+  const navAuthoringMain = isUniversalEditor() ? document.querySelector<HTMLElement>('main:has(.nav-top)') : null;
+  if (navAuthoringMain) {
+    const { default: decorateHeaderV2 } = await import('@/blocks/header-v2/header-v2.js');
+    await decorateHeaderV2(block, navAuthoringMain, true);
+    return;
+  }
+
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location.href).pathname : null;
   const hide = () => {
@@ -803,6 +855,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   }
   if (!fragment) {
     hide();
+    return;
+  }
+
+  if (fragment.querySelector('.nav-top')) {
+    const { default: decorateHeaderV2 } = await import('@/blocks/header-v2/header-v2.js');
+    if (!(await decorateHeaderV2(block, fragment, false))) hide();
     return;
   }
 
@@ -821,7 +879,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     return;
   }
 
-  const [logoImg, logoImgDark] = chromeSection.querySelectorAll('picture img');
+  // Image order in /nav: default logo, menu-open logo, scroll icon.
+  const [logoImg, logoImgDark, scrollIcon] = chromeSection.querySelectorAll('picture img');
   const chromeLinks = [...chromeSection.querySelectorAll<HTMLAnchorElement>('.default-content-wrapper > p > a')];
   const logoLinkAnchor = chromeLinks[0];
   const { label: logoLinkLabel, marker: logoLinkMarker } = splitMarker(logoLinkAnchor?.textContent ?? '');
@@ -838,6 +897,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     logoImg?.getAttribute('alt') ?? '',
     logoImgDark?.getAttribute('src') ?? '',
     logoImgDark?.getAttribute('alt') ?? '',
+    // The scrolled header sits on a cream surface; falls back to the menu-open logo.
+    (scrollIcon ?? logoImgDark)?.getAttribute('src') ?? '',
     logoLinkAnchor?.getAttribute('href') || activeLang.href,
     logoLinkLabel,
   );
@@ -846,7 +907,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const menuToggle = buildMenuToggle(closeMenuLabel);
   const langZone = buildLangZone(languages, activeLang.shortLabel);
   const cta = buildCtaZone(ctaLabel, ctaAnchor?.getAttribute('href') ?? '', ctaMarker === 'open-in-new-tab');
-  const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel);
+  // `global` or unset (legacy pages) both render the standard menu.
+  const menuType = (menuSection as HTMLElement).dataset.menu === 'destination' ? 'destination' : 'global';
+  const back = menuType === 'destination' ? buildBackLink(menuSection) : null;
+  const { panel, activateInitial } = buildMenuPanel(categories, languages, activeLang.shortLabel, back);
 
   let previousOverflow = '';
   const setPageInert = (inert: boolean) => {
@@ -902,4 +966,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   inner.append(menuToggle, logo, tools);
 
   block.replaceChildren(inner, panel);
+
+  const headerElement = block.closest('header');
+  if (headerElement) {
+    const updateScrolled = () =>
+      headerElement.classList.toggle('is-scrolled', window.scrollY > window.innerHeight * SCROLLED_VIEWPORT_RATIO);
+    window.addEventListener('scroll', updateScrolled, { passive: true });
+    updateScrolled();
+  }
 }

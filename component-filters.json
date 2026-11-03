@@ -3,7 +3,8 @@
     "id": "main",
     "components": [
       "section",
-      "header-section"
+      "header-section",
+      "nav-category"
     ]
   },
   {
@@ -35,6 +36,7 @@
       "text-with-cta",
       "hero-video",
       "hero-destination",
+      "hero-destination-video",
       "rte",
       "choose-space",
       "culturist-card",
@@ -46,7 +48,9 @@
       "footer-legal",
       "content-listing",
       "page-listing",
-      "booking-search"
+      "booking-search",
+      "separator",
+      "nav-top"
     ]
   },
   {
@@ -57,7 +61,15 @@
       "button",
       "hero",
       "navigation-lists",
-      "link"
+      "link",
+      "separator"
+    ]
+  },
+  {
+    "id": "nav-category",
+    "components": [
+      "nav-region",
+      "nav-region-rte"
     ]
   },
   {
