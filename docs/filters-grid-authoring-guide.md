@@ -22,7 +22,9 @@ Hiding labels also removes the space reserved for them. Choose each filter tag e
 
 Within each filter mode, each **Category Settings** entry contains **Category Tag**, **Background Color**, and **Default Category**, in that order. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White, with White selected by default. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
 
-New entries may remain incomplete while editing, without immediate required-field validation. Select exactly one category tag before publishing; entries without a tag do not become filters. The picker is configured with `multi: false`. Delivered entries containing more than one distinct tag show an explicit configuration error instead of silently selecting one.
+Category Tag and Background Color are required. Select exactly one tag per entry; Background Color defaults to White. New empty entries may immediately show Universal Editor required-field validation until a tag is selected. Entries without a tag do not become filters. The picker is configured with `multi: false`. Delivered entries containing more than one distinct tag show an explicit configuration error instead of silently selecting one.
+
+Internal card destinations (`directDestinationUrl`) and popup CTAs (`modalCtaUrlInternal`) use EDS page paths: `/content/capella-hotels/global.html` becomes `/global` on the current site. Query strings and anchors are retained. External destinations and DAM image references are unchanged.
 
 The properties panel is owned by Universal Editor, not the page's CSS. A custom separator between multifield entries is not currently configured because the documented model fields do not provide a separator component.
 

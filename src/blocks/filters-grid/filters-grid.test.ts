@@ -1,4 +1,4 @@
-import decorate, { resolvePickerPath } from './filters-grid';
+import decorate, { resolveCardHref, resolvePickerPath } from './filters-grid';
 
 jest.mock('@/app/scripts.js', () => ({
   moveInstrumentation: (from: Element, to: Element) => {
@@ -19,6 +19,83 @@ jest.mock('@/utils/env.js', () => ({
 describe('filters-grid authored filters', () => {
   const fetchMock = jest.fn();
   const originalFetch = global.fetch;
+
+  it.each([
+    ['/content/capella-hotels/global.html', '/global'],
+    ['https://publish-p152536-e1620746.adobeaemcloud.com/content/capella-hotels/global.html', '/global'],
+    ['/content/capella-hotels/ar/global.html?offer=stay#details', '/ar/global?offer=stay#details'],
+    ['/content/capella-hotels', '/'],
+    ['/content/capella-hotels.html', '/'],
+    ['/content/capella-hotels-other/global.html', '/content/capella-hotels-other/global.html'],
+    [
+      'https://main--capella-hotels--capella-hotel-group.aem.live/global',
+      'https://main--capella-hotels--capella-hotel-group.aem.live/global',
+    ],
+    ['', ''],
+  ])('maps internal page reference %s to %s', (value, expected) => {
+    expect(resolveCardHref({ directDestinationUrl: { _publishUrl: value } })).toBe(expected);
+  });
+
+  it('prefers the repository page path and leaves external destinations unchanged', () => {
+    expect(
+      resolveCardHref({
+        directDestinationUrl: {
+          _path: '/content/capella-hotels/global',
+          _publishUrl: 'https://publish.example.com/other.html',
+        },
+      }),
+    ).toBe('/global');
+    expect(
+      resolveCardHref({
+        directDestinationUrlType: 'external',
+        directDestinationExternalUrl: 'https://external.example.com/content/capella-hotels/global.html',
+      }),
+    ).toBe('https://external.example.com/content/capella-hotels/global.html');
+  });
+
+  it.each(['direct', 'popup'])('renders an EDS URL for the %s CTA without rewriting images', async (behavior) => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          filterGridCardDetailsList: {
+            items: [
+              {
+                cardHeadline: 'Internal page',
+                associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                cardClickActionBehavior: behavior,
+                directDestinationUrl: {
+                  _publishUrl: 'https://publish.example.com/content/capella-hotels/global.html?offer=stay#details',
+                },
+                cardBackgroundPhoto: { _publishUrl: 'https://publish.example.com/content/dam/photo.jpg' },
+                modalDetails: {
+                  modalCtaLabel: 'Explore',
+                  modalCtaUrlInternal: {
+                    _publishUrl: 'https://publish.example.com/content/capella-hotels/global.html?offer=stay#details',
+                  },
+                  openInNewTab: true,
+                },
+              },
+            ],
+          },
+        },
+      }),
+    });
+    const block = createItemBlock();
+    await decorate(block);
+    if (behavior === 'popup') block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    const link =
+      behavior === 'popup'
+        ? document.querySelector<HTMLAnchorElement>('.filters-grid-modal a')
+        : block.querySelector<HTMLAnchorElement>('a[href]');
+    expect(link?.getAttribute('href')).toBe('/global?offer=stay#details');
+    expect(block.querySelector('img')?.getAttribute('src')).toBe('https://publish.example.com/content/dam/photo.jpg');
+    if (behavior === 'popup') {
+      expect(link?.target).toBe('_blank');
+      expect(link?.rel).toBe('noopener noreferrer');
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    }
+  });
 
   function createBlock(experienceRoot = 'capella-hotels:experience'): HTMLElement {
     const block = document.createElement('div');
