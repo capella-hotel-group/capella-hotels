@@ -8,9 +8,9 @@ import { deferred, wait } from './lib/cinematic/timing';
 import { createVideoPlayback, type VideoPlayback } from './lib/cinematic/video-playback';
 import { parseVideoHero } from './lib/parse';
 
-const INTRO_MS = 1000;
+const INTRO_MS = 1200;
 const MAX_INTRO_WAIT_MS = 3000;
-const CROSSFADE_MS = 400;
+const CROSSFADE_MS = 500;
 const EXPAND_MS = 900;
 const VIDEO_READY_TIMEOUT_MS = 4000;
 
@@ -50,6 +50,29 @@ async function untilVideoReady(playback: VideoPlayback): Promise<boolean> {
   return true;
 }
 
+/** WCAG 2.2.2 pause control: invisible until keyboard focus, so the visual design is untouched. */
+function buildPauseToggle(playback: VideoPlayback): HTMLButtonElement {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'hero-destination-video-toggle';
+  const icon = document.createElement('span');
+  icon.className = 'hero-destination-video-toggle-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  toggle.append(icon);
+  const setPaused = (paused: boolean): void => {
+    toggle.dataset.state = paused ? 'paused' : 'playing';
+    toggle.setAttribute('aria-label', paused ? 'Play background video' : 'Pause background video');
+  };
+  setPaused(false);
+  toggle.addEventListener('click', () => {
+    const pausing = toggle.dataset.state === 'playing';
+    if (pausing) playback.element.pause();
+    else playback.play();
+    setPaused(pausing);
+  });
+  return toggle;
+}
+
 export default function decorate(block: HTMLElement): void {
   const config = parseVideoHero([...block.children] as HTMLElement[]);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -67,6 +90,7 @@ export default function decorate(block: HTMLElement): void {
         loop: config.loop,
         posterUrl,
         timeoutMs: VIDEO_READY_TIMEOUT_MS,
+        deferLoad: true,
       })
     : null;
   // Without a video the poster stands in as the image, so the hero is never empty.
@@ -126,10 +150,14 @@ export default function decorate(block: HTMLElement): void {
   if (skipIntro || !intro) {
     block.dataset.state = 'expanded';
     block.classList.add('is-static');
+    playback?.start();
     if (playback) {
       block.classList.add('is-video-visible');
       if (intro) playback.failed.then(() => block.classList.remove('is-video-visible'));
-      if (!reducedMotion) playback.play();
+      if (!reducedMotion) {
+        playback.play();
+        block.append(buildPauseToggle(playback));
+      }
     }
     if (skipIntro || !playback) heading.classList.add('is-revealed');
     else reveal(Promise.resolve());
@@ -138,6 +166,9 @@ export default function decorate(block: HTMLElement): void {
 
   const controlsHeader = ownsHeader(block);
   const expanded = deferred();
+  block.style.setProperty('--hero-destination-parallax-duration', `${INTRO_MS + CROSSFADE_MS}ms`);
+  block.style.setProperty('--hero-destination-crossfade-duration', `${CROSSFADE_MS}ms`);
+  block.style.setProperty('--hero-destination-expand-duration', `${EXPAND_MS}ms`);
   block.dataset.state = 'intro';
   if (controlsHeader) document.body.dataset.heroIntro = 'intro';
   reveal(expanded.promise);
@@ -145,7 +176,11 @@ export default function decorate(block: HTMLElement): void {
   // A failed play() mid-crossfade drops back to the intro image instead of a frozen/black frame.
   playback?.failed.then(() => block.classList.remove('is-video-visible'));
 
-  Promise.all([wait(INTRO_MS), Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)])]).then(async () => {
+  // The video request waits for the intro image so the LCP image gets the bandwidth first.
+  const imageSettled = Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)]);
+  imageSettled.then(() => playback?.start());
+
+  Promise.all([wait(INTRO_MS), imageSettled]).then(async () => {
     // Without a playable video the intro image itself expands (image-only fallback).
     if (playback && (await untilVideoReady(playback))) {
       block.dataset.state = 'switching';
@@ -157,6 +192,7 @@ export default function decorate(block: HTMLElement): void {
     await wait(EXPAND_MS);
     block.dataset.state = 'expanded';
     if (controlsHeader) document.body.dataset.heroIntro = 'done';
+    if (playback && block.classList.contains('is-video-visible')) block.append(buildPauseToggle(playback));
     expanded.resolve();
   });
 }

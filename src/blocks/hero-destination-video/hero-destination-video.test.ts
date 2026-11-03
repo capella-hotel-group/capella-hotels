@@ -150,12 +150,13 @@ describe('hero-destination-video', () => {
     cells[3] = link('/video-mobile.mp4');
     const block = build(cells);
     decorate(block);
+    introImg(block).dispatchEvent(new Event('load'));
+    await jest.advanceTimersByTimeAsync(0);
     video(block).dispatchEvent(new Event('canplay'));
     mobileViewport = true;
     breakpointListeners.forEach((listener) => listener());
-    introImg(block).dispatchEvent(new Event('load'));
 
-    await jest.advanceTimersByTimeAsync(1000);
+    await jest.advanceTimersByTimeAsync(1200);
     expect(block.dataset.state).toBe('intro');
     expect(block.classList.contains('is-video-visible')).toBe(false);
 
@@ -172,7 +173,7 @@ describe('hero-destination-video', () => {
     video(block).dispatchEvent(new Event('canplay'));
     introImg(block).dispatchEvent(new Event('load'));
 
-    await jest.advanceTimersByTimeAsync(999);
+    await jest.advanceTimersByTimeAsync(1199);
     expect(block.dataset.state).toBe('intro');
     await jest.advanceTimersByTimeAsync(1);
     expect(block.dataset.state).toBe('switching');
@@ -180,7 +181,7 @@ describe('hero-destination-video', () => {
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
     video(block).dispatchEvent(new Event('playing'));
 
-    await jest.advanceTimersByTimeAsync(399);
+    await jest.advanceTimersByTimeAsync(499);
     expect(block.dataset.state).toBe('switching');
     await jest.advanceTimersByTimeAsync(1);
     expect(block.dataset.state).toBe('expanding');
@@ -189,7 +190,7 @@ describe('hero-destination-video', () => {
     expect(block.dataset.state).toBe('expanded');
     expect(document.body.dataset.heroIntro).toBe('done');
 
-    await jest.advanceTimersByTimeAsync(199);
+    await jest.advanceTimersByTimeAsync(99);
     expect(revealed(block)).toBe(false);
     await jest.advanceTimersByTimeAsync(1);
     expect(revealed(block)).toBe(true);
@@ -200,11 +201,12 @@ describe('hero-destination-video', () => {
     cells[3] = link('/video-mobile.mp4');
     const block = build(cells);
     decorate(block);
-    video(block).dispatchEvent(new Event('canplay'));
     introImg(block).dispatchEvent(new Event('load'));
-    await jest.advanceTimersByTimeAsync(1000);
+    await jest.advanceTimersByTimeAsync(0);
+    video(block).dispatchEvent(new Event('canplay'));
+    await jest.advanceTimersByTimeAsync(1200);
     video(block).dispatchEvent(new Event('playing'));
-    await jest.advanceTimersByTimeAsync(400 + 900 + 1500);
+    await jest.advanceTimersByTimeAsync(500 + 900 + 1500);
     expect(block.dataset.state).toBe('expanded');
     expect(revealed(block)).toBe(true);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
@@ -213,10 +215,36 @@ describe('hero-destination-video', () => {
     breakpointListeners.forEach((listener) => listener());
 
     expect(video(block).querySelector('source')?.getAttribute('src')).toBe('/video-mobile.mp4');
-    expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(1);
+    expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(2);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
     expect(block.dataset.state).toBe('expanded');
     expect(revealed(block)).toBe(true);
+  });
+
+  it('requests the video only after the intro image has settled', async () => {
+    const block = build();
+    decorate(block);
+    expect(video(block).querySelector('source')?.getAttribute('src')).toBeNull();
+    introImg(block).dispatchEvent(new Event('load'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(video(block).querySelector('source')?.getAttribute('src')).toBe('/v.mp4');
+  });
+
+  it('adds a keyboard-reachable pause toggle once the video is playing fullscreen', async () => {
+    const block = build();
+    decorate(block);
+    video(block).dispatchEvent(new Event('canplay'));
+    introImg(block).dispatchEvent(new Event('load'));
+    expect(block.querySelector('.hero-destination-video-toggle')).toBeNull();
+    await jest.advanceTimersByTimeAsync(1200 + 500 + 900);
+    const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-video-toggle')!;
+    expect(toggle.getAttribute('aria-label')).toBe('Pause background video');
+    toggle.click();
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
+    expect(toggle.getAttribute('aria-label')).toBe('Play background video');
+    toggle.click();
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
+    expect(toggle.getAttribute('aria-label')).toBe('Pause background video');
   });
 
   it('holds the intro until 3s when the image never loads, then crossfades a ready video', async () => {
@@ -260,7 +288,7 @@ describe('hero-destination-video', () => {
     decorate(block);
     introImg(block).dispatchEvent(new Event('load'));
     video(block).dispatchEvent(new Event('error'));
-    await jest.advanceTimersByTimeAsync(1000);
+    await jest.advanceTimersByTimeAsync(1200);
     expect(block.dataset.state).toBe('expanding');
     await jest.advanceTimersByTimeAsync(2399);
     expect(revealed(block)).toBe(false);
@@ -333,7 +361,7 @@ describe('hero-destination-video', () => {
     decorate(block);
     expect(block.querySelector('video')).toBeNull();
     introImg(block).dispatchEvent(new Event('load'));
-    await jest.advanceTimersByTimeAsync(1900 + 1500);
+    await jest.advanceTimersByTimeAsync(2100 + 1500);
     expect(block.dataset.state).toBe('expanded');
     expect(revealed(block)).toBe(true);
   });

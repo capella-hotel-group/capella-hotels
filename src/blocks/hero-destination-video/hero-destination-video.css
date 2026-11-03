@@ -15,7 +15,7 @@
     position: relative;
     width: 100%;
     height: 100vh; /* fallback */
-    height: 100dvh;
+    height: 100svh; /* stable on mobile where dvh resizes with the address bar */
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -36,6 +36,10 @@
     transition: clip-path var(--hero-destination-expand-duration) cubic-bezier(0.37, 0, 0.63, 1);
 }
 
+.hero-destination-video:not([data-state='expanded']) .hero-destination-video-frame {
+    will-change: clip-path;
+}
+
 /* Media layers stay fullscreen-sized; only this clip opens, so the video is revealed, never zoomed. */
 .hero-destination-video[data-state='intro'] .hero-destination-video-frame,
 .hero-destination-video[data-state='switching'] .hero-destination-video-frame {
@@ -44,7 +48,7 @@
     );
 }
 
-/* Same 40% scrim as the slider; it fades in once the frame is fullscreen. */
+/* Same 40% scrim as the slider; it fades in alongside the expansion so nothing pops at the end. */
 .hero-destination-video-frame::after {
     content: '';
     position: absolute;
@@ -53,9 +57,10 @@
     background: rgb(0 0 0 / 40%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.6s ease;
+    transition: opacity var(--hero-destination-expand-duration) ease-in-out;
 }
 
+.hero-destination-video[data-state='expanding'] .hero-destination-video-frame::after,
 .hero-destination-video[data-state='expanded'] .hero-destination-video-frame::after {
     opacity: 1;
 }
@@ -72,16 +77,16 @@
     height: 100%;
 }
 
+/* The video fades in on top while the image stays opaque underneath, so the overlap never dips to black. */
 .hero-destination-video-media {
-    z-index: 0;
+    z-index: 1;
     object-fit: cover;
     opacity: 0;
     transition: opacity var(--hero-destination-crossfade-duration) ease-in-out;
 }
 
 .hero-destination-video-intro {
-    z-index: 1;
-    transition: opacity var(--hero-destination-crossfade-duration) ease-in-out;
+    z-index: 0;
 }
 
 .hero-destination-video-intro picture,
@@ -95,7 +100,8 @@
 /* Parallax moves only the image inside the frame; it holds its end pose so the crossfade never snaps.
    Offsets are in vw (~6px / -8px at 1440 on the 20vw square); the fullscreen-sized layer never shows edges. */
 .hero-destination-video-intro img {
-    animation: hero-destination-video-parallax var(--hero-destination-parallax-duration) ease-out forwards;
+    animation: hero-destination-video-parallax var(--hero-destination-parallax-duration) cubic-bezier(0.22, 1, 0.36, 1)
+        forwards;
 }
 
 @keyframes hero-destination-video-parallax {
@@ -113,6 +119,7 @@
 
 .hero-destination-video.is-video-visible .hero-destination-video-intro {
     opacity: 0;
+    transition: opacity 0s linear var(--hero-destination-crossfade-duration);
 }
 
 .hero-destination-video-heading {
@@ -158,6 +165,49 @@
 
 .hero-destination-video.is-static .hero-destination-video-intro img {
     animation: none;
+}
+
+.hero-destination-video-toggle {
+    position: absolute;
+    z-index: 4;
+    bottom: var(--dimension-layout-module-padding-inline-xs);
+    inset-inline-end: var(--dimension-layout-module-padding-inline-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: var(--corner-radius-round);
+    background: rgb(0 0 0 / 35%);
+    color: var(--color-icon-action-opaque-inverse);
+    cursor: pointer;
+    /* Not in the design: invisible until keyboard focus, which keeps the pause mechanism available. */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hero-destination-video-toggle:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    outline: 2px solid var(--color-icon-on-action-default);
+    outline-offset: 2px;
+}
+
+.hero-destination-video-toggle-icon {
+    display: block;
+    width: 14px;
+    height: 14px;
+}
+
+.hero-destination-video-toggle[data-state='playing'] .hero-destination-video-toggle-icon {
+    background: linear-gradient(to right, currentcolor 0 38%, transparent 38% 62%, currentcolor 62% 100%);
+}
+
+.hero-destination-video-toggle[data-state='paused'] .hero-destination-video-toggle-icon {
+    background: currentcolor;
+    clip-path: polygon(15% 0%, 100% 50%, 15% 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {

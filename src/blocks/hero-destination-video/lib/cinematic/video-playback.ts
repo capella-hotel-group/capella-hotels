@@ -9,6 +9,8 @@ export interface VideoPlaybackOptions {
   loop: boolean;
   posterUrl?: string;
   timeoutMs?: number;
+  /** Hold the network request until start() so the intro image gets the bandwidth first. */
+  deferLoad?: boolean;
 }
 
 export interface VideoPlayback {
@@ -19,6 +21,8 @@ export interface VideoPlayback {
   /** Error, timeout before ready, or a rejected play(). Once failed, always failed. */
   failed: Promise<void>;
   play(): void;
+  /** Begins loading a deferLoad video; a no-op otherwise or when already started. */
+  start(): void;
   isReady(): boolean;
 }
 
@@ -28,6 +32,7 @@ export function createVideoPlayback({
   loop,
   posterUrl,
   timeoutMs = READY_TIMEOUT_MS,
+  deferLoad = false,
 }: VideoPlaybackOptions): VideoPlayback {
   const video = document.createElement('video');
   video.className = 'hero-destination-video-media';
@@ -45,7 +50,8 @@ export function createVideoPlayback({
   const pickUrl = (): string => (mq.matches ? mobileUrl : desktopUrl);
   const source = document.createElement('source');
   source.type = 'video/mp4';
-  source.setAttribute('src', pickUrl());
+  let started = !deferLoad;
+  if (started) source.setAttribute('src', pickUrl());
   video.append(source);
 
   let currentReady = deferred<boolean>();
@@ -80,7 +86,7 @@ export function createVideoPlayback({
     previousReady.resolve(false);
   };
 
-  timer = window.setTimeout(markFailed, timeoutMs);
+  timer = started ? window.setTimeout(markFailed, timeoutMs) : 0;
   video.addEventListener('canplay', markReady);
   video.addEventListener('error', markFailed);
   source.addEventListener('error', markFailed);
@@ -96,6 +102,7 @@ export function createVideoPlayback({
   if (video.readyState >= HAVE_FUTURE_DATA) markReady();
 
   mq.addEventListener('change', () => {
+    if (!started) return;
     const url = pickUrl();
     if (source.getAttribute('src') === url) return;
     const wasPlaying = !video.paused;
@@ -115,6 +122,13 @@ export function createVideoPlayback({
     play() {
       if (outcome === 'failed') return;
       video.play()?.catch(markFailed);
+    },
+    start() {
+      if (started) return;
+      started = true;
+      source.setAttribute('src', pickUrl());
+      timer = window.setTimeout(markFailed, timeoutMs);
+      video.load();
     },
     isReady: () => sourceReady,
   };
