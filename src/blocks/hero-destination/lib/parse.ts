@@ -92,7 +92,7 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
         mediaType: 'image',
         desktopPicture,
         mobilePicture,
-        imageAlt: cellText(altCell),
+        imageAlt: cellText(altCell) || desktopPicture.querySelector('img')?.getAttribute('alt') || '',
         heading,
         showOverlay,
         sourceRow: row,

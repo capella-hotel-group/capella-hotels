@@ -4,22 +4,12 @@
 import { CarouselController } from './carousel-controller';
 import { buildDotNav, buildPlayToggle, buildSlide } from './dom-builder';
 import { resolveEffect } from './effects';
+import { dirSign } from './effects/offset';
+import { ownsPageHeading } from './page-heading';
 import { parseCarouselConfig, parseItems } from './parse';
 import { initSwipe } from './swipe';
 
 let instanceCount = 0;
-
-/** Background videos loop indefinitely, so the pause control has to stop them too, not just the rotation. */
-function setVideosPlaying(block: HTMLElement, playing: boolean): void {
-  block.querySelectorAll('video').forEach((video) => {
-    if (!playing) {
-      video.pause();
-      return;
-    }
-    if (video.closest('.hero-destination-slide')?.getAttribute('aria-hidden') !== 'false') return;
-    video.play()?.catch(() => {});
-  });
-}
 
 /** APG tabs keyboard support for the dot tablist: arrows move and select, Home/End jump. */
 function initTabKeys(nav: HTMLElement, dots: HTMLButtonElement[], select: (index: number) => void): void {
@@ -49,6 +39,7 @@ export default function decorateSlider(block: HTMLElement): void {
   const items = parseItems(itemRows);
   if (items.length === 0) return;
 
+  const firstHeadingTag = ownsPageHeading(block) ? 'h1' : 'h2';
   block.innerHTML = '';
   instanceCount += 1;
   const idPrefix = `hero-destination-${instanceCount}`;
@@ -56,9 +47,11 @@ export default function decorateSlider(block: HTMLElement): void {
   const track = document.createElement('ul');
   track.className = 'hero-destination-track';
   // The li elements become tabpanels, so the list semantics have to go.
-  track.setAttribute('role', 'presentation');
+  if (items.length > 1) track.setAttribute('role', 'presentation');
   track.setAttribute('aria-live', 'off');
-  items.forEach((item, index) => track.append(buildSlide(item, index, idPrefix)));
+  items.forEach((item, index) =>
+    track.append(buildSlide(item, index, idPrefix, items.length, index === 0 ? firstHeadingTag : 'h2')),
+  );
 
   block.append(track);
 
@@ -66,6 +59,26 @@ export default function decorateSlider(block: HTMLElement): void {
   const mediaEls = slides.map((slide) => slide.querySelector('.hero-destination-media') as HTMLElement);
   const headings = items.length > 1 ? items.map((item) => item.heading) : [];
   const { nav, dots } = buildDotNav(headings, idPrefix);
+
+  const videos = slides.map((slide) => slide.querySelector('video'));
+  const hasVideo = videos.some(Boolean);
+  // Looping background video is motion too, so reduced motion starts it paused.
+  let videosPaused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let activeIndex = 0;
+  const syncVideos = (): void => {
+    videos.forEach((video, index) => {
+      if (!video) return;
+      if (index === activeIndex && !videosPaused) video.play()?.catch(() => {});
+      else video.pause();
+    });
+  };
+
+  const toggle = buildPlayToggle();
+  let autoplayEnded = false;
+  const setToggleState = (paused: boolean, noun: string): void => {
+    toggle.dataset.state = paused ? 'paused' : 'playing';
+    toggle.setAttribute('aria-label', `${paused ? 'Play' : 'Pause'} ${noun}`);
+  };
 
   const carousel = new CarouselController({
     track,
@@ -76,6 +89,16 @@ export default function decorateSlider(block: HTMLElement): void {
     autoplay,
     loop,
     effect: resolveEffect(transitionEffect),
+    onChange: (index) => {
+      activeIndex = index;
+      syncVideos();
+    },
+    onAutoplayEnd: () => {
+      // With a video still playing, the toggle keeps controlling that motion instead.
+      if (hasVideo) return;
+      autoplayEnded = true;
+      setToggleState(true, 'slideshow');
+    },
   });
   dots.forEach((dot, index) => dot.addEventListener('click', () => carousel.goTo(index)));
   if (dots.length > 0) {
@@ -85,23 +108,30 @@ export default function decorateSlider(block: HTMLElement): void {
 
   if (simulateTouch) {
     track.classList.add('hero-destination-track--swipeable');
-    initSwipe(track, (direction) => (direction === 1 ? carousel.next() : carousel.previous()));
+    initSwipe(track, (direction) => (direction * dirSign(track) === 1 ? carousel.next() : carousel.previous()));
   }
 
   carousel.init();
 
-  if (!carousel.autoplayEnabled) return;
+  if (!carousel.autoplayEnabled && !hasVideo) return;
 
-  const toggle = buildPlayToggle();
+  const noun = carousel.autoplayEnabled ? 'slideshow' : 'background video';
+  setToggleState(videosPaused, noun);
   toggle.addEventListener('click', () => {
-    const paused = !carousel.userPaused;
+    const paused = toggle.dataset.state === 'playing';
     if (paused) carousel.pause('user');
     else carousel.resume('user');
-    toggle.dataset.state = paused ? 'paused' : 'playing';
-    toggle.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
-    setVideosPlaying(block, !paused);
+    if (!paused && autoplayEnded) {
+      autoplayEnded = false;
+      carousel.restart();
+    }
+    videosPaused = paused;
+    syncVideos();
+    setToggleState(paused, noun);
   });
   block.append(toggle);
+
+  if (!carousel.autoplayEnabled) return;
 
   // Autoplay pauses only when hovering specifically over the pagination dots or
   // text heading, rather than the entire 100vh video background.

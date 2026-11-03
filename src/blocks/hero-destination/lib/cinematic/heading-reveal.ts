@@ -8,8 +8,12 @@ export interface RevealTriggers {
   delayMs: number;
 }
 
-export function buildHeading(text: string, sourceCell: HTMLElement | null): HTMLHeadingElement {
-  const heading = document.createElement('h2');
+export function buildHeading(
+  text: string,
+  sourceCell: HTMLElement | null,
+  tag: 'h1' | 'h2' = 'h2',
+): HTMLHeadingElement {
+  const heading = document.createElement(tag);
   heading.className = 'hero-destination-video-heading';
   const span = document.createElement('span');
   span.className = 'hero-destination-video-heading-text';

@@ -3,16 +3,19 @@ jest.mock('@/utils/env.js', () => ({ resolveDAMUrl: (url: string) => url }));
 
 type Decorate = (block: HTMLElement) => void;
 
-/** Config rows (single cell) then item rows: mediaType, video link, heading. */
-function buildBlock(config: string[], count: number): HTMLElement {
+/** Config rows (single cell) then item rows: mediaType, media, heading. */
+function buildBlock(config: string[], count: number, kind: 'video' | 'image' = 'video'): HTMLElement {
+  const media = (index: number): string =>
+    kind === 'video'
+      ? `<a href="/clip-${index}.mp4">clip</a>`
+      : `<picture><img src="/img-${index}.png" alt=""></picture>`;
   const block = document.createElement('div');
   block.className = 'hero-destination';
   block.innerHTML =
     config.map((value) => `<div><div>${value}</div></div>`).join('') +
     Array.from(
       { length: count },
-      (_, index) =>
-        `<div><div>video</div><div><a href="/clip-${index}.mp4">clip</a></div><div>Slide ${index}</div></div>`,
+      (_, index) => `<div><div>${kind}</div><div>${media(index)}</div><div>Slide ${index}</div></div>`,
     ).join('');
   document.body.append(block);
   return block;
@@ -36,6 +39,7 @@ describe('hero-destination pause mechanism', () => {
       .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
     HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined);
     HTMLMediaElement.prototype.pause = jest.fn();
+    window.ResizeObserver = jest.fn().mockReturnValue({ observe: jest.fn(), disconnect: jest.fn() });
     // media.ts reads matchMedia at module scope, so the stub has to be in place before import.
     jest.resetModules();
     ({ default: decorate } = await import('./hero-destination'));
@@ -62,10 +66,91 @@ describe('hero-destination pause mechanism', () => {
   });
 
   it('omits the toggle when there is no auto-moving content', () => {
-    const block = buildBlock(['false', '5'], 3);
+    const block = buildBlock(['false', '5'], 3, 'image');
     decorate(block);
 
     expect(block.querySelector('.hero-destination-toggle')).toBeNull();
+  });
+
+  it('offers a video toggle when autoplay is off but background videos loop', () => {
+    const block = buildBlock(['false', '5'], 1);
+    decorate(block);
+
+    const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle');
+    expect(toggle?.getAttribute('aria-label')).toBe('Pause background video');
+    toggle!.click();
+    expect(toggle!.getAttribute('aria-label')).toBe('Play background video');
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+  });
+
+  it('starts videos paused under reduced motion', () => {
+    window.matchMedia = jest
+      .fn()
+      .mockReturnValue({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+    const block = buildBlock(['true', '5'], 2);
+    decorate(block);
+
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+    expect(block.querySelector('.hero-destination-toggle')?.getAttribute('aria-label')).toBe('Play background video');
+  });
+
+  it('plays only the active slide video, including after a pause and play', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+    const videos = [...block.querySelectorAll('video')];
+    const play = HTMLMediaElement.prototype.play as jest.Mock;
+    const lastPlayed = (): HTMLVideoElement => play.mock.contexts[play.mock.contexts.length - 1];
+
+    expect(lastPlayed()).toBe(videos[0]);
+    expect(videos.map((video) => video.preload)).toEqual(['auto', 'none', 'none']);
+
+    const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle')!;
+    toggle.click();
+    toggle.click();
+    jest.advanceTimersByTime(5000);
+
+    expect(lastPlayed()).toBe(videos[1]);
+  });
+
+  it('offers to replay a finished non-looping slideshow', () => {
+    const block = buildBlock(['true', '5', 'false'], 2, 'image');
+    decorate(block);
+    const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle')!;
+
+    jest.advanceTimersByTime(10_000);
+    expect(activeIndex(block)).toBe(1);
+    expect(toggle.getAttribute('aria-label')).toBe('Play slideshow');
+
+    toggle.click();
+    expect(activeIndex(block)).toBe(0);
+    expect(toggle.getAttribute('aria-label')).toBe('Pause slideshow');
+    jest.advanceTimersByTime(5000);
+    expect(activeIndex(block)).toBe(1);
+  });
+
+  it('keeps a single slide out of tab semantics', () => {
+    const block = buildBlock(['true', '5'], 1, 'image');
+    decorate(block);
+    const slide = block.querySelector('.hero-destination-slide')!;
+
+    expect(slide.hasAttribute('role')).toBe(false);
+    expect(slide.hasAttribute('aria-labelledby')).toBe(false);
+    expect(slide.hasAttribute('tabindex')).toBe(false);
+    expect(block.querySelector('.hero-destination-track')?.hasAttribute('role')).toBe(false);
+  });
+
+  it('promotes the first heading to h1 only in the first section of a page without one', () => {
+    document.body.innerHTML = '<main><div class="section"></div><div class="section"></div></main>';
+    const [first, second] = document.querySelectorAll('.section');
+    const lead = buildBlock(['true', '5'], 2, 'image');
+    first.append(lead);
+    decorate(lead);
+    const later = buildBlock(['true', '5'], 2, 'image');
+    second.append(later);
+    decorate(later);
+
+    expect([...lead.querySelectorAll('.hero-destination-heading')].map((h) => h.tagName)).toEqual(['H1', 'H2']);
+    expect([...later.querySelectorAll('.hero-destination-heading')].map((h) => h.tagName)).toEqual(['H2', 'H2']);
   });
 
   it('pauses on mouse hover over pagination dots and resumes on leave', () => {

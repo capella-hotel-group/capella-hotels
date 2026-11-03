@@ -80,9 +80,16 @@ describe('hero-destination video variant', () => {
     expect(block.dataset.state).toBe('intro');
     expect(block.querySelector('.hero-destination-video-frame video')).not.toBeNull();
     expect(block.querySelector('.hero-destination-video-frame .hero-destination-video-intro')).not.toBeNull();
-    expect(block.querySelector('h2')?.textContent).toBe('Kyoto');
+    expect(block.querySelector('h1')?.textContent).toBe('Kyoto');
     expect(block.querySelector('.hero-destination-track')).toBeNull();
     expect(document.body.dataset.heroIntro).toBe('intro');
+  });
+
+  it('keeps the heading an h2 outside the first section', () => {
+    const block = build(CELLS, { firstSection: false });
+    decorate(block);
+    expect(block.querySelector('h2')?.textContent).toBe('Kyoto');
+    expect(block.querySelector('h1')).toBeNull();
   });
 
   it('preserves instrumentation for every video-variant property', () => {

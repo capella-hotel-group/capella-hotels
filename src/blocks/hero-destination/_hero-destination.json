@@ -64,20 +64,14 @@
           "valueType": "string",
           "name": "autoplayInterval",
           "label": "Autoplay Interval (seconds)",
-          "value": "3",
-          "condition": {
-            "===": [{ "var": "autoplay" }, true]
-          }
+          "value": "3"
         },
         {
           "component": "boolean",
           "valueType": "boolean",
           "name": "loop",
           "label": "Loop back to first slide",
-          "value": true,
-          "condition": {
-            "===": [{ "var": "autoplay" }, true]
-          }
+          "value": true
         },
         {
           "component": "select",

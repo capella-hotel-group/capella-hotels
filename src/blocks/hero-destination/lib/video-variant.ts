@@ -5,6 +5,7 @@ import { buildHeading, scheduleHeadingReveal } from './cinematic/heading-reveal'
 import { buildIntroMedia } from './cinematic/intro-media';
 import { deferred, wait } from './cinematic/timing';
 import { createVideoPlayback } from './cinematic/video-playback';
+import { ownsPageHeading } from './page-heading';
 import { parseVideoHero } from './parse';
 
 const MIN_INTRO_MS = 500;
@@ -55,7 +56,7 @@ export default function decorateVideo(block: HTMLElement): void {
     config.introPicture ?? (playback ? null : config.posterPicture),
     config.introPictureMobile,
   );
-  const heading = buildHeading(config.heading, config.headingCell);
+  const heading = buildHeading(config.heading, config.headingCell, ownsPageHeading(block) ? 'h1' : 'h2');
 
   const frame = document.createElement('div');
   frame.className = 'hero-destination-video-frame';
