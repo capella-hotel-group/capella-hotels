@@ -52,7 +52,7 @@ export function parseVideoHero(rows: HTMLElement[]): HeroDestinationVideoConfig 
     posterCell: at(4),
     loop: parseBoolean(at(5), true),
     loopCell: at(5),
-    showOverlay: parseBoolean(at(6), true),
+    showOverlay: parseBoolean(at(6), false),
     showOverlayCell: at(6),
     heading: cellText(at(7)),
     headingCell: at(7),

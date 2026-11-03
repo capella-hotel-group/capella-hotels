@@ -85,6 +85,14 @@ describe('hero-destination-video', () => {
     expect(document.body.dataset.heroIntro).toBe('intro');
   });
 
+  it('falls back to the intro image as the video poster', () => {
+    const cells = [...CELLS];
+    cells[4] = '';
+    const block = build(cells);
+    decorate(block);
+    expect(video(block).getAttribute('poster')).toBe('/intro.jpg');
+  });
+
   it('keeps the heading an h2 outside the first section', () => {
     const block = build(CELLS, { firstSection: false });
     decorate(block);
@@ -137,7 +145,7 @@ describe('hero-destination-video', () => {
     expect(block.querySelector('[data-aue-prop="headingDelay"]')).not.toBeNull();
   });
 
-  it('waits for the newly selected source before late-crossfading', async () => {
+  it('waits for the newly selected source before crossfading', async () => {
     const cells = [...CELLS];
     cells[3] = link('/video-mobile.mp4');
     const block = build(cells);
@@ -147,36 +155,41 @@ describe('hero-destination-video', () => {
     breakpointListeners.forEach((listener) => listener());
     introImg(block).dispatchEvent(new Event('load'));
 
-    await jest.advanceTimersByTimeAsync(500);
-    expect(block.classList.contains('is-crossfading')).toBe(false);
-    expect(block.classList.contains('is-late-crossfade')).toBe(false);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(block.dataset.state).toBe('intro');
+    expect(block.classList.contains('is-video-visible')).toBe(false);
 
     video(block).dispatchEvent(new Event('canplay'));
     await jest.advanceTimersByTimeAsync(0);
-    expect(block.classList.contains('is-late-crossfade')).toBe(true);
+    expect(block.dataset.state).toBe('switching');
+    expect(block.classList.contains('is-video-visible')).toBe(true);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
   });
 
-  it('runs intro → crossfade → expanded → heading when the video is ready early', async () => {
+  it('runs intro → crossfade (square) → expand → heading when the video is ready early', async () => {
     const block = build();
     decorate(block);
     video(block).dispatchEvent(new Event('canplay'));
     introImg(block).dispatchEvent(new Event('load'));
 
-    await jest.advanceTimersByTimeAsync(500);
-    expect(block.dataset.state).toBe('expanding');
-    expect(block.classList.contains('is-crossfading')).toBe(true);
-    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
-
-    await jest.advanceTimersByTimeAsync(225);
+    await jest.advanceTimersByTimeAsync(999);
+    expect(block.dataset.state).toBe('intro');
+    await jest.advanceTimersByTimeAsync(1);
+    expect(block.dataset.state).toBe('switching');
+    expect(block.classList.contains('is-video-visible')).toBe(true);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
     video(block).dispatchEvent(new Event('playing'));
 
-    await jest.advanceTimersByTimeAsync(675);
+    await jest.advanceTimersByTimeAsync(399);
+    expect(block.dataset.state).toBe('switching');
+    await jest.advanceTimersByTimeAsync(1);
+    expect(block.dataset.state).toBe('expanding');
+
+    await jest.advanceTimersByTimeAsync(900);
     expect(block.dataset.state).toBe('expanded');
     expect(document.body.dataset.heroIntro).toBe('done');
 
-    await jest.advanceTimersByTimeAsync(824);
+    await jest.advanceTimersByTimeAsync(199);
     expect(revealed(block)).toBe(false);
     await jest.advanceTimersByTimeAsync(1);
     expect(revealed(block)).toBe(true);
@@ -189,9 +202,9 @@ describe('hero-destination-video', () => {
     decorate(block);
     video(block).dispatchEvent(new Event('canplay'));
     introImg(block).dispatchEvent(new Event('load'));
-    await jest.advanceTimersByTimeAsync(500 + 225);
+    await jest.advanceTimersByTimeAsync(1000);
     video(block).dispatchEvent(new Event('playing'));
-    await jest.advanceTimersByTimeAsync(675 + 1500);
+    await jest.advanceTimersByTimeAsync(400 + 900 + 1500);
     expect(block.dataset.state).toBe('expanded');
     expect(revealed(block)).toBe(true);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
@@ -204,40 +217,56 @@ describe('hero-destination-video', () => {
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(2);
     expect(block.dataset.state).toBe('expanded');
     expect(revealed(block)).toBe(true);
-    expect(block.classList.contains('is-late-crossfade')).toBe(false);
   });
 
-  it('starts expanding after 3s even if the intro image never loads', async () => {
+  it('holds the intro until 3s when the image never loads, then crossfades a ready video', async () => {
     const block = build();
     decorate(block);
+    video(block).dispatchEvent(new Event('canplay'));
     await jest.advanceTimersByTimeAsync(2999);
     expect(block.dataset.state).toBe('intro');
     await jest.advanceTimersByTimeAsync(1);
-    expect(block.dataset.state).toBe('expanding');
+    expect(block.dataset.state).toBe('switching');
   });
 
-  it('late-crossfades when the video becomes ready after expansion starts', async () => {
+  it('holds the square intro image while the video is not ready, then crossfades', async () => {
     const block = build();
     decorate(block);
     introImg(block).dispatchEvent(new Event('load'));
     await jest.advanceTimersByTimeAsync(1400);
-    expect(block.classList.contains('is-crossfading')).toBe(false);
+    expect(block.dataset.state).toBe('intro');
+    expect(block.classList.contains('is-video-visible')).toBe(false);
     video(block).dispatchEvent(new Event('canplay'));
     await jest.advanceTimersByTimeAsync(0);
-    expect(block.classList.contains('is-late-crossfade')).toBe(true);
+    expect(block.dataset.state).toBe('switching');
+    expect(block.classList.contains('is-video-visible')).toBe(true);
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the image and reveals the heading at expanded + delay when the video errors', async () => {
+  it('expands the intro image fullscreen when the video never becomes ready (4s)', async () => {
+    const block = build();
+    decorate(block);
+    introImg(block).dispatchEvent(new Event('load'));
+    await jest.advanceTimersByTimeAsync(3999);
+    expect(block.dataset.state).toBe('intro');
+    await jest.advanceTimersByTimeAsync(1);
+    expect(block.dataset.state).toBe('expanding');
+    expect(block.classList.contains('is-video-visible')).toBe(false);
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+  });
+
+  it('expands the intro image and reveals the heading at expanded + delay when the video errors', async () => {
     const block = build();
     decorate(block);
     introImg(block).dispatchEvent(new Event('load'));
     video(block).dispatchEvent(new Event('error'));
-    await jest.advanceTimersByTimeAsync(2899);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(block.dataset.state).toBe('expanding');
+    await jest.advanceTimersByTimeAsync(2399);
     expect(revealed(block)).toBe(false);
     await jest.advanceTimersByTimeAsync(1);
     expect(revealed(block)).toBe(true);
-    expect(block.classList.contains('is-crossfading')).toBe(false);
+    expect(block.classList.contains('is-video-visible')).toBe(false);
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
   });
 
@@ -304,7 +333,7 @@ describe('hero-destination-video', () => {
     decorate(block);
     expect(block.querySelector('video')).toBeNull();
     introImg(block).dispatchEvent(new Event('load'));
-    await jest.advanceTimersByTimeAsync(1400 + 1500);
+    await jest.advanceTimersByTimeAsync(1900 + 1500);
     expect(block.dataset.state).toBe('expanded');
     expect(revealed(block)).toBe(true);
   });

@@ -1949,7 +1949,7 @@
         "valueType": "boolean",
         "name": "showOverlay",
         "label": "Show media overlay",
-        "value": true
+        "value": false
       },
       {
         "component": "text",

@@ -5,13 +5,14 @@ import { ownsPageHeading } from '../hero-destination/lib/page-heading';
 import { buildHeading, scheduleHeadingReveal } from './lib/cinematic/heading-reveal';
 import { buildIntroMedia } from './lib/cinematic/intro-media';
 import { deferred, wait } from './lib/cinematic/timing';
-import { createVideoPlayback } from './lib/cinematic/video-playback';
+import { createVideoPlayback, type VideoPlayback } from './lib/cinematic/video-playback';
 import { parseVideoHero } from './lib/parse';
 
-const MIN_INTRO_MS = 500;
+const INTRO_MS = 1000;
 const MAX_INTRO_WAIT_MS = 3000;
+const CROSSFADE_MS = 400;
 const EXPAND_MS = 900;
-const CROSSFADE_PLAY_AT_MS = 225;
+const VIDEO_READY_TIMEOUT_MS = 4000;
 
 function transferInstrumentation(sourceCell: HTMLElement | null, target: Element | null): void {
   if (!sourceCell || !target) return;
@@ -36,19 +37,36 @@ function ownsHeader(block: HTMLElement): boolean {
   return !!section && section === document.querySelector('main .section');
 }
 
+/** Holds the intro image until a playable frame exists; false once playback has failed or timed out. */
+async function untilVideoReady(playback: VideoPlayback): Promise<boolean> {
+  let failed = false;
+  playback.failed.then(() => {
+    failed = true;
+  });
+  while (!playback.isReady()) {
+    if (failed) return false;
+    await Promise.race([playback.ready, playback.failed]);
+  }
+  return true;
+}
+
 export default function decorate(block: HTMLElement): void {
   const config = parseVideoHero([...block.children] as HTMLElement[]);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasIntroImage = !!(config.introPicture || config.introPictureMobile);
   const wantsVideo = !!config.desktopVideoUrl && !saveDataEnabled() && !(reducedMotion && hasIntroImage);
 
-  const posterUrl = config.posterPicture?.querySelector('img')?.getAttribute('src') ?? undefined;
+  const posterUrl =
+    (config.posterPicture ?? config.introPicture ?? config.introPictureMobile)
+      ?.querySelector('img')
+      ?.getAttribute('src') ?? undefined;
   const playback = wantsVideo
     ? createVideoPlayback({
         desktopUrl: config.desktopVideoUrl,
         mobileUrl: config.mobileVideoUrl,
         loop: config.loop,
         posterUrl,
+        timeoutMs: VIDEO_READY_TIMEOUT_MS,
       })
     : null;
   // Without a video the poster stands in as the image, so the hero is never empty.
@@ -125,52 +143,17 @@ export default function decorate(block: HTMLElement): void {
   reveal(expanded.promise);
 
   // A failed play() mid-crossfade drops back to the intro image instead of a frozen/black frame.
-  playback?.failed.then(() => block.classList.remove('is-crossfading', 'is-late-crossfade'));
+  playback?.failed.then(() => block.classList.remove('is-video-visible'));
 
-  Promise.all([wait(MIN_INTRO_MS), Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)])]).then(async () => {
+  Promise.all([wait(INTRO_MS), Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)])]).then(async () => {
+    // Without a playable video the intro image itself expands (image-only fallback).
+    if (playback && (await untilVideoReady(playback))) {
+      block.dataset.state = 'switching';
+      block.classList.add('is-video-visible');
+      playback.play();
+      await wait(CROSSFADE_MS);
+    }
     block.dataset.state = 'expanding';
-    let playbackFailed = false;
-    let crossfadeStarted = false;
-    let waitForCurrentSource: () => void = () => {};
-    const startCrossfade = (late: boolean): void => {
-      if (crossfadeStarted) return;
-      if (!playback || playbackFailed || !playback.isReady()) {
-        if (playback && !playbackFailed) waitForCurrentSource();
-        return;
-      }
-      crossfadeStarted = true;
-      block.classList.add(late ? 'is-late-crossfade' : 'is-crossfading');
-      if (late) playback.play();
-      else {
-        setTimeout(() => {
-          if (!playback.isReady()) {
-            block.classList.remove('is-crossfading');
-            crossfadeStarted = false;
-            waitForCurrentSource();
-            return;
-          }
-          playback.play();
-        }, CROSSFADE_PLAY_AT_MS);
-      }
-    };
-    playback?.failed.then(() => {
-      playbackFailed = true;
-    });
-    waitForCurrentSource = (): void => {
-      if (!playback || playbackFailed) return;
-      if (playback.isReady()) {
-        startCrossfade(true);
-        return;
-      }
-      playback.ready.then((ready) => {
-        if (!playback || playbackFailed) return;
-        if (ready && playback.isReady()) startCrossfade(true);
-        else if (!playbackFailed) waitForCurrentSource();
-      });
-    };
-
-    if (playback?.isReady()) startCrossfade(false);
-    else if (playback) waitForCurrentSource();
     await wait(EXPAND_MS);
     block.dataset.state = 'expanded';
     if (controlsHeader) document.body.dataset.heroIntro = 'done';

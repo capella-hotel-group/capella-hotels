@@ -5,16 +5,17 @@
     padding: 0;
 }
 
-/* Intro frame sizes: desktop 30vw x 57vh from the brief; tablet/mobile are placeholders pending design. */
+/* Intro frame is always a 20vw square (brief), then expands to the full block. */
 .hero-destination-video {
-    --hero-destination-intro-w: 80vw;
-    --hero-destination-intro-h: 55svh;
+    --hero-destination-intro-size: 20vw;
+    --hero-destination-parallax-duration: 1s;
+    --hero-destination-crossfade-duration: 0.4s;
     --hero-destination-expand-duration: 0.9s;
 
     position: relative;
     width: 100%;
     height: 100vh; /* fallback */
-    height: 100svh;
+    height: 100dvh;
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -26,19 +27,6 @@
     max-height: 1080px;
 }
 
-@media (width >= 768px) {
-    .hero-destination-video {
-        --hero-destination-intro-w: 50vw;
-    }
-}
-
-@media (width >= 1200px) {
-    .hero-destination-video {
-        --hero-destination-intro-w: 30vw;
-        --hero-destination-intro-h: 57vh;
-    }
-}
-
 .hero-destination-video-frame {
     position: absolute;
     inset: 0;
@@ -48,9 +36,11 @@
     transition: clip-path var(--hero-destination-expand-duration) cubic-bezier(0.37, 0, 0.63, 1);
 }
 
-.hero-destination-video[data-state='intro'] .hero-destination-video-frame {
+/* Media layers stay fullscreen-sized; only this clip opens, so the video is revealed, never zoomed. */
+.hero-destination-video[data-state='intro'] .hero-destination-video-frame,
+.hero-destination-video[data-state='switching'] .hero-destination-video-frame {
     clip-path: inset(
-        calc((100% - var(--hero-destination-intro-h)) / 2) calc((100% - var(--hero-destination-intro-w)) / 2)
+        calc((100% - var(--hero-destination-intro-size)) / 2) calc((100% - var(--hero-destination-intro-size)) / 2)
     );
 }
 
@@ -86,10 +76,12 @@
     z-index: 0;
     object-fit: cover;
     opacity: 0;
+    transition: opacity var(--hero-destination-crossfade-duration) ease-in-out;
 }
 
 .hero-destination-video-intro {
     z-index: 1;
+    transition: opacity var(--hero-destination-crossfade-duration) ease-in-out;
 }
 
 .hero-destination-video-intro picture,
@@ -100,64 +92,27 @@
     object-fit: cover;
 }
 
+/* Parallax moves only the image inside the frame; it holds its end pose so the crossfade never snaps.
+   Offsets are in vw (~6px / -8px at 1440 on the 20vw square); the fullscreen-sized layer never shows edges. */
+.hero-destination-video-intro img {
+    animation: hero-destination-video-parallax var(--hero-destination-parallax-duration) ease-out forwards;
+}
+
+@keyframes hero-destination-video-parallax {
+    from {
+        transform: translate(0, 0) scale(1.05);
+    }
+    to {
+        transform: translate(0.4vw, -0.55vw) scale(1.08);
+    }
+}
+
 .hero-destination-video.is-video-visible .hero-destination-video-media {
     opacity: 1;
 }
 
 .hero-destination-video.is-video-visible .hero-destination-video-intro {
     opacity: 0;
-}
-
-.hero-destination-video.is-crossfading .hero-destination-video-intro {
-    animation: hero-destination-intro-out var(--hero-destination-expand-duration) linear forwards;
-}
-
-.hero-destination-video.is-crossfading .hero-destination-video-media {
-    animation: hero-destination-video-in var(--hero-destination-expand-duration) linear forwards;
-}
-
-.hero-destination-video.is-late-crossfade .hero-destination-video-intro {
-    opacity: 0;
-    transition: opacity 0.6s ease;
-}
-
-.hero-destination-video.is-late-crossfade .hero-destination-video-media {
-    opacity: 1;
-    transition: opacity 0.6s ease;
-}
-
-@keyframes hero-destination-intro-out {
-    0%,
-    25% {
-        opacity: 1;
-    }
-    40% {
-        opacity: 0.75;
-    }
-    55% {
-        opacity: 0.4;
-    }
-    80%,
-    100% {
-        opacity: 0;
-    }
-}
-
-@keyframes hero-destination-video-in {
-    0%,
-    25% {
-        opacity: 0;
-    }
-    40% {
-        opacity: 0.25;
-    }
-    55% {
-        opacity: 0.6;
-    }
-    80%,
-    100% {
-        opacity: 1;
-    }
 }
 
 .hero-destination-video-heading {
@@ -182,10 +137,10 @@
 .hero-destination-video-heading-text {
     display: block;
     opacity: 0;
-    transform: translateY(60px);
+    transform: translateY(24px);
     transition:
-        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-destination-video-heading.is-revealed .hero-destination-video-heading-text {
@@ -195,19 +150,26 @@
 
 .hero-destination-video.is-static .hero-destination-video-frame,
 .hero-destination-video.is-static .hero-destination-video-frame::after,
+.hero-destination-video.is-static .hero-destination-video-media,
+.hero-destination-video.is-static .hero-destination-video-intro,
 .hero-destination-video.is-static .hero-destination-video-heading-text {
     transition: none;
+}
+
+.hero-destination-video.is-static .hero-destination-video-intro img {
+    animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .hero-destination-video-frame,
     .hero-destination-video-frame::after,
+    .hero-destination-video-media,
+    .hero-destination-video-intro,
     .hero-destination-video-heading-text {
         transition: none;
     }
 
-    .hero-destination-video .hero-destination-video-intro,
-    .hero-destination-video .hero-destination-video-media {
+    .hero-destination-video .hero-destination-video-intro img {
         animation: none;
     }
 }
