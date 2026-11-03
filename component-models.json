@@ -2042,97 +2042,25 @@
     "id": "hero-destination-item",
     "fields": [
       {
-        "component": "select",
-        "valueType": "string",
-        "name": "mediaType",
-        "label": "Media Type",
-        "value": "image",
-        "required": true,
-        "options": [
-          {
-            "name": "Image",
-            "value": "image"
-          },
-          {
-            "name": "Video",
-            "value": "video"
-          }
-        ]
-      },
-      {
         "component": "reference",
         "valueType": "string",
         "name": "image",
         "label": "Image (Desktop)",
-        "multi": false,
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "image"
-          ]
-        }
+        "multi": false
       },
       {
         "component": "reference",
         "valueType": "string",
         "name": "imageMobile",
         "label": "Image (Mobile)",
-        "multi": false,
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "image"
-          ]
-        }
+        "multi": false
       },
       {
         "component": "text",
         "valueType": "string",
         "name": "imageAlt",
         "label": "Alt Text",
-        "value": "",
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "image"
-          ]
-        }
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "video",
-        "label": "Video (Desktop)",
-        "multi": false,
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "video"
-          ]
-        }
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "videoMobile",
-        "label": "Video (Mobile)",
-        "multi": false,
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "video"
-          ]
-        }
+        "value": ""
       },
       {
         "component": "boolean",
