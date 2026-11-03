@@ -86,6 +86,8 @@ interface BlockConfig {
   revealElement?: Element;
 }
 
+const editorCardCache = new WeakMap<HTMLElement, { path: string; cards: FilterGridCard[] }>();
+
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
 
 export function normalizeChoice(value?: string | null): string {
@@ -326,7 +328,7 @@ function parseModeSettings(row: Element | undefined): ModeSetting[] {
           !CATEGORY_COLORS.has(normalizeColor(value)),
       ) ||
       labelFromTag(rootTag) ||
-      'Filter mode';
+      'Filter tab';
     return {
       key: `mode-${index}`,
       label,
@@ -416,7 +418,7 @@ function parseConfig(block: HTMLElement): BlockConfig {
           : [];
         return {
           key: `mode-${index}`,
-          label: textOf(labelElement) || 'Filter mode',
+          label: textOf(labelElement) || 'Filter tab',
           rootTag: '',
           filters,
           source: row,
@@ -834,31 +836,19 @@ function createCard(
   return item;
 }
 
-async function fetchModes(settings: ModeSetting[], useAuthoredFilters = false): Promise<AuthoredMode[]> {
-  return Promise.all(
-    settings.map(async (setting) => {
-      const { key, label, rootTag, isDefault, filters: authoredFilters = [] } = setting;
-      if (useAuthoredFilters) return { ...setting, filters: authoredFilters };
-      if (!rootTag.trim()) return { key, label, rootTag, isDefault, filters: [] };
-      const url = new URL('/content/servlet.childtags.json', getPublishBaseUrl());
-      url.searchParams.set('tag', rootTag.trim());
-      const response = await fetch(url.href, { headers: { Accept: 'application/json' } });
-      if (!response.ok) throw new Error(`Child tags request failed with status ${response.status}`);
-      const payload: {
-        data?: Array<{ path: string; title?: string | null }>;
-        status?: string;
-        code?: number;
-      } = await response.json();
-      if (payload.status === 'error' || (payload.code !== undefined && payload.code !== 200)) {
-        throw new Error('Unable to load filter tags.');
-      }
-      const filters = (payload.data || []).map(({ path, title }) => ({
-        tag: normalizeTagId(path),
-        label: title?.trim() || labelFromTag(path),
-      }));
-      return { key, label, rootTag, isDefault, filters };
-    }),
-  );
+function buildModes(config: BlockConfig): AuthoredMode[] {
+  return config.modeSettings.map((setting) => {
+    const filters = config.useAuthoredFilters
+      ? setting.filters || []
+      : config.categorySettings
+          .filter(({ tag }) => tagIsWithinRoot(tag, setting.rootTag))
+          .map((category) => ({ ...category, label: labelFromTag(category.tag) }));
+    const defaultFilter = filters.find(({ isDefault }) => isDefault);
+    return {
+      ...setting,
+      filters: defaultFilter ? [defaultFilter, ...filters.filter((filter) => filter !== defaultFilter)] : filters,
+    };
+  });
 }
 
 function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[], modes: AuthoredMode[]): void {
@@ -926,7 +916,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   const tabs = document.createElement('div');
   tabs.className = 'filters-grid-tabs';
   tabs.setAttribute('role', 'tablist');
-  tabs.setAttribute('aria-label', 'Filter mode');
+  tabs.setAttribute('aria-label', 'Filter tabs');
   const modeLabel = document.createElement('p');
   modeLabel.className = 'filters-grid-mode-label';
   modeLabel.textContent = modes[0]?.label || '';
@@ -1172,17 +1162,24 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   block.setAttribute('aria-busy', 'true');
   try {
     const config = parseConfig(block);
-    const [cards, modes] = await Promise.all([
-      fetchCards(config.cfRootPath),
-      fetchModes(config.modeSettings, config.useAuthoredFilters),
-    ]);
+    // UE keeps the previous block in place while decorating its replacement.
+    const resource = block.dataset.aueResource;
+    const previousBlock = resource
+      ? [...(block.closest('main')?.querySelectorAll<HTMLElement>('.filters-grid[data-aue-resource]') || [])].find(
+          (candidate) => candidate !== block && candidate.dataset.aueResource === resource,
+        )
+      : undefined;
+    const cached = previousBlock ? editorCardCache.get(previousBlock) : undefined;
+    const cards = cached?.path === config.cfRootPath ? cached.cards : await fetchCards(config.cfRootPath);
+    if (resource) editorCardCache.set(block, { path: config.cfRootPath, cards });
+    const modes = buildModes(config);
     render(block, config, cards, modes);
   } catch (error) {
     console.error('[filters-grid] Failed to load card content', error);
     const message = document.createElement('p');
     message.className = 'filters-grid-error';
     message.setAttribute('role', 'alert');
-    message.textContent = error instanceof Error ? error.message : 'Unable to load experiences and filter tags.';
+    message.textContent = error instanceof Error ? error.message : 'Unable to load experiences.';
     block.replaceChildren(message);
   } finally {
     block.removeAttribute('aria-busy');
