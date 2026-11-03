@@ -250,7 +250,7 @@
         "options": [
           {
             "name": "Global",
-            "value": ""
+            "value": "global"
           },
           {
             "name": "Destination",
