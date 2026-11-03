@@ -16,7 +16,7 @@ jest.mock('@/utils/env.js', () => ({
   resolveDAMUrl: (value: string) => value,
 }));
 
-describe('filters-grid child tag filters', () => {
+describe('filters-grid authored filters', () => {
   const fetchMock = jest.fn();
   const originalFetch = global.fetch;
 
@@ -72,25 +72,7 @@ describe('filters-grid child tag filters', () => {
           }),
         };
       }
-      const rootTag = url.searchParams.get('tag') || '';
-      const destination = rootTag.includes('destination');
-      return {
-        ok: true,
-        json: async () => ({
-          status: 'success',
-          code: 200,
-          data: destination
-            ? [
-                { path: '/content/cq:tags/capella-hotels/destination/bangkok', title: 'Bangkok Title' },
-                { path: '/content/cq:tags/capella-hotels/destination/hanoi', title: 'Hanoi Title' },
-              ]
-            : rootTag.includes(':interest')
-              ? [{ path: '/content/cq:tags/capella-hotels/interest/culture', title: 'Interest Culture' }]
-              : rootTag.includes(':type')
-                ? [{ path: '/content/cq:tags/capella-hotels/type/retreat', title: 'Retreats' }]
-                : [{ path: '/content/cq:tags/capella-hotels/experience/culture', title: 'Local Culture' }],
-        }),
-      };
+      throw new Error(`Unexpected request: ${input}`);
     });
   });
 
@@ -126,67 +108,50 @@ describe('filters-grid child tag filters', () => {
     );
   });
 
-  it('starts card and child-tag requests concurrently', async () => {
+  it('requests only cards and clears the loading state when they arrive', async () => {
     const pendingResponses: Array<(response: { ok: boolean; json: () => Promise<unknown> }) => void> = [];
     fetchMock.mockImplementation(() => new Promise((resolve) => pendingResponses.push(resolve)));
     const block = createBlock();
     const decoration = decorate(block);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(block.getAttribute('aria-busy')).toBe('true');
-    pendingResponses.forEach((resolve, index) => {
+    pendingResponses.forEach((resolve) => {
       resolve({
         ok: true,
-        json: async () => (index === 0 ? { data: { filterGridCardDetailsList: { items: [] } } } : { data: [] }),
+        json: async () => ({ data: { filterGridCardDetailsList: { items: [] } } }),
       });
     });
     await decoration;
     expect(block.hasAttribute('aria-busy')).toBe(false);
   });
 
-  it('requests both authored roots and displays every child using API titles and order', async () => {
+  it('does not fetch legacy root tags or derive category filters from card tags', async () => {
     const block = createBlock();
     await decorate(block);
 
-    const tagRequests = fetchMock.mock.calls
-      .map(([input]) => new URL(input as string))
-      .filter((url) => url.pathname === '/content/servlet.childtags.json');
-    expect(tagRequests.map((url) => url.searchParams.get('tag'))).toEqual([
-      'capella-hotels:experience',
-      '/content/cq:tags/capella-hotels/destination',
-    ]);
-    const filters = [...block.querySelectorAll<HTMLButtonElement>('.filters-grid-filter')];
-    expect(filters.map((button) => button.textContent)).toEqual(['Bangkok Title', 'Hanoi Title']);
-    expect(block.querySelector('.filters-grid-card-title')?.textContent).toBe('Bangkok Experience');
-
-    filters[1]?.click();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(block.querySelectorAll('.filters-grid-filter')).toHaveLength(0);
     expect(block.querySelector('.filters-grid-empty')?.textContent).toBe('No matching results.');
-    expect(block.querySelectorAll('.filters-grid-filter')).toHaveLength(2);
-
-    block.querySelector<HTMLButtonElement>('[data-mode-key="experience"]')?.click();
-    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Local Culture');
-    expect(block.querySelector('.filters-grid-card-title')?.textContent).toBe('Bangkok Experience');
-  });
-
-  it('skips an empty root without deriving filters from cards', async () => {
-    const block = createBlock('');
-    await decorate(block);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
     block.querySelector<HTMLButtonElement>('[data-mode-key="experience"]')?.click();
     expect(block.querySelectorAll('.filters-grid-filter')).toHaveLength(0);
     expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(0);
   });
 
-  it('shows the existing error state when the child tags request fails', async () => {
+  it('skips an empty root without deriving filters from cards', async () => {
+    const block = createBlock('');
+    await decorate(block);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    block.querySelector<HTMLButtonElement>('[data-mode-key="experience"]')?.click();
+    expect(block.querySelectorAll('.filters-grid-filter')).toHaveLength(0);
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(0);
+  });
+
+  it('shows the error state when the cards request fails', async () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    fetchMock
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: { filterGridCardDetailsList: { items: [] } } }),
-      })
-      .mockResolvedValueOnce({ ok: false, status: 503 });
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
     const block = createBlock();
     await decorate(block);
-    expect(block.querySelector('[role="alert"]')?.textContent).toBe('Child tags request failed with status 503');
+    expect(block.querySelector('[role="alert"]')?.textContent).toBe('GraphQL request failed with status 503');
     expect(block.hasAttribute('aria-busy')).toBe(false);
   });
 
@@ -416,7 +381,7 @@ describe('filters-grid child tag filters', () => {
         [...block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')].map(
           (filter) => filter.textContent,
         ),
-      ).toEqual(['Hanoi', 'Bangkok']);
+      ).toEqual(['Bangkok', 'Hanoi']);
       expect(block.classList.contains('filters-grid-theme-blue')).toBe(true);
       block.querySelector<HTMLButtonElement>('[data-mode-key="mode-0"]')!.click();
       expect(
@@ -440,7 +405,7 @@ describe('filters-grid child tag filters', () => {
     item.replaceChildren();
     await decorate(block);
     expect(block.contains(item)).toBe(true);
-    expect(item.textContent).toContain('Filter mode');
+    expect(item.textContent).toContain('Filter tab');
     expect(block.querySelector('[role="tab"]')).toBeNull();
     item.dispatchEvent(new CustomEvent('aue:ui-select', { bubbles: true }));
     expect(item.classList.contains('is-inactive')).toBe(false);
@@ -499,6 +464,109 @@ describe('filters-grid child tag filters', () => {
     expect(block.querySelector('.filters-grid-mode-item:not(.is-inactive)')?.textContent).toContain('add categories');
   });
 
+  it.each([true, false])(
+    'reads default-first category fields and keeps the first default on top with instrumentation %s',
+    async (instrumented) => {
+      const block = createItemBlock(instrumented);
+      const categories = block.lastElementChild!.lastElementChild!;
+      categories.innerHTML = `
+        <hr><p>false</p><ul><li>capella-hotels:destination/hanoi</li></ul><p>pink</p>
+        <hr><p>true</p><ul><li>capella-hotels:destination/bangkok</li></ul><p>blue</p>
+        <hr><p>true</p><ul><li>capella-hotels:destination/singapore</li></ul><p>green</p><hr>
+      `;
+      await decorate(block);
+      const buttons = [...block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')];
+      expect(buttons.map((button) => button.textContent)).toEqual(['Bangkok', 'Hanoi', 'Singapore']);
+      expect(buttons[0]!.getAttribute('aria-pressed')).toBe('true');
+      expect(block.classList.contains('filters-grid-theme-blue')).toBe(true);
+    },
+  );
+
+  it('uses the first authored mode with a default, not the last default selected', async () => {
+    const block = createItemBlock();
+    const categories = block.querySelector('[data-aue-prop="categorySettings"]')!;
+    categories.innerHTML = `
+      <hr><p>false</p><ul><li>capella-hotels:experience/culture</li></ul><p>green</p>
+      <hr><p>true</p><ul><li>capella-hotels:experience/nature</li></ul><p>pink</p><hr>
+    `;
+    await decorate(block);
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Experience');
+    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Nature');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Nature');
+  });
+
+  it.each(['', 'white'])('defaults to white when the selected category colour is %s', async (color) => {
+    const block = createItemBlock();
+    const categories = block.lastElementChild!.lastElementChild!;
+    categories.innerHTML = `
+      <hr><p>true</p><ul><li>capella-hotels:destination/bangkok</li></ul><p>${color}</p><hr>
+    `;
+    await decorate(block);
+    expect(block.classList.contains('filters-grid-theme-white')).toBe(true);
+  });
+
+  it('reuses cards for UE configuration replacements without waiting for another request', async () => {
+    const main = document.createElement('main');
+    document.body.append(main);
+    let current = createItemBlock();
+    current.dataset.aueResource = 'urn:aemconnection:/content/grid';
+    main.append(current);
+    const authored = current.cloneNode(true) as HTMLElement;
+    await decorate(current);
+
+    for (const color of ['green', 'pink', 'white']) {
+      const replacement = authored.cloneNode(true) as HTMLElement;
+      const categories = replacement.lastElementChild!.lastElementChild!;
+      categories.innerHTML = `
+        <hr><p>true</p><ul><li>capella-hotels:destination/bangkok</li></ul><p>${color}</p><hr>
+      `;
+      current.after(replacement);
+      await decorate(replacement);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(replacement.classList.contains(`filters-grid-theme-${color}`)).toBe(true);
+      expect(replacement.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+      current.remove();
+      current = replacement;
+    }
+
+    const newScope = authored.cloneNode(true) as HTMLElement;
+    newScope.children[4]!.firstElementChild!.textContent = '/content/dam/other-cards';
+    current.after(newScope);
+    await decorate(newScope);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1]![0]).toContain(';path=/content/dam/other-cards');
+  });
+
+  it('does not reuse cards between different editor resources or published grids', async () => {
+    const main = document.createElement('main');
+    document.body.append(main);
+    for (const resource of ['urn:aemconnection:/content/grid-a', 'urn:aemconnection:/content/grid-b', '', '']) {
+      const block = createItemBlock(false);
+      if (resource) block.dataset.aueResource = resource;
+      main.append(block);
+      await decorate(block);
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('retries failed editor card requests instead of caching an error', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 503 });
+    const main = document.createElement('main');
+    document.body.append(main);
+    const block = createItemBlock();
+    block.dataset.aueResource = 'urn:aemconnection:/content/grid';
+    main.append(block);
+    const replacement = block.cloneNode(true) as HTMLElement;
+    await decorate(block);
+    expect(block.querySelector('[role="alert"]')).not.toBeNull();
+    block.after(replacement);
+    await decorate(replacement);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(replacement.querySelector('[role="alert"]')).toBeNull();
+    expect(replacement.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+  });
+
   it('reveals six more cards and resets the count when switching item filters', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
@@ -551,9 +619,7 @@ describe('filters-grid child tag filters', () => {
       expect(block.querySelectorAll('[role="tab"]')).toHaveLength(2);
       expect(block.querySelector('[role="tab"]')?.textContent).toBe(expectedDefault);
       expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe(expectedDefault);
-      expect(block.querySelector('.filters-grid-filter')?.textContent).toBe(
-        expectedDefault === 'Destination' ? 'Bangkok Title' : 'Local Culture',
-      );
+      expect(block.querySelector('.filters-grid-filter')).toBeNull();
       expect(block.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
     },
   );
@@ -574,7 +640,7 @@ describe('filters-grid child tag filters', () => {
       'Experience',
     ]);
     expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
-    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Bangkok Title');
+    expect(block.querySelector('.filters-grid-filter')).toBeNull();
     expect(block.querySelector('.filters-grid-reveal')?.textContent).toBe('Show More');
   });
 
@@ -602,7 +668,7 @@ describe('filters-grid child tag filters', () => {
       'Experience',
     ]);
     expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Renamed Destination');
-    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Bangkok Title');
+    expect(block.querySelector('.filters-grid-filter')).toBeNull();
   });
 
   it('uses the first mode when all checkboxes are unchecked, ignoring the legacy default', async () => {
@@ -658,17 +724,17 @@ describe('filters-grid child tag filters', () => {
       'By Type',
     ]);
     expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('By Interest');
-    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Interest Culture');
-    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+    expect(block.querySelector('.filters-grid-filter')).toBeNull();
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(0);
     expect(block.id).toBe('dynamic-grid');
     expect(block.querySelector('.filters-grid-reveal')?.textContent).toBe('Show More');
-    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     block
       .querySelector<HTMLButtonElement>('[aria-selected="true"]')
       ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('By Type');
-    expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Retreats');
-    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+    expect(block.querySelector('.filters-grid-filter')).toBeNull();
+    expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(0);
     block
       .querySelector<HTMLButtonElement>('[aria-selected="true"]')
       ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
@@ -689,8 +755,8 @@ describe('filters-grid child tag filters', () => {
         'By Place',
         'By Interest',
       ]);
-      expect(block.querySelector('.filters-grid-filter')?.textContent).toBe('Bangkok Title');
-      expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(1);
+      expect(block.querySelector('.filters-grid-filter')).toBeNull();
+      expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(0);
     },
   );
 
@@ -739,10 +805,10 @@ describe('filters-grid child tag filters', () => {
     );
     await decorate(block);
     expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
-    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Bangkok Title');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Bangkok');
     expect(block.classList.contains('filters-grid-theme-dark-brown')).toBe(true);
-    block.querySelector<HTMLButtonElement>('.filters-grid-filter:not([aria-pressed="true"])')?.click();
-    expect(block.classList.contains('filters-grid-theme-white')).toBe(true);
+    block.querySelector<HTMLButtonElement>('[data-mode-key="mode-0"]')!.click();
+    expect(block.classList.contains('filters-grid-theme-green')).toBe(true);
   });
 
   it('uses authored nested categories per mode without requesting child tags', async () => {
@@ -777,7 +843,7 @@ describe('filters-grid child tag filters', () => {
     ).toBe(false);
   });
 
-  it('falls back to the first authored mode when the default category is unavailable', async () => {
+  it('uses explicit categories even when no cards match them', async () => {
     const block = createConfiguredBlock(
       [
         ['Experience', 'capella-hotels:experience'],
@@ -786,8 +852,9 @@ describe('filters-grid child tag filters', () => {
       [['capella-hotels:destination/singapore', 'blue', true]],
     );
     await decorate(block);
-    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Experience');
-    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Local Culture');
+    expect(block.querySelector('[aria-selected="true"]')?.textContent).toBe('Destination');
+    expect(block.querySelector('.filters-grid-filter[aria-pressed="true"]')?.textContent).toBe('Singapore');
+    expect(block.querySelector('.filters-grid-empty')?.textContent).toBe('No matching results.');
   });
 
   it('shows a single mode as text and hides all mode labels with the global setting', async () => {
@@ -795,7 +862,7 @@ describe('filters-grid child tag filters', () => {
     await decorate(visible);
     expect(visible.querySelector('.filters-grid-mode-label')?.textContent).toBe('Experience');
     expect(visible.querySelector('[role="tab"]')).toBeNull();
-    expect(visible.querySelector('.filters-grid-filter')?.textContent).toBe('Local Culture');
+    expect(visible.querySelector('.filters-grid-filter')).toBeNull();
 
     const hidden = createConfiguredBlock(
       [
@@ -807,7 +874,7 @@ describe('filters-grid child tag filters', () => {
     );
     await decorate(hidden);
     expect(hidden.querySelector('.filters-grid-mode-label, [role="tab"]')).toBeNull();
-    expect(hidden.querySelector('.filters-grid-filter')?.textContent).toBe('Bangkok Title');
+    expect(hidden.querySelector('.filters-grid-filter')?.textContent).toBe('Bangkok');
     expect(hidden.classList.contains('filters-grid-theme-blue')).toBe(true);
   });
 
@@ -822,7 +889,10 @@ describe('filters-grid child tag filters', () => {
         },
       }),
     });
-    const block = createDynamicBlock('By Interest', [['By Interest', 'capella-hotels:interest']]);
+    const block = createConfiguredBlock(
+      [['By Interest', 'capella-hotels:interest']],
+      [['capella-hotels:interest/culture', 'white', false]],
+    );
     await decorate(block);
     expect(block.querySelectorAll('.filters-grid-card')).toHaveLength(0);
     expect(block.querySelector('.filters-grid-empty')?.textContent).toBe('No matching results.');
@@ -851,7 +921,7 @@ describe('filters-grid child tag filters', () => {
         },
       }),
     });
-    const block = createBlock();
+    const block = createItemBlock();
     await decorate(block);
     expect(block.querySelector<HTMLImageElement>('.filters-grid-card img')?.loading).toBe('lazy');
     const imageSources = jest.spyOn(HTMLImageElement.prototype, 'src', 'set');
@@ -887,9 +957,9 @@ describe('filters-grid child tag filters', () => {
       ok: true,
       json: async () => ({ data: { filterGridCardDetailsList: { items: [] } } }),
     });
-    const block = createBlock();
+    const block = createItemBlock();
     await decorate(block);
     expect(block.querySelector('.filters-grid-empty')?.textContent).toBe('No results are available.');
-    expect(block.querySelectorAll('.filters-grid-filter')).toHaveLength(2);
+    expect(block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')).toHaveLength(2);
   });
 });

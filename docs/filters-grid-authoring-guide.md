@@ -1,15 +1,15 @@
 # Filters Grid Authoring
 
-## Filter Modes And Labels
+## Filter Tabs And Labels
 
-Add a **Filter Mode** child item to the Filters Grid for each tab (for example, Experience or Destination). Each item has:
+Add a **Filter Tab** child item to the Filters Grid for each tab (for example, Experience or Destination). Each item has:
 
-- **Mode Label**: optional, but provide meaningful labels when multiple modes are displayed. A blank label displays "Filter mode".
+- **Tab Label**: optional, but provide meaningful labels when multiple tabs are displayed. A blank label displays "Filter tab".
 - **Category Settings**: one repeatable field containing Category Tag, Background Color, and Default Category.
 
-The child item itself represents the mode, so there is no repeatable Filter Mode Labels container around these fields and no Root Tag is needed. Filters come only from the item's authored Category Settings entries, in authored order.
+The child item itself represents the mode, so there is no repeatable Filter Mode Labels container around these fields and no Root Tag is needed. Filters come only from the item's authored Category Settings entries. The default category appears first; remaining categories keep their authored order.
 
-Use **Show Filter Mode Labels** to show or hide all mode labels together:
+Use **Show Filter Tab Labels** to show or hide all tab labels together:
 
 - With no modes configured, all cards in the Content Fragment scope are shown, with no mode or category controls.
 - With one mode, its label is shown as plain text when labels are enabled. Its authored categories are available as filters.
@@ -20,13 +20,15 @@ Hiding labels also removes the space reserved for them. Choose each filter tag e
 
 ## Category Settings And Default Category
 
-Within each filter mode, add entries in **Category Settings** to select the category tag, its **Background Color**, and optionally mark it as the **Default Category**. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
+Within each filter mode, each **Category Settings** entry starts with **Default Category**, followed by **Category Tag** and **Background Color**. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White, with White selected by default. These simple names retain the original shades and gradients. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
 
 The first mode containing a default category is selected on load. Within each mode, its first default category is used, or its first category if no default is selected. If no defaults are selected anywhere, the first authored mode and its first category are used.
 
 Categories without an authored colour use White. Filter matching uses the full tag ID, not its display title. The tag picker is not currently scoped with a `rootPath`; authors should select a tag from the intended mode's taxonomy.
 
-Each Filter Mode uses the standard block-item resource type, and its Category Settings is a single-level multifield. Add, remove, and reorder modes through the Universal Editor content tree. Empty new items remain visible with a configuration prompt. The editor reveals inactive mode items, and selecting an item in the content tree activates that mode without changing the published show/hide setting.
+Each Filter Tab uses the standard block-item resource type, and its Category Settings is a single-level multifield. Add, remove, and reorder tabs through the Universal Editor content tree. Empty new items remain visible with a configuration prompt. The editor reveals inactive tabs, and selecting an item in the content tree activates that tab without changing the published show/hide setting.
+
+The five coloured backgrounds use the supplied Figma gradient angles, stops, and opacity values, applied once across the full block. White remains a solid white background. Existing colour values and component/property identifiers are unchanged; the Filter Tab rename is author-facing only.
 
 ## Popup Content
 
@@ -40,6 +42,8 @@ An empty selection displays **No matching results.** If there are no cards at al
 
 ## Existing Pages
 
-Previously published legacy layouts remain supported, including root-only modes (which still load child tags automatically) and the earlier authored-category layout. To use the new model, add one **Filter Mode** child item per mode and author its categories. Previous multifield entries are not automatically migrated into child items; recreate them and preview/publish the page before rollout.
+Filters are no longer fetched from a root tag or the child-tags servlet. The earlier authored-category layout remains readable, but root-only modes have no category filters until authors configure explicit entries. To use the new model, add one **Filter Tab** child item per tab and author its categories. Previous multifield entries are not automatically migrated into child items; recreate them and preview/publish the page before rollout.
+
+During Universal Editor block updates, unchanged Content Fragment scopes reuse the previous block's loaded cards so configuration changes do not wait for another card request. Changing the scope fetches fresh cards. Reload the page after publishing card Content Fragments to refresh their content. Normal preview/live page loads always request fresh cards.
 
 The updated component models and runtime must be deployed before testing this field in Universal Editor; the editor loads branch code, not localhost.

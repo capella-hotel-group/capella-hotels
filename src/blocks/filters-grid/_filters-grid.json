@@ -17,14 +17,14 @@
       }
     },
     {
-      "title": "Filter Mode",
+      "title": "Filter Tab",
       "id": "filters-grid-tab",
       "plugins": {
         "xwalk": {
           "page": {
             "resourceType": "core/franklin/components/block/v1/block/item",
             "template": {
-              "name": "Filter Mode",
+              "name": "Filter Tab",
               "model": "filters-grid-tab"
             }
           }
@@ -65,15 +65,15 @@
           "component": "aem-content",
           "name": "cfRootPath",
           "label": "Content Fragment's Root Path",
-          "description": "Select a Content Fragment folder or path prefix. Only matching published cards are requested; a blank path requests all cards.",
+          "description": "Choose a Content Fragment folder or path prefix to request matching published cards. Leave blank for all cards.",
           "valueType": "string",
           "required": true
         },
         {
           "component": "boolean",
           "name": "showModeLabels",
-          "label": "Show Filter Mode Labels",
-          "description": "This setting applies to all mode labels. If enabled, provide labels when multiple modes are displayed. If hidden, the configured default category and its mode remain active.",
+          "label": "Show Filter Tab Labels",
+          "description": "Show or hide all tab labels. Multiple visible tabs need labels. When hidden, the default category and tab stay active.",
           "valueType": "boolean",
           "value": true
         },
@@ -92,8 +92,8 @@
         {
           "component": "text",
           "name": "label",
-          "label": "Mode Label",
-          "description": "Provide a label when multiple modes are displayed.",
+          "label": "Tab Label",
+          "description": "Provide a label when multiple tabs are displayed.",
           "valueType": "string",
           "required": false
         },
@@ -101,9 +101,17 @@
           "component": "container",
           "name": "categorySettings",
           "label": "Category Settings",
-          "description": "Add one entry per filter, in display order. Suggested colours: Green for Nature.",
+          "description": "Add filters in order; the default appears first.",
           "multi": true,
           "fields": [
+            {
+              "component": "boolean",
+              "name": "isDefaultCategory",
+              "label": "Default Category",
+              "description": "Show this category first and activate its tab. For multiple defaults, use the first tab with a default and its first default category.",
+              "valueType": "boolean",
+              "value": false
+            },
             {
               "component": "aem-tag",
               "name": "categoryTag",
@@ -116,6 +124,7 @@
               "component": "select",
               "name": "backgroundColor",
               "label": "Background Color",
+              "description": "Suggested colour: Green for Nature.",
               "valueType": "string",
               "required": true,
               "value": "white",
@@ -127,14 +136,6 @@
                 { "name": "Blue", "value": "blue" },
                 { "name": "White", "value": "white" }
               ]
-            },
-            {
-              "component": "boolean",
-              "name": "isDefaultCategory",
-              "label": "Default Category",
-              "description": "Select the category to show initially. Its mode will also be selected. If multiple defaults are selected, the first mode with a default wins; within each mode, its first default is used.",
-              "valueType": "boolean",
-              "value": false
             }
           ]
         }

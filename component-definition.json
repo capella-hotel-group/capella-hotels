@@ -423,14 +423,14 @@
           }
         },
         {
-          "title": "Filter Mode",
+          "title": "Filter Tab",
           "id": "filters-grid-tab",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Filter Mode",
+                  "name": "Filter Tab",
                   "model": "filters-grid-tab"
                 }
               }

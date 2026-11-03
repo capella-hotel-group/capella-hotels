@@ -48,18 +48,6 @@
       "id": "footer-social-item",
       "fields": [
         {
-          "component": "select",
-          "name": "platform",
-          "label": "Social Platform",
-          "valueType": "string",
-          "required": true,
-          "options": [
-            { "name": "Facebook", "value": "facebook" },
-            { "name": "Instagram", "value": "instagram" },
-            { "name": "Line", "value": "line" }
-          ]
-        },
-        {
           "component": "reference",
           "name": "icon",
           "label": "Social Media Icon",
