@@ -1,12 +1,12 @@
 // Rows (authored, one cell each): 0=introImage (+collapsed alt), 1=introImageMobile, 2=video,
 // 3=videoMobile, 4=poster, 5=loop, 6=showOverlay, 7=heading, 8=headingDelay — see parseVideoHero.
 import { moveInstrumentation } from '@/app/scripts.js';
-import { buildHeading, scheduleHeadingReveal } from './cinematic/heading-reveal';
-import { buildIntroMedia } from './cinematic/intro-media';
-import { deferred, wait } from './cinematic/timing';
-import { createVideoPlayback } from './cinematic/video-playback';
-import { ownsPageHeading } from './page-heading';
-import { parseVideoHero } from './parse';
+import { ownsPageHeading } from '../hero-destination/lib/page-heading';
+import { buildHeading, scheduleHeadingReveal } from './lib/cinematic/heading-reveal';
+import { buildIntroMedia } from './lib/cinematic/intro-media';
+import { deferred, wait } from './lib/cinematic/timing';
+import { createVideoPlayback } from './lib/cinematic/video-playback';
+import { parseVideoHero } from './lib/parse';
 
 const MIN_INTRO_MS = 500;
 const MAX_INTRO_WAIT_MS = 3000;
@@ -36,7 +36,7 @@ function ownsHeader(block: HTMLElement): boolean {
   return !!section && section === document.querySelector('main .section');
 }
 
-export default function decorateVideo(block: HTMLElement): void {
+export default function decorate(block: HTMLElement): void {
   const config = parseVideoHero([...block.children] as HTMLElement[]);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasIntroImage = !!(config.introPicture || config.introPictureMobile);

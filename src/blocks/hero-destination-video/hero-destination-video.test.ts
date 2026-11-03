@@ -18,7 +18,7 @@ const pic = (src: string, alt = ''): string => `<picture><img src="${src}" alt="
 const link = (href: string): string => `<a href="${href}">${href}</a>`;
 const CELLS = [pic('/intro.jpg', 'Tea'), '', link('/v.mp4'), '', pic('/poster.jpg'), 'true', 'true', 'Kyoto', '1500'];
 
-describe('hero-destination video variant', () => {
+describe('hero-destination-video', () => {
   let decorate: Decorate;
   let reducedMotion: boolean;
   let mobileViewport: boolean;
@@ -42,7 +42,7 @@ describe('hero-destination video variant', () => {
     HTMLMediaElement.prototype.pause = jest.fn();
     HTMLMediaElement.prototype.load = jest.fn();
     jest.resetModules();
-    ({ default: decorate } = await import('../hero-destination'));
+    ({ default: decorate } = await import('./hero-destination-video'));
   });
 
   afterEach(() => {
@@ -54,8 +54,8 @@ describe('hero-destination video variant', () => {
 
   function build(cells = CELLS, { firstSection = true, properties = [] as string[] } = {}): HTMLElement {
     const lead = firstSection ? '' : '<div class="section"></div>';
-    document.body.innerHTML = `<main>${lead}<div class="section"><div class="hero-destination video"></div></div></main>`;
-    const block = document.querySelector('.hero-destination') as HTMLElement;
+    document.body.innerHTML = `<main>${lead}<div class="section"><div class="hero-destination-video"></div></div></main>`;
+    const block = document.querySelector('.hero-destination-video') as HTMLElement;
     cells.forEach((html, index) => {
       const row = document.createElement('div');
       row.innerHTML = `<div>${html}</div>`;
