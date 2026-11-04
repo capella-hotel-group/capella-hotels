@@ -21,6 +21,7 @@ function controller({
   loop = true,
   onChange = undefined as ((index: number) => void) | undefined,
   onAutoplayEnd = undefined as (() => void) | undefined,
+  holdFor = undefined as ((index: number) => Promise<void> | null) | undefined,
 } = {}): CarouselController {
   const { track, slides, dots } = build(count);
   return new CarouselController({
@@ -34,6 +35,7 @@ function controller({
     effect,
     onChange,
     onAutoplayEnd,
+    holdFor,
   });
 }
 
@@ -194,5 +196,75 @@ describe('CarouselController autoplay pausing', () => {
     }).init();
 
     expect(slides.map((slide) => slide.getAttribute('tabindex'))).toEqual([null, null]);
+  });
+});
+
+describe('CarouselController holdFor', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+    window.matchMedia = jest.fn().mockReturnValue({ matches: false });
+    window.ResizeObserver = jest.fn().mockReturnValue({ observe: jest.fn(), disconnect: jest.fn() });
+  });
+
+  afterEach(() => jest.useRealTimers());
+
+  function holds(): { holdFor: (index: number) => Promise<void> | null; release: () => void } {
+    let release = (): void => {};
+    const holdFor = (index: number): Promise<void> | null =>
+      index === 0
+        ? new Promise<void>((resolve) => {
+            release = resolve;
+          })
+        : null;
+    return { holdFor, release: () => release() };
+  }
+
+  it('ignores the interval on a held slide and advances when the hold resolves', async () => {
+    const { holdFor, release } = holds();
+    const carousel = controller({ holdFor });
+    carousel.init();
+
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(active()).toBe(0);
+
+    release();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active()).toBe(1);
+
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(active()).toBe(2);
+  });
+
+  it('does not advance from a hold that resolves while paused', async () => {
+    const { holdFor, release } = holds();
+    const carousel = controller({ holdFor });
+    carousel.init();
+
+    carousel.pause('hover');
+    release();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active()).toBe(0);
+  });
+
+  it('asks for a fresh hold on resume', async () => {
+    const holdFor = jest.fn().mockReturnValue(new Promise<void>(() => {}));
+    const carousel = controller({ holdFor });
+    carousel.init();
+    carousel.pause('hover');
+    carousel.resume('hover');
+    expect(holdFor).toHaveBeenCalledTimes(2);
+  });
+
+  it('holds autoplay while the intro pause reason is set', async () => {
+    const carousel = controller();
+    carousel.init();
+    carousel.pause('intro');
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(active()).toBe(0);
+    carousel.resume('intro');
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(active()).toBe(1);
   });
 });

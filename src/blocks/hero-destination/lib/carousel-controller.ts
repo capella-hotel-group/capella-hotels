@@ -4,7 +4,7 @@
 import type { EffectController } from './effects/types';
 
 /** Autoplay stays stopped while any reason is held, so one source resuming can't override another. */
-export type CarouselPauseReason = 'hover' | 'focus' | 'visibility' | 'user';
+export type CarouselPauseReason = 'hover' | 'focus' | 'visibility' | 'user' | 'intro';
 
 export interface CarouselControllerOptions {
   track: HTMLElement;
@@ -19,6 +19,8 @@ export interface CarouselControllerOptions {
   onChange?: (index: number) => void;
   /** Fired when a non-looping autoplay stops on the last slide. */
   onAutoplayEnd?: () => void;
+  /** Optional function to hold autoplay on a slide while a promise resolves. */
+  holdFor?: (index: number) => Promise<void> | null;
 }
 
 export class CarouselController {
@@ -32,10 +34,13 @@ export class CarouselController {
   private readonly effect: EffectController;
   private readonly onChange?: (index: number) => void;
   private readonly onAutoplayEnd?: () => void;
+  private readonly holdFor?: (index: number) => Promise<void> | null;
   private readonly pauseReasons = new Set<CarouselPauseReason>();
   private activeIndex = 0;
   private finished = false;
-  private timerId: ReturnType<typeof setInterval> | null = null;
+  private timerId: ReturnType<typeof setTimeout> | null = null;
+  private holdToken = 0;
+  private running = false;
 
   constructor({
     track,
@@ -48,6 +53,7 @@ export class CarouselController {
     effect,
     onChange,
     onAutoplayEnd,
+    holdFor,
   }: CarouselControllerOptions) {
     this.track = track;
     this.slides = slides;
@@ -58,6 +64,7 @@ export class CarouselController {
     this.effect = effect;
     this.onChange = onChange;
     this.onAutoplayEnd = onAutoplayEnd;
+    this.holdFor = holdFor;
     this.canAutoplay = autoplay && slides.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -156,14 +163,23 @@ export class CarouselController {
   private start(): void {
     if (this.canAutoplay && !this.finished && this.pauseReasons.size === 0) {
       this.stop();
-      this.timerId = setInterval(() => this.tick(), this.intervalMs);
+      this.running = true;
+      const hold = this.holdFor?.(this.activeIndex) ?? null;
+      if (hold) {
+        const token = this.holdToken;
+        hold.then(() => {
+          if (token === this.holdToken && this.running) this.tick();
+        });
+      } else {
+        this.timerId = setTimeout(() => this.tick(), this.intervalMs);
+      }
     }
     this.syncLiveRegion();
   }
 
   /** Auto-rotation must stay silent; once stopped, slide changes are user-driven so announce them. */
   private syncLiveRegion(): void {
-    this.track.setAttribute('aria-live', this.timerId === null ? 'polite' : 'off');
+    this.track.setAttribute('aria-live', this.running ? 'off' : 'polite');
   }
 
   /** Advances to the next slide; when loop is disabled, stops autoplay after the last slide. */
@@ -177,11 +193,14 @@ export class CarouselController {
       return;
     }
     this.setActive((this.activeIndex + 1) % this.slides.length);
+    this.start();
   }
 
   private stop(): void {
+    this.holdToken++;
+    this.running = false;
     if (this.timerId !== null) {
-      clearInterval(this.timerId);
+      clearTimeout(this.timerId);
       this.timerId = null;
     }
   }
