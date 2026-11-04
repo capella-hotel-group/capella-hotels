@@ -3,9 +3,11 @@ import { resolveDAMUrl } from '@/utils/env';
 import { applyBlockIdentity } from '@/utils/block-identity';
 
 // Row indices mirror the field order of the `destination-introduction` model
-// (eyebrow, title, body), after the leading identity rows. Changing that field
-// list is a contract change and must update these indices in the same commit.
+// (eyebrow, title, body), after the leading identity rows and before the two
+// trailing CTA rows. Changing that field list is a contract change and must
+// update these indices in the same commit.
 const COPY_FIELDS = ['eyebrow', 'title', 'body'] as const;
+const CTA_VARIANTS = ['primary', 'secondary'] as const;
 const IMAGE_MODEL = 'destination-introduction-image';
 // Cell indices mirror the field order of the `destination-introduction-image`
 // model; the `*Alt` fields collapse into the cell of the field they suffix and
@@ -73,12 +75,58 @@ function buildCopy(row: Element | undefined, field: string): HTMLElement | null 
 }
 
 /**
- * Pages published before the footer CTA was retired still deliver its grouped
- * label, link and new-tab flag after the copy fields until they are republished.
+ * A grouped CTA cell always ends with its new-tab flag; an unauthored one is empty.
+ * Pages published before the CTA fields existed emit no CTA rows at all, so the CTA
+ * rows are recognised by shape rather than counted from the tail.
  */
-function isRetiredCtaRow(row: HTMLElement | undefined): boolean {
-  const cell = row?.children.length === 1 ? row.firstElementChild : null;
-  return !!cell?.querySelector('a[href]') && [...cell.children].some(isFlag);
+function isCtaRow(row: HTMLElement | undefined): boolean {
+  if (!row || row.children.length > 1) return false;
+  const cell = row.firstElementChild;
+  if (!hasContent(cell)) return true;
+  const last = cell.lastElementChild;
+  return !!last && isFlag(last);
+}
+
+/**
+ * Reads an element-grouped CTA cell. The label arrives either as its own paragraph
+ * or as the anchor text; an unlabelled link falls back to its href.
+ */
+function buildCta(row: HTMLElement | undefined, variant: (typeof CTA_VARIANTS)[number]): HTMLAnchorElement | null {
+  const cell = row?.firstElementChild;
+  const link = cell?.querySelector('a[href]');
+  const href = link?.getAttribute('href');
+  if (!cell || !href) return null;
+
+  const children = [...cell.children];
+  const label = children.find((element) => !element.querySelector('a') && !isFlag(element));
+  const anchor = document.createElement('a');
+  anchor.className = `destination-introduction-cta destination-introduction-cta-${variant}`;
+  anchor.href = href;
+  anchor.textContent = textOf(label) || textOf(link) || href;
+  anchor.dataset.testid = `destination-introduction-${variant}-cta`;
+  if (children.some((element) => textOf(element).toLowerCase() === 'true')) {
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+  }
+  moveInstrumentation(cell, anchor);
+  return anchor;
+}
+
+function buildCtas(rows: HTMLElement[]): HTMLElement | null {
+  const [primary, secondary] = CTA_VARIANTS.map((variant, index) => buildCta(rows[index], variant));
+  if (!primary && !secondary) return null;
+
+  const links = document.createElement('div');
+  links.className = 'destination-introduction-ctas';
+  if (primary) links.append(primary);
+  if (primary && secondary) {
+    const divider = document.createElement('span');
+    divider.className = 'destination-introduction-cta-divider';
+    divider.setAttribute('aria-hidden', 'true');
+    links.append(divider);
+  }
+  if (secondary) links.append(secondary);
+  return links;
 }
 
 /**
@@ -280,7 +328,10 @@ export default function decorate(block: HTMLElement): void {
   // DOM order is the authored order, so these are the first three items
   const visibleGalleryRows = galleryRows.slice(0, MAX_MEDIA_ITEMS);
   const blockRows = rows.filter((row) => !galleryRows.includes(row));
-  if (isRetiredCtaRow(blockRows[blockRows.length - 1])) blockRows.pop();
+  const ctaRows: HTMLElement[] = [];
+  while (ctaRows.length < CTA_VARIANTS.length && isCtaRow(blockRows[blockRows.length - 1])) {
+    ctaRows.unshift(blockRows.pop()!);
+  }
   const copyRows = applyBlockIdentity(block, blockRows, { contentRows: COPY_FIELDS.length });
 
   const header = document.createElement('div');
@@ -293,6 +344,7 @@ export default function decorate(block: HTMLElement): void {
   if (title) header.append(title);
 
   const body = buildCopy(copyRows[2], COPY_FIELDS[2]);
+  const ctas = buildCtas(ctaRows);
 
   const slides = visibleGalleryRows.map(buildSlide);
   const track = buildTrack(slides);
@@ -317,6 +369,7 @@ export default function decorate(block: HTMLElement): void {
   if (header.childElementCount > 0) copy.append(header);
   if (body) copy.append(body);
   if (thumbs) copy.append(thumbs);
+  if (ctas) copy.append(ctas);
 
   block.textContent = '';
   block.append(copy);
