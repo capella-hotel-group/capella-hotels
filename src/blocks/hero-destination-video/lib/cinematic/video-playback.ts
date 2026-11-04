@@ -2,6 +2,8 @@ import { deferred } from './timing';
 
 const READY_TIMEOUT_MS = 5000;
 const HAVE_FUTURE_DATA = 3;
+const ERROR_RETRY_GRACE_MS = 400;
+const FIRST_FRAME_TIMEOUT_MS = 900;
 
 export interface VideoPlaybackOptions {
   desktopUrl: string;
@@ -21,6 +23,8 @@ export interface VideoPlayback {
   /** Error, timeout before ready, or a rejected play(). Once failed, always failed. */
   failed: Promise<void>;
   play(): void;
+  /** Resolves once pixels are actually rendering after play() (capped), so a crossfade never shows a black frame. */
+  firstFrame(): Promise<void>;
   /** Begins loading a deferLoad video; a no-op otherwise or when already started. */
   start(): void;
   isReady(): boolean;
@@ -88,8 +92,24 @@ export function createVideoPlayback({
 
   timer = started ? window.setTimeout(markFailed, timeoutMs) : 0;
   video.addEventListener('canplay', markReady);
-  video.addEventListener('error', markFailed);
-  source.addEventListener('error', markFailed);
+  // Chromium can abort the first byte-range probe under network contention; one delayed reload
+  // recovers it, so only a second error (or the timeout) counts as a failure.
+  let retry: 'none' | 'pending' | 'done' = 'none';
+  const handleLoadError = (): void => {
+    if (retry === 'pending') return;
+    if (retry === 'done') {
+      markFailed();
+      return;
+    }
+    retry = 'pending';
+    window.setTimeout(() => {
+      if (outcome === 'failed' || sourceReady) return;
+      retry = 'done';
+      video.load();
+    }, ERROR_RETRY_GRACE_MS);
+  };
+  video.addEventListener('error', handleLoadError);
+  source.addEventListener('error', handleLoadError);
   video.addEventListener(
     'playing',
     () => {
@@ -122,6 +142,17 @@ export function createVideoPlayback({
     play() {
       if (outcome === 'failed') return;
       video.play()?.catch(markFailed);
+    },
+    firstFrame() {
+      return new Promise<void>((resolve) => {
+        const timer = window.setTimeout(resolve, FIRST_FRAME_TIMEOUT_MS);
+        const done = (): void => {
+          window.clearTimeout(timer);
+          resolve();
+        };
+        if (typeof video.requestVideoFrameCallback === 'function') video.requestVideoFrameCallback(done);
+        else video.addEventListener('playing', done, { once: true });
+      });
     },
     start() {
       if (started) return;

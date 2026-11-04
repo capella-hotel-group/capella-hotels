@@ -72,10 +72,42 @@ describe('createVideoPlayback', () => {
     expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
   });
 
-  it('fails on a media error', async () => {
+  it('retries a media error once after a short grace, then fails on a second error', async () => {
     const playback = create();
+    const failed = flag(playback.failed);
+    playback.element.dispatchEvent(new Event('error'));
+    await jest.advanceTimersByTimeAsync(399);
+    expect(HTMLMediaElement.prototype.load).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(HTMLMediaElement.prototype.load).toHaveBeenCalledTimes(1);
+    expect(failed.done).toBe(false);
     playback.element.dispatchEvent(new Event('error'));
     await expect(playback.ready).resolves.toBe(false);
+    expect(failed.done).toBe(true);
+  });
+
+  it('recovers when the retried load becomes ready', async () => {
+    const playback = create();
+    const failed = flag(playback.failed);
+    playback.element.dispatchEvent(new Event('error'));
+    await jest.advanceTimersByTimeAsync(400);
+    playback.element.dispatchEvent(new Event('canplay'));
+    await expect(playback.ready).resolves.toBe(true);
+    expect(failed.done).toBe(false);
+  });
+
+  it('resolves firstFrame on the playing event, or after the cap', async () => {
+    const playback = create();
+    const viaEvent = flag(playback.firstFrame());
+    playback.element.dispatchEvent(new Event('playing'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(viaEvent.done).toBe(true);
+
+    const capped = flag(create().firstFrame());
+    await jest.advanceTimersByTimeAsync(899);
+    expect(capped.done).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(capped.done).toBe(true);
   });
 
   it('fails when play() is rejected', async () => {

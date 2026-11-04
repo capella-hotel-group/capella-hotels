@@ -12,7 +12,7 @@ const INTRO_MS = 1200;
 const MAX_INTRO_WAIT_MS = 3000;
 const CROSSFADE_MS = 500;
 const EXPAND_MS = 900;
-const VIDEO_READY_TIMEOUT_MS = 4000;
+const VIDEO_READY_TIMEOUT_MS = 6000;
 
 function transferInstrumentation(sourceCell: HTMLElement | null, target: Element | null): void {
   if (!sourceCell || !target) return;
@@ -184,8 +184,9 @@ export default function decorate(block: HTMLElement): void {
     // Without a playable video the intro image itself expands (image-only fallback).
     if (playback && (await untilVideoReady(playback))) {
       block.dataset.state = 'switching';
-      block.classList.add('is-video-visible');
       playback.play();
+      await playback.firstFrame();
+      block.classList.add('is-video-visible');
       await wait(CROSSFADE_MS);
     }
     block.dataset.state = 'expanding';
