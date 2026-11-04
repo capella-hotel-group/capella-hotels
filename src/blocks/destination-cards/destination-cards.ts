@@ -1,5 +1,14 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { isUniversalEditor } from '@/utils/env.js';
 import { createCarouselControls } from './carousel.js';
+
+// longest per-slot duration in the stylesheet (left card) plus a small settle margin
+const ENTRANCE_SETTLE_MS = 2250;
+const ENTRANCE_SLOTS: Record<number, string[]> = {
+  1: ['center'],
+  2: ['left', 'right'],
+  3: ['left', 'center', 'right'],
+};
 
 function stripHtml(html: string): string {
   const wrapper = document.createElement('div');
@@ -250,6 +259,68 @@ function buildCard(row: Element): HTMLLIElement {
   return item;
 }
 
+/**
+ * Cards rise from below their slot, together, once the section reaches the viewport (first 3
+ * on desktop, first 2 on mobile). Slot offsets/durations live in the stylesheet.
+ */
+function setupEntrance(block: HTMLElement, carousel: HTMLElement, list: HTMLElement): void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (isUniversalEditor() || !('IntersectionObserver' in window)) return;
+
+  const items = [...list.querySelectorAll<HTMLElement>('.destination-cards-item')];
+  const isMobile = window.matchMedia('(width < 768px)').matches;
+  // mobile: only the two cards visible on first view animate; swiped-in cards stay as they were
+  const animated = isMobile ? items.slice(0, 2) : items.slice(0, 3);
+  const slots = isMobile ? animated.map(() => 'center') : ENTRANCE_SLOTS[animated.length];
+  if (!animated.length || !slots) return;
+
+  animated.forEach((item, index) => {
+    item.dataset.entranceSlot = slots[index];
+  });
+  block.classList.add('destination-cards-animate');
+
+  let pending = animated.length;
+  const settle = (item: HTMLElement): void => {
+    delete item.dataset.entranceSlot;
+    item.classList.remove('is-entering');
+    pending -= 1;
+    if (pending > 0) return;
+    block.classList.remove('destination-cards-animate');
+    block.style.removeProperty('--entrance-fly');
+    list.scrollTop = 0;
+  };
+
+  const play = (targets: HTMLElement[], instant: boolean): void => {
+    if (instant) {
+      targets.forEach(settle);
+      return;
+    }
+    const fly = Math.ceil(Math.max(...targets.map((target) => target.offsetHeight))) + 2;
+    block.style.setProperty('--entrance-fly', `${fly}px`);
+    // commit the start offsets before releasing the cards so the transition runs
+    void block.offsetHeight;
+    requestAnimationFrame(() => {
+      targets.forEach((target) => target.classList.add('is-entering'));
+      window.setTimeout(() => targets.forEach(settle), ENTRANCE_SETTLE_MS);
+    });
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        // already scrolled past (e.g. reload mid-page): show the final state without animating
+        const passed = !entry.isIntersecting && entry.boundingClientRect.bottom < 0;
+        if (!entry.isIntersecting && !passed) return;
+        observer.disconnect();
+        play(animated, passed);
+      });
+    },
+    // fire as soon as the card area scrolls in; a higher threshold leaves a blank gap under the intro
+    { threshold: 0, rootMargin: '0px 0px -5% 0px' },
+  );
+  observer.observe(carousel);
+}
+
 export default function decorate(block: HTMLElement): HTMLElement {
   const rows = [...block.children];
   const firstCardIndex = rows.findIndex(isCardRow);
@@ -276,5 +347,6 @@ export default function decorate(block: HTMLElement): HTMLElement {
     const title = intro.querySelector('.destination-cards-title')?.textContent?.trim() || '';
     setupCarousel(carousel, list, title);
   }
+  setupEntrance(block, carousel, list);
   return block;
 }
