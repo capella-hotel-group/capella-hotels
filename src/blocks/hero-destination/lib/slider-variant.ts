@@ -109,7 +109,7 @@ export default function decorateSlider(block: HTMLElement): void {
       if (index === activeIndex && !videosPaused) {
         playback.start();
         playback.play();
-      } else playback.element.pause();
+      } else playback.pause();
     });
   };
 
@@ -124,8 +124,13 @@ export default function decorateSlider(block: HTMLElement): void {
         return;
       }
       video.addEventListener('ended', () => resolve(), { once: true });
-      // A dead video behaves like an image slide.
+      // A dead or autoplay-blocked video behaves like an image slide, unless it started by then.
       playback.failed.then(() => wait(intervalMs)).then(() => resolve());
+      playback.blocked
+        .then(() => wait(intervalMs))
+        .then(() => {
+          if (video.paused) resolve();
+        });
     });
   };
 

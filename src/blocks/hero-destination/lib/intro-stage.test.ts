@@ -16,14 +16,19 @@ function setup({ firstSection = true } = {}) {
 function fakePlayback() {
   const ready = deferred<boolean>();
   const failed = deferred();
+  const blocked = deferred();
+  const playing = deferred();
   let isReady = false;
+  let isBlocked = false;
   const playback = {
     element: document.createElement('video'),
     get ready() {
       return ready.promise;
     },
-    playing: new Promise<void>(() => {}),
+    playing: playing.promise,
     failed: failed.promise,
+    blocked: blocked.promise,
+    isBlocked: () => isBlocked,
     play: jest.fn(),
     firstFrame: () => Promise.resolve(),
     start: jest.fn(),
@@ -36,6 +41,14 @@ function fakePlayback() {
       ready.resolve(true);
     },
     fail: () => failed.resolve(),
+    block: () => {
+      isBlocked = true;
+      blocked.resolve();
+    },
+    startPlaying: () => {
+      isBlocked = false;
+      playing.resolve();
+    },
   };
 }
 
@@ -44,6 +57,25 @@ describe('runIntroStage', () => {
   afterEach(() => {
     jest.useRealTimers();
     delete document.body.dataset.heroIntro;
+  });
+
+  it('shows the intro image while autoplay is blocked and swaps to the video once it plays', async () => {
+    const { block, intro, firstMedia } = setup();
+    const { playback, becomeReady, block: blockPlay, startPlaying } = fakePlayback();
+    const done = runIntroStage({ block, intro, firstMedia, firstPlayback: playback });
+    await jest.advanceTimersByTimeAsync(1200);
+    blockPlay();
+    becomeReady();
+    await jest.advanceTimersByTimeAsync(1400);
+    await done;
+    expect(block.dataset.state).toBe('expanded');
+    expect(firstMedia.classList.contains('hero-destination-media--fallback')).toBe(true);
+    expect(firstMedia.querySelector('[data-intro-fallback] img')?.getAttribute('src')).toBe('/intro.jpg');
+
+    startPlaying();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(firstMedia.classList.contains('hero-destination-media--fallback')).toBe(false);
+    expect(firstMedia.querySelector('[data-intro-fallback]')).toBeNull();
   });
 
   it('runs intro, crossfade and expand for a ready video', async () => {

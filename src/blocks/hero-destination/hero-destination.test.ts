@@ -452,6 +452,31 @@ describe('hero-destination merged intro and media', () => {
     expect(time).toBe(0);
   });
 
+  it('treats a video slide whose autoplay is blocked like an image slide', async () => {
+    HTMLMediaElement.prototype.play = jest.fn().mockRejectedValue(new Error('NotAllowed'));
+    const el = block([], [videoItem(0), imageItem(1)]);
+    decorate(el);
+    await jest.advanceTimersByTimeAsync(4999);
+    expect(active(el)).toBe(0);
+    await jest.advanceTimersByTimeAsync(2);
+    expect(active(el)).toBe(1);
+  });
+
+  it('keeps holding a blocked video slide that starts playing before the interval ends', async () => {
+    const play = jest.fn().mockRejectedValueOnce(new Error('NotAllowed')).mockResolvedValue(undefined);
+    HTMLMediaElement.prototype.play = play;
+    const el = block([], [videoItem(0), imageItem(1)]);
+    decorate(el);
+    await jest.advanceTimersByTimeAsync(1000);
+    const video = el.querySelector('video')!;
+    Object.defineProperty(video, 'paused', { configurable: true, value: false });
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(active(el)).toBe(0);
+    video.dispatchEvent(new Event('ended'));
+    await jest.advanceTimersByTimeAsync(1);
+    expect(active(el)).toBe(1);
+  });
+
   it('loops the video of a single-item block', () => {
     const el = block([], [videoItem(0)]);
     decorate(el);

@@ -48,7 +48,7 @@ async function prepareFirstSlide(media: HTMLElement, playback: VideoPlayback | u
     if (!(await untilVideoReady(playback))) return false;
     playback.play();
     await playback.firstFrame();
-    return true;
+    return !playback.isBlocked();
   }
   const img = media.querySelector('img');
   if (!img) return false;
@@ -60,7 +60,15 @@ function useIntroAsBackground(intro: IntroMedia, media: HTMLElement): void {
   const picture = intro.element.querySelector('picture');
   if (!picture || media.classList.contains('hero-destination-media--fallback')) return;
   media.classList.add('hero-destination-media--fallback');
-  media.prepend(picture.cloneNode(true));
+  const clone = picture.cloneNode(true) as HTMLElement;
+  clone.setAttribute('data-intro-fallback', '');
+  media.prepend(clone);
+}
+
+/** A video blocked at first can still start after a user gesture; then the video replaces the stand-in. */
+function releaseIntroBackground(media: HTMLElement): void {
+  media.classList.remove('hero-destination-media--fallback');
+  media.querySelector('[data-intro-fallback]')?.remove();
 }
 
 export async function runIntroStage({ block, intro, firstMedia, firstPlayback }: IntroStageOptions): Promise<void> {
@@ -71,8 +79,10 @@ export async function runIntroStage({ block, intro, firstMedia, firstPlayback }:
   block.dataset.state = 'intro';
   if (controlsHeader) document.body.dataset.heroIntro = 'intro';
   try {
-    // A play() rejected after the crossfade still needs a picture behind the scrim.
+    // A play() refused after the crossfade still needs a picture behind the scrim.
     firstPlayback?.failed.then(() => useIntroAsBackground(intro, firstMedia));
+    firstPlayback?.blocked.then(() => useIntroAsBackground(intro, firstMedia));
+    firstPlayback?.playing.then(() => releaseIntroBackground(firstMedia));
 
     // Slide 1 waits for the intro image so the LCP image gets the bandwidth first.
     const introSettled = Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)]);
