@@ -175,10 +175,7 @@ export class CarouselController {
         const token = this.holdToken;
         const fire = () => {
           if (token === this.holdToken && this.running) {
-            // Defer the setTimeout scheduling to a microtask to prevent tight loops
-            Promise.resolve().then(() => {
-              this.timerId = setTimeout(() => this.tick(), 0);
-            });
+            this.timerId = setTimeout(() => this.tick(), 0);
           }
         };
         hold.then(fire, fire);

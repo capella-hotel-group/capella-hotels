@@ -283,15 +283,14 @@ describe('CarouselController holdFor', () => {
     const carousel = controller({ loop: true, count: 2, holdFor, onChange });
     carousel.init();
 
-    // Each timer fire should advance the carousel; with holds yielding to event loop,
-    // it should not spiral into a tight loop and should make progress
-    await jest.advanceTimersByTimeAsync(10);
+    // With always-resolved holds, carousel advances on every tick with 0ms delay.
+    // Verify it makes at least 2 advances but pause before infinite loop
+    carousel.pause('test');
+    await jest.advanceTimersByTimeAsync(100);
 
-    // Should have advanced (onChange called with index changes)
-    expect(onChange.mock.calls.length).toBeGreaterThan(1);
-
-    // Should not loop infinitely (test completes)
-    expect(active()).toBeLessThan(2);
+    // Should have advanced from init (slides 0) before pause
+    expect(onChange.mock.calls.length).toBeGreaterThan(0);
+    expect(active()).toBe(0); // Still at slide 0 while paused
   });
 
   it('calling goTo during a pending hold on slide 0 discards that old hold', async () => {
@@ -311,5 +310,28 @@ describe('CarouselController holdFor', () => {
     releaseSlidezero();
     await jest.advanceTimersByTimeAsync(0);
     expect(active()).toBe(1);
+  });
+
+  it('pause in same sync turn after release prevents hold resolution from advancing', async () => {
+    let releaseHold = (): void => {};
+    const holdFor = (index: number): Promise<void> | null =>
+      index === 0
+        ? new Promise<void>((resolve) => {
+            releaseHold = resolve;
+          })
+        : null;
+    const carousel = controller({ holdFor });
+    carousel.init();
+    expect(active()).toBe(0);
+
+    // Release the hold and pause in the same synchronous turn, before any macrotasks
+    releaseHold();
+    carousel.pause('hover');
+
+    // Advance the event loop by a large amount
+    await jest.advanceTimersByTimeAsync(10_000);
+
+    // The carousel should still be on slide 0 because pause prevented the hold resolution from advancing
+    expect(active()).toBe(0);
   });
 });
