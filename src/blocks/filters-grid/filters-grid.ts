@@ -105,20 +105,32 @@ function referenceUrl(reference?: Reference | null): string {
   return value ? resolveDAMUrl(value) : '';
 }
 
+function pageReferenceUrl(reference?: Reference | null): string {
+  const value = reference?._path?.trim() || reference?._publishUrl?.trim() || '';
+  if (!value) return '';
+  const url = new URL(value, window.location.href);
+  const root = '/content/capella-hotels';
+  if (url.pathname === root || url.pathname.startsWith(`${root}/`) || url.pathname === `${root}.html`) {
+    const path = url.pathname.slice(root.length).replace(/\.html$/i, '') || '/';
+    return `${path}${url.search}${url.hash}`;
+  }
+  return value;
+}
+
 export function resolveCardHref(
   card: Pick<FilterGridCard, 'directDestinationUrlType' | 'directDestinationUrl' | 'directDestinationExternalUrl'>,
 ): string {
   if (normalizeChoice(card.directDestinationUrlType) === 'external') {
     return card.directDestinationExternalUrl?.trim() || '';
   }
-  return referenceUrl(card.directDestinationUrl);
+  return pageReferenceUrl(card.directDestinationUrl);
 }
 
 function resolveModalHref(details: ModalDetails): string {
   if (normalizeChoice(details.modalCtaUrlType) === 'external') {
     return details.modalCtaUrlExternal?.trim() || '';
   }
-  return referenceUrl(details.modalCtaUrlInternal);
+  return pageReferenceUrl(details.modalCtaUrlInternal);
 }
 
 export function cardMatchesFilter(
@@ -766,13 +778,14 @@ function createModal() {
       description.append(sanitizeRichText(details.modalDescription.html));
       body.append(description);
     }
-    const href = resolveModalHref(details);
-    if (details.modalCtaLabel && href) {
+    const ctaLabel = details.modalCtaLabel?.trim();
+    const href = ctaLabel ? resolveModalHref(details) : '';
+    if (ctaLabel && href) {
       const cta = document.createElement('a');
       cta.className = 'filters-grid-modal-cta';
       cta.dataset.testid = 'filters-grid-modal-cta';
       cta.href = href;
-      cta.textContent = details.modalCtaLabel;
+      cta.textContent = ctaLabel;
       setNewTab(cta, details.openInNewTab);
       body.append(cta);
     }
