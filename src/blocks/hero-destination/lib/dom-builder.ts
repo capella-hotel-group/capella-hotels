@@ -49,6 +49,7 @@ export function buildDotNav(headings: string[], idPrefix: string): { nav: HTMLDi
     const dot = document.createElement('button');
     dot.type = 'button';
     dot.className = 'hero-destination-dot';
+    dot.setAttribute('data-testid', 'hero-destination-dot');
     dot.id = `${idPrefix}-tab-${index}`;
     dot.setAttribute('role', 'tab');
     // Named after the slide's heading: `aria-controls` alone never makes a screen reader read the
@@ -72,6 +73,7 @@ export function buildPlayToggle(): HTMLButtonElement {
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'hero-destination-toggle';
+  toggle.setAttribute('data-testid', 'hero-destination-toggle');
   toggle.dataset.state = 'playing';
   toggle.setAttribute('aria-label', 'Pause slideshow');
 

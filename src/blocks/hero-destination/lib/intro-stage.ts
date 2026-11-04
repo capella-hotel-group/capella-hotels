@@ -70,20 +70,23 @@ export async function runIntroStage({ block, intro, firstMedia, firstPlayback }:
   block.style.setProperty('--hero-destination-expand-duration', `${EXPAND_MS}ms`);
   block.dataset.state = 'intro';
   if (controlsHeader) document.body.dataset.heroIntro = 'intro';
-  // A play() rejected after the crossfade still needs a picture behind the scrim.
-  firstPlayback?.failed.then(() => useIntroAsBackground(intro, firstMedia));
+  try {
+    // A play() rejected after the crossfade still needs a picture behind the scrim.
+    firstPlayback?.failed.then(() => useIntroAsBackground(intro, firstMedia));
 
-  // Slide 1 waits for the intro image so the LCP image gets the bandwidth first.
-  const introSettled = Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)]);
-  introSettled.then(() => firstPlayback?.start());
-  await Promise.all([wait(INTRO_MS), introSettled]);
+    // Slide 1 waits for the intro image so the LCP image gets the bandwidth first.
+    const introSettled = Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)]);
+    introSettled.then(() => firstPlayback?.start());
+    await Promise.all([wait(INTRO_MS), introSettled]);
 
-  if (!(await prepareFirstSlide(firstMedia, firstPlayback))) useIntroAsBackground(intro, firstMedia);
-  block.dataset.state = 'switching';
-  block.classList.add('is-media-visible');
-  await wait(CROSSFADE_MS);
-  block.dataset.state = 'expanding';
-  await wait(EXPAND_MS);
-  block.dataset.state = 'expanded';
-  if (controlsHeader) document.body.dataset.heroIntro = 'done';
+    if (!(await prepareFirstSlide(firstMedia, firstPlayback))) useIntroAsBackground(intro, firstMedia);
+    block.dataset.state = 'switching';
+    block.classList.add('is-media-visible');
+    await wait(CROSSFADE_MS);
+    block.dataset.state = 'expanding';
+    await wait(EXPAND_MS);
+  } finally {
+    block.dataset.state = 'expanded';
+    if (controlsHeader) document.body.dataset.heroIntro = 'done';
+  }
 }

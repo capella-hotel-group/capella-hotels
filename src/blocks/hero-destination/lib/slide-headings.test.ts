@@ -42,6 +42,40 @@ describe('createHeadingSequencer', () => {
     expect(revealed(heading)).toBe(true);
   });
 
+  it('reveals a video slide heading immediately when the video fails', async () => {
+    const [heading] = headings(1);
+    let fail = (): void => {};
+    const failed = new Promise<void>((resolve) => {
+      fail = resolve;
+    });
+    const playback = { ...video(), failed };
+    createHeadingSequencer({
+      headings: [heading],
+      playbacks: [playback],
+      instant: false,
+      gate: Promise.resolve(),
+    }).activate(0);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(revealed(heading)).toBe(false);
+    fail();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(revealed(heading)).toBe(true);
+  });
+
+  it('reveals a video slide heading at the 6000ms cap without the extra delay', async () => {
+    const [heading] = headings(1);
+    createHeadingSequencer({
+      headings: [heading],
+      playbacks: [video()],
+      instant: false,
+      gate: Promise.resolve(),
+    }).activate(0);
+    await jest.advanceTimersByTimeAsync(5999);
+    expect(revealed(heading)).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(revealed(heading)).toBe(true);
+  });
+
   it('waits for the gate', async () => {
     const [heading] = headings(1);
     let open = (): void => {};

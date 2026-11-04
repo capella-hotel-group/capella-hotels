@@ -84,6 +84,23 @@ describe('runIntroStage', () => {
     expect(block.dataset.state).toBe('expanded');
   });
 
+  it('settles state and header when the first slide playback rejects', async () => {
+    const { block, intro, firstMedia } = setup();
+    const { playback, becomeReady } = fakePlayback();
+    (playback as unknown as { firstFrame: () => Promise<void> }).firstFrame = () => Promise.reject(new Error('boom'));
+    const done = runIntroStage({ block, intro, firstMedia, firstPlayback: playback });
+    const outcome = done.then(
+      () => 'resolved',
+      () => 'rejected',
+    );
+    await jest.advanceTimersByTimeAsync(1200);
+    becomeReady();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(await outcome).toBe('rejected');
+    expect(block.dataset.state).toBe('expanded');
+    expect(document.body.dataset.heroIntro).toBe('done');
+  });
+
   it('uses the intro image for an empty first slide', async () => {
     const { block, intro, firstMedia } = setup();
     const done = runIntroStage({ block, intro, firstMedia, firstPlayback: undefined });

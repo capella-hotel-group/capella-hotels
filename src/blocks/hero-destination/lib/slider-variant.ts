@@ -56,6 +56,7 @@ export default function decorateSlider(block: HTMLElement): void {
   const videoLoop = items.length === 1 || !autoplay;
 
   const firstHeadingTag = ownsPageHeading(block) ? 'h1' : 'h2';
+  block.setAttribute('data-testid', 'hero-destination');
   block.innerHTML = '';
   instanceCount += 1;
   const idPrefix = `hero-destination-${instanceCount}`;
@@ -174,12 +175,14 @@ export default function decorateSlider(block: HTMLElement): void {
 
   if (intro) {
     carousel.pause('intro');
-    runIntroStage({ block, intro, firstMedia: mediaEls[0] as HTMLElement, firstPlayback: playbacks[0] }).then(() => {
-      introRunning = false;
-      introDone.resolve();
-      syncVideos();
-      carousel.resume('intro');
-    });
+    runIntroStage({ block, intro, firstMedia: mediaEls[0] as HTMLElement, firstPlayback: playbacks[0] })
+      .catch(() => {})
+      .then(() => {
+        introRunning = false;
+        introDone.resolve();
+        syncVideos();
+        carousel.resume('intro');
+      });
   }
 
   if (!carousel.autoplayEnabled && !hasVideo) return;

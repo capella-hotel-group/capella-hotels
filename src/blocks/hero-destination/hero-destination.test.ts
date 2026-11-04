@@ -66,6 +66,19 @@ describe('hero-destination pause mechanism', () => {
     expect(block.querySelector('.hero-destination-dots')?.contains(toggle!)).toBe(false);
   });
 
+  it('exposes data-testid hooks on the root, dots and toggle', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+
+    expect(block.getAttribute('data-testid')).toBe('hero-destination');
+    const dots = block.querySelectorAll('.hero-destination-dot');
+    expect(dots).toHaveLength(3);
+    dots.forEach((dot) => expect(dot.getAttribute('data-testid')).toBe('hero-destination-dot'));
+    expect(block.querySelector('.hero-destination-toggle')?.getAttribute('data-testid')).toBe(
+      'hero-destination-toggle',
+    );
+  });
+
   it('omits the toggle when there is no auto-moving content', () => {
     const block = buildBlock(['false', '5'], 3, 'image');
     decorate(block);

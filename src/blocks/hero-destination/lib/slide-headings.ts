@@ -5,7 +5,7 @@ import type { VideoPlayback } from './cinematic/video-playback';
 export const VIDEO_HEADING_DELAY_MS = 1500;
 /** Matches .hero-destination-media's transition, so the text rises once the background settles. */
 export const IMAGE_HEADING_DELAY_MS = 750;
-/** A video that never reports `playing` (blocked, stalled) must not keep its heading hidden. */
+/** A video that never reports `playing` (blocked, stalled) reveals its heading at this cap, with no extra delay. */
 export const VIDEO_HEADING_CAP_MS = 6000;
 
 type HeadingPlayback = Pick<VideoPlayback, 'element' | 'failed'>;
@@ -44,10 +44,13 @@ export function createHeadingSequencer({ headings, playbacks, instant, gate }: H
       }
       heading.classList.remove('is-revealed');
       const playback = playbacks[index];
+      // Only a video that actually plays gets the extra beat; failure or the cap reveals at once.
       const ready = playback
-        ? Promise.race([nextPlaying(playback.element), playback.failed, wait(VIDEO_HEADING_CAP_MS)]).then(() =>
-            wait(VIDEO_HEADING_DELAY_MS),
-          )
+        ? Promise.race([
+            nextPlaying(playback.element).then(() => wait(VIDEO_HEADING_DELAY_MS)),
+            playback.failed,
+            wait(VIDEO_HEADING_CAP_MS),
+          ])
         : wait(IMAGE_HEADING_DELAY_MS);
       Promise.all([gate, ready]).then(() => {
         if (current === token) heading.classList.add('is-revealed');
