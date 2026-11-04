@@ -102,7 +102,11 @@ describe('hero-destination pause mechanism', () => {
     const lastPlayed = (): HTMLVideoElement => play.mock.contexts[play.mock.contexts.length - 1];
 
     expect(lastPlayed()).toBe(videos[0]);
-    expect(videos.map((video) => video.preload)).toEqual(['auto', 'none', 'none']);
+    expect(videos.map((video) => video.querySelector('source')?.getAttribute('src') ?? null)).toEqual([
+      '/clip-0.mp4',
+      null,
+      null,
+    ]);
 
     const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle')!;
     toggle.click();

@@ -1,6 +1,6 @@
 // src/blocks/hero-destination/lib/dom-builder.ts
 import { moveInstrumentation } from '@/app/scripts.js';
-import { buildMedia } from './media';
+import { buildMedia, type MediaOptions } from './media';
 import type { HeroDestinationItem } from './types';
 
 export function buildSlide(
@@ -9,6 +9,7 @@ export function buildSlide(
   idPrefix: string,
   total: number,
   headingTag: 'h1' | 'h2' = 'h2',
+  mediaOptions: MediaOptions = { eager: index === 0, loop: true },
 ): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'hero-destination-slide';
@@ -23,12 +24,15 @@ export function buildSlide(
   }
   moveInstrumentation(item.sourceRow, slide);
 
-  const media = buildMedia(item, index === 0);
+  const media = buildMedia(item, mediaOptions);
   if (!item.showOverlay) media.classList.add('hero-destination-media--no-overlay');
 
   const heading = document.createElement(headingTag);
   heading.className = 'hero-destination-heading';
-  heading.textContent = item.heading;
+  const headingText = document.createElement('span');
+  headingText.className = 'hero-destination-heading-text';
+  headingText.textContent = item.heading;
+  heading.append(headingText);
 
   slide.append(media, heading);
   return slide;
