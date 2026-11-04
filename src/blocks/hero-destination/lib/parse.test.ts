@@ -125,6 +125,7 @@ describe('hero-destination splitBlockRows', () => {
     for (let i = 0; i < introCount; i++) {
       expect(introRows[i]).toBe(intro[i]);
     }
+    expect(introRows).toHaveLength(introCount);
     expect(configRows).toHaveLength(5);
   });
 
@@ -164,16 +165,25 @@ describe('hero-destination parseIntro', () => {
     expect(intro?.mobile).not.toBeNull();
   });
 
-  it('respects slots: picture in alt row (row 1) with empty desktop does not become mobile', () => {
-    const desktopRow = row('');
-    const altRow = row(pic('/pic.jpg'));
-    const mobileRow = row('');
-    const intro = parseIntro([desktopRow, altRow, mobileRow]);
-    expect(intro).toBeNull();
+  it('respects slots: picture in alt row (row 1) does not displace desktop/mobile', () => {
+    const intro = parseIntro([row(''), row(pic('/alt-pic.jpg')), row(pic('/mobile-pic.jpg'))]);
+    expect(intro?.desktop).toBeNull();
+    expect(intro?.mobile?.querySelector('img')?.getAttribute('src')).toBe('/mobile-pic.jpg');
   });
 
   it('does not apply mobile row text as alt when alt row is empty', () => {
     const intro = parseIntro([row(pic('/d.jpg')), row(''), row('Text in mobile')]);
     expect(intro?.desktop?.querySelector('img')?.getAttribute('alt')).toBe('');
+  });
+
+  it('stray pictures outside slots do not displace desktop/mobile from slots', () => {
+    const intro = parseIntro([
+      row(pic('/desktop.jpg')), // row 0 = desktop
+      row(pic('/stray-pic.jpg')), // row 1 = alt slot (picture here is ignored)
+      row(pic('/another-stray.jpg')), // row 2 = middle stray
+      row(pic('/mobile.jpg')), // row 3 = mobile (last row)
+    ]);
+    expect(intro?.desktop?.querySelector('img')?.getAttribute('src')).toBe('/desktop.jpg');
+    expect(intro?.mobile?.querySelector('img')?.getAttribute('src')).toBe('/mobile.jpg');
   });
 });
