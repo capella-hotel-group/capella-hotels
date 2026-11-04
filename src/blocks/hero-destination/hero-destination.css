@@ -10,6 +10,13 @@
        edge and centres its 8px dots 28px above it. */
     --hero-destination-pagination-height: 56px;
 
+    /* Intro frame is a 20vw square that grows until it overscans the viewport. */
+    --hero-destination-intro-size: 20vw;
+    --hero-destination-final-size: calc(max(100vw, 100svh) * 1.04);
+    --hero-destination-parallax-duration: 1s;
+    --hero-destination-crossfade-duration: 0.4s;
+    --hero-destination-expand-duration: 0.9s;
+
     position: relative;
     width: 100%;
     height: 100vh; /* fallback */
@@ -225,5 +232,91 @@
 @media (width >= 768px) {
     .hero-destination-toggle {
         inset-inline-end: var(--dimension-layout-module-padding-inline-s);
+    }
+}
+
+.hero-destination[data-state] {
+    background: var(--color-surface-general-subtle, #f9f6f6);
+}
+
+.hero-destination-frame {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #000;
+    transition: clip-path var(--hero-destination-expand-duration) cubic-bezier(0.37, 0, 0.63, 1);
+}
+
+.hero-destination:is([data-state='intro'], [data-state='switching'], [data-state='expanding']) .hero-destination-frame {
+    will-change: clip-path;
+}
+
+/* Slides stay fullscreen-sized; only this clip opens, so the media is revealed, never zoomed. */
+.hero-destination:is([data-state='intro'], [data-state='switching']) .hero-destination-frame {
+    clip-path: inset(
+        calc((100% - var(--hero-destination-intro-size)) / 2) calc((100% - var(--hero-destination-intro-size)) / 2)
+    );
+}
+
+/* Negative end insets overscan the frame, which clips the square back to the viewport. */
+.hero-destination[data-state='expanding'] .hero-destination-frame {
+    clip-path: inset(
+        calc((100% - var(--hero-destination-final-size)) / 2) calc((100% - var(--hero-destination-final-size)) / 2)
+    );
+}
+
+.hero-destination:is([data-state='intro'], [data-state='switching'], [data-state='expanding'])
+    :is(.hero-destination-dots, .hero-destination-toggle) {
+    visibility: hidden;
+}
+
+.hero-destination-intro {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    transition: opacity var(--hero-destination-crossfade-duration) ease-in-out;
+}
+
+.hero-destination-intro picture,
+.hero-destination-intro img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Parallax moves only the image inside the frame and holds its end pose through the crossfade. */
+.hero-destination-intro img {
+    animation: hero-destination-parallax var(--hero-destination-parallax-duration) cubic-bezier(0.22, 1, 0.36, 1)
+        forwards;
+}
+
+@keyframes hero-destination-parallax {
+    from {
+        transform: translate(0, 0) scale(1.05);
+    }
+
+    to {
+        transform: translate(0.4vw, -0.55vw) scale(1.08);
+    }
+}
+
+.hero-destination.is-media-visible .hero-destination-intro {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hero-destination-media--fallback video {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-destination-frame,
+    .hero-destination-intro {
+        transition: none;
+    }
+
+    .hero-destination-intro img {
+        animation: none;
     }
 }
