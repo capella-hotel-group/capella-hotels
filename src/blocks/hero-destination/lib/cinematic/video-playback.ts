@@ -4,6 +4,7 @@ const READY_TIMEOUT_MS = 5000;
 const HAVE_FUTURE_DATA = 3;
 const ERROR_RETRY_GRACE_MS = 400;
 const FIRST_FRAME_TIMEOUT_MS = 900;
+const GESTURE_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'wheel'] as const;
 
 export interface VideoPlaybackOptions {
   desktopUrl: string;
@@ -20,9 +21,14 @@ export interface VideoPlayback {
   /** Resolves for the selected source; a source change creates a new readiness promise. */
   ready: Promise<boolean>;
   playing: Promise<void>;
-  /** Error, timeout before ready, or a rejected play(). Once failed, always failed. */
+  /** Error or timeout before ready, or a failed load. Once failed, always failed. */
   failed: Promise<void>;
+  /** Resolves the first time the browser refuses play(); playback then retries on the next user gesture. */
+  blocked: Promise<void>;
+  isBlocked(): boolean;
   play(): void;
+  /** Pauses and drops any pending gesture retry's intent to play. */
+  pause(): void;
   /** Resolves once pixels are actually rendering after play() (capped), so a crossfade never shows a black frame. */
   firstFrame(): Promise<void>;
   /** Begins loading a deferLoad video; a no-op otherwise or when already started. */
@@ -39,7 +45,7 @@ export function createVideoPlayback({
   deferLoad = false,
 }: VideoPlaybackOptions): VideoPlayback {
   const video = document.createElement('video');
-  video.className = 'hero-destination-video-media';
+  video.className = 'hero-destination-video';
   video.muted = true;
   video.setAttribute('muted', '');
   video.playsInline = true;
@@ -63,7 +69,30 @@ export function createVideoPlayback({
   let outcome: 'pending' | 'playing' | 'failed' = 'pending';
   const playing = deferred();
   const failed = deferred();
+  const blockedSignal = deferred();
   let timer = 0;
+  let blocked = false;
+  let wantsPlay = false;
+  let gestureArmed = false;
+
+  const retryOnGesture = (): void => {
+    gestureArmed = false;
+    GESTURE_EVENTS.forEach((type) => window.removeEventListener(type, retryOnGesture));
+    if (wantsPlay && outcome !== 'failed') attemptPlay();
+  };
+  // Autoplay refusals (Low Power Mode, strict policies) are recoverable, unlike load failures.
+  const markBlocked = (): void => {
+    blocked = true;
+    blockedSignal.resolve();
+    if (gestureArmed) return;
+    gestureArmed = true;
+    GESTURE_EVENTS.forEach((type) => window.addEventListener(type, retryOnGesture, { once: true, passive: true }));
+  };
+  function attemptPlay(): void {
+    video.play()?.then(() => {
+      blocked = false;
+    }, markBlocked);
+  }
 
   const markFailed = (): void => {
     if (outcome === 'failed') return;
@@ -129,7 +158,7 @@ export function createVideoPlayback({
     source.setAttribute('src', url);
     if (outcome !== 'failed') restartReadiness();
     video.load();
-    if (outcome === 'playing' || wasPlaying) video.play()?.catch(markFailed);
+    if (outcome === 'playing' || wasPlaying) attemptPlay();
   });
 
   return {
@@ -139,9 +168,16 @@ export function createVideoPlayback({
     },
     playing: playing.promise,
     failed: failed.promise,
+    blocked: blockedSignal.promise,
+    isBlocked: () => blocked,
     play() {
+      wantsPlay = true;
       if (outcome === 'failed') return;
-      video.play()?.catch(markFailed);
+      attemptPlay();
+    },
+    pause() {
+      wantsPlay = false;
+      video.pause();
     },
     firstFrame() {
       return new Promise<void>((resolve) => {

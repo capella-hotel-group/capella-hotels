@@ -39,6 +39,7 @@ describe('hero-destination pause mechanism', () => {
       .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
     HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined);
     HTMLMediaElement.prototype.pause = jest.fn();
+    HTMLMediaElement.prototype.load = jest.fn();
     window.ResizeObserver = jest.fn().mockReturnValue({ observe: jest.fn(), disconnect: jest.fn() });
     // media.ts reads matchMedia at module scope, so the stub has to be in place before import.
     jest.resetModules();
@@ -63,6 +64,19 @@ describe('hero-destination pause mechanism', () => {
     expect(toggle).not.toBeNull();
     expect(toggle?.getAttribute('aria-label')).toBe('Pause slideshow');
     expect(block.querySelector('.hero-destination-dots')?.contains(toggle!)).toBe(false);
+  });
+
+  it('exposes data-testid hooks on the root, dots and toggle', () => {
+    const block = buildBlock(['true', '5'], 3);
+    decorate(block);
+
+    expect(block.getAttribute('data-testid')).toBe('hero-destination');
+    const dots = block.querySelectorAll('.hero-destination-dot');
+    expect(dots).toHaveLength(3);
+    dots.forEach((dot) => expect(dot.getAttribute('data-testid')).toBe('hero-destination-dot'));
+    expect(block.querySelector('.hero-destination-toggle')?.getAttribute('data-testid')).toBe(
+      'hero-destination-toggle',
+    );
   });
 
   it('omits the toggle when there is no auto-moving content', () => {
@@ -94,7 +108,7 @@ describe('hero-destination pause mechanism', () => {
     expect(block.querySelector('.hero-destination-toggle')?.getAttribute('aria-label')).toBe('Play background video');
   });
 
-  it('plays only the active slide video, including after a pause and play', () => {
+  it('plays only the active slide video and advances when it ends', () => {
     const block = buildBlock(['true', '5'], 3);
     decorate(block);
     const videos = [...block.querySelectorAll('video')];
@@ -102,14 +116,17 @@ describe('hero-destination pause mechanism', () => {
     const lastPlayed = (): HTMLVideoElement => play.mock.contexts[play.mock.contexts.length - 1];
 
     expect(lastPlayed()).toBe(videos[0]);
-    expect(videos.map((video) => video.preload)).toEqual(['auto', 'none', 'none']);
+    expect(videos.map((video) => video.querySelector('source')?.getAttribute('src') ?? null)).toEqual([
+      '/clip-0.mp4',
+      null,
+      null,
+    ]);
 
     const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle')!;
     toggle.click();
     toggle.click();
     jest.advanceTimersByTime(5000);
-
-    expect(lastPlayed()).toBe(videos[1]);
+    expect(activeIndex(block)).toBe(0);
   });
 
   it('offers to replay a finished non-looping slideshow', () => {
@@ -154,7 +171,7 @@ describe('hero-destination pause mechanism', () => {
   });
 
   it('pauses on mouse hover over pagination dots and resumes on leave', () => {
-    const block = buildBlock(['true', '5'], 3);
+    const block = buildBlock(['true', '5'], 3, 'image');
     decorate(block);
     const nav = block.querySelector<HTMLElement>('.hero-destination-dots')!;
 
@@ -168,7 +185,7 @@ describe('hero-destination pause mechanism', () => {
   });
 
   it('pauses on mouse hover over text heading and resumes on leave', () => {
-    const block = buildBlock(['true', '5'], 3);
+    const block = buildBlock(['true', '5'], 3, 'image');
     decorate(block);
     const heading = block.querySelector<HTMLElement>('.hero-destination-heading')!;
 
@@ -182,7 +199,7 @@ describe('hero-destination pause mechanism', () => {
   });
 
   it('does not pause when hovering over the video background', () => {
-    const block = buildBlock(['true', '5'], 3);
+    const block = buildBlock(['true', '5'], 3, 'image');
     decorate(block);
 
     block.dispatchEvent(pointer('pointerenter', 'mouse'));
@@ -191,7 +208,7 @@ describe('hero-destination pause mechanism', () => {
   });
 
   it('ignores touch pointers so a tap cannot freeze autoplay', () => {
-    const block = buildBlock(['true', '5'], 3);
+    const block = buildBlock(['true', '5'], 3, 'image');
     decorate(block);
     const nav = block.querySelector<HTMLElement>('.hero-destination-dots')!;
     const heading = block.querySelector<HTMLElement>('.hero-destination-heading')!;
@@ -217,7 +234,7 @@ describe('hero-destination pause mechanism', () => {
     expect(activeIndex(block)).toBe(0);
   });
 
-  it('toggles slide rotation and video playback, and survives a hover resume', () => {
+  it('toggles slide rotation and video playback, and survives a hover resume', async () => {
     const block = buildBlock(['true', '5'], 3);
     decorate(block);
     const toggle = block.querySelector<HTMLButtonElement>('.hero-destination-toggle')!;
@@ -236,7 +253,9 @@ describe('hero-destination pause mechanism', () => {
     toggle.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
     toggle.click();
     expect(toggle.getAttribute('aria-label')).toBe('Pause slideshow');
-    jest.advanceTimersByTime(5000);
+    block.querySelector('video')!.dispatchEvent(new Event('ended'));
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(1);
     expect(activeIndex(block)).toBe(1);
   });
 
@@ -288,5 +307,179 @@ describe('hero-destination pause mechanism', () => {
 
     nav.dispatchEvent(pointer('pointerleave', 'mouse'));
     expect(track.getAttribute('aria-live')).toBe('off');
+  });
+});
+
+describe('hero-destination merged intro and media', () => {
+  let decorate: Decorate;
+  const CONFIG = ['true', '5', 'true', 'fade', 'true'];
+  const pic = (src: string): string => `<picture><img src="${src}" alt=""></picture>`;
+
+  function block(introCells: string[], items: string[][]): HTMLElement {
+    document.body.innerHTML = '<main><div class="section"><div class="hero-destination"></div></div></main>';
+    const el = document.querySelector('.hero-destination') as HTMLElement;
+    el.innerHTML =
+      [...introCells, ...CONFIG].map((value) => `<div><div>${value}</div></div>`).join('') +
+      items.map((cells) => `<div>${cells.map((cell) => `<div>${cell}</div>`).join('')}</div>`).join('');
+    return el;
+  }
+  const videoItem = (n: number): string[] => ['video', `<a href="/v-${n}.mp4">v</a>`, 'true', `Video ${n}`];
+  const imageItem = (n: number): string[] => ['image', pic(`/i-${n}.jpg`), 'true', `Image ${n}`];
+  const active = (el: HTMLElement): number =>
+    [...el.querySelectorAll('.hero-destination-slide')].findIndex((s) => s.getAttribute('aria-hidden') === 'false');
+
+  beforeEach(async () => {
+    jest.useFakeTimers();
+    document.documentElement.className = '';
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+    window.matchMedia = jest
+      .fn()
+      .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+    HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined);
+    HTMLMediaElement.prototype.pause = jest.fn();
+    HTMLMediaElement.prototype.load = jest.fn();
+    window.ResizeObserver = jest.fn().mockReturnValue({ observe: jest.fn(), disconnect: jest.fn() });
+    jest.resetModules();
+    ({ default: decorate } = await import('./hero-destination'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    document.documentElement.className = '';
+    delete document.body.dataset.heroIntro;
+  });
+
+  it('wraps the track in a frame and renders the intro', () => {
+    const el = block([pic('/intro.jpg'), pic('/intro-m.jpg')], [imageItem(0), imageItem(1)]);
+    decorate(el);
+    expect(el.querySelector('.hero-destination-frame > .hero-destination-track')).not.toBeNull();
+    expect(el.querySelector('.hero-destination-frame > .hero-destination-intro')).not.toBeNull();
+    expect(el.dataset.state).toBe('intro');
+  });
+
+  it('ignores swipes while the intro runs but not afterwards', () => {
+    const swipe = (el: HTMLElement): void => {
+      const track = el.querySelector<HTMLElement>('.hero-destination-track')!;
+      track.setPointerCapture = jest.fn();
+      const fire = (type: string, clientX: number): void => {
+        const event = new Event(type);
+        Object.assign(event, { pointerId: 1, pointerType: 'touch', button: 0, clientX, clientY: 0 });
+        track.dispatchEvent(event);
+      };
+      fire('pointerdown', 200);
+      fire('pointerup', 100);
+    };
+    const withIntro = block([pic('/intro.jpg'), pic('/intro-m.jpg')], [imageItem(0), imageItem(1)]);
+    decorate(withIntro);
+    swipe(withIntro);
+    expect(active(withIntro)).toBe(0);
+
+    const plain = block([], [imageItem(0), imageItem(1)]);
+    decorate(plain);
+    swipe(plain);
+    expect(active(plain)).toBe(1);
+  });
+
+  it('does not autoplay until the intro has expanded', async () => {
+    const el = block([pic('/intro.jpg'), pic('/intro-m.jpg')], [imageItem(0), imageItem(1)]);
+    decorate(el);
+    await jest.advanceTimersByTimeAsync(4000);
+    expect(active(el)).toBe(0);
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(el.dataset.state).toBe('expanded');
+    expect(active(el)).toBe(1);
+  });
+
+  it('skips the intro in Universal Editor', () => {
+    document.documentElement.classList.add('adobe-ue-edit');
+    const el = block([pic('/intro.jpg'), pic('/intro-m.jpg')], [imageItem(0)]);
+    decorate(el);
+    expect(el.querySelector('.hero-destination-intro')).toBeNull();
+    expect(el.dataset.state).toBeUndefined();
+    expect(el.querySelector('.hero-destination-heading')?.classList.contains('is-revealed')).toBe(true);
+  });
+
+  it('holds a video slide until the video ends, then times image slides', async () => {
+    const el = block([], [videoItem(0), imageItem(1), imageItem(2)]);
+    decorate(el);
+    const [video] = [...el.querySelectorAll('video')];
+    expect(video.loop).toBe(false);
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(active(el)).toBe(0);
+    video.dispatchEvent(new Event('ended'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active(el)).toBe(1);
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(active(el)).toBe(2);
+  });
+
+  it('advances on resume when the held video already ended', async () => {
+    const el = block([], [videoItem(0), imageItem(1)]);
+    decorate(el);
+    const video = el.querySelector('video')!;
+    const nav = el.querySelector('.hero-destination-dots')!;
+    const enter = new Event('pointerenter');
+    Object.defineProperty(enter, 'pointerType', { value: 'mouse' });
+    nav.dispatchEvent(enter);
+    Object.defineProperty(video, 'ended', { configurable: true, value: true });
+    video.dispatchEvent(new Event('ended'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active(el)).toBe(0);
+    const leave = new Event('pointerleave');
+    Object.defineProperty(leave, 'pointerType', { value: 'mouse' });
+    nav.dispatchEvent(leave);
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active(el)).toBe(1);
+  });
+
+  it('restarts a revisited video from the beginning', async () => {
+    const el = block([], [videoItem(0), imageItem(1)]);
+    decorate(el);
+    const video = el.querySelector('video')!;
+    let time = 4;
+    Object.defineProperty(video, 'currentTime', {
+      configurable: true,
+      get: () => time,
+      set: (value: number) => {
+        time = value;
+      },
+    });
+    video.dispatchEvent(new Event('ended'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active(el)).toBe(1);
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(active(el)).toBe(0);
+    expect(time).toBe(0);
+  });
+
+  it('treats a video slide whose autoplay is blocked like an image slide', async () => {
+    HTMLMediaElement.prototype.play = jest.fn().mockRejectedValue(new Error('NotAllowed'));
+    const el = block([], [videoItem(0), imageItem(1)]);
+    decorate(el);
+    await jest.advanceTimersByTimeAsync(4999);
+    expect(active(el)).toBe(0);
+    await jest.advanceTimersByTimeAsync(2);
+    expect(active(el)).toBe(1);
+  });
+
+  it('keeps holding a blocked video slide that starts playing before the interval ends', async () => {
+    const play = jest.fn().mockRejectedValueOnce(new Error('NotAllowed')).mockResolvedValue(undefined);
+    HTMLMediaElement.prototype.play = play;
+    const el = block([], [videoItem(0), imageItem(1)]);
+    decorate(el);
+    await jest.advanceTimersByTimeAsync(1000);
+    const video = el.querySelector('video')!;
+    Object.defineProperty(video, 'paused', { configurable: true, value: false });
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(active(el)).toBe(0);
+    video.dispatchEvent(new Event('ended'));
+    await jest.advanceTimersByTimeAsync(1);
+    expect(active(el)).toBe(1);
+  });
+
+  it('loops the video of a single-item block', () => {
+    const el = block([], [videoItem(0)]);
+    decorate(el);
+    expect(el.querySelector('video')?.loop).toBe(true);
   });
 });

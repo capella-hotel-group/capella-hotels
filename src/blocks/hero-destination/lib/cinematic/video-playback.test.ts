@@ -48,6 +48,10 @@ describe('createVideoPlayback', () => {
     expect(create().element.querySelector('source')?.getAttribute('src')).toBe('/m.mp4');
   });
 
+  it('uses the slider video class', () => {
+    expect(create().element.className).toBe('hero-destination-video');
+  });
+
   it('becomes ready on canplay and is not failed by the later timeout', async () => {
     const playback = create();
     const failed = flag(playback.failed);
@@ -110,14 +114,93 @@ describe('createVideoPlayback', () => {
     expect(capped.done).toBe(true);
   });
 
-  it('fails when play() is rejected', async () => {
-    HTMLMediaElement.prototype.play = jest.fn().mockRejectedValue(new Error('NotAllowed'));
-    const playback = create();
-    const failed = flag(playback.failed);
-    playback.element.dispatchEvent(new Event('canplay'));
-    playback.play();
-    await jest.advanceTimersByTimeAsync(0);
-    expect(failed.done).toBe(true);
+  describe('when the browser refuses play()', () => {
+    const gesture = (type = 'pointerdown'): void => {
+      window.dispatchEvent(new Event(type));
+    };
+
+    // Drain gesture listeners armed by earlier tests so they cannot hit this test's play mock.
+    afterEach(() => {
+      HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined);
+      gesture();
+    });
+
+    it('reports blocked instead of failed', async () => {
+      HTMLMediaElement.prototype.play = jest.fn().mockRejectedValue(new Error('NotAllowed'));
+      const playback = create();
+      const failed = flag(playback.failed);
+      const blocked = flag(playback.blocked);
+      playback.element.dispatchEvent(new Event('canplay'));
+      playback.play();
+      await jest.advanceTimersByTimeAsync(0);
+      expect(blocked.done).toBe(true);
+      expect(playback.isBlocked()).toBe(true);
+      expect(failed.done).toBe(false);
+    });
+
+    it.each(['pointerdown', 'keydown', 'touchstart', 'wheel'])(
+      'retries once on %s and clears blocked',
+      async (type) => {
+        const play = jest.fn().mockRejectedValueOnce(new Error('NotAllowed')).mockResolvedValue(undefined);
+        HTMLMediaElement.prototype.play = play;
+        const playback = create();
+        playback.play();
+        await jest.advanceTimersByTimeAsync(0);
+        expect(play).toHaveBeenCalledTimes(1);
+
+        gesture(type);
+        await jest.advanceTimersByTimeAsync(0);
+        expect(play).toHaveBeenCalledTimes(2);
+        expect(playback.isBlocked()).toBe(false);
+
+        gesture(type);
+        expect(play).toHaveBeenCalledTimes(2);
+      },
+    );
+
+    it('re-arms when the gesture retry is refused too', async () => {
+      const play = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('NotAllowed'))
+        .mockRejectedValueOnce(new Error('NotAllowed'))
+        .mockResolvedValue(undefined);
+      HTMLMediaElement.prototype.play = play;
+      const playback = create();
+      playback.play();
+      await jest.advanceTimersByTimeAsync(0);
+      gesture();
+      await jest.advanceTimersByTimeAsync(0);
+      expect(playback.isBlocked()).toBe(true);
+      gesture();
+      await jest.advanceTimersByTimeAsync(0);
+      expect(play).toHaveBeenCalledTimes(3);
+      expect(playback.isBlocked()).toBe(false);
+    });
+
+    it('does not retry after pause()', async () => {
+      const play = jest.fn().mockRejectedValue(new Error('NotAllowed'));
+      HTMLMediaElement.prototype.play = play;
+      HTMLMediaElement.prototype.pause = jest.fn();
+      const playback = create();
+      playback.play();
+      await jest.advanceTimersByTimeAsync(0);
+      playback.pause();
+      gesture();
+      await jest.advanceTimersByTimeAsync(0);
+      expect(play).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry once the video has failed to load', async () => {
+      const play = jest.fn().mockRejectedValue(new Error('NotAllowed'));
+      HTMLMediaElement.prototype.play = play;
+      const playback = create();
+      playback.play();
+      await jest.advanceTimersByTimeAsync(0);
+      await jest.advanceTimersByTimeAsync(5000);
+      gesture();
+      await jest.advanceTimersByTimeAsync(0);
+      expect(play).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('resolves playing on the playing event', async () => {

@@ -1,9 +1,26 @@
 // src/blocks/hero-destination/lib/media.ts
 // Builds a slide's background media (image or video) and swaps the mobile/desktop asset live on
 // breakpoint change, without re-requesting the asset that's already active.
+import { createVideoPlayback, type VideoPlayback } from './cinematic/video-playback';
 import type { HeroDestinationImageItem, HeroDestinationItem, HeroDestinationVideoItem } from './types';
 
+const VIDEO_READY_TIMEOUT_MS = 6000;
 const mqMobile = window.matchMedia('(max-width: 767px)');
+const playbacks = new WeakMap<HTMLElement, VideoPlayback>();
+
+export interface MediaOptions {
+  /** Load right away (slide 1 without an intro); otherwise loading waits for playback.start(). */
+  eager: boolean;
+  loop: boolean;
+}
+
+export function playbackFor(media: HTMLElement): VideoPlayback | undefined {
+  return playbacks.get(media);
+}
+
+function saveDataEnabled(): boolean {
+  return (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+}
 
 function buildImageMedia(item: HeroDestinationImageItem): HTMLElement {
   const wrapper = document.createElement('div');
@@ -21,48 +38,30 @@ function buildImageMedia(item: HeroDestinationImageItem): HTMLElement {
   return wrapper;
 }
 
-function buildVideoMedia(item: HeroDestinationVideoItem, eager: boolean): HTMLElement {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'hero-destination-media';
-
-  // Playback is driven by the slider so only the active slide's video runs.
-  const video = document.createElement('video');
-  video.className = 'hero-destination-video';
-  video.preload = eager ? 'auto' : 'none';
-  video.muted = true;
-  video.loop = true;
-  video.setAttribute('muted', '');
-  video.setAttribute('playsinline', '');
-  video.setAttribute('aria-hidden', 'true');
-
-  const source = document.createElement('source');
-  source.type = 'video/mp4';
-  const pickSrc = (): string => (mqMobile.matches ? item.mobileVideoUrl : item.desktopVideoUrl);
-  source.src = pickSrc();
-  video.append(source);
-
-  mqMobile.addEventListener('change', () => {
-    const next = pickSrc();
-    if (source.src !== next) {
-      const wasPlaying = !video.paused;
-      source.src = next;
-      video.load();
-      if (wasPlaying) video.play()?.catch(() => {});
-    }
-  });
-
-  wrapper.append(video);
-  return wrapper;
-}
-
 function buildEmptyMedia(): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'hero-destination-media';
   return wrapper;
 }
 
-export function buildMedia(item: HeroDestinationItem, eager: boolean): HTMLElement {
-  if (item.mediaType === 'video') return buildVideoMedia(item, eager);
+function buildVideoMedia(item: HeroDestinationVideoItem, { eager, loop }: MediaOptions): HTMLElement {
+  const wrapper = buildEmptyMedia();
+  if (saveDataEnabled()) return wrapper;
+  // Playback is driven by the slider so only the active slide's video runs.
+  const playback = createVideoPlayback({
+    desktopUrl: item.desktopVideoUrl,
+    mobileUrl: item.mobileVideoUrl,
+    loop,
+    timeoutMs: VIDEO_READY_TIMEOUT_MS,
+    deferLoad: !eager,
+  });
+  wrapper.append(playback.element);
+  playbacks.set(wrapper, playback);
+  return wrapper;
+}
+
+export function buildMedia(item: HeroDestinationItem, options: MediaOptions): HTMLElement {
+  if (item.mediaType === 'video') return buildVideoMedia(item, options);
   if (item.mediaType === 'image') return buildImageMedia(item);
   return buildEmptyMedia();
 }

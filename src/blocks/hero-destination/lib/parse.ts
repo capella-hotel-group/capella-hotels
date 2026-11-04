@@ -1,15 +1,16 @@
 // src/blocks/hero-destination/lib/parse.ts
-// Rows (authored): config rows have a single cell (0=autoplay, 1=autoplayInterval, 2=loop,
-// 3=transitionEffect, 4=simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
+// Rows (authored): single-cell block rows are [introImage, introImageAlt?, introImageMobile] followed
+// by 5 config rows (autoplay, autoplayInterval, loop, transitionEffect, simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
 // video, videoMobile, showOverlay, heading fields, but conditionally-hidden fields can drop their cell from
 // the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
 import type { EffectName } from './effects/types';
-import type { HeroDestinationItem } from './types';
+import type { HeroDestinationIntro, HeroDestinationItem } from './types';
 
 const DEFAULT_INTERVAL_SECONDS = 3;
 const DEFAULT_EFFECT: EffectName = 'fade';
 const BOOLEAN_TEXTS = ['true', 'false', 'yes', 'no'];
+const CONFIG_ROW_COUNT = 5;
 
 export interface CarouselConfig {
   autoplay: boolean;
@@ -101,4 +102,31 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
   }
 
   return { mediaType: 'empty', heading, showOverlay, sourceRow: row };
+}
+
+export interface SplitBlockRowsResult {
+  introRows: HTMLElement[];
+  configRows: HTMLElement[];
+}
+
+export function splitBlockRows(rows: HTMLElement[]): SplitBlockRowsResult {
+  // Config rows consist of exactly 5 rows. Everything before them is intro.
+  // Short legacy config (< 5 rows) are treated as config (not intro) to preserve position.
+  const configStartIndex = rows.length >= CONFIG_ROW_COUNT ? rows.length - CONFIG_ROW_COUNT : 0;
+  return {
+    introRows: rows.slice(0, configStartIndex),
+    configRows: rows.slice(configStartIndex),
+  };
+}
+
+// introImageAlt collapses into the desktop <img alt> when set, so there are 2 or 3 intro rows.
+export function parseIntro(rows: HTMLElement[]): HeroDestinationIntro | null {
+  if (rows.length === 0) return null;
+  const pictureIn = (row?: HTMLElement): HTMLPictureElement | null => row?.querySelector('picture') ?? null;
+  const desktop = pictureIn(rows[0]);
+  const mobile = rows.length > 1 ? pictureIn(rows[rows.length - 1]) : null;
+  if (!desktop && !mobile) return null;
+  const alt = rows.length >= 3 ? cellText(rows[1]) : '';
+  if (alt) [desktop, mobile].forEach((picture) => picture?.querySelector('img')?.setAttribute('alt', alt));
+  return { desktop, mobile };
 }

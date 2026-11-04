@@ -1897,15 +1897,14 @@
     ]
   },
   {
-    "id": "hero-destination-video",
+    "id": "hero-destination",
     "fields": [
       {
         "component": "reference",
         "valueType": "string",
         "name": "introImage",
         "label": "Intro Image (Desktop)",
-        "multi": false,
-        "required": true
+        "multi": false
       },
       {
         "component": "text",
@@ -1921,62 +1920,6 @@
         "label": "Intro Image (Mobile)",
         "multi": false
       },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "video",
-        "label": "Video (Desktop, MP4)",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "videoMobile",
-        "label": "Video (Mobile, MP4)",
-        "multi": false
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "poster",
-        "label": "Poster Image",
-        "multi": false
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "loop",
-        "label": "Loop video",
-        "value": true
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "showOverlay",
-        "label": "Show media overlay",
-        "value": false
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "heading",
-        "label": "Heading",
-        "value": "",
-        "required": true
-      },
-      {
-        "component": "number",
-        "valueType": "number",
-        "name": "headingDelay",
-        "label": "Heading delay after video starts (ms)",
-        "value": 1500
-      }
-    ]
-  },
-  {
-    "id": "hero-destination",
-    "fields": [
       {
         "component": "boolean",
         "valueType": "boolean",
@@ -2048,25 +1991,97 @@
     "id": "hero-destination-item",
     "fields": [
       {
+        "component": "select",
+        "valueType": "string",
+        "name": "mediaType",
+        "label": "Media Type",
+        "value": "image",
+        "required": true,
+        "options": [
+          {
+            "name": "Image",
+            "value": "image"
+          },
+          {
+            "name": "Video",
+            "value": "video"
+          }
+        ]
+      },
+      {
         "component": "reference",
         "valueType": "string",
         "name": "image",
         "label": "Image (Desktop)",
-        "multi": false
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "image"
+          ]
+        }
       },
       {
         "component": "reference",
         "valueType": "string",
         "name": "imageMobile",
         "label": "Image (Mobile)",
-        "multi": false
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "image"
+          ]
+        }
       },
       {
         "component": "text",
         "valueType": "string",
         "name": "imageAlt",
         "label": "Alt Text",
-        "value": ""
+        "value": "",
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "image"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "video",
+        "label": "Video (Desktop, MP4)",
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "video"
+          ]
+        }
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "videoMobile",
+        "label": "Video (Mobile, MP4)",
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "video"
+          ]
+        }
       },
       {
         "component": "boolean",

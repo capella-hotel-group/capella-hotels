@@ -32,7 +32,7 @@ describe('buildIntroMedia', () => {
 
   it('shows the desktop picture eagerly at desktop widths', () => {
     const intro = buildIntroMedia(picture('/d.jpg', 'Tea'), picture('/m.jpg'));
-    expect(intro?.element.className).toBe('hero-destination-video-intro');
+    expect(intro?.element.className).toBe('hero-destination-intro');
     expect(shownSrc(intro!.element)).toBe('/d.jpg');
     const img = intro!.element.querySelector('img')!;
     expect(img.getAttribute('loading')).toBe('eager');
