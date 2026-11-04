@@ -29,7 +29,7 @@ export default function decorate(block: HTMLElement): void {
     submit.rel = 'noopener noreferrer';
   }
   const syncSubmit = (): void => {
-    const href = buildBookingUrl(bookingUrl, selection);
+    const href = buildBookingUrl(bookingUrl, selection, showLocation);
     if (href) {
       submit.href = href;
       submit.removeAttribute('aria-disabled');
