@@ -1,17 +1,18 @@
 // Rows (authored, one cell each): 0=introImage (+collapsed alt), 1=introImageMobile, 2=video,
 // 3=videoMobile, 4=poster, 5=loop, 6=showOverlay, 7=heading, 8=headingDelay — see parseVideoHero.
 import { moveInstrumentation } from '@/app/scripts.js';
-import { buildHeading, scheduleHeadingReveal } from './cinematic/heading-reveal';
-import { buildIntroMedia } from './cinematic/intro-media';
-import { deferred, wait } from './cinematic/timing';
-import { createVideoPlayback } from './cinematic/video-playback';
-import { ownsPageHeading } from './page-heading';
-import { parseVideoHero } from './parse';
+import { ownsPageHeading } from '../hero-destination/lib/page-heading';
+import { buildHeading, scheduleHeadingReveal } from './lib/cinematic/heading-reveal';
+import { buildIntroMedia } from './lib/cinematic/intro-media';
+import { deferred, wait } from './lib/cinematic/timing';
+import { createVideoPlayback, type VideoPlayback } from './lib/cinematic/video-playback';
+import { parseVideoHero } from './lib/parse';
 
-const MIN_INTRO_MS = 500;
+const INTRO_MS = 1200;
 const MAX_INTRO_WAIT_MS = 3000;
+const CROSSFADE_MS = 500;
 const EXPAND_MS = 900;
-const CROSSFADE_PLAY_AT_MS = 225;
+const VIDEO_READY_TIMEOUT_MS = 4000;
 
 function transferInstrumentation(sourceCell: HTMLElement | null, target: Element | null): void {
   if (!sourceCell || !target) return;
@@ -36,19 +37,60 @@ function ownsHeader(block: HTMLElement): boolean {
   return !!section && section === document.querySelector('main .section');
 }
 
-export default function decorateVideo(block: HTMLElement): void {
+/** Holds the intro image until a playable frame exists; false once playback has failed or timed out. */
+async function untilVideoReady(playback: VideoPlayback): Promise<boolean> {
+  let failed = false;
+  playback.failed.then(() => {
+    failed = true;
+  });
+  while (!playback.isReady()) {
+    if (failed) return false;
+    await Promise.race([playback.ready, playback.failed]);
+  }
+  return true;
+}
+
+/** WCAG 2.2.2 pause control: invisible until keyboard focus, so the visual design is untouched. */
+function buildPauseToggle(playback: VideoPlayback): HTMLButtonElement {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'hero-destination-video-toggle';
+  const icon = document.createElement('span');
+  icon.className = 'hero-destination-video-toggle-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  toggle.append(icon);
+  const setPaused = (paused: boolean): void => {
+    toggle.dataset.state = paused ? 'paused' : 'playing';
+    toggle.setAttribute('aria-label', paused ? 'Play background video' : 'Pause background video');
+  };
+  setPaused(false);
+  toggle.addEventListener('click', () => {
+    const pausing = toggle.dataset.state === 'playing';
+    if (pausing) playback.element.pause();
+    else playback.play();
+    setPaused(pausing);
+  });
+  return toggle;
+}
+
+export default function decorate(block: HTMLElement): void {
   const config = parseVideoHero([...block.children] as HTMLElement[]);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasIntroImage = !!(config.introPicture || config.introPictureMobile);
   const wantsVideo = !!config.desktopVideoUrl && !saveDataEnabled() && !(reducedMotion && hasIntroImage);
 
-  const posterUrl = config.posterPicture?.querySelector('img')?.getAttribute('src') ?? undefined;
+  const posterUrl =
+    (config.posterPicture ?? config.introPicture ?? config.introPictureMobile)
+      ?.querySelector('img')
+      ?.getAttribute('src') ?? undefined;
   const playback = wantsVideo
     ? createVideoPlayback({
         desktopUrl: config.desktopVideoUrl,
         mobileUrl: config.mobileVideoUrl,
         loop: config.loop,
         posterUrl,
+        timeoutMs: VIDEO_READY_TIMEOUT_MS,
+        deferLoad: true,
       })
     : null;
   // Without a video the poster stands in as the image, so the hero is never empty.
@@ -108,10 +150,14 @@ export default function decorateVideo(block: HTMLElement): void {
   if (skipIntro || !intro) {
     block.dataset.state = 'expanded';
     block.classList.add('is-static');
+    playback?.start();
     if (playback) {
       block.classList.add('is-video-visible');
       if (intro) playback.failed.then(() => block.classList.remove('is-video-visible'));
-      if (!reducedMotion) playback.play();
+      if (!reducedMotion) {
+        playback.play();
+        block.append(buildPauseToggle(playback));
+      }
     }
     if (skipIntro || !playback) heading.classList.add('is-revealed');
     else reveal(Promise.resolve());
@@ -120,60 +166,33 @@ export default function decorateVideo(block: HTMLElement): void {
 
   const controlsHeader = ownsHeader(block);
   const expanded = deferred();
+  block.style.setProperty('--hero-destination-parallax-duration', `${INTRO_MS + CROSSFADE_MS}ms`);
+  block.style.setProperty('--hero-destination-crossfade-duration', `${CROSSFADE_MS}ms`);
+  block.style.setProperty('--hero-destination-expand-duration', `${EXPAND_MS}ms`);
   block.dataset.state = 'intro';
   if (controlsHeader) document.body.dataset.heroIntro = 'intro';
   reveal(expanded.promise);
 
   // A failed play() mid-crossfade drops back to the intro image instead of a frozen/black frame.
-  playback?.failed.then(() => block.classList.remove('is-crossfading', 'is-late-crossfade'));
+  playback?.failed.then(() => block.classList.remove('is-video-visible'));
 
-  Promise.all([wait(MIN_INTRO_MS), Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)])]).then(async () => {
+  // The video request waits for the intro image so the LCP image gets the bandwidth first.
+  const imageSettled = Promise.race([intro.loaded, wait(MAX_INTRO_WAIT_MS)]);
+  imageSettled.then(() => playback?.start());
+
+  Promise.all([wait(INTRO_MS), imageSettled]).then(async () => {
+    // Without a playable video the intro image itself expands (image-only fallback).
+    if (playback && (await untilVideoReady(playback))) {
+      block.dataset.state = 'switching';
+      block.classList.add('is-video-visible');
+      playback.play();
+      await wait(CROSSFADE_MS);
+    }
     block.dataset.state = 'expanding';
-    let playbackFailed = false;
-    let crossfadeStarted = false;
-    let waitForCurrentSource: () => void = () => {};
-    const startCrossfade = (late: boolean): void => {
-      if (crossfadeStarted) return;
-      if (!playback || playbackFailed || !playback.isReady()) {
-        if (playback && !playbackFailed) waitForCurrentSource();
-        return;
-      }
-      crossfadeStarted = true;
-      block.classList.add(late ? 'is-late-crossfade' : 'is-crossfading');
-      if (late) playback.play();
-      else {
-        setTimeout(() => {
-          if (!playback.isReady()) {
-            block.classList.remove('is-crossfading');
-            crossfadeStarted = false;
-            waitForCurrentSource();
-            return;
-          }
-          playback.play();
-        }, CROSSFADE_PLAY_AT_MS);
-      }
-    };
-    playback?.failed.then(() => {
-      playbackFailed = true;
-    });
-    waitForCurrentSource = (): void => {
-      if (!playback || playbackFailed) return;
-      if (playback.isReady()) {
-        startCrossfade(true);
-        return;
-      }
-      playback.ready.then((ready) => {
-        if (!playback || playbackFailed) return;
-        if (ready && playback.isReady()) startCrossfade(true);
-        else if (!playbackFailed) waitForCurrentSource();
-      });
-    };
-
-    if (playback?.isReady()) startCrossfade(false);
-    else if (playback) waitForCurrentSource();
     await wait(EXPAND_MS);
     block.dataset.state = 'expanded';
     if (controlsHeader) document.body.dataset.heroIntro = 'done';
+    if (playback && block.classList.contains('is-video-visible')) block.append(buildPauseToggle(playback));
     expanded.resolve();
   });
 }

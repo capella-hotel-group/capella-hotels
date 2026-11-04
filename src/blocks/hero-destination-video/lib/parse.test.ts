@@ -47,7 +47,7 @@ describe('parseVideoHero', () => {
     expect(config.mobileVideoUrl).toBe('/v.mp4');
     expect(config.posterPicture).toBeNull();
     expect(config.loop).toBe(true);
-    expect(config.showOverlay).toBe(true);
+    expect(config.showOverlay).toBe(false);
     expect(config.headingDelayMs).toBe(DEFAULT_HEADING_DELAY_MS);
   });
 
