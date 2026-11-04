@@ -112,8 +112,11 @@
 .hero-destination-heading {
     position: relative;
     z-index: 55;
-    margin: 0;
-    padding: 0.15em var(--dimension-layout-module-padding-block-s);
+    box-sizing: border-box;
+    width: 100%;
+    /* Headroom for tall Arabic marks inside the overflow mask; the negative margin keeps the layout height. */
+    margin: -0.25em 0;
+    padding: 0.4em var(--dimension-layout-module-padding-block-s);
     overflow: hidden; /* masks the rising text */
     color: var(--color-text-main-inverse-heading);
     font-family: var(--type-font-family-heading);
@@ -123,9 +126,15 @@
     text-align: center;
 }
 
+[dir='rtl'] .hero-destination-heading {
+    line-height: 1.6;
+}
+
 /* Exit is quick so the text never lingers over the next slide's background. */
 .hero-destination-heading-text {
     display: block;
+    text-align: center;
+    text-wrap: balance;
     opacity: 0;
     transform: translateY(24px);
     transition:

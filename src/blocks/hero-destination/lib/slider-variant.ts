@@ -168,7 +168,11 @@ export default function decorateSlider(block: HTMLElement): void {
 
   if (simulateTouch) {
     track.classList.add('hero-destination-track--swipeable');
-    initSwipe(track, (direction) => (direction * dirSign(track) === 1 ? carousel.next() : carousel.previous()));
+    initSwipe(track, (direction) => {
+      if (introRunning) return;
+      if (direction * dirSign(track) === 1) carousel.next();
+      else carousel.previous();
+    });
   }
 
   carousel.init();

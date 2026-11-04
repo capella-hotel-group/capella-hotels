@@ -357,6 +357,29 @@ describe('hero-destination merged intro and media', () => {
     expect(el.dataset.state).toBe('intro');
   });
 
+  it('ignores swipes while the intro runs but not afterwards', () => {
+    const swipe = (el: HTMLElement): void => {
+      const track = el.querySelector<HTMLElement>('.hero-destination-track')!;
+      track.setPointerCapture = jest.fn();
+      const fire = (type: string, clientX: number): void => {
+        const event = new Event(type);
+        Object.assign(event, { pointerId: 1, pointerType: 'touch', button: 0, clientX, clientY: 0 });
+        track.dispatchEvent(event);
+      };
+      fire('pointerdown', 200);
+      fire('pointerup', 100);
+    };
+    const withIntro = block([pic('/intro.jpg'), pic('/intro-m.jpg')], [imageItem(0), imageItem(1)]);
+    decorate(withIntro);
+    swipe(withIntro);
+    expect(active(withIntro)).toBe(0);
+
+    const plain = block([], [imageItem(0), imageItem(1)]);
+    decorate(plain);
+    swipe(plain);
+    expect(active(plain)).toBe(1);
+  });
+
   it('does not autoplay until the intro has expanded', async () => {
     const el = block([pic('/intro.jpg'), pic('/intro-m.jpg')], [imageItem(0), imageItem(1)]);
     decorate(el);
