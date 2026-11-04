@@ -24,6 +24,8 @@ Within each filter mode, each **Category Settings** entry contains **Category Ta
 
 Category Tag and Background Color are optional while drafting. Select exactly one tag for each completed category; Background Color defaults to White. Entries without a tag do not become filters. The picker is configured with `multi: false`. Delivered entries containing more than one distinct tag show an explicit configuration error instead of silently selecting one.
 
+The Category Tag picker is configured with the root path `/content/cq:tags/capella-hotels`, covering both Experience and Destination tags. Confirm that the hosted Universal Editor applies this picker restriction after deployment; it does not change runtime filtering or existing saved tags.
+
 Internal card destinations (`directDestinationUrl`) and popup CTAs (`modalCtaUrlInternal`) use EDS page paths on preview/live and localhost: `/content/capella-hotels/global.html` becomes `/global`. On an AEM author page, the link retains `/content/capella-hotels/global.html`. Query strings and anchors are retained. External destinations and DAM image references are unchanged.
 
 The properties panel is owned by Universal Editor, not the page's CSS. A custom separator between multifield entries is not currently configured because the documented model fields do not provide a separator component.
