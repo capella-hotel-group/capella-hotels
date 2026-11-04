@@ -277,20 +277,18 @@ describe('CarouselController holdFor', () => {
     expect(active()).toBe(1);
   });
 
-  it('does not hang with loop: true and always-resolved holds (yields to event loop)', async () => {
-    const holdFor = (): Promise<void> => Promise.resolve();
-    const onChange = jest.fn();
-    const carousel = controller({ loop: true, count: 2, holdFor, onChange });
+  it('advances exactly one slide per macrotask with an always-resolved hold and loop: true', async () => {
+    const carousel = controller({ count: 2, holdFor: () => Promise.resolve() });
     carousel.init();
 
-    // With always-resolved holds, carousel advances on every tick with 0ms delay.
-    // Verify it makes at least 2 advances but pause before infinite loop
-    carousel.pause('test');
-    await jest.advanceTimersByTimeAsync(100);
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active()).toBe(1);
 
-    // Should have advanced from init (slides 0) before pause
-    expect(onChange.mock.calls.length).toBeGreaterThan(0);
-    expect(active()).toBe(0); // Still at slide 0 while paused
+    // A 0ms timer scheduled during a tick is bumped to 1ms by fake-timers, so the next step needs 1ms.
+    await jest.advanceTimersByTimeAsync(1);
+    expect(active()).toBe(0);
+
+    carousel.pause('hover');
   });
 
   it('calling goTo during a pending hold on slide 0 discards that old hold', async () => {
@@ -312,7 +310,7 @@ describe('CarouselController holdFor', () => {
     expect(active()).toBe(1);
   });
 
-  it('pause in same sync turn after release prevents hold resolution from advancing', async () => {
+  it('pause between hold resolution and the follow-up timer prevents advancing', async () => {
     let releaseHold = (): void => {};
     const holdFor = (index: number): Promise<void> | null =>
       index === 0
@@ -324,14 +322,11 @@ describe('CarouselController holdFor', () => {
     carousel.init();
     expect(active()).toBe(0);
 
-    // Release the hold and pause in the same synchronous turn, before any macrotasks
     releaseHold();
+    await Promise.resolve();
     carousel.pause('hover');
-
-    // Advance the event loop by a large amount
     await jest.advanceTimersByTimeAsync(10_000);
 
-    // The carousel should still be on slide 0 because pause prevented the hold resolution from advancing
     expect(active()).toBe(0);
   });
 });
