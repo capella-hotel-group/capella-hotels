@@ -21,6 +21,21 @@ describe('filters-grid authored filters', () => {
   const originalFetch = global.fetch;
 
   it.each([
+    ['/content/capella-hotels/global', '/content/capella-hotels/global.html'],
+    [
+      'https://publish.example.com/content/capella-hotels/global.html?q=1#details',
+      '/content/capella-hotels/global.html?q=1#details',
+    ],
+  ])('retains the AEM page root on author for %s', (value, expected) => {
+    jest.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      hostname: 'author-p152536-e1620746.adobeaemcloud.com',
+      href: 'https://author-p152536-e1620746.adobeaemcloud.com/content/capella-hotels/test.html',
+    });
+    expect(resolveCardHref({ directDestinationUrl: { _publishUrl: value } })).toBe(expected);
+  });
+
+  it.each([
     ['square', undefined, 1, 0],
     ['square', '', 2, 2],
     ['square', '   ', 1, 0],
@@ -59,6 +74,9 @@ describe('filters-grid authored filters', () => {
     const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
     expect(modal).not.toBeNull();
     expect(modal.querySelector('.filters-grid-modal-cta')).toBeNull();
+    expect(modal.querySelector('.filters-grid-modal-panel')?.classList.contains('filters-grid-modal-no-cta')).toBe(
+      true,
+    );
     expect(modal.querySelectorAll('.filters-grid-modal-pagination button')).toHaveLength(Number(dots));
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   });

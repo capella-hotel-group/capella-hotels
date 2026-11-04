@@ -111,7 +111,7 @@
               "description": "Select one tag per category. Complete this field before publishing.",
               "valueType": "string",
               "multi": false,
-              "required": true
+              "required": false
             },
             {
               "component": "select",
@@ -119,7 +119,7 @@
               "label": "Background Color",
               "description": "Suggested colour: Green for Nature.",
               "valueType": "string",
-              "required": true,
+              "required": false,
               "value": "white",
               "options": [
                 { "name": "Dark brown", "value": "dark-brown" },

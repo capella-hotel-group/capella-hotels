@@ -821,11 +821,12 @@ body.filters-grid-modal-open {
     }
 
     .filters-grid-modal-panel[data-variant='wide'] {
-        width: min(100%, 920px);
+        width: min(100%, 792px);
+        height: min(600px, calc(100vh - 48px));
     }
 
-    .filters-grid-modal-panel[data-variant='wide'] .filters-grid-modal-body {
-        grid-template-columns: 120px minmax(0, 1fr) auto;
+    .filters-grid-modal-panel.filters-grid-modal-no-cta {
+        height: auto;
     }
 }
 

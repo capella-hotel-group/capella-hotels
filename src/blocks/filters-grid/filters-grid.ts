@@ -109,8 +109,13 @@ function pageReferenceUrl(reference?: Reference | null): string {
   const value = reference?._path?.trim() || reference?._publishUrl?.trim() || '';
   if (!value) return '';
   const url = new URL(value, window.location.href);
+  const isEds = /(?:\.aem\.(?:page|live)$|^localhost$|^127\.0\.0\.1$)/i.test(window.location.hostname);
   const root = '/content/capella-hotels';
   if (url.pathname === root || url.pathname.startsWith(`${root}/`) || url.pathname === `${root}.html`) {
+    if (!isEds) {
+      const path = /\.html$/i.test(url.pathname) ? url.pathname : `${url.pathname}.html`;
+      return `${path}${url.search}${url.hash}`;
+    }
     const path = url.pathname.slice(root.length).replace(/\.html$/i, '') || '/';
     return `${path}${url.search}${url.hash}`;
   }
@@ -780,6 +785,7 @@ function createModal() {
     }
     const ctaLabel = details.modalCtaLabel?.trim();
     const href = ctaLabel ? resolveModalHref(details) : '';
+    panel.classList.toggle('filters-grid-modal-no-cta', !ctaLabel || !href);
     if (ctaLabel && href) {
       const cta = document.createElement('a');
       cta.className = 'filters-grid-modal-cta';
