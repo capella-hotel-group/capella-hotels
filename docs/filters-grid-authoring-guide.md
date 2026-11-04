@@ -40,6 +40,11 @@ The five coloured backgrounds use the supplied Figma gradient angles, stops, and
 
 Popup details are authored in a separate Content Fragment and selected from the main card Content Fragment. Configure the popup description, image layout, feature and carousel images with alt text, and optional CTA. Publish the referenced popup Content Fragment before testing the card.
 
+Leave the CTA label blank to omit the CTA in either layout; its URL is not resolved when the label is empty.
+Carousel dots appear only when that carousel contains more than one image. In Split Image (square), the feature image is separate from the right-hand carousel. In Landscape (wide), the feature image is the first carousel slide.
+
+Suggested image-field description: "Use square (1:1) images for Split Image Carousel and landscape (16:9) images for Landscape Carousel. Apply the same ratio to the feature image and additional carousel images."
+
 ## Dark Image Overlay
 
 The persisted `Filter-grid-card` query must return two independent boolean fields, with exact casing:

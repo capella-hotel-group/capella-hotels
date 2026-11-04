@@ -778,13 +778,14 @@ function createModal() {
       description.append(sanitizeRichText(details.modalDescription.html));
       body.append(description);
     }
-    const href = resolveModalHref(details);
-    if (details.modalCtaLabel && href) {
+    const ctaLabel = details.modalCtaLabel?.trim();
+    const href = ctaLabel ? resolveModalHref(details) : '';
+    if (ctaLabel && href) {
       const cta = document.createElement('a');
       cta.className = 'filters-grid-modal-cta';
       cta.dataset.testid = 'filters-grid-modal-cta';
       cta.href = href;
-      cta.textContent = details.modalCtaLabel;
+      cta.textContent = ctaLabel;
       setNewTab(cta, details.openInNewTab);
       body.append(cta);
     }

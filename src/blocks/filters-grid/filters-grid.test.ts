@@ -21,6 +21,49 @@ describe('filters-grid authored filters', () => {
   const originalFetch = global.fetch;
 
   it.each([
+    ['square', undefined, 1, 0],
+    ['square', '', 2, 2],
+    ['square', '   ', 1, 0],
+    ['wide', undefined, 0, 0],
+    ['wide', '', 1, 2],
+    ['wide', '   ', 0, 0],
+  ])('skips unnamed CTA URLs and counts actual %s slides (%s, %s)', async (variant, label, extraImages, dots) => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          filterGridCardDetailsList: {
+            items: [
+              {
+                cardHeadline: 'Optional CTA',
+                associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                cardClickActionBehavior: 'popup',
+                modalDetails: {
+                  modalImageAspectRatioVariant: variant,
+                  modalFeatureImageAsset: { _path: '/feature.jpg' },
+                  carouselImages: Array.from({ length: Number(extraImages) }, (_, index) => ({
+                    _path: `/extra-${index}.jpg`,
+                  })),
+                  modalCtaLabel: label,
+                  modalCtaUrlInternal: { _publishUrl: 'http://[invalid-url' },
+                },
+              },
+            ],
+          },
+        },
+      }),
+    });
+    const block = createItemBlock();
+    await decorate(block);
+    block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
+    expect(modal).not.toBeNull();
+    expect(modal.querySelector('.filters-grid-modal-cta')).toBeNull();
+    expect(modal.querySelectorAll('.filters-grid-modal-pagination button')).toHaveLength(Number(dots));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  });
+
+  it.each([
     ['/content/capella-hotels/global.html', '/global'],
     ['https://publish-p152536-e1620746.adobeaemcloud.com/content/capella-hotels/global.html', '/global'],
     ['/content/capella-hotels/ar/global.html?offer=stay#details', '/ar/global?offer=stay#details'],
