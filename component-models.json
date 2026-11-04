@@ -1609,10 +1609,7 @@
             "description": "Select one tag per category. Complete this field before publishing.",
             "valueType": "string",
             "multi": false,
-            "required": false,
-            "validation": {
-              "rootPath": "/content/cq:tags/capella-hotels"
-            }
+            "required": false
           },
           {
             "component": "select",
