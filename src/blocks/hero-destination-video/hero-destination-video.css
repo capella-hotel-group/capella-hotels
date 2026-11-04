@@ -5,9 +5,10 @@
     padding: 0;
 }
 
-/* Intro frame is always a 20vw square (brief), then expands to the full block. */
+/* Intro frame is always a 20vw square (brief); it grows as a square until it overscans the viewport. */
 .hero-destination-video {
     --hero-destination-intro-size: 20vw;
+    --hero-destination-final-size: calc(max(100vw, 100svh) * 1.04);
     --hero-destination-parallax-duration: 1s;
     --hero-destination-crossfade-duration: 0.4s;
     --hero-destination-expand-duration: 0.9s;
@@ -32,7 +33,6 @@
     inset: 0;
     overflow: hidden;
     background: #000;
-    clip-path: inset(0);
     transition: clip-path var(--hero-destination-expand-duration) cubic-bezier(0.37, 0, 0.63, 1);
 }
 
@@ -45,6 +45,14 @@
 .hero-destination-video[data-state='switching'] .hero-destination-video-frame {
     clip-path: inset(
         calc((100% - var(--hero-destination-intro-size)) / 2) calc((100% - var(--hero-destination-intro-size)) / 2)
+    );
+}
+
+/* Both insets derive from the same square size, so they move by the same amount and the clip stays 1:1.
+   The end insets are negative: the square overscans the frame, which clips it back to the viewport. */
+.hero-destination-video[data-state='expanding'] .hero-destination-video-frame {
+    clip-path: inset(
+        calc((100% - var(--hero-destination-final-size)) / 2) calc((100% - var(--hero-destination-final-size)) / 2)
     );
 }
 
