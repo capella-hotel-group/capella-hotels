@@ -38,7 +38,53 @@ describe('createHeadingSequencer', () => {
     await jest.advanceTimersByTimeAsync(3000);
     expect(revealed(heading)).toBe(false);
     playback.element.dispatchEvent(new Event('playing'));
-    await jest.advanceTimersByTimeAsync(1500);
+    await jest.advanceTimersByTimeAsync(1499);
+    expect(revealed(heading)).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(revealed(heading)).toBe(true);
+  });
+
+  it('still waits the full 1500ms when playing lands close to the 6000ms cap', async () => {
+    const [heading] = headings(1);
+    const playback = video();
+    createHeadingSequencer({
+      headings: [heading],
+      playbacks: [playback],
+      instant: false,
+      gate: Promise.resolve(),
+    }).activate(0);
+    await jest.advanceTimersByTimeAsync(5000);
+    playback.element.dispatchEvent(new Event('playing'));
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(revealed(heading)).toBe(false);
+    await jest.advanceTimersByTimeAsync(499);
+    expect(revealed(heading)).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(revealed(heading)).toBe(true);
+  });
+
+  it('does not cut the delay short when failed lands within 1500ms after playing', async () => {
+    const [heading] = headings(1);
+    let fail = (): void => {};
+    const failed = new Promise<void>((resolve) => {
+      fail = resolve;
+    });
+    const playback = { ...video(), failed };
+    createHeadingSequencer({
+      headings: [heading],
+      playbacks: [playback],
+      instant: false,
+      gate: Promise.resolve(),
+    }).activate(0);
+    await jest.advanceTimersByTimeAsync(1000);
+    playback.element.dispatchEvent(new Event('playing'));
+    await jest.advanceTimersByTimeAsync(500);
+    fail();
+    await jest.advanceTimersByTimeAsync(500);
+    expect(revealed(heading)).toBe(false);
+    await jest.advanceTimersByTimeAsync(499);
+    expect(revealed(heading)).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
     expect(revealed(heading)).toBe(true);
   });
 

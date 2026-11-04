@@ -47,10 +47,10 @@ export function createHeadingSequencer({ headings, playbacks, instant, gate }: H
       // Only a video that actually plays gets the extra beat; failure or the cap reveals at once.
       const ready = playback
         ? Promise.race([
-            nextPlaying(playback.element).then(() => wait(VIDEO_HEADING_DELAY_MS)),
-            playback.failed,
-            wait(VIDEO_HEADING_CAP_MS),
-          ])
+            nextPlaying(playback.element).then(() => 'playing' as const),
+            playback.failed.then(() => 'failed' as const),
+            wait(VIDEO_HEADING_CAP_MS).then(() => 'cap' as const),
+          ]).then((outcome) => (outcome === 'playing' ? wait(VIDEO_HEADING_DELAY_MS) : undefined))
         : wait(IMAGE_HEADING_DELAY_MS);
       Promise.all([gate, ready]).then(() => {
         if (current === token) heading.classList.add('is-revealed');
