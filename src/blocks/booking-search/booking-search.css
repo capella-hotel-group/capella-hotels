@@ -605,6 +605,7 @@ html[dir='rtl'] .booking-search .booking-search-calendar-next::before {
     cursor: pointer;
 }
 
-.booking-search .booking-search-submit:not([href]) {
+.booking-search .booking-search-submit[aria-disabled='true'] {
+    color: var(--color-text-action-inactive);
     cursor: default;
 }

@@ -117,6 +117,15 @@ function decorateCard(row: HTMLElement): void {
   const [mediaCell, contentCell, ctaCell] = [...row.children] as HTMLElement[];
   if (!mediaCell || !contentCell) return;
 
+  const overlayField = getField(row, 'darkOverlay') || row.children[3];
+  if (overlayField) {
+    mediaCell.classList.toggle(
+      'offers-carousel-card-media-no-overlay',
+      overlayField.textContent?.trim().toLowerCase() === 'false',
+    );
+    overlayField.classList.add('offers-carousel-hidden');
+  }
+
   mediaCell.classList.add('offers-carousel-card-media');
   contentCell.classList.add('offers-carousel-card-overlay');
 
