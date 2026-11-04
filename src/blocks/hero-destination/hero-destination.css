@@ -106,36 +106,38 @@
     position: relative;
     z-index: 55;
     margin: 0;
-    padding-inline: var(--dimension-layout-module-padding-block-s);
+    padding: 0.15em var(--dimension-layout-module-padding-block-s);
+    overflow: hidden; /* masks the rising text */
     color: var(--color-text-main-inverse-heading);
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h2);
     line-height: var(--typography-line-height-heading-h2);
     font-weight: var(--type-font-weight-heading);
     text-align: center;
+}
+
+/* Exit is quick so the text never lingers over the next slide's background. */
+.hero-destination-heading-text {
+    display: block;
     opacity: 0;
-    transform: translateY(28px);
-    /* Exit: fades/drops out quickly with no delay, so it never lingers over the next slide's
-       background once its slide is no longer active. */
+    transform: translateY(24px);
     transition:
         opacity 0.35s cubic-bezier(0.4, 0, 1, 1),
         transform 0.35s cubic-bezier(0.4, 0, 1, 1);
 }
 
-.hero-destination-slide[aria-hidden='false'] .hero-destination-heading {
+.hero-destination-heading.is-revealed .hero-destination-heading-text {
     opacity: 1;
-    transform: translateY(0);
-    /* Enter: waits for the background effect to fully settle, then rises in with a softer, longer
-       premium ease (matches .hero-destination-media's transition duration). */
+    transform: none;
     transition:
-        opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s,
-        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s;
+        opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-destination-heading,
-    .hero-destination-slide[aria-hidden='false'] .hero-destination-heading {
-        transition: opacity 0.3s ease;
+    .hero-destination-heading-text,
+    .hero-destination-heading.is-revealed .hero-destination-heading-text {
+        transition: none;
         transform: none;
     }
 }
