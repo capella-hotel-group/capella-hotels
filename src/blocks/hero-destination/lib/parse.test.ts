@@ -1,6 +1,6 @@
 jest.mock('@/utils/env.js', () => ({ resolveDAMUrl: (url: string) => url }));
 
-import { parseCarouselConfig, parseItems } from './parse';
+import { parseCarouselConfig, parseIntro, parseItems, splitBlockRows } from './parse';
 
 function row(...cells: string[]): HTMLElement {
   const el = document.createElement('div');
@@ -107,5 +107,58 @@ describe('hero-destination buildSlide overlay class', () => {
     const media = (item: typeof on) => buildSlide(item, 0, 'hd', 1).querySelector('.hero-destination-media')!;
     expect(media(on).classList.contains('hero-destination-media--no-overlay')).toBe(false);
     expect(media(off).classList.contains('hero-destination-media--no-overlay')).toBe(true);
+  });
+});
+
+describe('hero-destination splitBlockRows', () => {
+  const config = ['true', '3', 'true', 'fade', 'true'];
+
+  it('treats exactly five rows as config only', () => {
+    const rows = config.map((value) => row(value));
+    expect(splitBlockRows(rows)).toEqual({ introRows: [], configRows: rows });
+  });
+
+  it.each([2, 3])('treats %i leading rows as intro rows', (introCount) => {
+    const intro = Array.from({ length: introCount }, () => row(PICTURE));
+    const rows = [...intro, ...config.map((value) => row(value))];
+    const { introRows, configRows } = splitBlockRows(rows);
+    expect(introRows).toEqual(intro);
+    expect(configRows).toHaveLength(5);
+  });
+
+  it('keeps short legacy config lists positional', () => {
+    const rows = [row('true'), row('5')];
+    expect(splitBlockRows(rows)).toEqual({ introRows: [], configRows: rows });
+  });
+});
+
+describe('hero-destination parseIntro', () => {
+  const pic = (src: string, alt = ''): string => `<picture><img src="${src}" alt="${alt}"></picture>`;
+
+  it('returns null without intro rows', () => {
+    expect(parseIntro([])).toBeNull();
+  });
+
+  it('returns null when intro rows carry no picture', () => {
+    expect(parseIntro([row(''), row(''), row('')])).toBeNull();
+  });
+
+  it('reads desktop and mobile when the alt collapsed into the image', () => {
+    const intro = parseIntro([row(pic('/d.jpg', 'Tea')), row(pic('/m.jpg'))]);
+    expect(intro?.desktop?.querySelector('img')?.getAttribute('src')).toBe('/d.jpg');
+    expect(intro?.mobile?.querySelector('img')?.getAttribute('src')).toBe('/m.jpg');
+    expect(intro?.desktop?.querySelector('img')?.getAttribute('alt')).toBe('Tea');
+  });
+
+  it('applies a separate alt row to both images', () => {
+    const intro = parseIntro([row(pic('/d.jpg')), row('Lanterns'), row(pic('/m.jpg'))]);
+    expect(intro?.desktop?.querySelector('img')?.getAttribute('alt')).toBe('Lanterns');
+    expect(intro?.mobile?.querySelector('img')?.getAttribute('alt')).toBe('Lanterns');
+  });
+
+  it('keeps a mobile-only intro', () => {
+    const intro = parseIntro([row(''), row(''), row(pic('/m.jpg'))]);
+    expect(intro?.desktop).toBeNull();
+    expect(intro?.mobile).not.toBeNull();
   });
 });

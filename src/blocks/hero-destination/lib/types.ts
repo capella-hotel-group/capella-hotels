@@ -26,3 +26,8 @@ export interface HeroDestinationEmptyItem extends HeroDestinationItemBase {
 }
 
 export type HeroDestinationItem = HeroDestinationImageItem | HeroDestinationVideoItem | HeroDestinationEmptyItem;
+
+export interface HeroDestinationIntro {
+  desktop: HTMLPictureElement | null;
+  mobile: HTMLPictureElement | null;
+}

@@ -5,11 +5,12 @@
 // the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
 import type { EffectName } from './effects/types';
-import type { HeroDestinationItem } from './types';
+import type { HeroDestinationIntro, HeroDestinationItem } from './types';
 
 const DEFAULT_INTERVAL_SECONDS = 3;
 const DEFAULT_EFFECT: EffectName = 'fade';
 const BOOLEAN_TEXTS = ['true', 'false', 'yes', 'no'];
+const CONFIG_ROW_COUNT = 5;
 
 export interface CarouselConfig {
   autoplay: boolean;
@@ -101,4 +102,80 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
   }
 
   return { mediaType: 'empty', heading, showOverlay, sourceRow: row };
+}
+
+export interface SplitBlockRowsResult {
+  introRows: HTMLElement[];
+  configRows: HTMLElement[];
+}
+
+export function splitBlockRows(rows: HTMLElement[]): SplitBlockRowsResult {
+  // Config rows consist of exactly 5 rows. Everything before them is intro.
+  // Short legacy config (< 5 rows) are treated as config (not intro) to preserve position.
+  const configStartIndex = rows.length >= CONFIG_ROW_COUNT ? rows.length - CONFIG_ROW_COUNT : 0;
+  return {
+    introRows: rows.slice(0, configStartIndex),
+    configRows: rows.slice(configStartIndex),
+  };
+}
+
+export function parseIntro(introRows: HTMLElement[]): HeroDestinationIntro | null {
+  if (introRows.length === 0) return null;
+
+  interface PictureInfo {
+    element: HTMLPictureElement;
+    rowIndex: number;
+  }
+
+  const picturesByRow: PictureInfo[] = [];
+  let altText = '';
+
+  // Find all pictures and track which row they came from, also find any alt text
+  for (let rowIdx = 0; rowIdx < introRows.length; rowIdx++) {
+    const row = introRows[rowIdx];
+    if (!row) continue;
+    const cells = [...row.children] as HTMLElement[];
+    for (const cell of cells) {
+      const picture = cell.querySelector('picture') as HTMLPictureElement;
+      if (picture) {
+        picturesByRow.push({ element: picture, rowIndex: rowIdx });
+      } else {
+        const text = cellText(cell);
+        if (text) {
+          altText = text;
+        }
+      }
+    }
+  }
+
+  // If no pictures at all, return null
+  if (picturesByRow.length === 0) return null;
+
+  // Create new picture elements with the alt text applied
+  const createPictureWithAlt = (picture: HTMLPictureElement): HTMLPictureElement => {
+    const newPicture = picture.cloneNode(true) as HTMLPictureElement;
+    const img = newPicture.querySelector('img');
+    if (img && altText) {
+      img.setAttribute('alt', altText);
+    }
+    return newPicture;
+  };
+
+  // Assign pictures based on row index:
+  // - Picture in row 0 is desktop
+  // - Picture in row 1+ (second or later) is mobile
+  // - If only one picture in row 0, it's desktop
+  // - If only one picture in row 1+, it's mobile-only (desktop is null)
+  const firstPic = picturesByRow[0];
+  const secondPic = picturesByRow[1];
+
+  if (!firstPic) return null;
+
+  return {
+    desktop: firstPic.rowIndex === 0 ? createPictureWithAlt(firstPic.element) : null,
+    mobile:
+      secondPic?.element || (firstPic.rowIndex > 0 ? firstPic.element : undefined)
+        ? createPictureWithAlt(secondPic?.element || firstPic.element)
+        : null,
+  };
 }
