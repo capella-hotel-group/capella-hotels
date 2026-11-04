@@ -336,6 +336,7 @@
 @media (width >= 768px) {
     .destination-cards .destination-cards-list {
         grid-auto-columns: calc((100% - 2 * var(--dimension-layout-carousel-item-gap-l)) / 3);
+        justify-content: safe center;
     }
 
     .destination-cards .destination-cards-media {
@@ -357,7 +358,6 @@
 
     .destination-cards .destination-cards-list {
         grid-auto-columns: calc((100% - 2 * var(--dimension-layout-carousel-item-gap-l)) / 3);
-        justify-content: safe center;
     }
 
     .destination-cards .destination-cards-media {
