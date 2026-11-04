@@ -122,7 +122,9 @@ describe('hero-destination splitBlockRows', () => {
     const intro = Array.from({ length: introCount }, () => row(PICTURE));
     const rows = [...intro, ...config.map((value) => row(value))];
     const { introRows, configRows } = splitBlockRows(rows);
-    expect(introRows).toEqual(intro);
+    for (let i = 0; i < introCount; i++) {
+      expect(introRows[i]).toBe(intro[i]);
+    }
     expect(configRows).toHaveLength(5);
   });
 
@@ -160,5 +162,18 @@ describe('hero-destination parseIntro', () => {
     const intro = parseIntro([row(''), row(''), row(pic('/m.jpg'))]);
     expect(intro?.desktop).toBeNull();
     expect(intro?.mobile).not.toBeNull();
+  });
+
+  it('respects slots: picture in alt row (row 1) with empty desktop does not become mobile', () => {
+    const desktopRow = row('');
+    const altRow = row(pic('/pic.jpg'));
+    const mobileRow = row('');
+    const intro = parseIntro([desktopRow, altRow, mobileRow]);
+    expect(intro).toBeNull();
+  });
+
+  it('does not apply mobile row text as alt when alt row is empty', () => {
+    const intro = parseIntro([row(pic('/d.jpg')), row(''), row('Text in mobile')]);
+    expect(intro?.desktop?.querySelector('img')?.getAttribute('alt')).toBe('');
   });
 });

@@ -1,6 +1,6 @@
 // src/blocks/hero-destination/lib/parse.ts
-// Rows (authored): config rows have a single cell (0=autoplay, 1=autoplayInterval, 2=loop,
-// 3=transitionEffect, 4=simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
+// Rows (authored): single-cell block rows are [introImage, introImageAlt?, introImageMobile] followed
+// by 5 config rows (autoplay, autoplayInterval, loop, transitionEffect, simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
 // video, videoMobile, showOverlay, heading fields, but conditionally-hidden fields can drop their cell from
 // the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
@@ -119,63 +119,14 @@ export function splitBlockRows(rows: HTMLElement[]): SplitBlockRowsResult {
   };
 }
 
-export function parseIntro(introRows: HTMLElement[]): HeroDestinationIntro | null {
-  if (introRows.length === 0) return null;
-
-  interface PictureInfo {
-    element: HTMLPictureElement;
-    rowIndex: number;
-  }
-
-  const picturesByRow: PictureInfo[] = [];
-  let altText = '';
-
-  // Find all pictures and track which row they came from, also find any alt text
-  for (let rowIdx = 0; rowIdx < introRows.length; rowIdx++) {
-    const row = introRows[rowIdx];
-    if (!row) continue;
-    const cells = [...row.children] as HTMLElement[];
-    for (const cell of cells) {
-      const picture = cell.querySelector('picture') as HTMLPictureElement;
-      if (picture) {
-        picturesByRow.push({ element: picture, rowIndex: rowIdx });
-      } else {
-        const text = cellText(cell);
-        if (text) {
-          altText = text;
-        }
-      }
-    }
-  }
-
-  // If no pictures at all, return null
-  if (picturesByRow.length === 0) return null;
-
-  // Create new picture elements with the alt text applied
-  const createPictureWithAlt = (picture: HTMLPictureElement): HTMLPictureElement => {
-    const newPicture = picture.cloneNode(true) as HTMLPictureElement;
-    const img = newPicture.querySelector('img');
-    if (img && altText) {
-      img.setAttribute('alt', altText);
-    }
-    return newPicture;
-  };
-
-  // Assign pictures based on row index:
-  // - Picture in row 0 is desktop
-  // - Picture in row 1+ (second or later) is mobile
-  // - If only one picture in row 0, it's desktop
-  // - If only one picture in row 1+, it's mobile-only (desktop is null)
-  const firstPic = picturesByRow[0];
-  const secondPic = picturesByRow[1];
-
-  if (!firstPic) return null;
-
-  return {
-    desktop: firstPic.rowIndex === 0 ? createPictureWithAlt(firstPic.element) : null,
-    mobile:
-      secondPic?.element || (firstPic.rowIndex > 0 ? firstPic.element : undefined)
-        ? createPictureWithAlt(secondPic?.element || firstPic.element)
-        : null,
-  };
+// introImageAlt collapses into the desktop <img alt> when set, so there are 2 or 3 intro rows.
+export function parseIntro(rows: HTMLElement[]): HeroDestinationIntro | null {
+  if (rows.length === 0) return null;
+  const pictureIn = (row?: HTMLElement): HTMLPictureElement | null => row?.querySelector('picture') ?? null;
+  const desktop = pictureIn(rows[0]);
+  const mobile = rows.length > 1 ? pictureIn(rows[rows.length - 1]) : null;
+  if (!desktop && !mobile) return null;
+  const alt = rows.length >= 3 ? cellText(rows[1]) : '';
+  if (alt) [desktop, mobile].forEach((picture) => picture?.querySelector('img')?.setAttribute('alt', alt));
+  return { desktop, mobile };
 }
