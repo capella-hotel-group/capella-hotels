@@ -23,7 +23,9 @@ const COPY_ROWS = [
   '<div><div><p>TITLE</p></div></div>',
   '<div><div><p>Body copy</p></div></div>',
 ].join('');
-const RETIRED_CTA_ROW = '<div><div><p>Discover</p><p><a href="/discover">/discover</a></p><p>false</p></div></div>';
+const PRIMARY_CTA_ROW = '<div><div><p>Book your stay</p><p><a href="/book">/book</a></p><p>false</p></div></div>';
+const SECONDARY_CTA_ROW = '<div><div><p><a href="/more">Learn more</a></p><p>true</p></div></div>';
+const EMPTY_ROW = '<div><div></div></div>';
 const REAL_SLIDES = '.destination-introduction-slide:not(.destination-introduction-slide-clone)';
 
 function picture(src: string, alt = ''): string {
@@ -147,15 +149,59 @@ describe('destination-introduction', () => {
     }
   });
 
-  it('ignores a retired footer CTA in previously published markup', () => {
-    const block = build(COPY_ROWS + RETIRED_CTA_ROW + items(1));
+  it('renders two CTAs separated by a divider', () => {
+    const block = build(COPY_ROWS + PRIMARY_CTA_ROW + SECONDARY_CTA_ROW + items(1));
+
+    decorate(block);
+
+    expect(block.id).toBe('destination-intro');
+    expect(block.querySelector('.destination-introduction-body')?.textContent).toBe('Body copy');
+    const ctas = block.querySelector('.destination-introduction-ctas');
+    expect([...(ctas?.children ?? [])].map((child) => child.className)).toEqual([
+      'destination-introduction-cta destination-introduction-cta-primary',
+      'destination-introduction-cta-divider',
+      'destination-introduction-cta destination-introduction-cta-secondary',
+    ]);
+    const [primary, secondary] = [...block.querySelectorAll<HTMLAnchorElement>('.destination-introduction-cta')];
+    expect([primary?.textContent, primary?.getAttribute('href'), primary?.target]).toEqual([
+      'Book your stay',
+      '/book',
+      '',
+    ]);
+    expect([secondary?.textContent, secondary?.getAttribute('href'), secondary?.target]).toEqual([
+      'Learn more',
+      '/more',
+      '_blank',
+    ]);
+  });
+
+  it.each([
+    ['primary only', PRIMARY_CTA_ROW + EMPTY_ROW, 'Book your stay'],
+    ['secondary only', EMPTY_ROW + SECONDARY_CTA_ROW, 'Learn more'],
+    ['content published before the CTA fields existed', PRIMARY_CTA_ROW, 'Book your stay'],
+  ])('renders a single CTA without a divider for %s', (_label, ctaRows, label) => {
+    const block = build(COPY_ROWS + ctaRows + items(1));
 
     decorate(block);
 
     expect(block.id).toBe('destination-intro');
     expect(block.querySelector('.destination-introduction-eyebrow')?.textContent).toBe('THE DESTINATION');
+    expect([...block.querySelectorAll('.destination-introduction-cta')].map((cta) => cta.textContent)).toEqual([label]);
+    expect(block.querySelector('.destination-introduction-cta-divider')).toBeNull();
+  });
+
+  it.each([
+    ['empty CTA rows', EMPTY_ROW + EMPTY_ROW],
+    ['no CTA rows', ''],
+  ])('renders no CTA container for %s', (_label, ctaRows) => {
+    const block = build(COPY_ROWS + ctaRows + items(1));
+
+    decorate(block);
+
+    expect(block.id).toBe('destination-intro');
+    expect(block.dataset.testId).toBe('destination-intro-qa');
     expect(block.querySelector('.destination-introduction-body')?.textContent).toBe('Body copy');
-    expect(block.querySelector('a[href="/discover"]')).toBeNull();
+    expect(block.querySelector('.destination-introduction-ctas')).toBeNull();
   });
 
   it.each([

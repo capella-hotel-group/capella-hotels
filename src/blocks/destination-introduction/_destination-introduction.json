@@ -74,6 +74,47 @@
           "valueType": "string",
           "required": true,
           "value": ""
+        },
+        {
+          "component": "text",
+          "name": "primaryCta",
+          "label": "Primary CTA Label",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "primaryCta_link",
+          "label": "Primary CTA URL",
+          "valueType": "string"
+        },
+        {
+          "component": "boolean",
+          "name": "primaryCta_openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
+          "component": "text",
+          "name": "secondaryCta",
+          "label": "Secondary CTA Label",
+          "description": "Optional. Shown beside the primary CTA, separated by a divider.",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "secondaryCta_link",
+          "label": "Secondary CTA URL",
+          "valueType": "string"
+        },
+        {
+          "component": "boolean",
+          "name": "secondaryCta_openInNewTab",
+          "label": "Open in new tab",
+          "valueType": "boolean",
+          "value": false
         }
       ]
     },

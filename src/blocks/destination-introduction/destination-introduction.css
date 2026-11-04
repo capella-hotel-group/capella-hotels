@@ -122,6 +122,56 @@
         }
     }
 
+    /* ---------- CTAs (Figma text-links) ---------- */
+
+    .destination-introduction-ctas {
+        order: 4;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--dimension-spacing-general-xl);
+        margin-block-start: var(--dimension-spacing-general-l);
+        padding-inline: calc(var(--dimension-layout-module-padding-inline-s) + var(--dimension-spacing-general-2xl));
+
+        @media (width >= 768px) {
+            margin-block-start: var(--dimension-layout-module-gutter-l);
+        }
+
+        @media (width >= 1200px) {
+            order: 0;
+            padding-inline-start: calc(
+                var(--dimension-layout-module-padding-inline-xs) + var(--dimension-spacing-general-2xl)
+            );
+            padding-inline-end: var(--dimension-layout-module-padding-inline-s);
+        }
+    }
+
+    /* Figma Button/text-standard: a fixed 40px row around the label */
+    .destination-introduction-cta {
+        display: flex;
+        align-items: center;
+        min-height: var(--component-button-height);
+        border-radius: var(--component-button-corner-standard);
+        font-family: var(--type-font-family-cta);
+        font-size: var(--typography-fontsize-body-m);
+        font-weight: var(--type-font-weight-text-link);
+        line-height: var(--typography-line-height-body-md);
+        color: var(--color-text-action-default);
+        text-transform: uppercase;
+        text-decoration-line: underline;
+        text-decoration-style: solid;
+        text-decoration-skip-ink: auto;
+        text-decoration-thickness: 7%;
+        text-underline-offset: 20.5%;
+    }
+
+    .destination-introduction-cta-divider {
+        flex: none;
+        width: var(--stroke-weight-s);
+        height: 20px;
+        background-color: var(--color-stroke-main-primary);
+    }
+
     /* ---------- media ---------- */
 
     .destination-introduction-media {
