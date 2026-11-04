@@ -267,4 +267,49 @@ describe('CarouselController holdFor', () => {
     await jest.advanceTimersByTimeAsync(5000);
     expect(active()).toBe(1);
   });
+
+  it('advances from a hold that rejects', async () => {
+    const holdFor = (index: number): Promise<void> | null =>
+      index === 0 ? Promise.reject(new Error('hold error')) : null;
+    const carousel = controller({ holdFor });
+    carousel.init();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active()).toBe(1);
+  });
+
+  it('does not hang with loop: true and always-resolved holds (yields to event loop)', async () => {
+    const holdFor = (): Promise<void> => Promise.resolve();
+    const onChange = jest.fn();
+    const carousel = controller({ loop: true, count: 2, holdFor, onChange });
+    carousel.init();
+
+    // Each timer fire should advance the carousel; with holds yielding to event loop,
+    // it should not spiral into a tight loop and should make progress
+    await jest.advanceTimersByTimeAsync(10);
+
+    // Should have advanced (onChange called with index changes)
+    expect(onChange.mock.calls.length).toBeGreaterThan(1);
+
+    // Should not loop infinitely (test completes)
+    expect(active()).toBeLessThan(2);
+  });
+
+  it('calling goTo during a pending hold on slide 0 discards that old hold', async () => {
+    let releaseSlidezero = (): void => {};
+    const holdFor = (index: number): Promise<void> | null =>
+      index === 0
+        ? new Promise<void>((resolve) => {
+            releaseSlidezero = resolve;
+          })
+        : null;
+    const carousel = controller({ holdFor });
+    carousel.init();
+
+    carousel.goTo(1);
+    expect(active()).toBe(1);
+
+    releaseSlidezero();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(active()).toBe(1);
+  });
 });

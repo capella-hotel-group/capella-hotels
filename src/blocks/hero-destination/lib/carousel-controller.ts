@@ -19,7 +19,13 @@ export interface CarouselControllerOptions {
   onChange?: (index: number) => void;
   /** Fired when a non-looping autoplay stops on the last slide. */
   onAutoplayEnd?: () => void;
-  /** Optional function to hold autoplay on a slide while a promise resolves. */
+  /**
+   * Optional function to hold autoplay on a slide while a promise resolves.
+   * The promise should resolve when the slide may advance. It is requested afresh on every
+   * slide activation and on every resume. It must not have side effects that matter if the
+   * result is discarded (the slider requests slide 0's hold once at init and discards it
+   * when the 'intro' pause starts).
+   */
   holdFor?: (index: number) => Promise<void> | null;
 }
 
@@ -167,9 +173,15 @@ export class CarouselController {
       const hold = this.holdFor?.(this.activeIndex) ?? null;
       if (hold) {
         const token = this.holdToken;
-        hold.then(() => {
-          if (token === this.holdToken && this.running) this.tick();
-        });
+        const fire = () => {
+          if (token === this.holdToken && this.running) {
+            // Defer the setTimeout scheduling to a microtask to prevent tight loops
+            Promise.resolve().then(() => {
+              this.timerId = setTimeout(() => this.tick(), 0);
+            });
+          }
+        };
+        hold.then(fire, fire);
       } else {
         this.timerId = setTimeout(() => this.tick(), this.intervalMs);
       }
