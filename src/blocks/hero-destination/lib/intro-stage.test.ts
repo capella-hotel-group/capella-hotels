@@ -56,8 +56,8 @@ describe('runIntroStage', () => {
     await jest.advanceTimersByTimeAsync(0);
     expect(playback.start).toHaveBeenCalled();
     await jest.advanceTimersByTimeAsync(1200);
+    expect(block.dataset.state).toBe('intro');
     becomeReady();
-    await jest.advanceTimersByTimeAsync(0);
     await jest.advanceTimersByTimeAsync(0);
     expect(playback.play).toHaveBeenCalled();
     expect(block.dataset.state).toBe('switching');
@@ -77,7 +77,6 @@ describe('runIntroStage', () => {
     const done = runIntroStage({ block, intro, firstMedia, firstPlayback: playback });
     await jest.advanceTimersByTimeAsync(1200);
     fail();
-    await jest.advanceTimersByTimeAsync(0);
     await jest.advanceTimersByTimeAsync(1400);
     await done;
     expect(firstMedia.classList.contains('hero-destination-media--fallback')).toBe(true);
@@ -91,6 +90,7 @@ describe('runIntroStage', () => {
     await jest.advanceTimersByTimeAsync(2600);
     await done;
     expect(firstMedia.querySelector('picture')).not.toBeNull();
+    expect(firstMedia.classList.contains('hero-destination-media--fallback')).toBe(true);
   });
 
   it('does not claim the header outside the first section', async () => {

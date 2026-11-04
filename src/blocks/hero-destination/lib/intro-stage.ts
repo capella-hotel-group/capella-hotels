@@ -30,8 +30,6 @@ async function untilVideoReady(playback: VideoPlayback): Promise<boolean> {
   while (!playback.isReady()) {
     if (failed) return false;
     await Promise.race([playback.ready, playback.failed]);
-    // Let the failed flag settle before re-checking.
-    await Promise.resolve();
   }
   return true;
 }
