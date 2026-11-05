@@ -1109,6 +1109,29 @@
         "valueType": "string",
         "value": "GO TO DESTINATION",
         "placeholder": "e.g., GO TO DESTINATION"
+      },
+      {
+        "component": "container",
+        "name": "destinationMappings",
+        "label": "Destination Mappings",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "destinationName",
+            "label": "Destination Name",
+            "valueType": "string",
+            "required": true,
+            "placeholder": "e.g., Bali, Dubai, Tokyo"
+          },
+          {
+            "component": "aem-content",
+            "name": "destinationLink",
+            "label": "Destination Page Link",
+            "valueType": "string",
+            "required": true
+          }
+        ]
       }
     ]
   },
@@ -1184,7 +1207,15 @@
         "component": "aem-content",
         "name": "ctaLink",
         "label": "CTA URL",
-        "valueType": "string"
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "ctaActionMode"
+            },
+            "direct-url"
+          ]
+        }
       }
     ]
   },

@@ -56,6 +56,13 @@
     line-height: 16px;
 }
 
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-eyebrow {
+        font-size: 12px;
+        line-height: 14px;
+    }
+}
+
 .destination-cards-signature .destination-cards-signature-title {
     margin: 0;
     font-family: 'GoudyWtcT', serif;
@@ -65,6 +72,13 @@
     letter-spacing: normal;
     text-transform: uppercase;
     white-space: pre-line;
+}
+
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-title {
+        font-size: 36px;
+        line-height: 40px;
+    }
 }
 
 .destination-cards-signature .destination-cards-signature-description,
@@ -82,8 +96,32 @@
     text-align: center;
 }
 
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-description,
+    .destination-cards-signature .destination-cards-signature-description p {
+        font-size: 20px;
+        line-height: 22px;
+    }
+}
+
 .destination-cards-signature .destination-cards-signature-description p {
     margin: 0;
+}
+
+/* Tablet Intro Section */
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-intro {
+        padding: 112px 48px 40px;
+        gap: 40px;
+    }
+}
+
+/* Mobile Intro Section */
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-intro {
+        padding: 96px 24px 40px;
+        gap: 32px;
+    }
 }
 
 /* Carousel Container */
@@ -94,11 +132,17 @@
     box-sizing: border-box;
 }
 
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-carousel {
+        padding-inline: 48px;
+    }
+}
+
 @media (width < 768px) {
     .destination-cards-signature .destination-cards-signature-carousel {
         margin-inline-end: calc(-1 * var(--dimension-layout-module-padding-inline-s));
         width: auto;
-        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        padding-inline: 24px;
     }
 }
 
@@ -110,6 +154,14 @@
     gap: 20px;
 }
 
+/* Tablet: 2-column grid with wider gap */
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+    }
+}
+
 /* Desktop: 2-column grid */
 @media (min-width: 1200px) {
     .destination-cards-signature .destination-cards-signature-list {
@@ -118,26 +170,20 @@
     }
 }
 
-/* Tablet: 2-column grid */
-@media (min-width: 768px) and (width < 1200px) {
-    .destination-cards-signature .destination-cards-signature-list {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 /* Mobile: Horizontal carousel */
 @media (width < 768px) {
     .destination-cards-signature .destination-cards-signature-list {
         display: grid;
         grid-auto-flow: column;
-        grid-auto-columns: min(90vw, 320px);
+        grid-auto-columns: 240px;
         overflow-x: auto;
         overscroll-behavior-inline: contain;
         scroll-snap-type: inline mandatory;
-        scroll-padding: var(--dimension-layout-module-padding-inline-s);
+        scroll-padding: 24px;
         scrollbar-width: none;
         justify-content: center;
-        padding-inline: var(--dimension-layout-module-padding-inline-s);
+        padding-inline: 24px;
+        gap: 32px;
     }
 
     .destination-cards-signature .destination-cards-signature-list::-webkit-scrollbar {
@@ -166,6 +212,18 @@
     gap: 20px;
 }
 
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-item {
+        gap: 16px;
+    }
+}
+
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-item {
+        gap: 12px;
+    }
+}
+
 .destination-cards-signature .destination-cards-signature-card {
     display: flex;
     flex-direction: column;
@@ -174,6 +232,12 @@
     border-radius: 0;
     overflow: hidden;
     gap: 0;
+}
+
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-card {
+        height: 426.56px;
+    }
 }
 
 @media (min-width: 1200px) {
@@ -190,6 +254,12 @@
     overflow: hidden;
     isolation: isolate;
     background: #000000;
+}
+
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-image-wrapper {
+        height: 426.56px;
+    }
 }
 
 @media (min-width: 1200px) {
@@ -252,6 +322,21 @@
     width: 522px;
 }
 
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-card-title {
+        width: 349px;
+    }
+}
+
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-card-title {
+        font-size: 22px;
+        line-height: 24px;
+        height: 24px;
+        width: 240px;
+    }
+}
+
 .destination-cards-signature .destination-cards-signature-card-description {
     margin: 0;
     font-family: 'calibre';
@@ -265,6 +350,22 @@
     display: flex;
     align-items: center;
     flex: none;
+}
+
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-card-description {
+        width: 349px;
+        height: 65px;
+    }
+}
+
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-card-description {
+        font-size: 16px;
+        line-height: 16px;
+        height: 74px;
+        width: 240px;
+    }
 }
 
 .destination-cards-signature .destination-cards-signature-card-description p {
@@ -301,6 +402,22 @@
     display: flex;
     align-items: center;
     border-radius: 2px;
+}
+
+@media (min-width: 768px) and (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-cta {
+        padding: 8px 0;
+    }
+}
+
+@media (width < 768px) {
+    .destination-cards-signature .destination-cards-signature-cta {
+        padding: 4px 0;
+        font-size: 16px;
+        line-height: 16px;
+        height: 16px;
+        width: 96px;
+    }
 }
 
 .destination-cards-signature .destination-cards-signature-cta:hover {
