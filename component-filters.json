@@ -117,6 +117,12 @@
     ]
   },
   {
+    "id": "destination-cards-signature",
+    "components": [
+      "destination-cards-signature-item"
+    ]
+  },
+  {
     "id": "destination-cards",
     "components": [
       "destination-card-item"
