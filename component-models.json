@@ -1184,7 +1184,15 @@
         "component": "aem-content",
         "name": "ctaLink",
         "label": "CTA URL",
-        "valueType": "string"
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "ctaActionMode"
+            },
+            "direct-url"
+          ]
+        }
       }
     ]
   },
