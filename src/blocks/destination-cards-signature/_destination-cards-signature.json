@@ -1,0 +1,185 @@
+{
+  "definitions": [
+    {
+      "title": "Destination Cards - Signature Variation",
+      "id": "destination-cards-signature",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Destination Cards Signature",
+              "model": "destination-cards-signature",
+              "filter": "destination-cards-signature"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Destination Cards Item",
+      "id": "destination-cards-signature-item",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "Destination Cards Item",
+              "model": "destination-cards-signature-item"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "destination-cards-signature",
+      "fields": [
+        {
+          "component": "text",
+          "name": "id",
+          "label": "Component Anchor ID",
+          "valueType": "string",
+          "value": "",
+          "placeholder": "e.g., capella-signature"
+        },
+        {
+          "component": "text",
+          "name": "testId",
+          "label": "Test ID",
+          "valueType": "string",
+          "value": "",
+          "placeholder": "e.g., destination-cards-signature"
+        },
+        {
+          "component": "text",
+          "name": "eyebrow",
+          "label": "Section Eyebrow",
+          "valueType": "string",
+          "value": "",
+          "placeholder": "e.g., CAPELLA SIGNATURE"
+        },
+        {
+          "component": "richtext",
+          "name": "title",
+          "label": "Main Section Title",
+          "valueType": "string",
+          "required": true,
+          "value": ""
+        },
+        {
+          "component": "richtext",
+          "name": "description",
+          "label": "Section Description",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "select",
+          "name": "backgroundStyle",
+          "label": "Background Style",
+          "valueType": "string",
+          "required": true,
+          "value": "signature-warm",
+          "options": [
+            { "name": "Signature Warm Tint", "value": "signature-warm" },
+            { "name": "Default Light", "value": "default-light" }
+          ]
+        },
+        {
+          "component": "text",
+          "name": "modalHeading",
+          "label": "Modal Heading",
+          "valueType": "string",
+          "value": "Choose destination",
+          "placeholder": "e.g., Choose destination"
+        },
+        {
+          "component": "text",
+          "name": "modalSubmitLabel",
+          "label": "Modal Submit Label",
+          "valueType": "string",
+          "value": "GO TO DESTINATION",
+          "placeholder": "e.g., GO TO DESTINATION"
+        }
+      ]
+    },
+    {
+      "id": "destination-cards-signature-item",
+      "fields": [
+        {
+          "component": "reference",
+          "name": "image",
+          "label": "Card Image",
+          "valueType": "string",
+          "multi": false,
+          "required": true
+        },
+        {
+          "component": "text",
+          "name": "imageAlt",
+          "label": "Asset Alt Text",
+          "valueType": "string",
+          "required": true,
+          "value": ""
+        },
+        {
+          "component": "boolean",
+          "name": "darkOverlay",
+          "label": "Dark Image Overlay",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
+          "component": "richtext",
+          "name": "title",
+          "label": "Card Title",
+          "valueType": "string",
+          "required": true,
+          "value": ""
+        },
+        {
+          "component": "richtext",
+          "name": "description",
+          "label": "Card Description",
+          "valueType": "string",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "name": "ctaLabel",
+          "label": "CTA Label",
+          "valueType": "string",
+          "required": true,
+          "value": "EXPLORE NOW",
+          "placeholder": "e.g., EXPLORE NOW"
+        },
+        {
+          "component": "select",
+          "name": "ctaActionMode",
+          "label": "CTA Action Mode",
+          "valueType": "string",
+          "required": true,
+          "value": "destination-modal",
+          "options": [
+            { "name": "Destination Modal", "value": "destination-modal" },
+            { "name": "Direct URL Navigation", "value": "direct-url" }
+          ]
+        },
+        {
+          "component": "aem-content",
+          "name": "ctaLink",
+          "label": "CTA URL",
+          "valueType": "string"
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "destination-cards-signature",
+      "components": ["destination-cards-signature-item"]
+    }
+  ]
+}
