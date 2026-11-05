@@ -1,18 +1,19 @@
 /* Destination Cards Signature Block */
 
 .destination-cards-signature {
-    padding-block: var(--dimension-layout-module-padding-block);
-    padding-inline: var(--dimension-layout-module-padding-inline-s);
+    padding-block: 0;
+    padding-inline: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--dimension-spacing-general-5xl);
+    gap: 0;
 }
 
 /* Background Style Variants */
 .destination-cards-signature--signature-warm {
     background: linear-gradient(to right, #c9a486, #b8956a);
     color: #ffffff;
+    padding-block: 64px 0;
 }
 
 .destination-cards-signature--signature-warm .destination-cards-signature-eyebrow,
@@ -27,14 +28,18 @@
 .destination-cards-signature--default-light {
     background: var(--color-surface-page);
     color: var(--color-text-main-body);
+    padding-block: var(--dimension-layout-module-padding-block);
 }
 
 /* Intro Section */
 .destination-cards-signature .destination-cards-signature-intro {
-    display: grid;
-    gap: var(--dimension-spacing-heading-to-content);
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
     justify-items: center;
     text-align: center;
+    align-items: center;
+    padding: 120px 80px 64px;
     width: 100%;
 }
 
@@ -43,18 +48,20 @@
 }
 
 .destination-cards-signature .destination-cards-signature-eyebrow {
-    font-size: var(--typography-fontsize-caption);
-    font-weight: var(--type-font-weight-body-bold);
+    font-size: 14px;
+    font-family: 'calibre';
+    font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 2px;
+    line-height: 16px;
 }
 
 .destination-cards-signature .destination-cards-signature-title {
     margin: 0;
-    font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h1);
-    font-weight: var(--type-font-weight-heading);
-    line-height: var(--typography-line-height-heading-h1);
+    font-family: 'GoudyWtcT', serif;
+    font-size: 48px;
+    font-weight: 400;
+    line-height: 48px;
     letter-spacing: normal;
     text-transform: uppercase;
     white-space: pre-line;
@@ -62,14 +69,17 @@
 
 .destination-cards-signature .destination-cards-signature-description,
 .destination-cards-signature .destination-cards-signature-description p {
-    font-family: var(--type-font-family-subtitle);
-    font-size: var(--typography-fontsize-heading-subtitle);
-    font-weight: var(--type-font-weight-subtitle);
-    line-height: var(--typography-line-height-heading-subtitle);
+    font-family: 'GoudyWtcT', serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 24px;
     letter-spacing: normal;
     white-space: pre-line;
     max-width: 600px;
     margin-inline: auto;
+    display: flex;
+    align-items: center;
+    text-align: center;
 }
 
 .destination-cards-signature .destination-cards-signature-description p {
@@ -80,13 +90,15 @@
 .destination-cards-signature .destination-cards-signature-carousel {
     position: relative;
     width: 100%;
-    max-width: 1280px;
+    padding-inline: 188px;
+    box-sizing: border-box;
 }
 
 @media (width < 768px) {
     .destination-cards-signature .destination-cards-signature-carousel {
         margin-inline-end: calc(-1 * var(--dimension-layout-module-padding-inline-s));
         width: auto;
+        padding-inline: var(--dimension-layout-module-padding-inline-s);
     }
 }
 
@@ -95,7 +107,7 @@
     padding: 0;
     list-style: none;
     display: grid;
-    gap: var(--dimension-layout-carousel-item-gap-l);
+    gap: 20px;
 }
 
 /* Desktop: 2-column grid */
@@ -149,22 +161,41 @@
     list-style: none;
     scroll-snap-align: center;
     scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .destination-cards-signature .destination-cards-signature-card {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    border-radius: var(--dimension-border-radius-l);
+    height: auto;
+    width: 100%;
+    border-radius: 0;
     overflow: hidden;
+    gap: 0;
+}
+
+@media (min-width: 1200px) {
+    .destination-cards-signature .destination-cards-signature-card {
+        height: 638px;
+    }
 }
 
 /* Card Image Wrapper */
 .destination-cards-signature .destination-cards-signature-image-wrapper {
     position: relative;
     width: 100%;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: auto;
     overflow: hidden;
+    isolation: isolate;
+    background: #000000;
+}
+
+@media (min-width: 1200px) {
+    .destination-cards-signature .destination-cards-signature-image-wrapper {
+        height: 638px;
+    }
 }
 
 .destination-cards-signature .destination-cards-signature-image-wrapper img,
@@ -176,14 +207,22 @@
 }
 
 /* Dark overlay */
-.destination-cards-signature .destination-cards-signature-image-wrapper--dark-overlay {
-    background: rgba(0, 0, 0, 0.3);
+.destination-cards-signature .destination-cards-signature-image-wrapper--dark-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .destination-cards-signature .destination-cards-signature-image-wrapper--dark-overlay img,
 .destination-cards-signature .destination-cards-signature-image-wrapper--dark-overlay picture {
-    opacity: 0.8;
-    mix-blend-mode: multiply;
+    position: relative;
+    z-index: 0;
 }
 
 /* Card Content */
@@ -191,48 +230,77 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: var(--dimension-spacing-general-l);
+    padding: 0;
     background: inherit;
+    gap: 14px;
+    justify-content: flex-start;
 }
 
 .destination-cards-signature .destination-cards-signature-card-title {
-    margin: 0 0 var(--dimension-spacing-general-s) 0;
-    font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h3);
-    font-weight: var(--type-font-weight-heading);
-    line-height: var(--typography-line-height-heading-h3);
+    margin: 0;
+    font-family: 'GoudyWtcT', serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 28px;
     letter-spacing: normal;
-    text-transform: uppercase;
+    text-transform: none;
+    text-align: center;
     white-space: pre-line;
+    display: flex;
+    align-items: center;
+    height: 28px;
+    width: 522px;
 }
 
 .destination-cards-signature .destination-cards-signature-card-description {
-    margin: 0 0 var(--dimension-spacing-general-m) 0;
-    font-family: var(--type-font-family-body);
-    font-size: var(--typography-fontsize-body-m);
-    font-weight: var(--type-font-weight-body);
-    line-height: var(--typography-line-height-body-m);
-    flex: 1;
+    margin: 0;
+    font-family: 'calibre';
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: normal;
+    text-align: center;
+    height: 47px;
+    width: 522px;
+    display: flex;
+    align-items: center;
+    flex: none;
 }
 
 .destination-cards-signature .destination-cards-signature-card-description p {
     margin: 0;
 }
 
+/* CTA Wrapper */
+.destination-cards-signature .destination-cards-signature-cta-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    width: 172px;
+    height: 40px;
+}
+
 /* CTA Button */
 .destination-cards-signature .destination-cards-signature-cta {
     background: none;
     border: none;
-    padding: 0;
-    font-family: var(--type-font-family-body);
-    font-size: var(--typography-fontsize-body-m);
-    font-weight: var(--type-font-weight-body-bold);
+    padding: 16px 0;
+    font-family: 'calibre';
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 18px;
     text-decoration: underline;
     cursor: pointer;
-    text-align: left;
+    text-align: center;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: normal;
     transition: opacity 0.2s ease;
+    height: 18px;
+    width: 108px;
+    display: flex;
+    align-items: center;
+    border-radius: 2px;
 }
 
 .destination-cards-signature .destination-cards-signature-cta:hover {
