@@ -1,4 +1,5 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createCarouselControls } from '../destination-cards/carousel.ts';
 
 function stripHtml(html: string): string {
   const wrapper = document.createElement('div');
@@ -545,6 +546,28 @@ export default async function decorate(block: Element): Promise<void> {
   }
 
   carousel.append(list);
+
+  // Add carousel controls if there are more than 2 cards (show on desktop only)
+  const cardCount = list.querySelectorAll('.destination-cards-signature-item').length;
+  if (cardCount > 2) {
+    const controls = createCarouselControls({
+      track: list,
+      itemSelector: '.destination-cards-signature-item',
+      classNames: {
+        controls: 'destination-cards-signature-controls',
+        control: 'destination-cards-signature-control',
+        controlPrev: 'destination-cards-signature-control-prev',
+        controlNext: 'destination-cards-signature-control-next',
+      },
+      labels: {
+        track: 'Destination cards carousel',
+        previous: 'Previous card',
+        next: 'Next card',
+      },
+    });
+    carousel.prepend(controls);
+  }
+
   block.append(carousel);
 
   // Build and setup modal

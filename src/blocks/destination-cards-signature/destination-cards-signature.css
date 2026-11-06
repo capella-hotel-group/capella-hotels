@@ -153,8 +153,20 @@
 .destination-cards-signature .destination-cards-signature-carousel {
     position: relative;
     width: 100%;
-    padding-inline: 188px;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    overflow: visible;
+    padding: 0;
+}
+
+@media (min-width: 1200px) {
+    .destination-cards-signature .destination-cards-signature-carousel {
+        /* Add space for side arrows, keep centered */
+        padding-inline: 60px;
+    }
 }
 
 @media (min-width: 768px) and (width < 1200px) {
@@ -171,6 +183,85 @@
     }
 }
 
+/* Carousel Controls - positioned on left and right sides on desktop */
+.destination-cards-signature .destination-cards-signature-controls {
+    display: none;
+    gap: 0;
+    flex-direction: row;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding-inline: 50px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@media (min-width: 1200px) {
+    .destination-cards-signature .destination-cards-signature-controls {
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+/* Position prev button on left, next button on right */
+.destination-cards-signature .destination-cards-signature-control-prev {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    pointer-events: auto;
+}
+
+.destination-cards-signature .destination-cards-signature-control-next {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+    pointer-events: auto;
+}
+
+@media (width < 1200px) {
+    .destination-cards-signature .destination-cards-signature-control-prev,
+    .destination-cards-signature .destination-cards-signature-control-next {
+        display: none;
+    }
+}
+
+.destination-cards-signature .destination-cards-signature-control {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 28px 28px;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.destination-cards-signature .destination-cards-signature-control:hover:not(:disabled) {
+    opacity: 1;
+}
+
+.destination-cards-signature .destination-cards-signature-control:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
+.destination-cards-signature .destination-cards-signature-control-prev {
+    background-image: url("data:image/svg+xml,%3Csvg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19.71 4C15.98 7.16 12.47 10.56 8.99996 14C10.79 15.78 12.59 17.56 14.44 19.27C15.96 20.68 18.13 22.69 19.71 24C16.71 20.46 11 14 11 14C11 14 18.2116 5.76279 19.71 4Z' fill='%231B364B'/%3E%3C/svg%3E%0A");
+}
+
+.destination-cards-signature .destination-cards-signature-control-next {
+    background-image: url("data:image/svg+xml,%3Csvg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 4C12.73 7.16 16.24 10.56 19.71 14C17.92 15.78 16.12 17.56 14.27 19.27C12.75 20.68 10.58 22.69 9 24C12 20.46 17.5 14 17.5 14C17.5 14 10.4984 5.76279 9 4Z' fill='%231B364B'/%3E%3C/svg%3E%0A");
+}
+
 .destination-cards-signature .destination-cards-signature-list {
     margin: 0;
     padding: 0;
@@ -178,6 +269,28 @@
     display: grid;
     gap: var(--dimension-spacing-general-l);
     justify-content: center;
+    flex: 0 0 auto;
+}
+
+/* Desktop: Single row horizontal carousel with scroll - shows exactly 2 cards */
+@media (min-width: 1200px) {
+    .destination-cards-signature .destination-cards-signature-list {
+        grid-auto-flow: column;
+        grid-auto-columns: 522px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: var(--dimension-spacing-general-l);
+        padding: 0;
+        scrollbar-width: none;
+        scroll-behavior: smooth;
+        /* Width: 2 cards (522px each) + 1 gap (32px) */
+        width: calc(522px * 2 + var(--dimension-spacing-general-l));
+        justify-content: flex-start;
+    }
+
+    .destination-cards-signature .destination-cards-signature-list::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 /* Tablet: 2-column grid with wider gap */
@@ -185,14 +298,6 @@
     .destination-cards-signature .destination-cards-signature-list {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--dimension-spacing-general-3xl);
-    }
-}
-
-/* Desktop: 2-column grid */
-@media (min-width: 1200px) {
-    .destination-cards-signature .destination-cards-signature-list {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 100%;
     }
 }
 
