@@ -103,6 +103,10 @@
     --color-stroke-action-default: #1b364b;
     --color-stroke-action-inverse-default: #ffffff;
 
+    /* color / component / signature-warm (brand gradient) */
+    --color-signature-warm-gradient-start: #c9a486;
+    --color-signature-warm-gradient-end: #b8956a;
+
     /* type / font weight (Figma weight names mapped to numeric CSS values) */
     --type-font-weight-body-reg: 400;
     --type-font-weight-body-light: 300;

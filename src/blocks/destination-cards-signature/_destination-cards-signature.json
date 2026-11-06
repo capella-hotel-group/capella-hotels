@@ -196,6 +196,14 @@
           "label": "CTA URL",
           "valueType": "string",
           "condition": { "===": [{ "var": "ctaActionMode" }, "direct-url"] }
+        },
+        {
+          "component": "boolean",
+          "name": "openInNewTab",
+          "label": "Open Link in New Tab",
+          "valueType": "boolean",
+          "value": false,
+          "condition": { "===": [{ "var": "ctaActionMode" }, "direct-url"] }
         }
       ]
     }
