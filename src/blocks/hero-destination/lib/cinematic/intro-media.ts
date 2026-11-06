@@ -28,7 +28,7 @@ export function buildIntroMedia(
   prioritize(mobilePicture);
 
   const element = document.createElement('div');
-  element.className = 'hero-destination-video-intro';
+  element.className = 'hero-destination-intro';
   const loaded = deferred();
   const mq = window.matchMedia('(max-width: 767px)');
 

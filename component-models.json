@@ -1035,6 +1035,191 @@
     ]
   },
   {
+    "id": "destination-cards-signature",
+    "fields": [
+      {
+        "component": "text",
+        "name": "id",
+        "label": "Component Anchor ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., capella-signature"
+      },
+      {
+        "component": "text",
+        "name": "testId",
+        "label": "Test ID",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., destination-cards-signature"
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Section Eyebrow",
+        "valueType": "string",
+        "value": "",
+        "placeholder": "e.g., CAPELLA SIGNATURE"
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Main Section Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Section Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "select",
+        "name": "backgroundStyle",
+        "label": "Background Style",
+        "valueType": "string",
+        "required": true,
+        "value": "signature-warm",
+        "options": [
+          {
+            "name": "Signature Warm Tint",
+            "value": "signature-warm"
+          },
+          {
+            "name": "Default Light",
+            "value": "default-light"
+          }
+        ]
+      },
+      {
+        "component": "text",
+        "name": "modalHeading",
+        "label": "Modal Heading",
+        "valueType": "string",
+        "value": "Choose destination",
+        "placeholder": "e.g., Choose destination"
+      },
+      {
+        "component": "text",
+        "name": "modalSubmitLabel",
+        "label": "Modal Submit Label",
+        "valueType": "string",
+        "value": "GO TO DESTINATION",
+        "placeholder": "e.g., GO TO DESTINATION"
+      },
+      {
+        "component": "container",
+        "name": "destinationMappings",
+        "label": "Destination Mappings",
+        "multi": true,
+        "fields": [
+          {
+            "component": "text",
+            "name": "destinationName",
+            "label": "Destination Name",
+            "valueType": "string",
+            "required": true,
+            "placeholder": "e.g., Bali, Dubai, Tokyo"
+          },
+          {
+            "component": "aem-content",
+            "name": "destinationLink",
+            "label": "Destination Page Link",
+            "valueType": "string",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "destination-cards-signature-item",
+    "fields": [
+      {
+        "component": "reference",
+        "name": "image",
+        "label": "Card Image",
+        "valueType": "string",
+        "multi": false,
+        "required": true
+      },
+      {
+        "component": "text",
+        "name": "imageAlt",
+        "label": "Asset Alt Text",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Dark Image Overlay",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Card Title",
+        "valueType": "string",
+        "required": true,
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "description",
+        "label": "Card Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "ctaLabel",
+        "label": "CTA Label",
+        "valueType": "string",
+        "required": true,
+        "value": "EXPLORE NOW",
+        "placeholder": "e.g., EXPLORE NOW"
+      },
+      {
+        "component": "select",
+        "name": "ctaActionMode",
+        "label": "CTA Action Mode",
+        "valueType": "string",
+        "required": true,
+        "value": "destination-modal",
+        "options": [
+          {
+            "name": "Destination Modal",
+            "value": "destination-modal"
+          },
+          {
+            "name": "Direct URL Navigation",
+            "value": "direct-url"
+          }
+        ]
+      },
+      {
+        "component": "aem-content",
+        "name": "ctaLink",
+        "label": "CTA URL",
+        "valueType": "string",
+        "condition": {
+          "===": [
+            {
+              "var": "ctaActionMode"
+            },
+            "direct-url"
+          ]
+        }
+      }
+    ]
+  },
+  {
     "id": "destination-cards",
     "fields": [
       {
@@ -1900,6 +2085,27 @@
     "id": "hero-destination",
     "fields": [
       {
+        "component": "reference",
+        "valueType": "string",
+        "name": "introImage",
+        "label": "Intro Image (Desktop)",
+        "multi": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "introImageAlt",
+        "label": "Intro Image Alt Text",
+        "value": ""
+      },
+      {
+        "component": "reference",
+        "valueType": "string",
+        "name": "introImageMobile",
+        "label": "Intro Image (Mobile)",
+        "multi": false
+      },
+      {
         "component": "boolean",
         "valueType": "boolean",
         "name": "autoplay",
@@ -2036,102 +2242,31 @@
         "component": "reference",
         "valueType": "string",
         "name": "video",
-        "label": "Video (Desktop)",
-        "multi": false,
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "video"
-          ]
-        }
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "videoMobile",
-        "label": "Video (Mobile)",
-        "multi": false,
-        "condition": {
-          "===": [
-            {
-              "var": "mediaType"
-            },
-            "video"
-          ]
-        }
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "showOverlay",
-        "label": "Show media overlay",
-        "value": true
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "heading",
-        "label": "Heading",
-        "value": "",
-        "required": true
-      }
-    ]
-  },
-  {
-    "id": "hero-destination-video",
-    "fields": [
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "introImage",
-        "label": "Intro Image (Desktop)",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "text",
-        "valueType": "string",
-        "name": "introImageAlt",
-        "label": "Intro Image Alt Text",
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "introImageMobile",
-        "label": "Intro Image (Mobile)",
-        "multi": false
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "video",
         "label": "Video (Desktop, MP4)",
         "multi": false,
-        "required": true
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "video"
+          ]
+        }
       },
       {
         "component": "reference",
         "valueType": "string",
         "name": "videoMobile",
         "label": "Video (Mobile, MP4)",
-        "multi": false
-      },
-      {
-        "component": "reference",
-        "valueType": "string",
-        "name": "poster",
-        "label": "Poster Image",
-        "multi": false
-      },
-      {
-        "component": "boolean",
-        "valueType": "boolean",
-        "name": "loop",
-        "label": "Loop video",
-        "value": true
+        "multi": false,
+        "condition": {
+          "===": [
+            {
+              "var": "mediaType"
+            },
+            "video"
+          ]
+        }
       },
       {
         "component": "boolean",
@@ -2147,13 +2282,6 @@
         "label": "Heading",
         "value": "",
         "required": true
-      },
-      {
-        "component": "number",
-        "valueType": "number",
-        "name": "headingDelay",
-        "label": "Heading delay after video starts (ms)",
-        "value": 1500
       }
     ]
   },

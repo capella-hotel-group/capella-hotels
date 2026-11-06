@@ -1,12 +1,17 @@
 // src/blocks/hero-destination/lib/slider-variant.ts
-// Rows (authored): 0=autoplay, 1=autoplayInterval, 2=loop, 3=transitionEffect, 4=simulateTouch
-// (config), 5..n=items (see lib/parse.ts for the item field layout)
+// Rows (authored): single-cell rows are [intro rows (0, 2 or 3)] + 5 config rows (autoplay,
+// autoplayInterval, loop, transitionEffect, simulateTouch); multi-cell rows are items (see lib/parse.ts).
 import { CarouselController } from './carousel-controller';
+import { buildIntroMedia } from './cinematic/intro-media';
+import { deferred, wait } from './cinematic/timing';
 import { buildDotNav, buildPlayToggle, buildSlide } from './dom-builder';
 import { resolveEffect } from './effects';
 import { dirSign } from './effects/offset';
+import { runIntroStage } from './intro-stage';
+import { playbackFor } from './media';
 import { ownsPageHeading } from './page-heading';
-import { parseCarouselConfig, parseItems } from './parse';
+import { parseCarouselConfig, parseIntro, parseItems, splitBlockRows } from './parse';
+import { createHeadingSequencer } from './slide-headings';
 import { initSwipe } from './swipe';
 
 let instanceCount = 0;
@@ -30,16 +35,28 @@ function initTabKeys(nav: HTMLElement, dots: HTMLButtonElement[], select: (index
   });
 }
 
+function isEditorOrFramed(): boolean {
+  return document.documentElement.classList.contains('adobe-ue-edit') || window.self !== window.top;
+}
+
 export default function decorateSlider(block: HTMLElement): void {
   const rows = [...block.children] as HTMLElement[];
-  const configRows = rows.filter((row) => row.children.length <= 1);
+  const { introRows, configRows } = splitBlockRows(rows.filter((row) => row.children.length <= 1));
   const itemRows = rows.filter((row) => row.children.length > 1);
 
   const { autoplay, loop, intervalSeconds, transitionEffect, simulateTouch } = parseCarouselConfig(configRows);
   const items = parseItems(itemRows);
   if (items.length === 0) return;
 
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const staticMode = reducedMotion || isEditorOrFramed();
+  const introConfig = staticMode ? null : parseIntro(introRows);
+  const intro = introConfig ? buildIntroMedia(introConfig.desktop, introConfig.mobile) : null;
+  // A lone video, or one nobody advances past, loops; otherwise it plays once and hands over.
+  const videoLoop = items.length === 1 || !autoplay;
+
   const firstHeadingTag = ownsPageHeading(block) ? 'h1' : 'h2';
+  block.setAttribute('data-testid', 'hero-destination');
   block.innerHTML = '';
   instanceCount += 1;
   const idPrefix = `hero-destination-${instanceCount}`;
@@ -50,26 +67,70 @@ export default function decorateSlider(block: HTMLElement): void {
   if (items.length > 1) track.setAttribute('role', 'presentation');
   track.setAttribute('aria-live', 'off');
   items.forEach((item, index) =>
-    track.append(buildSlide(item, index, idPrefix, items.length, index === 0 ? firstHeadingTag : 'h2')),
+    track.append(
+      buildSlide(item, index, idPrefix, items.length, index === 0 ? firstHeadingTag : 'h2', {
+        eager: index === 0 && !intro,
+        loop: videoLoop,
+      }),
+    ),
   );
 
-  block.append(track);
+  const frame = document.createElement('div');
+  frame.className = 'hero-destination-frame';
+  frame.append(track);
+  if (intro) frame.append(intro.element);
+  block.append(frame);
 
   const slides = [...track.children] as HTMLElement[];
   const mediaEls = slides.map((slide) => slide.querySelector('.hero-destination-media') as HTMLElement);
+  const playbacks = mediaEls.map((media) => playbackFor(media));
+  const hasVideo = playbacks.some(Boolean);
   const headings = items.length > 1 ? items.map((item) => item.heading) : [];
   const { nav, dots } = buildDotNav(headings, idPrefix);
 
-  const videos = slides.map((slide) => slide.querySelector('video'));
-  const hasVideo = videos.some(Boolean);
+  const introDone = deferred();
+  if (!intro) introDone.resolve();
+  const headingSequencer = createHeadingSequencer({
+    headings: slides.map((slide) => slide.querySelector('.hero-destination-heading') as HTMLElement),
+    playbacks,
+    instant: staticMode,
+    gate: introDone.promise,
+  });
+
   // Looping background video is motion too, so reduced motion starts it paused.
-  let videosPaused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let videosPaused = reducedMotion;
+  // The intro stage owns slide 1's video until it hands over.
+  let introRunning = !!intro;
   let activeIndex = 0;
   const syncVideos = (): void => {
-    videos.forEach((video, index) => {
-      if (!video) return;
-      if (index === activeIndex && !videosPaused) video.play()?.catch(() => {});
-      else video.pause();
+    if (introRunning) return;
+    playbacks.forEach((playback, index) => {
+      if (!playback) return;
+      if (index === activeIndex && !videosPaused) {
+        playback.start();
+        playback.play();
+      } else playback.pause();
+    });
+  };
+
+  const intervalMs = intervalSeconds * 1000;
+  const holdFor = (index: number): Promise<void> | null => {
+    const playback = playbacks[index];
+    if (!playback || playback.element.loop) return null;
+    const video = playback.element;
+    return new Promise<void>((resolve) => {
+      if (video.ended) {
+        resolve();
+        return;
+      }
+      video.addEventListener('ended', () => resolve(), { once: true });
+      // A dead or autoplay-blocked video behaves like an image slide, unless it started by then.
+      playback.failed.then(() => wait(intervalMs)).then(() => resolve());
+      playback.blocked
+        .then(() => wait(intervalMs))
+        .then(() => {
+          if (video.paused) resolve();
+        });
     });
   };
 
@@ -89,9 +150,13 @@ export default function decorateSlider(block: HTMLElement): void {
     autoplay,
     loop,
     effect: resolveEffect(transitionEffect),
+    holdFor,
     onChange: (index) => {
+      const video = playbacks[index]?.element;
+      if (index !== activeIndex && video && video.currentTime > 0) video.currentTime = 0;
       activeIndex = index;
       syncVideos();
+      headingSequencer.activate(index);
     },
     onAutoplayEnd: () => {
       // With a video still playing, the toggle keeps controlling that motion instead.
@@ -108,10 +173,26 @@ export default function decorateSlider(block: HTMLElement): void {
 
   if (simulateTouch) {
     track.classList.add('hero-destination-track--swipeable');
-    initSwipe(track, (direction) => (direction * dirSign(track) === 1 ? carousel.next() : carousel.previous()));
+    initSwipe(track, (direction) => {
+      if (introRunning) return;
+      if (direction * dirSign(track) === 1) carousel.next();
+      else carousel.previous();
+    });
   }
 
   carousel.init();
+
+  if (intro) {
+    carousel.pause('intro');
+    runIntroStage({ block, intro, firstMedia: mediaEls[0] as HTMLElement, firstPlayback: playbacks[0] })
+      .catch(() => {})
+      .then(() => {
+        introRunning = false;
+        introDone.resolve();
+        syncVideos();
+        carousel.resume('intro');
+      });
+  }
 
   if (!carousel.autoplayEnabled && !hasVideo) return;
 

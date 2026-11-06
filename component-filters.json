@@ -27,6 +27,7 @@
       "newsletter-form",
       "culturist-carousel",
       "destination-cards",
+      "destination-cards-signature",
       "experience-tiles",
       "destination-introduction",
       "hotel-architect",
@@ -36,7 +37,6 @@
       "text-with-cta",
       "hero-video",
       "hero-destination",
-      "hero-destination-video",
       "rte",
       "choose-space",
       "culturist-card",
@@ -115,6 +115,12 @@
     "id": "culturist-carousel",
     "components": [
       "culturist-carousel-item"
+    ]
+  },
+  {
+    "id": "destination-cards-signature",
+    "components": [
+      "destination-cards-signature-item"
     ]
   },
   {

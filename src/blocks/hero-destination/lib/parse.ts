@@ -1,15 +1,16 @@
 // src/blocks/hero-destination/lib/parse.ts
-// Rows (authored): config rows have a single cell (0=autoplay, 1=autoplayInterval, 2=loop,
-// 3=transitionEffect, 4=simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
+// Rows (authored): single-cell block rows are [introImage, introImageAlt?, introImageMobile] followed
+// by 5 config rows (autoplay, autoplayInterval, loop, transitionEffect, simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
 // video, videoMobile, showOverlay, heading fields, but conditionally-hidden fields can drop their cell from
 // the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
 import type { EffectName } from './effects/types';
-import type { HeroDestinationItem, HeroDestinationVideoConfig } from './types';
+import type { HeroDestinationIntro, HeroDestinationItem } from './types';
 
 const DEFAULT_INTERVAL_SECONDS = 3;
 const DEFAULT_EFFECT: EffectName = 'fade';
 const BOOLEAN_TEXTS = ['true', 'false', 'yes', 'no'];
+const CONFIG_ROW_COUNT = 5;
 
 export interface CarouselConfig {
   autoplay: boolean;
@@ -103,45 +104,29 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
   return { mediaType: 'empty', heading, showOverlay, sourceRow: row };
 }
 
-export const DEFAULT_HEADING_DELAY_MS = 1500;
-/** 9 rows when introImageAlt collapses into the img alt; 10 when it renders as its own row. */
-const VIDEO_ROWS_WITH_ALT = 10;
+export interface SplitBlockRowsResult {
+  introRows: HTMLElement[];
+  configRows: HTMLElement[];
+}
 
-// Video variant rows (single cell each): 0=introImage, 1=introImageMobile, 2=video, 3=videoMobile,
-// 4=poster, 5=loop, 6=showOverlay, 7=heading, 8=headingDelay. Slots are positional but each one is
-// content-checked (picture / link), so a stray value in the wrong slot is ignored.
-export function parseVideoHero(rows: HTMLElement[]): HeroDestinationVideoConfig {
-  const cells = rows.map((row) => (row.children[0] as HTMLElement | undefined) ?? null);
-  const hasAltRow = rows.length >= VIDEO_ROWS_WITH_ALT;
-  const at = (slot: number): HTMLElement | null => cells[slot > 0 && hasAltRow ? slot + 1 : slot] ?? null;
-  const pictureAt = (slot: number): HTMLPictureElement | null => at(slot)?.querySelector('picture') ?? null;
-
-  const introPicture = pictureAt(0);
-  const altText = hasAltRow ? cellText(cells[1]) : '';
-  if (introPicture && altText) introPicture.querySelector('img')?.setAttribute('alt', altText);
-
-  const desktopVideoUrl = cellVideoUrl(at(2));
-  const rawDelay = Number.parseInt(cellText(at(8)), 10);
-
+export function splitBlockRows(rows: HTMLElement[]): SplitBlockRowsResult {
+  // Config rows consist of exactly 5 rows. Everything before them is intro.
+  // Short legacy config (< 5 rows) are treated as config (not intro) to preserve position.
+  const configStartIndex = rows.length >= CONFIG_ROW_COUNT ? rows.length - CONFIG_ROW_COUNT : 0;
   return {
-    introPicture,
-    introPictureCell: at(0),
-    introImageAltCell: hasAltRow ? (cells[1] ?? null) : null,
-    introPictureMobile: pictureAt(1),
-    introPictureMobileCell: at(1),
-    desktopVideoUrl,
-    desktopVideoCell: at(2),
-    mobileVideoUrl: cellVideoUrl(at(3)) || desktopVideoUrl,
-    mobileVideoCell: at(3),
-    posterPicture: pictureAt(4),
-    posterCell: at(4),
-    loop: parseBoolean(at(5), true),
-    loopCell: at(5),
-    showOverlay: parseBoolean(at(6), true),
-    showOverlayCell: at(6),
-    heading: cellText(at(7)),
-    headingCell: at(7),
-    headingDelayMs: Number.isFinite(rawDelay) && rawDelay >= 0 ? rawDelay : DEFAULT_HEADING_DELAY_MS,
-    headingDelayCell: at(8),
+    introRows: rows.slice(0, configStartIndex),
+    configRows: rows.slice(configStartIndex),
   };
+}
+
+// introImageAlt collapses into the desktop <img alt> when set, so there are 2 or 3 intro rows.
+export function parseIntro(rows: HTMLElement[]): HeroDestinationIntro | null {
+  if (rows.length === 0) return null;
+  const pictureIn = (row?: HTMLElement): HTMLPictureElement | null => row?.querySelector('picture') ?? null;
+  const desktop = pictureIn(rows[0]);
+  const mobile = rows.length > 1 ? pictureIn(rows[rows.length - 1]) : null;
+  if (!desktop && !mobile) return null;
+  const alt = rows.length >= 3 ? cellText(rows[1]) : '';
+  if (alt) [desktop, mobile].forEach((picture) => picture?.querySelector('img')?.setAttribute('alt', alt));
+  return { desktop, mobile };
 }

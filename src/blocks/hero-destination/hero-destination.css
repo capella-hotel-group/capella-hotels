@@ -10,6 +10,13 @@
        edge and centres its 8px dots 28px above it. */
     --hero-destination-pagination-height: 56px;
 
+    /* Intro frame is a 20vw square that grows until it overscans the viewport. */
+    --hero-destination-intro-size: 20vw;
+    --hero-destination-final-size: calc(max(100vw, 100svh) * 1.04);
+    --hero-destination-parallax-duration: 1s;
+    --hero-destination-crossfade-duration: 0.4s;
+    --hero-destination-expand-duration: 0.9s;
+
     position: relative;
     width: 100%;
     height: 100vh; /* fallback */
@@ -105,37 +112,48 @@
 .hero-destination-heading {
     position: relative;
     z-index: 55;
-    margin: 0;
-    padding-inline: var(--dimension-layout-module-padding-block-s);
+    box-sizing: border-box;
+    width: 100%;
+    /* Headroom for tall Arabic marks inside the overflow mask; the negative margin keeps the layout height. */
+    margin: -0.25em 0;
+    padding: 0.4em var(--dimension-layout-module-padding-block-s);
+    overflow: hidden; /* masks the rising text */
     color: var(--color-text-main-inverse-heading);
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h2);
     line-height: var(--typography-line-height-heading-h2);
     font-weight: var(--type-font-weight-heading);
     text-align: center;
+}
+
+[dir='rtl'] .hero-destination-heading {
+    line-height: 1.6;
+}
+
+/* Exit is quick so the text never lingers over the next slide's background. */
+.hero-destination-heading-text {
+    display: block;
+    text-align: center;
+    text-wrap: balance;
     opacity: 0;
-    transform: translateY(28px);
-    /* Exit: fades/drops out quickly with no delay, so it never lingers over the next slide's
-       background once its slide is no longer active. */
+    transform: translateY(24px);
     transition:
         opacity 0.35s cubic-bezier(0.4, 0, 1, 1),
         transform 0.35s cubic-bezier(0.4, 0, 1, 1);
 }
 
-.hero-destination-slide[aria-hidden='false'] .hero-destination-heading {
+.hero-destination-heading.is-revealed .hero-destination-heading-text {
     opacity: 1;
-    transform: translateY(0);
-    /* Enter: waits for the background effect to fully settle, then rises in with a softer, longer
-       premium ease (matches .hero-destination-media's transition duration). */
+    transform: none;
     transition:
-        opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s,
-        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s;
+        opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-destination-heading,
-    .hero-destination-slide[aria-hidden='false'] .hero-destination-heading {
-        transition: opacity 0.3s ease;
+    .hero-destination-heading-text,
+    .hero-destination-heading.is-revealed .hero-destination-heading-text {
+        transition: none;
         transform: none;
     }
 }
@@ -226,199 +244,88 @@
     }
 }
 
-/* ---------- Video variant (cinematic intro) ---------- */
-
-/* Intro frame sizes: desktop 30vw x 57vh from the brief; tablet/mobile are placeholders pending design. */
-.hero-destination.video {
-    --hero-destination-intro-w: 80vw;
-    --hero-destination-intro-h: 55svh;
-    --hero-destination-expand-duration: 0.9s;
-
+.hero-destination[data-state] {
     background: var(--color-surface-general-subtle, #f9f6f6);
 }
 
-@media (width >= 768px) {
-    .hero-destination.video {
-        --hero-destination-intro-w: 50vw;
-    }
-}
-
-@media (width >= 1200px) {
-    .hero-destination.video {
-        --hero-destination-intro-w: 30vw;
-        --hero-destination-intro-h: 57vh;
-    }
-}
-
-.hero-destination-video-frame {
+.hero-destination-frame {
     position: absolute;
     inset: 0;
     overflow: hidden;
     background: #000;
-    clip-path: inset(0);
     transition: clip-path var(--hero-destination-expand-duration) cubic-bezier(0.37, 0, 0.63, 1);
 }
 
-.hero-destination.video[data-state='intro'] .hero-destination-video-frame {
+.hero-destination:is([data-state='intro'], [data-state='switching'], [data-state='expanding']) .hero-destination-frame {
+    will-change: clip-path;
+}
+
+/* Slides stay fullscreen-sized; only this clip opens, so the media is revealed, never zoomed. */
+.hero-destination:is([data-state='intro'], [data-state='switching']) .hero-destination-frame {
     clip-path: inset(
-        calc((100% - var(--hero-destination-intro-h)) / 2) calc((100% - var(--hero-destination-intro-w)) / 2)
+        calc((100% - var(--hero-destination-intro-size)) / 2) calc((100% - var(--hero-destination-intro-size)) / 2)
     );
 }
 
-/* Same 40% scrim as the slider; it fades in once the frame is fullscreen. */
-.hero-destination-video-frame::after {
-    content: '';
+/* Negative end insets overscan the frame, which clips the square back to the viewport. */
+.hero-destination[data-state='expanding'] .hero-destination-frame {
+    clip-path: inset(
+        calc((100% - var(--hero-destination-final-size)) / 2) calc((100% - var(--hero-destination-final-size)) / 2)
+    );
+}
+
+.hero-destination:is([data-state='intro'], [data-state='switching'], [data-state='expanding'])
+    :is(.hero-destination-dots, .hero-destination-toggle) {
+    visibility: hidden;
+}
+
+.hero-destination-intro {
     position: absolute;
     inset: 0;
-    z-index: 2;
-    background: rgb(0 0 0 / 40%);
+    z-index: 50;
+    transition: opacity var(--hero-destination-crossfade-duration) ease-in-out;
+}
+
+.hero-destination-intro picture,
+.hero-destination-intro img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Parallax moves only the image inside the frame and holds its end pose through the crossfade. */
+.hero-destination-intro img {
+    animation: hero-destination-parallax var(--hero-destination-parallax-duration) cubic-bezier(0.22, 1, 0.36, 1)
+        forwards;
+}
+
+@keyframes hero-destination-parallax {
+    from {
+        transform: translate(0, 0) scale(1.05);
+    }
+
+    to {
+        transform: translate(0.4vw, -0.55vw) scale(1.08);
+    }
+}
+
+.hero-destination.is-media-visible .hero-destination-intro {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.6s ease;
 }
 
-.hero-destination.video[data-state='expanded'] .hero-destination-video-frame::after {
-    opacity: 1;
-}
-
-.hero-destination.video.hero-destination-video--no-overlay .hero-destination-video-frame::after {
-    content: none;
-}
-
-.hero-destination-video-media,
-.hero-destination-video-intro {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.hero-destination-video-media {
-    z-index: 0;
-    object-fit: cover;
-    opacity: 0;
-}
-
-.hero-destination-video-intro {
-    z-index: 1;
-}
-
-.hero-destination-video-intro picture,
-.hero-destination-video-intro img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.hero-destination.video.is-video-visible .hero-destination-video-media {
-    opacity: 1;
-}
-
-.hero-destination.video.is-video-visible .hero-destination-video-intro {
-    opacity: 0;
-}
-
-.hero-destination.video.is-crossfading .hero-destination-video-intro {
-    animation: hero-destination-intro-out var(--hero-destination-expand-duration) linear forwards;
-}
-
-.hero-destination.video.is-crossfading .hero-destination-video-media {
-    animation: hero-destination-video-in var(--hero-destination-expand-duration) linear forwards;
-}
-
-.hero-destination.video.is-late-crossfade .hero-destination-video-intro {
-    opacity: 0;
-    transition: opacity 0.6s ease;
-}
-
-.hero-destination.video.is-late-crossfade .hero-destination-video-media {
-    opacity: 1;
-    transition: opacity 0.6s ease;
-}
-
-@keyframes hero-destination-intro-out {
-    0%,
-    25% {
-        opacity: 1;
-    }
-    40% {
-        opacity: 0.75;
-    }
-    55% {
-        opacity: 0.4;
-    }
-    80%,
-    100% {
-        opacity: 0;
-    }
-}
-
-@keyframes hero-destination-video-in {
-    0%,
-    25% {
-        opacity: 0;
-    }
-    40% {
-        opacity: 0.25;
-    }
-    55% {
-        opacity: 0.6;
-    }
-    80%,
-    100% {
-        opacity: 1;
-    }
-}
-
-.hero-destination-video-heading {
-    position: absolute;
-    z-index: 3;
-    top: 50%;
-    left: 50%;
-    box-sizing: border-box;
-    width: 100%;
-    margin: 0;
-    padding: 0.15em var(--dimension-layout-module-padding-block-s);
-    overflow: hidden; /* masks the rising text */
-    transform: translate(-50%, -50%);
-    color: var(--color-text-main-inverse-heading);
-    font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h2);
-    line-height: var(--typography-line-height-heading-h2);
-    font-weight: var(--type-font-weight-heading);
-    text-align: center;
-}
-
-.hero-destination-video-heading-text {
-    display: block;
-    opacity: 0;
-    transform: translateY(60px);
-    transition:
-        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.hero-destination-video-heading.is-revealed .hero-destination-video-heading-text {
-    opacity: 1;
-    transform: none;
-}
-
-.hero-destination.video.is-static .hero-destination-video-frame,
-.hero-destination.video.is-static .hero-destination-video-frame::after,
-.hero-destination.video.is-static .hero-destination-video-heading-text {
-    transition: none;
+.hero-destination-media--fallback video {
+    display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-destination-video-frame,
-    .hero-destination-video-frame::after,
-    .hero-destination-video-heading-text {
+    .hero-destination-frame,
+    .hero-destination-intro {
         transition: none;
     }
 
-    .hero-destination.video .hero-destination-video-intro,
-    .hero-destination.video .hero-destination-video-media {
+    .hero-destination-intro img {
         animation: none;
     }
 }

@@ -22,7 +22,9 @@ Hiding labels also removes the space reserved for them. Choose each filter tag e
 
 Within each filter mode, each **Category Settings** entry contains **Category Tag**, **Background Color**, and **Default Category**, in that order. Available colours are Dark brown, Light brown, Green, Pink, Blue, and White, with White selected by default. Suggested use, such as Green for Nature, is guidance only; colours are not automatically assigned by category.
 
-New entries may remain incomplete while editing, without immediate required-field validation. Select exactly one category tag before publishing; entries without a tag do not become filters. The picker is configured with `multi: false`. Delivered entries containing more than one distinct tag show an explicit configuration error instead of silently selecting one.
+Category Tag and Background Color are optional while drafting. Select exactly one tag for each completed category; Background Color defaults to White. Entries without a tag do not become filters. The picker is configured with `multi: false`. Delivered entries containing more than one distinct tag show an explicit configuration error instead of silently selecting one.
+
+Internal card destinations (`directDestinationUrl`) and popup CTAs (`modalCtaUrlInternal`) use EDS page paths on preview/live and localhost: `/content/capella-hotels/global.html` becomes `/global`. On an AEM author page, the link retains `/content/capella-hotels/global.html`. Query strings and anchors are retained. External destinations and DAM image references are unchanged.
 
 The properties panel is owned by Universal Editor, not the page's CSS. A custom separator between multifield entries is not currently configured because the documented model fields do not provide a separator component.
 
@@ -37,6 +39,12 @@ The five coloured backgrounds use the supplied Figma gradient angles, stops, and
 ## Popup Content
 
 Popup details are authored in a separate Content Fragment and selected from the main card Content Fragment. Configure the popup description, image layout, feature and carousel images with alt text, and optional CTA. Publish the referenced popup Content Fragment before testing the card.
+
+Leave the CTA label blank to omit the CTA in either layout; its URL is not resolved when the label is empty.
+At desktop sizes, Landscape uses a 792px-wide popup with a 720 x 405px banner; Split Image uses a 760px-wide popup with two 344 x 344px images. Both use a 600px popup height when a CTA is displayed, capped to fit the viewport. Without a displayed CTA, both layouts use content height. Normal modal padding remains. Smaller viewports retain responsive image ratios and scrolling for longer content.
+Carousel dots appear only when that carousel contains more than one image. In Split Image (square), the feature image is separate from the right-hand carousel. In Landscape (wide), the feature image is the first carousel slide.
+
+Suggested image-field description: "Use square (1:1) images for Split Image Carousel and landscape (16:9) images for Landscape Carousel. Apply the same ratio to the feature image and additional carousel images."
 
 ## Dark Image Overlay
 

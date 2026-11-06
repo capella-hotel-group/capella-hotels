@@ -256,6 +256,71 @@
     transform: scale(1.03);
 }
 
+/* Entrance: the whole card rises from below its slot (see setupEntrance in the block) */
+.destination-cards.destination-cards-animate .destination-cards-list {
+    /* keeps the offset cards from making the list scrollable vertically */
+    overflow-y: hidden;
+}
+
+.destination-cards .destination-cards-item[data-entrance-slot] .destination-cards-card {
+    transform: translateY(var(--entrance-offset));
+    visibility: hidden;
+    will-change: transform;
+}
+
+.destination-cards .destination-cards-item[data-entrance-slot='center'] {
+    --entrance-offset: 45%;
+    --entrance-duration: 1300ms;
+}
+
+.destination-cards .destination-cards-item[data-entrance-slot='left'] {
+    --entrance-offset: 100%;
+    --entrance-duration: 2100ms;
+}
+
+.destination-cards .destination-cards-item[data-entrance-slot='right'] {
+    --entrance-offset: 75%;
+    --entrance-duration: 1700ms;
+}
+
+.destination-cards .destination-cards-item[data-entrance-slot].is-entering .destination-cards-card {
+    transform: translateY(0);
+    visibility: visible;
+    transition: transform var(--entrance-duration) cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@media (width >= 768px) {
+    /* sections are z-index 2 stacking contexts, so lift this one above the next while cards fly into it */
+    main > div:has(.destination-cards-animate) {
+        z-index: 3;
+    }
+
+    /* extends the list's clip box downward (margin cancels it, so no layout shift) */
+    .destination-cards.destination-cards-animate .destination-cards-list {
+        padding-block-end: var(--entrance-fly, 0px);
+        margin-block-end: calc(-1 * var(--entrance-fly, 0px));
+        pointer-events: none;
+    }
+}
+
+@media (width < 768px) {
+    /* mobile: the two cards fade in one after another while rising */
+    .destination-cards .destination-cards-item[data-entrance-slot] .destination-cards-card {
+        opacity: 0;
+    }
+
+    .destination-cards .destination-cards-item[data-entrance-slot]:nth-child(2) {
+        --entrance-delay: 300ms;
+    }
+
+    .destination-cards .destination-cards-item[data-entrance-slot].is-entering .destination-cards-card {
+        opacity: 1;
+        transition:
+            transform var(--entrance-duration) cubic-bezier(0.19, 1, 0.22, 1) var(--entrance-delay, 0ms),
+            opacity 700ms ease-out var(--entrance-delay, 0ms);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .destination-cards .destination-cards-media img,
     .destination-cards .destination-cards-media::after {
@@ -271,6 +336,7 @@
 @media (width >= 768px) {
     .destination-cards .destination-cards-list {
         grid-auto-columns: calc((100% - 2 * var(--dimension-layout-carousel-item-gap-l)) / 3);
+        justify-content: safe center;
     }
 
     .destination-cards .destination-cards-media {
@@ -292,7 +358,6 @@
 
     .destination-cards .destination-cards-list {
         grid-auto-columns: calc((100% - 2 * var(--dimension-layout-carousel-item-gap-l)) / 3);
-        justify-content: safe center;
     }
 
     .destination-cards .destination-cards-media {

@@ -1,6 +1,6 @@
 // src/blocks/hero-destination/lib/dom-builder.ts
 import { moveInstrumentation } from '@/app/scripts.js';
-import { buildMedia } from './media';
+import { buildMedia, type MediaOptions } from './media';
 import type { HeroDestinationItem } from './types';
 
 export function buildSlide(
@@ -9,6 +9,7 @@ export function buildSlide(
   idPrefix: string,
   total: number,
   headingTag: 'h1' | 'h2' = 'h2',
+  mediaOptions: MediaOptions = { eager: index === 0, loop: true },
 ): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'hero-destination-slide';
@@ -23,12 +24,15 @@ export function buildSlide(
   }
   moveInstrumentation(item.sourceRow, slide);
 
-  const media = buildMedia(item, index === 0);
+  const media = buildMedia(item, mediaOptions);
   if (!item.showOverlay) media.classList.add('hero-destination-media--no-overlay');
 
   const heading = document.createElement(headingTag);
   heading.className = 'hero-destination-heading';
-  heading.textContent = item.heading;
+  const headingText = document.createElement('span');
+  headingText.className = 'hero-destination-heading-text';
+  headingText.textContent = item.heading;
+  heading.append(headingText);
 
   slide.append(media, heading);
   return slide;
@@ -45,6 +49,7 @@ export function buildDotNav(headings: string[], idPrefix: string): { nav: HTMLDi
     const dot = document.createElement('button');
     dot.type = 'button';
     dot.className = 'hero-destination-dot';
+    dot.setAttribute('data-testid', 'hero-destination-dot');
     dot.id = `${idPrefix}-tab-${index}`;
     dot.setAttribute('role', 'tab');
     // Named after the slide's heading: `aria-controls` alone never makes a screen reader read the
@@ -68,6 +73,7 @@ export function buildPlayToggle(): HTMLButtonElement {
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'hero-destination-toggle';
+  toggle.setAttribute('data-testid', 'hero-destination-toggle');
   toggle.dataset.state = 'playing';
   toggle.setAttribute('aria-label', 'Pause slideshow');
 
