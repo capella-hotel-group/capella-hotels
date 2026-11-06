@@ -191,10 +191,9 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    left: 0;
-    right: 0;
-    width: 100%;
-    padding-inline: 50px;
+    inset-inline: 60px;
+    inset-block: auto;
+    height: 28px;
     pointer-events: none;
     z-index: 10;
 }
@@ -286,6 +285,13 @@
         /* Width: 2 cards (522px each) + 1 gap (32px) */
         width: calc(522px * 2 + var(--dimension-spacing-general-l));
         justify-content: flex-start;
+    }
+
+    /* Single card on desktop: center it */
+    .destination-cards-signature .destination-cards-signature-list:has(> :only-child) {
+        width: auto;
+        justify-content: center;
+        overflow: visible;
     }
 
     .destination-cards-signature .destination-cards-signature-list::-webkit-scrollbar {
