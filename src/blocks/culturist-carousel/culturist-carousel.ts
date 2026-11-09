@@ -4,6 +4,11 @@ import { getPublishBaseUrl } from '@/utils/env.js';
 // Keeps combobox/option ids unique when several blocks share a page.
 let blockInstanceCount = 0;
 
+// Matches the reference motion: ~3.2s, slow start, gradual settle.
+const SLIDE_DURATION_MS = 1200;
+const SLIDE_EASING = 'cubic-bezier(0.37, 0, 0.63, 1)';
+const SWIPE_THRESHOLD_PX = 40;
+
 function resolveAssetUrl(damPath?: string | null): string | null {
   if (!damPath) return null;
   if (damPath.startsWith('http')) return damPath;
@@ -63,9 +68,7 @@ async function fetchCFDetails(cfPath: string): Promise<Record<string, any> | nul
   }
 }
 
-async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<void> {
-  const cfData = await fetchCFDetails(cfPath);
-
+function renderCulturistInfo(slot: HTMLElement, cfData: Record<string, any> | null): void {
   if (!cfData) {
     slot.textContent = 'Failed to load content';
     return;
@@ -167,6 +170,28 @@ function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
     cardImg.alt = card.imagealt || card.title || 'Gallery card';
     cardContent.append(cardImg);
   }
+  const { _path: hoverImgPath } = card.hoverImage || {};
+  const hoverDescription: string = card.hoverDescription?.plaintext || '';
+  if (hoverImgPath || hoverDescription) {
+    cardContent.classList.add('culturist-carousel-card-content--has-hover');
+    const hover = document.createElement('div');
+    hover.className = 'culturist-carousel-card-hover';
+    if (hoverImgPath) {
+      const hoverImg = document.createElement('img');
+      hoverImg.className = 'culturist-carousel-card-hover-img';
+      hoverImg.src = resolveAssetUrl(hoverImgPath) ?? '';
+      hoverImg.alt = '';
+      hoverImg.loading = 'lazy';
+      hover.append(hoverImg);
+    }
+    if (hoverDescription) {
+      const hoverText = document.createElement('p');
+      hoverText.className = 'culturist-carousel-card-hover-text';
+      hoverText.textContent = hoverDescription;
+      hover.append(hoverText);
+    }
+    cardContent.append(hover);
+  }
   if (card.title) {
     const cardTitle = document.createElement('span');
     cardTitle.className = 'culturist-carousel-card-title';
@@ -178,135 +203,175 @@ function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
   return slide;
 }
 
-async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): Promise<void> {
-  const track = carouselCol.querySelector<HTMLElement>('.culturist-carousel-carousel-track');
-  const prevBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-prev');
-  const nextBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-next');
-  if (!track || !prevBtn || !nextBtn) return;
+function createGalleryCarousel(
+  carouselCol: HTMLElement,
+  viewport: HTMLElement,
+  track: HTMLElement,
+  prevBtn: HTMLButtonElement,
+  nextBtn: HTMLButtonElement,
+): (cfData: Record<string, any> | null) => void {
+  // Track offsets (px) each arrow/swipe step settles on; the last one is clamped so the track never overshoots.
+  let positions = [0];
+  let index = 0;
+  const offsetAt = (i: number): number => positions[i] ?? 0;
 
-  const cfData = await fetchCFDetails(cfPath);
-  track.innerHTML = '';
+  const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Skip any null/empty entries so one bad card doesn't break the rest
-  const cards: Record<string, any>[] = (cfData?.cardContentReference || []).filter(Boolean);
-  if (!cards.length) {
-    track.textContent = 'No content';
-    carouselCol.classList.add('culturist-carousel-carousel--empty');
-    return;
-  }
+  const updateButtons = () => {
+    prevBtn.disabled = index <= 0;
+    nextBtn.disabled = index >= positions.length - 1;
+  };
 
-  carouselCol.classList.remove('culturist-carousel-carousel--empty');
-  cards.forEach((card) => {
-    try {
-      track.append(buildCarouselCard(card));
-    } catch (error) {
-      console.error('[culturist-carousel] Skipping malformed card', card, error);
+  const measure = () => {
+    const slides = [...track.children] as HTMLElement[];
+    const maxOffset = Math.max(0, track.scrollWidth - viewport.clientWidth);
+    const offsets = slides.map((slide) => Math.min(slide.offsetLeft, maxOffset));
+    positions = offsets.filter((offset, i) => i === 0 || offset > (offsets[i - 1] ?? 0) + 1);
+    if (!positions.length) positions = [0];
+    index = Math.min(index, positions.length - 1);
+    const canNavigate = positions.length > 1;
+    viewport.classList.toggle('is-grabbable', canNavigate);
+    prevBtn.hidden = !canNavigate;
+    nextBtn.hidden = !canNavigate;
+    updateButtons();
+  };
+
+  const applyTransform = (animate: boolean, dragOffset = 0) => {
+    track.style.transition =
+      animate && !prefersReducedMotion() ? `transform ${SLIDE_DURATION_MS}ms ${SLIDE_EASING}` : 'none';
+    track.style.transform = `translate3d(${dragOffset - offsetAt(index)}px, 0, 0)`;
+  };
+
+  // Retargeting mid-transition continues from the current visual position, so rapid clicks never corrupt state.
+  const goTo = (target: number, animate = true) => {
+    index = Math.max(0, Math.min(target, positions.length - 1));
+    updateButtons();
+    applyTransform(animate);
+  };
+
+  const currentTranslateX = (): number => {
+    const { transform } = getComputedStyle(track);
+    if (!transform || transform === 'none' || typeof DOMMatrixReadOnly === 'undefined') return -offsetAt(index);
+    return new DOMMatrixReadOnly(transform).m41;
+  };
+
+  prevBtn.addEventListener('click', () => goTo(index - 1));
+  nextBtn.addEventListener('click', () => goTo(index + 1));
+
+  carouselCol.addEventListener('keydown', (event) => {
+    if (!track.contains(event.target as Node)) return;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      goTo(index + 1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      goTo(index - 1);
     }
   });
-  track.scrollLeft = 0;
 
-  const hasMultiple = cards.length > 2;
-  prevBtn.hidden = !hasMultiple;
-  nextBtn.hidden = !hasMultiple;
+  // Focus on an off-screen card makes the browser scroll the clipped viewport; undo that and move the track instead.
+  viewport.addEventListener('scroll', () => {
+    viewport.scrollLeft = 0;
+  });
+  track.addEventListener('focusin', (event) => {
+    const slide = (event.target as Element).closest<HTMLElement>('.culturist-carousel-carousel-card');
+    if (!slide) return;
+    const visibleStart = offsetAt(index);
+    const fullyVisible =
+      slide.offsetLeft >= visibleStart && slide.offsetLeft + slide.offsetWidth <= visibleStart + viewport.clientWidth;
+    if (fullyVisible) return;
+    const target = positions.reduce((best, offset, i) => (offset <= slide.offsetLeft ? i : best), 0);
+    goTo(target);
+  });
 
-  const jumpToBoundary = (position: number) => {
-    const previousSnapType = track.style.scrollSnapType;
-    const previousScrollBehavior = track.style.scrollBehavior;
-    track.style.scrollSnapType = 'none';
-    track.style.scrollBehavior = 'auto';
-    track.scrollLeft = position;
-    track.style.scrollSnapType = previousSnapType;
-    track.style.scrollBehavior = previousScrollBehavior;
+  // Pointer swipe (touch, pen, mouse with grab cursor): the track follows the pointer, then eases to the neighbouring position.
+  let dragStartX: number | null = null;
+  let dragBase = 0;
+  let dragDelta = 0;
+  let suppressClick = false;
+
+  const endDrag = (commit: boolean) => {
+    if (dragStartX === null) return;
+    dragStartX = null;
+    viewport.classList.remove('is-grabbing');
+    if (commit && dragDelta <= -SWIPE_THRESHOLD_PX) goTo(index + 1);
+    else if (commit && dragDelta >= SWIPE_THRESHOLD_PX) goTo(index - 1);
+    else goTo(index);
+    suppressClick = Math.abs(dragDelta) > SWIPE_THRESHOLD_PX / 2;
   };
 
-  const scrollByCard = (direction: number) => {
-    const card = track.querySelector('.culturist-carousel-carousel-card');
-    if (!card) return;
-    const amount = card.getBoundingClientRect().width + 4;
-    const maxScrollLeft = track.scrollWidth - track.clientWidth;
-    if (direction > 0 && track.scrollLeft >= maxScrollLeft - 1) {
-      jumpToBoundary(0);
-      return;
-    }
-    if (direction < 0 && track.scrollLeft <= 0) {
-      jumpToBoundary(maxScrollLeft);
-      return;
-    }
-    track.scrollBy({ left: direction * amount, behavior: 'smooth' });
-  };
-
-  // Desktop navigates via the prev/next arrows only; wheel/drag scrolling is a tablet/mobile-only affordance
-  const isDesktop = window.matchMedia('(min-width: 1200px)').matches;
-  if (!isDesktop && track.dataset.loopEvents !== 'true') {
-    let touchStartX: number | null = null;
-    let touchStartedAtBoundary = false;
-    let isScrollSettled = true;
-    let boundaryTimer: number | undefined;
-    track.dataset.loopEvents = 'true';
-
-    const wrapAtBoundary = (direction: number): boolean => {
-      const maxScrollLeft = track.scrollWidth - track.clientWidth;
-      const atEnd = track.scrollLeft >= maxScrollLeft - 1;
-      const atStart = track.scrollLeft <= 0;
-      if (!isScrollSettled) return false;
-      if (direction > 0 && atEnd) {
-        jumpToBoundary(0);
-        isScrollSettled = false;
-        return true;
-      }
-      if (direction < 0 && atStart) {
-        jumpToBoundary(maxScrollLeft);
-        isScrollSettled = false;
-        return true;
-      }
-      return false;
-    };
-
-    const updateBoundary = () => {
-      isScrollSettled = true;
-    };
-
-    track.addEventListener('scroll', () => {
-      isScrollSettled = false;
-      window.clearTimeout(boundaryTimer);
-      boundaryTimer = window.setTimeout(updateBoundary, 200);
-    });
-
-    track.addEventListener(
-      'wheel',
-      (event) => {
-        if (wrapAtBoundary(event.deltaX || event.deltaY)) event.preventDefault();
-      },
-      { passive: false },
+  viewport.addEventListener('pointerdown', (event) => {
+    if ((event.pointerType === 'mouse' && event.button !== 0) || positions.length < 2) return;
+    const visualX = currentTranslateX();
+    index = positions.reduce(
+      (best, offset, i) => (Math.abs(offset + visualX) < Math.abs(offsetAt(best) + visualX) ? i : best),
+      0,
     );
+    dragBase = visualX + offsetAt(index);
+    dragStartX = event.clientX;
+    dragDelta = 0;
+    viewport.classList.add('is-grabbing');
+    applyTransform(false, dragBase);
+  });
+  viewport.addEventListener('pointermove', (event) => {
+    if (dragStartX === null) return;
+    dragDelta = event.clientX - dragStartX;
+    // Capture only once it's a real drag, so a plain click still reaches the card link.
+    if (Math.abs(dragDelta) > 5 && !viewport.hasPointerCapture(event.pointerId)) {
+      viewport.setPointerCapture(event.pointerId);
+    }
+    applyTransform(false, dragBase + dragDelta);
+  });
+  viewport.addEventListener('pointerup', () => endDrag(true));
+  viewport.addEventListener('pointercancel', () => endDrag(false));
+  viewport.addEventListener('pointerleave', (event) => {
+    if (!viewport.hasPointerCapture(event.pointerId)) endDrag(false);
+  });
+  // Stop the browser's native image/link drag from hijacking a mouse swipe.
+  viewport.addEventListener('dragstart', (event) => event.preventDefault());
+  viewport.addEventListener(
+    'click',
+    (event) => {
+      if (!suppressClick) return;
+      suppressClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    true,
+  );
 
-    track.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'touch') {
-        touchStartX = event.clientX;
-        const maxScrollLeft = track.scrollWidth - track.clientWidth;
-        touchStartedAtBoundary = isScrollSettled && (track.scrollLeft <= 0 || track.scrollLeft >= maxScrollLeft - 1);
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      measure();
+      applyTransform(false);
+    }).observe(viewport);
+  }
+
+  return (cfData) => {
+    // Skip any null/empty entries so one bad card doesn't break the rest
+    const cards: Record<string, any>[] = (cfData?.cardContentReference || []).filter(Boolean);
+    index = 0;
+    if (!cards.length) {
+      track.textContent = 'No content';
+      carouselCol.classList.add('culturist-carousel-carousel--empty');
+      measure();
+      applyTransform(false);
+      return;
+    }
+
+    carouselCol.classList.remove('culturist-carousel-carousel--empty');
+    const slides: HTMLLIElement[] = [];
+    cards.forEach((card) => {
+      try {
+        slides.push(buildCarouselCard(card));
+      } catch (error) {
+        console.error('[culturist-carousel] Skipping malformed card', card, error);
       }
     });
-
-    track.addEventListener('pointerup', (event) => {
-      if (touchStartX === null) return;
-      const direction = touchStartX - event.clientX;
-      touchStartX = null;
-      if (touchStartedAtBoundary && Math.abs(direction) > 30) wrapAtBoundary(direction);
-      touchStartedAtBoundary = false;
-    });
-
-    track.addEventListener('pointercancel', () => {
-      touchStartX = null;
-    });
-
-    track.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowRight' && wrapAtBoundary(1)) event.preventDefault();
-      if (event.key === 'ArrowLeft' && wrapAtBoundary(-1)) event.preventDefault();
-    });
-  }
-  prevBtn.onclick = () => scrollByCard(-1);
-  nextBtn.onclick = () => scrollByCard(1);
+    track.replaceChildren(...slides);
+    measure();
+    applyTransform(false);
+  };
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
@@ -421,9 +486,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const carouselCol = document.createElement('div');
   carouselCol.className = 'culturist-carousel-carousel-col';
 
+  const carouselViewport = document.createElement('div');
+  carouselViewport.className = 'culturist-carousel-carousel-viewport';
+
   const carouselTrack = document.createElement('ul');
   carouselTrack.className = 'culturist-carousel-carousel-track';
-  carouselCol.append(carouselTrack);
+  carouselViewport.append(carouselTrack);
+  carouselCol.append(carouselViewport);
 
   const carouselPrevBtn = document.createElement('button');
   carouselPrevBtn.type = 'button';
@@ -436,6 +505,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   carouselNextBtn.className = 'culturist-carousel-carousel-next';
   carouselNextBtn.setAttribute('aria-label', 'Next cards');
   carouselCol.append(carouselNextBtn);
+
+  const renderGallery = createGalleryCarousel(
+    carouselCol,
+    carouselViewport,
+    carouselTrack,
+    carouselPrevBtn,
+    carouselNextBtn,
+  );
 
   let currentTabIndex = 0;
   let selectTabGeneration = 0;
@@ -466,21 +543,13 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const cfRef = itemRows[currentTabIndex]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
     if (!cfRef) return;
 
-    infoSlot.classList.add('is-fading');
-    carouselCol.classList.add('is-fading');
-    await new Promise((resolve) => {
-      window.setTimeout(resolve, 280);
-    });
+    // Previous destination stays on screen until the new data arrives, then both columns swap in the same frame.
+    const cfData = await fetchCFDetails(cfRef);
     if (generation !== selectTabGeneration) return;
 
-    await renderCulturistInfo(infoSlot, cfRef);
-    await renderGalleryCarousel(carouselCol, cfRef);
-    if (generation !== selectTabGeneration) return;
-
+    renderCulturistInfo(infoSlot, cfData);
+    renderGallery(cfData);
     applyOverlay(currentTabIndex);
-
-    infoSlot.classList.remove('is-fading');
-    carouselCol.classList.remove('is-fading');
   };
 
   updateDestinationBtn();
@@ -666,8 +735,9 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   // Load initial tab data
   const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
   if (initialCfRef) {
-    await renderCulturistInfo(infoSlot, initialCfRef);
-    await renderGalleryCarousel(carouselCol, initialCfRef);
+    const initialData = await fetchCFDetails(initialCfRef);
+    renderCulturistInfo(infoSlot, initialData);
+    renderGallery(initialData);
   }
 
   moveInstrumentation(block, wrapper);
