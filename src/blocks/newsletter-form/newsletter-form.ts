@@ -538,7 +538,7 @@ async function submitForm(
   } else if (result === 'captcha-required') {
     showMessage(message, inline?.messages.captchaRequiredError ?? 'Please complete the captcha.', 'error');
   } else {
-    showMessage(message, inline?.messages.errorMessage ?? MESSAGE_DEFAULTS.errorMessage, 'error');
+    showMessage(message, inline?.messages.errorMessage ?? 'Sorry, something went wrong. Please try again.', 'error');
     if (config.captcha) config.captcha.reset();
   }
   submitBtn.disabled = false;
@@ -744,7 +744,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   let captchaLoading = false;
   let captchaPreloaded = false;
   const captchaUnavailableText =
-    cfg.layout === 'Inline' ? cfg.messages.captchaUnavailableError : MESSAGE_DEFAULTS.captchaUnavailableError;
+    cfg.layout === 'Inline' ? cfg.messages.captchaUnavailableError : 'CAPTCHA is unavailable. Please try again later.';
   const preloadCaptcha = (): void => {
     if (!siteKey || captchaPreloaded) return;
     captchaPreloaded = true;
@@ -800,15 +800,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     if (cfg.layout === 'Inline') {
       if (submitBtn.getAttribute('aria-busy') === 'true') return;
       validationAttempted = true;
+      showMessage(message, '');
       if (!validateInline()) return;
       if (gate.blockedBy() === 'captcha') {
+        // A restored form can have consent ticked without the change event that normally starts the widget.
+        initializeCaptcha();
         showMessage(
           message,
-          !siteKey
-            ? cfg.messages.captchaUnavailableError
-            : captchaLoading
-              ? 'CAPTCHA is loading. Please wait.'
-              : cfg.messages.captchaRequiredError,
+          !siteKey ? cfg.messages.captchaUnavailableError : cfg.messages.captchaRequiredError,
           'error',
         );
         return;
