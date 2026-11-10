@@ -1,4 +1,5 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createCarouselControls } from '../destination-cards/carousel.ts';
 
 function stripHtml(html: string): string {
   const wrapper = document.createElement('div');
@@ -23,6 +24,14 @@ function isEnabled(value?: Element | string | null, fallback = false): boolean {
   return ['true', 'yes', 'enabled'].includes(text.trim().toLowerCase());
 }
 
+function setLinkAttributes(link: HTMLAnchorElement, href: string, openInNewTab: boolean = false): void {
+  link.setAttribute('href', href);
+  if (openInNewTab) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
+}
+
 interface DestinationMapping {
   location: string;
   url: string;
@@ -37,6 +46,7 @@ interface CardFields {
   ctaLabel: string;
   ctaActionMode: string;
   ctaLink: string;
+  openInNewTab: boolean;
 }
 
 interface BlockConfig {
@@ -54,15 +64,19 @@ interface BlockConfig {
 function getCardFields(row: Element): CardFields {
   const cells = [...row.children];
 
+  const ctaLabel = textFromCell(cells[4]) || 'EXPLORE NOW';
+  const ctaActionMode = textFromCell(cells[5]) || 'destination-modal';
+
   return {
     image: cells[0]?.querySelector('picture, img'),
-    imageAlt: cells[1]?.textContent?.trim() || '',
-    darkOverlay: isEnabled(cells[2]),
-    title: textFromCell(cells[3]),
-    description: textFromCell(cells[4]),
-    ctaLabel: textFromCell(cells[5]),
-    ctaActionMode: textFromCell(cells[6]),
-    ctaLink: cells[7]?.querySelector('a')?.getAttribute('href') || textFromCell(cells[7]),
+    imageAlt: cells[0]?.querySelector('img')?.getAttribute('alt') || '',
+    darkOverlay: isEnabled(cells[1]),
+    title: textFromCell(cells[2]),
+    description: textFromCell(cells[3]),
+    ctaLabel: ctaLabel.includes('modal') || ctaLabel.includes('url') ? 'EXPLORE NOW' : ctaLabel,
+    ctaActionMode,
+    ctaLink: cells[6]?.querySelector('a')?.getAttribute('href') || textFromCell(cells[6]),
+    openInNewTab: isEnabled(cells[7]),
   };
 }
 
@@ -138,14 +152,26 @@ function buildCard(row: Element): HTMLLIElement {
   }
 
   if (fields.ctaLabel) {
-    const cta = document.createElement('button');
+    const cta = document.createElement('a');
     cta.className = 'destination-cards-signature-cta';
     cta.setAttribute('data-testid', 'destination-cards-signature-cta');
     cta.textContent = fields.ctaLabel;
     cta.setAttribute('data-cta-action-mode', fields.ctaActionMode);
-    if (fields.ctaLink) {
-      cta.setAttribute('data-cta-link', fields.ctaLink);
+
+    // Handle link based on action mode
+    if (fields.ctaActionMode === 'destination-modal') {
+      // For modal mode, use role="button"
+      cta.setAttribute('role', 'button');
+      cta.setAttribute('tabindex', '0');
+    } else {
+      // For direct link mode, set href and respect openInNewTab setting
+      if (fields.ctaLink) {
+        setLinkAttributes(cta, fields.ctaLink, fields.openInNewTab);
+      } else {
+        cta.href = '#';
+      }
     }
+
     content.append(cta);
   }
 
@@ -163,78 +189,124 @@ function buildModal(config: BlockConfig): HTMLDivElement {
   dialog.className = 'destination-cards-signature-modal';
   dialog.setAttribute('data-testid', 'destination-cards-signature-modal');
 
-  // Modal header
-  const header = document.createElement('div');
-  header.className = 'destination-cards-signature-modal-header';
+  // Modal content container
+  const content = document.createElement('div');
+  content.className = 'destination-cards-signature-modal-content';
 
+  // Modal title
   const title = document.createElement('h2');
   title.className = 'destination-cards-signature-modal-title';
   title.textContent = config.modalHeading || 'Choose destination';
-  header.append(title);
+  content.append(title);
 
+  // Destination carousel group
+  const carouselGroup = document.createElement('div');
+  carouselGroup.className = 'destination-cards-signature-carousel-group';
+
+  // Gradient mask overlay
+  const maskOverlay = document.createElement('div');
+  maskOverlay.className = 'destination-cards-signature-mask-overlay';
+  carouselGroup.append(maskOverlay);
+
+  // Carousel container with destinations
+  const carouselContainer = document.createElement('div');
+  carouselContainer.className = 'destination-cards-signature-carousel-container';
+
+  const destinationList = document.createElement('div');
+  destinationList.className = 'destination-cards-signature-destination-list';
+  destinationList.setAttribute('data-testid', 'destination-cards-signature-destination-list');
+
+  config.destinationMappings.forEach((mapping, index) => {
+    const destinationItem = document.createElement('div');
+    destinationItem.className = 'destination-cards-signature-destination-item';
+    destinationItem.setAttribute('data-testid', `destination-cards-signature-destination-${index}`);
+    destinationItem.setAttribute('data-destination', mapping.url);
+
+    const destinationName = document.createElement('h3');
+    destinationName.className = 'destination-cards-signature-destination-name';
+    destinationName.textContent = mapping.location;
+    destinationItem.append(destinationName);
+
+    destinationList.append(destinationItem);
+  });
+
+  carouselContainer.append(destinationList);
+  carouselGroup.append(carouselContainer);
+  content.append(carouselGroup);
+
+  // Submit button
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'destination-cards-signature-modal-submit';
+  submitBtn.setAttribute('data-testid', 'destination-cards-signature-modal-submit');
+  submitBtn.textContent = config.modalSubmitLabel || 'GO TO DESTINATION';
+  content.append(submitBtn);
+
+  // Close button
   const closeBtn = document.createElement('button');
   closeBtn.className = 'destination-cards-signature-modal-close';
   closeBtn.setAttribute('data-testid', 'destination-cards-signature-modal-close');
   closeBtn.setAttribute('aria-label', 'Close modal');
   closeBtn.innerHTML = '✕';
-  header.append(closeBtn);
+  content.append(closeBtn);
 
-  dialog.append(header);
-
-  // Destination list
-  const listContainer = document.createElement('div');
-  listContainer.className = 'destination-cards-signature-modal-content';
-
-  const list = document.createElement('ul');
-  list.className = 'destination-cards-signature-destination-list';
-  list.setAttribute('data-testid', 'destination-cards-signature-destination-list');
-
-  config.destinationMappings.forEach((mapping, index) => {
-    const item = document.createElement('li');
-    item.className = 'destination-cards-signature-destination-item';
-
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'destination';
-    radio.value = mapping.url;
-    radio.id = `destination-${index}`;
-    radio.setAttribute('data-testid', `destination-cards-signature-destination-${index}`);
-
-    const label = document.createElement('label');
-    label.htmlFor = `destination-${index}`;
-    label.textContent = mapping.location;
-
-    item.append(radio, label);
-    list.append(item);
-  });
-
-  listContainer.append(list);
-  dialog.append(listContainer);
-
-  // Modal footer with submit button
-  const footer = document.createElement('div');
-  footer.className = 'destination-cards-signature-modal-footer';
-
-  const submitBtn = document.createElement('button');
-  submitBtn.className = 'destination-cards-signature-modal-submit';
-  submitBtn.setAttribute('data-testid', 'destination-cards-signature-modal-submit');
-  submitBtn.textContent = config.modalSubmitLabel || 'GO TO DESTINATION';
-
-  footer.append(submitBtn);
-  dialog.append(footer);
-
+  dialog.append(content);
   modal.append(dialog);
 
   return modal;
 }
 
 function setupModalHandlers(block: Element, modal: HTMLElement): void {
-  const dialog = modal.querySelector('dialog') as HTMLDialogElement;
-  const closeBtn = modal.querySelector('.destination-cards-signature-modal-close') as HTMLButtonElement;
-  const submitBtn = modal.querySelector('.destination-cards-signature-modal-submit') as HTMLButtonElement;
-  const backdrop = modal.querySelector('.destination-cards-signature-modal-wrapper') as HTMLElement;
+  const dialog = modal.querySelector('dialog') as HTMLDialogElement | null;
+  const closeBtn = modal.querySelector('.destination-cards-signature-modal-close') as HTMLButtonElement | null;
+  const submitBtn = modal.querySelector('.destination-cards-signature-modal-submit') as HTMLButtonElement | null;
+  const destinationList = modal.querySelector('.destination-cards-signature-destination-list') as HTMLElement | null;
+  const carouselContainer = modal.querySelector(
+    '.destination-cards-signature-carousel-container',
+  ) as HTMLElement | null;
+
+  if (!dialog || !closeBtn || !submitBtn || !destinationList || !carouselContainer) {
+    console.error('destination-cards-signature: Modal elements not found');
+    return;
+  }
 
   const ctaButtons = block.querySelectorAll('.destination-cards-signature-cta');
+  let selectedDestination: HTMLElement | null = null;
+
+  // Make carousel container scrollable with proper overflow
+  carouselContainer.style.overflowY = 'scroll';
+  carouselContainer.style.scrollSnapType = 'y mandatory';
+
+  const destinationItems = destinationList.querySelectorAll('.destination-cards-signature-destination-item');
+  let clickedDestination: HTMLElement | null = null;
+
+  // Scroll handler to update active item based on center position
+  const updateCenterItem = () => {
+    const containerRect = carouselContainer.getBoundingClientRect();
+    const containerCenter = containerRect.top + containerRect.height / 2;
+    let closestItem: HTMLElement | null = null;
+    let closestDistance = Infinity;
+
+    for (let i = 0; i < destinationItems.length; i += 1) {
+      const item = destinationItems[i] as HTMLElement;
+      const itemRect = item.getBoundingClientRect();
+      const itemCenter = itemRect.top + itemRect.height / 2;
+      const distance = Math.abs(containerCenter - itemCenter);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestItem = item;
+      }
+    }
+
+    // Update active state
+    for (let i = 0; i < destinationItems.length; i += 1) {
+      (destinationItems[i] as HTMLElement).classList.remove('active');
+    }
+    if (closestItem) {
+      closestItem.classList.add('active');
+      selectedDestination = closestItem;
+    }
+  };
 
   const openModal = () => {
     if (dialog.showModal) {
@@ -242,6 +314,13 @@ function setupModalHandlers(block: Element, modal: HTMLElement): void {
     } else {
       dialog.style.display = 'block';
     }
+    // Add modal-open class to body to prevent scroll
+    document.body.classList.add('modal-open');
+    // Update center item after modal opens and layout is settled
+    setTimeout(() => {
+      updateCenterItem();
+      clickedDestination = null; // Reset clicked selection when modal opens
+    }, 100);
   };
 
   const closeModal = () => {
@@ -250,48 +329,97 @@ function setupModalHandlers(block: Element, modal: HTMLElement): void {
     } else {
       dialog.style.display = 'none';
     }
+    // Remove modal-open class from body to restore scroll
+    document.body.classList.remove('modal-open');
   };
+
+  destinationItems.forEach((item: Element) => {
+    item.addEventListener('click', () => {
+      // Mark as clicked to persist selection
+      clickedDestination = item as HTMLElement;
+      selectedDestination = clickedDestination;
+      // Update active state
+      for (let i = 0; i < destinationItems.length; i += 1) {
+        (destinationItems[i] as HTMLElement).classList.remove('active');
+      }
+      (item as HTMLElement).classList.add('active');
+      // Scroll to center
+      (item as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // Hover listener to update active state (always show hover preview)
+    item.addEventListener('mouseenter', () => {
+      for (let i = 0; i < destinationItems.length; i += 1) {
+        (destinationItems[i] as HTMLElement).classList.remove('active');
+      }
+      (item as HTMLElement).classList.add('active');
+      selectedDestination = item as HTMLElement;
+    });
+
+    // Mouseleave listener to restore clicked item (if any)
+    item.addEventListener('mouseleave', () => {
+      if (clickedDestination) {
+        for (let i = 0; i < destinationItems.length; i += 1) {
+          (destinationItems[i] as HTMLElement).classList.remove('active');
+        }
+        clickedDestination.classList.add('active');
+        selectedDestination = clickedDestination;
+      }
+    });
+  });
 
   ctaButtons.forEach((btn: Element) => {
     btn.addEventListener('click', (e: Event) => {
-      const ctaBtn = btn as HTMLButtonElement;
+      const ctaBtn = btn as HTMLAnchorElement;
       const actionMode = ctaBtn.getAttribute('data-cta-action-mode');
 
-      if (actionMode === 'direct-url') {
-        const url = ctaBtn.getAttribute('data-cta-link');
-        if (url) {
-          window.location.href = url;
-        }
-      } else {
+      if (actionMode === 'destination-modal') {
+        e.preventDefault();
+        selectedDestination = null; // Reset selection
         openModal();
       }
-      e.preventDefault();
+      // For 'direct-url' or any other mode, use the href normally (don't preventDefault)
     });
+
+    // For keyboard accessibility of modal buttons (Enter/Space)
+    if ((btn as HTMLAnchorElement).getAttribute('data-cta-action-mode') === 'destination-modal') {
+      btn.addEventListener('keydown', (e: Event) => {
+        const keyEvent = e as KeyboardEvent;
+        if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+          keyEvent.preventDefault();
+          selectedDestination = null; // Reset selection
+          openModal();
+        }
+      });
+    }
   });
 
   closeBtn.addEventListener('click', closeModal);
 
-  backdrop.addEventListener('click', (e: Event) => {
-    if (e.target === backdrop) {
+  // Close modal when clicking on the backdrop (wrapper) but not on the dialog itself
+  modal.addEventListener('click', (e: Event) => {
+    if (e.target === modal) {
       closeModal();
     }
   });
 
   submitBtn.addEventListener('click', () => {
-    const selectedRadio = modal.querySelector('input[name="destination"]:checked') as HTMLInputElement;
-    if (selectedRadio) {
-      window.location.href = selectedRadio.value;
+    if (selectedDestination) {
+      const destinationUrl = selectedDestination.getAttribute('data-destination');
+      if (destinationUrl) {
+        window.location.href = destinationUrl;
+      }
     }
   });
 
   dialog.addEventListener('cancel', closeModal);
 }
 
-function getBlockConfig(rows: Element[]): BlockConfig {
+function getBlockConfig(rows: Element[]): { config: BlockConfig; cardStartIndex: number } {
   const [idRow, testIdRow, eyebrowRow, titleRow, descriptionRow, bgStyleRow, modalHeadingRow, modalSubmitLabelRow] =
     rows.slice(0, 8);
 
-  return {
+  const config: BlockConfig = {
     id: textFromCell(idRow?.firstElementChild || idRow),
     testId: textFromCell(testIdRow?.firstElementChild || testIdRow),
     eyebrow: textFromCell(eyebrowRow?.firstElementChild || eyebrowRow),
@@ -299,9 +427,71 @@ function getBlockConfig(rows: Element[]): BlockConfig {
     description: textFromCell(descriptionRow?.firstElementChild || descriptionRow),
     backgroundStyle: textFromCell(bgStyleRow?.firstElementChild || bgStyleRow) || 'signature-warm',
     modalHeading: textFromCell(modalHeadingRow?.firstElementChild || modalHeadingRow),
-    destinationMappings: [], // TODO: Parse repeatable mappings
+    destinationMappings: [],
     modalSubmitLabel: textFromCell(modalSubmitLabelRow?.firstElementChild || modalSubmitLabelRow),
   };
+
+  // Parse destinationMappings: they are rows after config but before the first card row (which has an image)
+  let cardStartIndex = 8;
+  for (let i = 8; i < rows.length; i += 1) {
+    const row = rows[i];
+    if (!row) break;
+
+    const hasImage = row.querySelector('picture, img');
+
+    if (hasImage) {
+      // This is the first card row
+      cardStartIndex = i;
+      break;
+    }
+
+    // This is a destinationMapping container row with <hr> separators
+    const container = row.querySelector('div');
+    if (container) {
+      const children = [...container.children];
+      let idx = 0;
+      while (idx < children.length) {
+        const child = children[idx];
+
+        if (!child) {
+          idx += 1;
+          continue;
+        }
+
+        // Skip <hr> elements
+        if (child.tagName === 'HR') {
+          idx += 1;
+          continue;
+        }
+
+        // Get destination name from current <p>
+        const namePara = child.tagName === 'P' ? child : null;
+        const destinationName = namePara ? textFromCell(namePara) : '';
+
+        // Get destination link from next <p> with <a>
+        let destinationLink = '';
+        if (destinationName && idx + 1 < children.length) {
+          const linkPara = children[idx + 1];
+          if (linkPara && linkPara.tagName === 'P') {
+            const link = linkPara.querySelector('a');
+            destinationLink = link?.getAttribute('href') || textFromCell(linkPara);
+            idx += 1; // Skip the next <p> since we just processed it
+          }
+        }
+
+        if (destinationName && destinationLink) {
+          config.destinationMappings.push({
+            location: destinationName,
+            url: destinationLink,
+          });
+        }
+
+        idx += 1;
+      }
+    }
+  }
+
+  return { config, cardStartIndex };
 }
 
 /**
@@ -313,11 +503,8 @@ export default async function decorate(block: Element): Promise<void> {
 
   const rows = [...block.children] as Element[];
 
-  // Parse block configuration (first 8 rows)
-  const config = getBlockConfig(rows);
-
-  // Parse card rows (remaining rows)
-  const cardRows = rows.slice(8);
+  // Parse block configuration and destination mappings
+  const { config, cardStartIndex } = getBlockConfig(rows);
 
   // Set block attributes
   if (config.testId) {
@@ -325,6 +512,14 @@ export default async function decorate(block: Element): Promise<void> {
   }
 
   block.classList.add(`destination-cards-signature--${config.backgroundStyle}`);
+
+  // Hide config and mapping rows (keep them for AEM instrumentation but hide visually)
+  for (let i = 0; i < cardStartIndex; i += 1) {
+    const row = rows[i];
+    if (row) {
+      (row as HTMLElement).style.display = 'none';
+    }
+  }
 
   // Build intro section
   const intro = buildIntro(config);
@@ -338,15 +533,41 @@ export default async function decorate(block: Element): Promise<void> {
   list.className = 'destination-cards-signature-list';
   list.setAttribute('data-testid', 'destination-cards-signature-list');
 
-  cardRows.forEach((row) => {
-    if (row.querySelector('picture, img')) {
+  // Process card rows (starting from cardStartIndex)
+  for (let i = cardStartIndex; i < rows.length; i += 1) {
+    const row = rows[i];
+    if (row && row.querySelector('picture, img')) {
+      // Hide the original authored row and build a new card from its content
+      (row as HTMLElement).style.display = 'none';
       const card = buildCard(row);
       list.append(card);
-      row.remove();
+      (row as HTMLElement).style.display = 'none';
     }
-  });
+  }
 
   carousel.append(list);
+
+  // Add carousel controls if there are more than 2 cards (show on desktop only)
+  const cardCount = list.querySelectorAll('.destination-cards-signature-item').length;
+  if (cardCount > 2) {
+    const controls = createCarouselControls({
+      track: list,
+      itemSelector: '.destination-cards-signature-item',
+      classNames: {
+        controls: 'destination-cards-signature-controls',
+        control: 'destination-cards-signature-control',
+        controlPrev: 'destination-cards-signature-control-prev',
+        controlNext: 'destination-cards-signature-control-next',
+      },
+      labels: {
+        track: 'Destination cards carousel',
+        previous: 'Previous card',
+        next: 'Next card',
+      },
+    });
+    carousel.prepend(controls);
+  }
+
   block.append(carousel);
 
   // Build and setup modal
