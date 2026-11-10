@@ -148,6 +148,15 @@
           "value": "Submission in non-English is not supported"
         },
         {
+          "component": "text",
+          "name": "errorMessage",
+          "label": "General Error Message",
+          "description": "Shown under the submit button when the submission fails for any reason not covered by a field message. Inline layout only.",
+          "valueType": "string",
+          "required": true,
+          "value": "Sorry, something went wrong. Please try again."
+        },
+        {
           "component": "tab",
           "name": "errorTab",
           "label": "Error Messages"
@@ -223,15 +232,6 @@
           "valueType": "string",
           "required": true,
           "value": "Please accept the terms to continue."
-        },
-        {
-          "component": "text",
-          "name": "errorMessage",
-          "label": "General Error Message",
-          "description": "Shown under the submit button when the submission fails for any reason not covered by a field message above. Inline layout only.",
-          "valueType": "string",
-          "required": true,
-          "value": "Sorry, something went wrong. Please try again."
         },
         {
           "component": "text",
