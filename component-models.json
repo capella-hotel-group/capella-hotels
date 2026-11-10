@@ -3656,6 +3656,11 @@
     "id": "text-with-cta-signup-form",
     "fields": [
       {
+        "component": "tab",
+        "name": "formTab",
+        "label": "Form"
+      },
+      {
         "component": "text",
         "name": "triggerLabel",
         "label": "Expand Link Label",
@@ -3730,14 +3735,6 @@
         "value": "Sign up"
       },
       {
-        "component": "text",
-        "name": "successMessage",
-        "label": "Success Message",
-        "valueType": "string",
-        "required": true,
-        "value": "Thank you, your details have been received."
-      },
-      {
         "component": "boolean",
         "name": "enableHCaptcha",
         "label": "Enable hCaptcha",
@@ -3768,6 +3765,112 @@
         "description": "Optional information displayed above the sign-up form. Leave blank to omit it.",
         "valueType": "string",
         "value": "Submission in non-English is not supported"
+      },
+      {
+        "component": "tab",
+        "name": "errorTab",
+        "label": "Error Messages"
+      },
+      {
+        "component": "text",
+        "name": "salutationError",
+        "label": "Salutation Error Message",
+        "description": "Shown when no salutation is selected.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please select a title."
+      },
+      {
+        "component": "text",
+        "name": "firstNameError",
+        "label": "First Name Error Message",
+        "description": "Shown when the first name is blank or contains characters other than letters.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter your first name."
+      },
+      {
+        "component": "text",
+        "name": "lastNameError",
+        "label": "Last Name Error Message",
+        "description": "Shown when the last name is blank or contains characters other than letters.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter your last name."
+      },
+      {
+        "component": "text",
+        "name": "countryError",
+        "label": "Country Error Message",
+        "description": "Shown when no country is selected.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please select your country."
+      },
+      {
+        "component": "text",
+        "name": "emailRequiredError",
+        "label": "Email Required Error Message",
+        "description": "Shown when the email is blank.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter a valid email address."
+      },
+      {
+        "component": "text",
+        "name": "emailFormatError",
+        "label": "Email Format Error Message",
+        "description": "Shown when the email does not follow the user@domain.com format.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter a valid email address."
+      },
+      {
+        "component": "text",
+        "name": "consentError",
+        "label": "Consent Error Message",
+        "description": "Shown when the consent checkbox is not ticked.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please accept the terms to continue."
+      },
+      {
+        "component": "tab",
+        "name": "successTab",
+        "label": "Thank You Modal"
+      },
+      {
+        "component": "text",
+        "name": "successEyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "required": true,
+        "value": "Newsletter"
+      },
+      {
+        "component": "richtext",
+        "name": "successHeading",
+        "label": "Title",
+        "description": "Each paragraph renders as its own title line.",
+        "valueType": "string",
+        "required": true,
+        "value": "<p>Thank you</p><p>for subscribing</p>"
+      },
+      {
+        "component": "richtext",
+        "name": "successMessage",
+        "label": "Body Text",
+        "valueType": "string",
+        "required": true,
+        "value": "<p>You have successfully joined our mailing list. Look out for the latest news and exclusive offers from Capella.</p>"
+      },
+      {
+        "component": "text",
+        "name": "successButtonLabel",
+        "label": "Button Label",
+        "valueType": "string",
+        "required": true,
+        "value": "Done"
       }
     ]
   },

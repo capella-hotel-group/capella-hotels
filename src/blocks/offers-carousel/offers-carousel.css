@@ -2,10 +2,15 @@
    834 geometry comes from the same component under the mobile/tablet variable modes. */
 
 .offers-carousel {
+    --offers-ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+    --offers-ease-glide: cubic-bezier(0.65, 0, 0.35, 1);
+
     width: 100%;
     margin: 0;
     padding: 0;
     background: var(--color-surface-page);
+    /* a leaving card flies towards the viewer and may grow past the page edge */
+    overflow-x: clip;
 }
 
 /* authored-only fields (anchor id) and cards past the third stay in the DOM for the
@@ -66,10 +71,44 @@
     padding-inline-start: var(--dimension-spacing-general-2xl);
 }
 
+/* Intro: each title line rises inside its own mask; the eyebrow rises with them */
+.offers-carousel .offers-carousel-title-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 2px;
+}
+
+.offers-carousel .offers-carousel-title-line-inner {
+    display: block;
+}
+
+.offers-carousel .is-animated .offers-carousel-eyebrow,
+.offers-carousel .is-animated .offers-carousel-title-line-inner {
+    opacity: 0;
+    transform: translateY(105%);
+}
+
+/* the copy reveals on its own, so on mobile it does not wait for the stack further down */
+.offers-carousel .is-animated.is-copy-in .offers-carousel-eyebrow,
+.offers-carousel .is-animated.is-copy-in .offers-carousel-title-line-inner {
+    opacity: 1;
+    transform: none;
+    transition:
+        transform 1.3s var(--offers-ease-settle),
+        opacity 1s var(--offers-ease-settle);
+}
+
+/* --line-index is set per line by the block, starting at 1 */
+.offers-carousel .is-animated.is-copy-in .offers-carousel-title-line-inner {
+    transition-delay: calc(var(--line-index, 1) * 0.12s);
+}
+
 .offers-carousel .offers-carousel-stage {
     position: relative;
     width: 100%;
     touch-action: pan-y;
+    perspective: 1400px;
+    perspective-origin: 55% 40%;
 }
 
 /* the stack grows one step per card, so the container must follow the authored count or the
@@ -79,26 +118,38 @@
     --card-count: 3;
     --card-step: 50px;
     --card-height: 328px;
+    /* each card behind the front one also sits one --card-dz step deeper */
+    --card-dx: 16px;
+    --card-dy: 24px;
+    --card-dz: 70px;
 
     position: relative;
     width: 100%;
     height: calc(var(--card-height) + (var(--card-count) - 1) * var(--card-step));
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    /* must stay overflow: visible, any clipping would flatten the 3D stack */
+    transform-style: preserve-3d;
+    /* --stack-rx/--stack-ry are set by the block from the pointer position */
+    transform: rotateX(var(--stack-rx, 0deg)) rotateY(var(--stack-ry, 0deg));
+    transition: transform 1.2s var(--offers-ease-settle);
+    /* the stack plane sits in front of the deeper cards, so only the cards may take the pointer */
+    pointer-events: none;
     /* the stack consumes the gesture itself, in both axes */
     touch-action: none;
 }
 
-/* every stack offset is expressed through --card-x/--card-y so the swipe can add its own
-   --card-shift on top without having to know the current breakpoint's geometry */
+/* the resting slot comes from --card-x/--card-y; --card-fx/fy/fz/rx are motion offsets on top
+   of it, so the same motion works for every breakpoint's geometry */
 .offers-carousel .offers-carousel-card {
     --card-x: -50%;
     --card-y: 0px;
-    --card-shift: 0px;
-    --card-move-duration: 0.55s;
-    --card-move-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
-    --card-leave-easing: cubic-bezier(0.55, 0, 1, 0.45);
+    --card-z: 0px;
+    --card-fx: 0px;
+    --card-fy: 0px;
+    --card-fz: 0px;
+    --card-rx: 0deg;
+    --card-move: 0.85s var(--offers-ease-settle);
 
     position: absolute;
     top: 0;
@@ -106,14 +157,22 @@
     width: 260px;
     height: 300px;
     cursor: pointer;
-    transform: translate(var(--card-x), calc(var(--card-y) + var(--card-shift)));
+    pointer-events: auto;
+    backface-visibility: hidden;
+    transform: translate3d(
+            calc(var(--card-x) + var(--card-fx)),
+            calc(var(--card-y) + var(--card-fy)),
+            calc(var(--card-z) + var(--card-fz))
+        )
+        rotateX(var(--card-rx));
     transition:
-        top var(--card-move-duration) var(--card-move-easing),
-        right var(--card-move-duration) var(--card-move-easing),
-        width var(--card-move-duration) var(--card-move-easing),
-        height var(--card-move-duration) var(--card-move-easing),
-        opacity var(--card-move-duration) var(--card-move-easing),
-        transform var(--card-move-duration) var(--card-move-easing);
+        top var(--card-move),
+        right var(--card-move),
+        width var(--card-move),
+        height var(--card-move),
+        transform var(--card-move),
+        opacity 0.55s var(--offers-ease-settle);
+    will-change: transform;
 }
 
 .offers-carousel .offers-carousel-card-media {
@@ -123,15 +182,26 @@
     overflow: hidden;
 }
 
+/* the shade deepens with each step back, so the depth between the cards reads */
 .offers-carousel .offers-carousel-card-media::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgb(0 0 0 / 40%);
+    background: rgb(0 0 0);
+    opacity: 0.4;
+    transition: opacity 0.8s var(--offers-ease-glide);
 }
 
-.offers-carousel .offers-carousel-card-media.offers-carousel-card-media-no-overlay::after {
-    background: transparent;
+.offers-carousel .offers-carousel-card.is-next-1 .offers-carousel-card-media::after {
+    opacity: 0.55;
+}
+
+.offers-carousel .offers-carousel-card.is-next-2 .offers-carousel-card-media::after {
+    opacity: 0.65;
+}
+
+.offers-carousel .offers-carousel-card .offers-carousel-card-media.offers-carousel-card-media-no-overlay::after {
+    opacity: 0;
 }
 
 .offers-carousel .offers-carousel-card-media > p {
@@ -148,6 +218,12 @@
 
 .offers-carousel .offers-carousel-card img {
     object-fit: cover;
+    transform: scale(1.08);
+    transition: transform 1.6s var(--offers-ease-settle);
+}
+
+.offers-carousel .offers-carousel-card.is-active img {
+    transform: scale(1);
 }
 
 /* Figma nests the eyebrow with the title and the title with the description, so the flat
@@ -264,6 +340,44 @@
     background: var(--color-stroke-action-inverse-default);
 }
 
+/* only the front card shows its title, description and CTAs; they rise in one after another
+   once it takes the front slot. The eyebrow stays on every card. */
+.offers-carousel .offers-carousel-card .offers-carousel-card-title,
+.offers-carousel .offers-carousel-card .offers-carousel-card-description,
+.offers-carousel .offers-carousel-card .offers-carousel-card-ctas {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+        opacity 0.35s,
+        transform 0.35s;
+}
+
+.offers-carousel .offers-carousel-card.is-active .offers-carousel-card-title,
+.offers-carousel .offers-carousel-card.is-active .offers-carousel-card-description,
+.offers-carousel .offers-carousel-card.is-active .offers-carousel-card-ctas {
+    opacity: 1;
+    transform: none;
+    transition:
+        opacity 0.7s var(--offers-ease-settle),
+        transform 0.8s var(--offers-ease-settle);
+}
+
+.offers-carousel .offers-carousel-card.is-active .offers-carousel-card-title {
+    transition-delay: 0.3s;
+}
+
+.offers-carousel .offers-carousel-card.is-active .offers-carousel-card-description {
+    transition-delay: 0.38s;
+}
+
+.offers-carousel .offers-carousel-card.is-active .offers-carousel-card-ctas {
+    transition-delay: 0.46s;
+}
+
+.offers-carousel .offers-carousel-card:not(.is-active) .offers-carousel-card-ctas {
+    pointer-events: none;
+}
+
 /* mobile stack: cards are centred and step 30px narrower behind the active one */
 .offers-carousel .offers-carousel-card.is-active {
     z-index: 4;
@@ -294,67 +408,141 @@
     pointer-events: auto;
 }
 
+.offers-carousel .offers-carousel-card.is-next-1 {
+    --card-z: calc(var(--card-dz) * -1);
+}
+
+.offers-carousel .offers-carousel-card.is-next-2 {
+    --card-z: calc(var(--card-dz) * -2);
+}
+
+/* a card behind the front one lifts towards the viewer to show it can be brought forward */
+.offers-carousel .offers-carousel-card:not(.is-active, .is-ghost, .is-enter-back):hover {
+    --card-fz: 30px;
+}
+
 .offers-carousel .offers-carousel-card.is-hidden {
     opacity: 0;
     pointer-events: none;
 }
 
-/* Reel swipe, part one: the front card drops out of the stack and fades away fast while the
-   cards behind it are already stepping forward. Duration is mirrored by LEAVE_MS in the block. */
-.offers-carousel .offers-carousel-card.is-leaving {
-    --card-shift: 120px;
+/* Next, part one: a ghost copy of the front card flies towards the viewer, tips forward and
+   fades fast. Duration is mirrored by LEAVE_MS in the block. */
+.offers-carousel .offers-carousel-card.is-ghost {
+    z-index: 5;
+    pointer-events: none;
+}
+
+.offers-carousel .offers-carousel-card.is-ghost.is-leaving,
+.offers-carousel .offers-carousel-card.is-enter-front {
+    --card-fx: calc(var(--card-dx) * -0.4);
+    --card-fy: calc(var(--card-dy) * 0.4);
+    --card-fz: calc(var(--card-dz) * 2.6);
+    --card-rx: -7deg;
 
     z-index: 5;
     opacity: 0;
-    pointer-events: none;
-    transition:
-        opacity 0.42s ease-in,
-        transform 0.42s var(--card-leave-easing);
 }
 
-/* Part two: the card takes the rear slot with transitions off, then the block drops this class
-   so it rises into place and fades back in. */
-.offers-carousel .offers-carousel-card.is-entering {
-    --card-shift: 56px;
+.offers-carousel .offers-carousel-card.is-ghost.is-leaving {
+    transition:
+        transform 0.75s var(--offers-ease-settle),
+        opacity 0.22s cubic-bezier(0.2, 0.6, 0.3, 1);
+}
+
+.offers-carousel .offers-carousel-card.is-ghost.is-leaving .offers-carousel-card-title,
+.offers-carousel .offers-carousel-card.is-ghost.is-leaving .offers-carousel-card-description,
+.offers-carousel .offers-carousel-card.is-ghost.is-leaving .offers-carousel-card-ctas {
+    opacity: 0;
+    transition: opacity 0.3s;
+    transition-delay: 0s;
+}
+
+/* Next, part two: the card itself starts deep behind the rear slot and fades in there.
+   The block drops this class right after placing it, so the move into the slot is animated. */
+.offers-carousel .offers-carousel-card.is-enter-back {
+    --card-fz: calc(var(--card-dz) * -2.2);
 
     opacity: 0;
     transition: none;
 }
 
-/* Intermediate hops of a multi-step move: constant speed, each hop lasting exactly as long as the
-   gap between two steps. Duration is mirrored by STEP_INTERVAL_MS in the block. */
-.offers-carousel .offers-carousel-cards.is-chaining .offers-carousel-card {
-    --card-move-duration: 0.29s;
-    --card-move-easing: linear;
+/* Previous: the rear card's ghost sinks deeper and fades behind the stack, while the card
+   itself starts where a leaving card ends and comes down into the front slot. */
+.offers-carousel .offers-carousel-card.is-ghost.is-next-1,
+.offers-carousel .offers-carousel-card.is-ghost.is-next-2 {
+    z-index: 0;
 }
 
-/* Intro reveal: the stack is inert and runs slower than a swipe while the cards assemble.
-   Duration is mirrored by INTRO_DURATION_MS in the block. */
-.offers-carousel .offers-carousel-cards.is-intro {
-    /* the clip margin lets the front card rise from below its slot without being cut off,
-       unlike the plain overflow clipping the stack uses at rest */
-    overflow: clip;
-    overflow-clip-margin: 240px;
-}
-
-.offers-carousel .offers-carousel-cards.is-intro .offers-carousel-card {
-    --card-move-duration: 1.2s;
-
-    pointer-events: none;
-    /* the fade finishes early so each card is solid for most of its flight and never blends
-       into the one behind it */
-    transition:
-        opacity 0.3s ease-out,
-        transform var(--card-move-duration) var(--card-move-easing);
-}
-
-/* Each card waits below its slot; the block removes this class with a per-card transition-delay
-   so they rise and fade in one after another. */
-.offers-carousel .offers-carousel-cards.is-intro .offers-carousel-card.is-intro-pending {
-    --card-shift: 180px;
+.offers-carousel .offers-carousel-card.is-ghost.is-fading {
+    --card-fz: calc(var(--card-dz) * -2.2);
 
     opacity: 0;
+    transition:
+        opacity 0.35s ease,
+        transform 0.6s var(--offers-ease-settle);
+}
+
+.offers-carousel .offers-carousel-card.is-enter-front {
     transition: none;
+}
+
+.offers-carousel .offers-carousel-card.is-enter-front.is-go {
+    --card-fx: 0px;
+    --card-fy: 0px;
+    --card-fz: 0px;
+    --card-rx: 0deg;
+
+    opacity: 1;
+    transition:
+        transform 0.8s var(--offers-ease-settle),
+        opacity 0.45s cubic-bezier(0.3, 0.6, 0.4, 1);
+}
+
+/* Intro: before the stack is well in view the cards wait deep behind their slots; on first view they
+   build from the rear card to the front one, then the front card's copy follows. The whole
+   sequence is mirrored by INTRO_DURATION_MS in the block. */
+.offers-carousel .is-animated:not(.is-in) .offers-carousel-card {
+    --card-fz: -420px;
+
+    opacity: 0;
+}
+
+.offers-carousel .is-animated:not(.is-in) .offers-carousel-card .offers-carousel-card-title,
+.offers-carousel .is-animated:not(.is-in) .offers-carousel-card .offers-carousel-card-description,
+.offers-carousel .is-animated:not(.is-in) .offers-carousel-card .offers-carousel-card-ctas {
+    opacity: 0;
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card {
+    pointer-events: none;
+    transition:
+        transform 1.4s var(--offers-ease-settle),
+        opacity 1.1s var(--offers-ease-settle);
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card.is-next-2 {
+    transition-delay: 0.25s;
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card.is-next-1 {
+    transition-delay: 0.42s;
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card.is-active {
+    transition-delay: 0.59s;
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card.is-active .offers-carousel-card-title {
+    transition-delay: 1.25s;
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card.is-active .offers-carousel-card-description {
+    transition-delay: 1.38s;
+}
+
+.offers-carousel .is-animated.is-building .offers-carousel-card.is-active .offers-carousel-card-ctas {
+    transition-delay: 1.5s;
 }
 
 @media (width >= 768px) {
@@ -368,6 +556,9 @@
 
     .offers-carousel .offers-carousel-cards {
         --card-height: 432px;
+        --card-dx: 52px;
+        --card-dy: 60px;
+        --card-dz: 110px;
     }
 
     .offers-carousel .offers-carousel-card {
@@ -422,6 +613,12 @@
     .offers-carousel .offers-carousel-stage {
         padding-block: var(--dimension-layout-module-padding-top);
         padding-inline: 0 var(--dimension-layout-module-padding-inline-s);
+        /* 55% 40% of the stack itself, not of the padded stage, as in the reference */
+        perspective-origin: calc((100% - var(--dimension-layout-module-padding-inline-s)) * 0.55)
+            calc(
+                var(--dimension-layout-module-padding-top) + (100% - 2 * var(--dimension-layout-module-padding-top)) *
+                    0.4
+            );
     }
 
     .offers-carousel .offers-carousel-cards {
@@ -495,11 +692,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .offers-carousel .offers-carousel-card,
-    .offers-carousel .offers-carousel-card.is-leaving,
-    .offers-carousel .offers-carousel-card.is-entering {
-        --card-shift: 0px;
-
-        transition-duration: 0.01ms;
+    .offers-carousel .offers-carousel-layout .offers-carousel-cards,
+    .offers-carousel .offers-carousel-layout .offers-carousel-card,
+    .offers-carousel .offers-carousel-layout .offers-carousel-card * {
+        transition-duration: 0.01ms !important;
+        transition-delay: 0s !important;
     }
 }
