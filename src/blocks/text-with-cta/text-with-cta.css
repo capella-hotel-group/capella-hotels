@@ -270,9 +270,18 @@
     opacity: 1;
 }
 
+.text-with-cta .text-with-cta-field-control:focus,
 .text-with-cta .text-with-cta-field-control:focus-visible {
-    outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
-    outline-offset: 2px;
+    outline: none;
+}
+
+/* The UA autofill background is !important, so delay its transition indefinitely instead. */
+.text-with-cta .text-with-cta-field-control:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-text-main-body);
+    caret-color: var(--color-text-main-body);
+    transition:
+        background-color 0s 600000s,
+        color 0s 600000s;
 }
 
 .text-with-cta .text-with-cta-field-control:user-invalid {
@@ -332,9 +341,9 @@
     box-shadow: inset 0 0 0 var(--stroke-weight-m) var(--color-surface-page);
 }
 
+.text-with-cta .text-with-cta-consent-control:focus,
 .text-with-cta .text-with-cta-consent-control:focus-visible {
-    outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
-    outline-offset: 2px;
+    outline: none;
 }
 
 .text-with-cta .text-with-cta-consent-label,
