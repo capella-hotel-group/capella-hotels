@@ -426,6 +426,11 @@ body.newsletter-modal-open {
     outline-offset: 2px;
 }
 
+/* Centres the box on the first text line; the fixed 2px above only fits a 20px line-height. */
+.newsletter-inline .newsletter-inline-consent input[type='checkbox'] {
+    margin-block-start: calc((var(--typography-line-height-body-sm) - 16px) / 2);
+}
+
 .newsletter-inline-consent label {
     font-family: var(--type-font-family-body);
     font-size: var(--typography-fontsize-body-s);
