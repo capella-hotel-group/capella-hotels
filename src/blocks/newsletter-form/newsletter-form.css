@@ -515,3 +515,44 @@ body.newsletter-modal-open {
         animation: none;
     }
 }
+
+/* Inline per-field validation errors */
+.newsletter-inline .newsletter-inline-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-general-2xs);
+    min-width: 0;
+}
+
+@media (width >=768px) {
+    .newsletter-inline .newsletter-inline-row .newsletter-inline-field-group {
+        flex: 1 1 0;
+    }
+}
+
+/* the row rule above sizes bare fields with flex-basis 0, which would collapse the field's fixed height in a column group */
+.newsletter-inline .newsletter-inline-field-group > .newsletter-inline-field {
+    flex: 0 0 auto;
+}
+
+.newsletter-inline .newsletter-inline-field-error {
+    margin: 0;
+    color: var(--color-text-main-error);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-sm);
+    text-align: start;
+}
+
+.newsletter-inline .newsletter-inline-field-error[hidden] {
+    display: none;
+}
+
+.newsletter-inline .newsletter-inline-field:has([aria-invalid='true']) {
+    border-block-end-color: var(--color-text-main-error);
+}
+
+.newsletter-inline .newsletter-inline-consent input[type='checkbox'][aria-invalid='true'] {
+    border-color: var(--color-text-main-error);
+}

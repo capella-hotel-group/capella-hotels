@@ -2,8 +2,10 @@ import { getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
 import { loadHCaptcha } from '@/utils/hcaptcha.js';
 import { resolveNewsletterProperty, submitNewsletterForm } from '@/utils/newsletter-submission.js';
 
-const CONSENT_REQUIRED_MESSAGE = 'Please accept the consent to continue.';
 const DEFAULT_SALUTATION_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Mx', 'Dr'];
+
+const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}' .-]*$/u;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Per-instance suffix so ids stay unique when several newsletter blocks share a page.
 let instanceCount = 0;
@@ -29,6 +31,45 @@ const ROW = {
   INFO_TEXT: 14,
 };
 
+// Inline-only authored cells, appended after INFO_TEXT in this exact order (tab fields emit no cell).
+const MESSAGE_KEYS = [
+  'salutationError',
+  'firstNameError',
+  'lastNameError',
+  'countryError',
+  'countryInvalidError',
+  'emailRequiredError',
+  'emailFormatError',
+  'consentError',
+  'errorMessage',
+  'captchaRequiredError',
+  'captchaUnavailableError',
+  'countryValidationUnavailableError',
+] as const;
+const SUCCESS_KEYS = ['successEyebrow', 'successHeading', 'successMessage', 'successButtonLabel'] as const;
+const TRAILING_KEYS = [...MESSAGE_KEYS, ...SUCCESS_KEYS] as const;
+
+type MessageKey = (typeof MESSAGE_KEYS)[number];
+type SuccessKey = (typeof SUCCESS_KEYS)[number];
+
+const MESSAGE_DEFAULTS: Record<MessageKey, string> = {
+  salutationError: 'Please select a title.',
+  firstNameError: 'Please enter your first name.',
+  lastNameError: 'Please enter your last name.',
+  countryError: 'Please enter your country.',
+  countryInvalidError: 'Enter a valid country name.',
+  emailRequiredError: 'Please enter a valid email address.',
+  emailFormatError: 'Please enter a valid email address.',
+  consentError: 'Please accept the terms to continue.',
+  errorMessage: 'Sorry, something went wrong. Please try again.',
+  captchaRequiredError: 'Please complete the CAPTCHA verification.',
+  captchaUnavailableError: 'CAPTCHA is unavailable. Please try again later.',
+  countryValidationUnavailableError: 'Country validation is unavailable. Please try again later.',
+};
+
+// With all trailing cells present the row count is INFO_TEXT + 16 (blank infoText dropped) or one more (filled).
+const ROWS_WITHOUT_INFO_TEXT = ROW.INFO_TEXT + TRAILING_KEYS.length;
+
 function rowText(rows: Element[], index: number): string {
   return rows[index]?.querySelector(':scope > div')?.textContent?.trim() ?? '';
 }
@@ -49,6 +90,22 @@ function rowLink(rows: Element[], index: number): string {
   if (!cell) return '';
   const link = cell.querySelector('a');
   return (link?.getAttribute('href') || cell.textContent || '').trim();
+}
+
+/**
+ * Reads the trailing cells from the end of the row list: a blank optional `infoText`
+ * drops its cell, so fixed offsets from the start would shift. Legacy content has none.
+ */
+function readTrailingFields(rows: Element[]): Partial<Record<MessageKey | SuccessKey, Element>> {
+  const fields: Partial<Record<MessageKey | SuccessKey, Element>> = {};
+  if (rows.length < ROWS_WITHOUT_INFO_TEXT) return fields;
+  const trailing = rows.slice(-TRAILING_KEYS.length);
+  TRAILING_KEYS.forEach((key, index) => {
+    const row = trailing[index];
+    const cell = row?.querySelector(':scope > div') ?? row;
+    if (cell) fields[key] = cell;
+  });
+  return fields;
 }
 
 function rowList(rows: Element[], index: number, fallback: string[] = []): string[] {
@@ -131,35 +188,25 @@ async function setupCaptcha(
 }
 
 /**
- * Combines consent-checkbox and hCaptcha gating into the submit button's
- * `aria-disabled` state (not `disabled`, so the button stays focusable).
- * `blockedBy()` reports which condition currently blocks submission.
+ * Mirrors the hCaptcha state into the submit button's `aria-disabled` (not
+ * `disabled`, so the button stays focusable). Consent is validated on submit
+ * so its error can show inline instead of silently blocking the button.
  */
 function createSubmitGate(
   submitBtn: HTMLButtonElement,
-  { requireConsent, requireCaptcha }: { requireConsent: boolean; requireCaptcha: boolean },
+  { requireCaptcha }: { requireCaptcha: boolean },
 ): {
-  setConsent: (ok: boolean) => void;
   setCaptcha: (ok: boolean) => void;
-  blockedBy: () => 'consent' | 'captcha' | null;
+  blockedBy: () => 'captcha' | null;
 } {
-  let consentOk = !requireConsent;
   let captchaOk = !requireCaptcha;
-  const blockedBy = () => {
-    if (!consentOk) return 'consent';
-    if (!captchaOk) return 'captcha';
-    return null;
-  };
+  const blockedBy = () => (captchaOk ? null : 'captcha');
   const recompute = () => {
     if (blockedBy()) submitBtn.setAttribute('aria-disabled', 'true');
     else submitBtn.removeAttribute('aria-disabled');
   };
   recompute();
   return {
-    setConsent: (ok: boolean) => {
-      consentOk = ok;
-      recompute();
-    },
     setCaptcha: (ok: boolean) => {
       captchaOk = ok;
       recompute();
@@ -220,14 +267,58 @@ function buildInput(name: string, type: string, placeholder?: string): HTMLInput
   return input;
 }
 
+type FormControl = HTMLInputElement | HTMLSelectElement;
+
+/** An `Inline` field: `group` is what goes into the row; `control` and `error` drive validation. */
+interface InlineFieldBuild {
+  group: HTMLDivElement;
+  control: FormControl;
+  error: HTMLParagraphElement;
+}
+
+interface InlineRule {
+  control: FormControl;
+  error: HTMLElement;
+  validate: (value: string) => string;
+}
+
+/** Per-field error line; the control references it via `aria-describedby`. */
+function buildInlineError(controlId: string): HTMLParagraphElement {
+  const error = document.createElement('p');
+  error.className = 'newsletter-inline-field-error';
+  error.id = `${controlId}-error`;
+  error.hidden = true;
+  return error;
+}
+
+/** Shows or clears a field's error and keeps `aria-invalid` / `aria-describedby` in sync. */
+function setFieldError(control: HTMLElement, error: HTMLElement, text: string): void {
+  error.textContent = text;
+  error.hidden = !text;
+  if (text) {
+    control.setAttribute('aria-invalid', 'true');
+    control.setAttribute('aria-describedby', error.id);
+  } else {
+    control.removeAttribute('aria-invalid');
+    control.removeAttribute('aria-describedby');
+  }
+}
+
+function runInlineRule({ control, error, validate }: InlineRule): boolean {
+  const text = validate(control.value.trim());
+  setFieldError(control, error, text);
+  return !text;
+}
+
 /**
  * Wraps a control for the `Inline` layout: no separate <label> (the control's
  * own placeholder text stands in for one, matching the underline-field design),
  * marked required, with an `aria-label` for assistive tech since the placeholder
  * disappears once a value is entered. Adds a chevron icon for `<select>`s,
- * whose native arrow is hidden in CSS.
+ * whose native arrow is hidden in CSS. The error line sits under the field.
  */
-function buildInlineField(control: HTMLInputElement | HTMLSelectElement, label: string): HTMLDivElement {
+function buildInlineField(control: FormControl, label: string, id: string): InlineFieldBuild {
+  control.id = id;
   control.required = true;
   control.setAttribute('aria-label', label);
 
@@ -245,19 +336,23 @@ function buildInlineField(control: HTMLInputElement | HTMLSelectElement, label: 
     wrapper.append(chevron);
   }
 
-  return wrapper;
+  const error = buildInlineError(id);
+  const group = document.createElement('div');
+  group.className = 'newsletter-inline-field-group';
+  group.append(wrapper, error);
+  return { group, control, error };
 }
 
 /** Groups a set of `Inline` fields into one responsive row. */
-function buildInlineRow(fields: HTMLDivElement[]): HTMLDivElement {
+function buildInlineRow(fields: HTMLElement[]): HTMLDivElement {
   const row = document.createElement('div');
   row.className = 'newsletter-inline-row';
   row.append(...fields);
   return row;
 }
 
-/** Builds the `Inline` layout's required consent checkbox + notice. */
-function buildInlineConsent(consentHTML: string, id: string): HTMLDivElement {
+/** Builds the `Inline` layout's consent checkbox + notice, with its error line below. */
+function buildInlineConsent(consentHTML: string, id: string): InlineFieldBuild & { control: HTMLInputElement } {
   const wrapper = document.createElement('div');
   wrapper.className = 'newsletter-inline-consent';
 
@@ -274,7 +369,12 @@ function buildInlineConsent(consentHTML: string, id: string): HTMLDivElement {
     'I would like to receive updates and offers from Capella Hotel Group via email or other electronic channels. <a href="/privacy">View our Privacy Policy</a>.';
 
   wrapper.append(checkbox, label);
-  return wrapper;
+
+  const error = buildInlineError(id);
+  const group = document.createElement('div');
+  group.className = 'newsletter-inline-field-group';
+  group.append(wrapper, error);
+  return { group, control: checkbox, error };
 }
 
 /**
@@ -372,10 +472,20 @@ function flagInvalidFields(form: HTMLFormElement, message: HTMLElement): void {
   form.reportValidity();
 }
 
+/** Inline-only behaviour of `submitForm`: authored messages and per-field error handling. */
+interface InlineSubmitHandlers {
+  messages: Record<MessageKey, string>;
+  /** Reruns every rule, showing all errors; returns true when the form is valid. */
+  revalidate: () => boolean;
+  flagCountryInvalid: () => void;
+  reset: () => void;
+}
+
 interface SubmitConfig {
   property: string;
   captcha: CaptchaController | null;
   captchaEnabled: boolean;
+  inline?: InlineSubmitHandlers;
 }
 
 async function submitForm(
@@ -396,6 +506,7 @@ async function submitForm(
 
   if (result === 'success') {
     form.reset();
+    config.inline?.reset();
     showMessage(message, 'Thank you for subscribing!', 'success');
     if (config.captcha) config.captcha.reset();
     const captchaContainer = form.querySelector<HTMLElement>('.newsletter-captcha');
@@ -404,18 +515,30 @@ async function submitForm(
     return;
   }
 
+  const { inline } = config;
   if (result === 'missing-fields') {
-    flagInvalidFields(form, message);
+    if (!inline) flagInvalidFields(form, message);
+    // The rules already passed, so a still-valid form means the API helper saw something the rules did not.
+    else if (inline.revalidate()) showMessage(message, inline.messages.errorMessage, 'error');
   } else if (result === 'invalid-country') {
-    showMessage(message, 'Enter a valid country name.', 'error');
-    const countryInput = form.querySelector<HTMLInputElement>('[name="country"]');
-    if (countryInput) markInvalid(countryInput, message);
+    if (inline) {
+      inline.flagCountryInvalid();
+    } else {
+      showMessage(message, 'Enter a valid country name.', 'error');
+      const countryInput = form.querySelector<HTMLInputElement>('[name="country"]');
+      if (countryInput) markInvalid(countryInput, message);
+    }
   } else if (result === 'country-validation-unavailable') {
-    showMessage(message, 'Country validation is unavailable. Please try again later.', 'error');
+    showMessage(
+      message,
+      inline?.messages.countryValidationUnavailableError ??
+        'Country validation is unavailable. Please try again later.',
+      'error',
+    );
   } else if (result === 'captcha-required') {
-    showMessage(message, 'Please complete the captcha.', 'error');
+    showMessage(message, inline?.messages.captchaRequiredError ?? 'Please complete the captcha.', 'error');
   } else {
-    showMessage(message, 'Sorry, something went wrong. Please try again.', 'error');
+    showMessage(message, inline?.messages.errorMessage ?? MESSAGE_DEFAULTS.errorMessage, 'error');
     if (config.captcha) config.captcha.reset();
   }
   submitBtn.disabled = false;
@@ -427,6 +550,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const uid = instanceCount;
 
   // ── Read authored labels / config (the dialog inputs) ────────────────────
+  const trailing = readTrailingFields(rows);
   const cfg = {
     title: rowText(rows, ROW.TITLE) || 'Subscribe to our newsletter',
     salutationLabel: rowText(rows, ROW.SALUTATION_LABEL) || 'Salutation',
@@ -442,7 +566,10 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     triggerLabel: rowText(rows, ROW.TRIGGER_LABEL) || 'Subscribe',
     layout: rowText(rows, ROW.LAYOUT) === 'Inline' ? 'Inline' : 'Modal',
     enableHCaptcha: rowText(rows, ROW.ENABLE_HCAPTCHA).toLowerCase() === 'true',
-    infoText: rowText(rows, ROW.INFO_TEXT),
+    infoText: rows.length === ROWS_WITHOUT_INFO_TEXT ? '' : rowText(rows, ROW.INFO_TEXT),
+    messages: Object.fromEntries(
+      MESSAGE_KEYS.map((key) => [key, trailing[key]?.textContent?.trim() || MESSAGE_DEFAULTS[key]]),
+    ) as Record<MessageKey, string>,
   };
 
   const property = await resolveNewsletterProperty(cfg.propertyPath);
@@ -469,9 +596,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     titleContent = titleInfo;
   }
 
-  // hCaptcha widget mount point. The submit button starts disabled whenever a
-  // captcha is configured and/or (in `Inline`) consent is required, until the
-  // combined gate below reports both conditions satisfied.
+  // hCaptcha widget mount point. The submit button starts aria-disabled while a
+  // captcha is configured, until the gate below reports it solved.
   const siteKey = getHCaptchaSiteKey(cfg.enableHCaptcha);
   const captchaWrapper = document.createElement('div');
   captchaWrapper.className = 'newsletter-captcha';
@@ -487,33 +613,85 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   message.setAttribute('aria-live', 'polite');
 
   let consentCheckbox: HTMLInputElement | null = null;
-  const gate = createSubmitGate(submitBtn, {
-    requireConsent: cfg.layout === 'Inline',
-    requireCaptcha: cfg.enableHCaptcha,
-  });
+  const gate = createSubmitGate(submitBtn, { requireCaptcha: cfg.enableHCaptcha });
+
+  // Inline-only validation state; the rules are filled in by the Inline branch below.
+  let inlineRules: InlineRule[] = [];
+  let inlineCountry: InlineRule | null = null;
+  let validationAttempted = false;
 
   if (cfg.layout === 'Inline') {
     submitBtn.className = 'newsletter-inline-submit';
+    const { messages } = cfg;
+    const fieldId = (name: string): string => `newsletter-inline-${uid}-${name}`;
 
     const salutation = buildInlineField(
       buildSelect('salutation', cfg.salutationLabel, cfg.salutationOptions),
       cfg.salutationLabel,
+      fieldId('salutation'),
     );
-    const firstName = buildInlineField(buildInput('firstName', 'text', cfg.firstNameLabel), cfg.firstNameLabel);
-    const lastName = buildInlineField(buildInput('lastName', 'text', cfg.lastNameLabel), cfg.lastNameLabel);
-    const country = buildInlineField(buildInput('country', 'text', cfg.countryPlaceholder), cfg.countryLabel);
-    const email = buildInlineField(buildInput('email', 'email', cfg.emailLabel), cfg.emailLabel);
-
+    const firstName = buildInlineField(
+      buildInput('firstName', 'text', cfg.firstNameLabel),
+      cfg.firstNameLabel,
+      fieldId('first-name'),
+    );
+    const lastName = buildInlineField(
+      buildInput('lastName', 'text', cfg.lastNameLabel),
+      cfg.lastNameLabel,
+      fieldId('last-name'),
+    );
+    const country = buildInlineField(
+      buildInput('country', 'text', cfg.countryPlaceholder),
+      cfg.countryLabel,
+      fieldId('country'),
+    );
+    const email = buildInlineField(buildInput('email', 'email', cfg.emailLabel), cfg.emailLabel, fieldId('email'));
     const consent = buildInlineConsent(cfg.consentHTML, `newsletter-inline-consent-${uid}`);
-    const checkbox = consent.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    consentCheckbox = checkbox;
-    checkbox.addEventListener('change', () => gate.setConsent(checkbox.checked));
+    consentCheckbox = consent.control;
+
+    const nameRule = (text: string) => (value: string) => (NAME_PATTERN.test(value) ? '' : text);
+    inlineCountry = {
+      control: country.control,
+      error: country.error,
+      validate: (value) => (value ? '' : messages.countryError),
+    };
+    inlineRules = [
+      {
+        control: salutation.control,
+        error: salutation.error,
+        validate: (value) => (value ? '' : messages.salutationError),
+      },
+      { control: firstName.control, error: firstName.error, validate: nameRule(messages.firstNameError) },
+      { control: lastName.control, error: lastName.error, validate: nameRule(messages.lastNameError) },
+      inlineCountry,
+      {
+        control: email.control,
+        error: email.error,
+        validate: (value) => {
+          if (!value) return messages.emailRequiredError;
+          return EMAIL_PATTERN.test(value) ? '' : messages.emailFormatError;
+        },
+      },
+      {
+        control: consent.control,
+        error: consent.error,
+        validate: () => (consent.control.checked ? '' : messages.consentError),
+      },
+    ];
+    // After the first submit attempt each field re-validates as it changes.
+    inlineRules.forEach((rule) => {
+      const revalidate = (): void => {
+        if (validationAttempted) runInlineRule(rule);
+      };
+      rule.control.addEventListener('input', revalidate);
+      rule.control.addEventListener('change', revalidate);
+    });
 
     form.append(
       titleContent,
-      buildInlineRow([salutation, firstName, lastName]),
-      buildInlineRow([country, email]),
-      consent,
+      buildInlineRow([salutation.group, firstName.group, lastName.group]),
+      buildInlineRow([country.group, email.group]),
+      consent.group,
       captchaWrapper,
       submitBtn,
       message,
@@ -565,13 +743,15 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   let captcha: CaptchaController | null = null;
   let captchaLoading = false;
   let captchaPreloaded = false;
+  const captchaUnavailableText =
+    cfg.layout === 'Inline' ? cfg.messages.captchaUnavailableError : MESSAGE_DEFAULTS.captchaUnavailableError;
   const preloadCaptcha = (): void => {
     if (!siteKey || captchaPreloaded) return;
     captchaPreloaded = true;
     void loadHCaptcha().catch((error: unknown) => {
       captchaPreloaded = false;
       console.error('Newsletter captcha error:', error);
-      showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+      showMessage(message, captchaUnavailableText, 'error');
     });
   };
   const initializeCaptcha = (): void => {
@@ -585,27 +765,64 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       })
       .catch((error: unknown) => {
         console.error('Newsletter captcha error:', error);
-        showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+        showMessage(message, captchaUnavailableText, 'error');
       })
       .finally(() => {
         captchaLoading = false;
       });
   };
   if (cfg.enableHCaptcha && !siteKey) {
-    showMessage(message, 'CAPTCHA is unavailable. Please try again later.', 'error');
+    showMessage(message, captchaUnavailableText, 'error');
   }
 
   // ── Wire up submission ───────────────────────────────────────────────────
+  const validateInline = (): boolean => {
+    const invalid = inlineRules.filter((rule) => !runInlineRule(rule));
+    invalid[0]?.control.focus();
+    return !invalid.length;
+  };
+  const inlineHandlers: InlineSubmitHandlers = {
+    messages: cfg.messages,
+    revalidate: validateInline,
+    flagCountryInvalid: () => {
+      if (!inlineCountry) return;
+      setFieldError(inlineCountry.control, inlineCountry.error, cfg.messages.countryInvalidError);
+      inlineCountry.control.focus();
+    },
+    reset: () => {
+      validationAttempted = false;
+      inlineRules.forEach(({ control, error }) => setFieldError(control, error, ''));
+    },
+  };
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const blocked = gate.blockedBy();
-    if (blocked === 'consent' && consentCheckbox) {
-      showMessage(message, CONSENT_REQUIRED_MESSAGE, 'error');
-      markInvalid(consentCheckbox, message);
+    if (cfg.layout === 'Inline') {
+      if (submitBtn.getAttribute('aria-busy') === 'true') return;
+      validationAttempted = true;
+      if (!validateInline()) return;
+      if (gate.blockedBy() === 'captcha') {
+        showMessage(
+          message,
+          !siteKey
+            ? cfg.messages.captchaUnavailableError
+            : captchaLoading
+              ? 'CAPTCHA is loading. Please wait.'
+              : cfg.messages.captchaRequiredError,
+          'error',
+        );
+        return;
+      }
+      submitForm(
+        form,
+        { property, captcha, captchaEnabled: cfg.enableHCaptcha, inline: inlineHandlers },
+        message,
+        submitBtn,
+      );
       return;
     }
-    if (blocked === 'captcha') {
-      if (cfg.layout !== 'Inline') initializeCaptcha();
+    if (gate.blockedBy() === 'captcha') {
+      initializeCaptcha();
       showMessage(
         message,
         !siteKey
@@ -626,8 +843,11 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   form.addEventListener('input', (event) => {
     const target = event.target as HTMLElement;
-    target.removeAttribute('aria-invalid');
-    target.removeAttribute('aria-describedby');
+    // Inline fields clear or refresh their own error through their rule.
+    if (cfg.layout !== 'Inline') {
+      target.removeAttribute('aria-invalid');
+      target.removeAttribute('aria-describedby');
+    }
     if (cfg.layout === 'Inline' && target instanceof HTMLInputElement && target.type !== 'checkbox') {
       preloadCaptcha();
     }
