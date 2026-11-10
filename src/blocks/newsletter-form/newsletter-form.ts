@@ -33,6 +33,7 @@ const ROW = {
 
 // Inline-only authored cells, appended after INFO_TEXT in this exact order (tab fields emit no cell).
 const MESSAGE_KEYS = [
+  'errorMessage',
   'salutationError',
   'firstNameError',
   'lastNameError',
@@ -41,7 +42,6 @@ const MESSAGE_KEYS = [
   'emailRequiredError',
   'emailFormatError',
   'consentError',
-  'errorMessage',
   'captchaRequiredError',
   'captchaUnavailableError',
   'countryValidationUnavailableError',
