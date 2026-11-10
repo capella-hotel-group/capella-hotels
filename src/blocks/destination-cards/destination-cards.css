@@ -124,7 +124,7 @@
     transition: background 0.3s ease;
 }
 
-.destination-cards .destination-cards-media.destination-cards-media-no-overlay::after {
+.destination-cards.destination-cards--no-overlay .destination-cards-media::after {
     background: transparent;
 }
 

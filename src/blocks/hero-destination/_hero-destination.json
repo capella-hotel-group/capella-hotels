@@ -100,6 +100,13 @@
           "name": "simulateTouch",
           "label": "Allow drag/swipe with mouse (simulate touch)",
           "value": true
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "showOverlay",
+          "label": "Show Media Overlay",
+          "value": true
         }
       ]
     },
@@ -157,13 +164,6 @@
           "label": "Video (Mobile, MP4)",
           "multi": false,
           "condition": { "===": [{ "var": "mediaType" }, "video"] }
-        },
-        {
-          "component": "boolean",
-          "valueType": "boolean",
-          "name": "showOverlay",
-          "label": "Show media overlay",
-          "value": true
         },
         {
           "component": "text",

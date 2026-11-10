@@ -1,6 +1,6 @@
 // src/blocks/hero-destination/lib/slider-variant.ts
-// Rows (authored): single-cell rows are [intro rows (0, 2 or 3)] + 5 config rows (autoplay,
-// autoplayInterval, loop, transitionEffect, simulateTouch); multi-cell rows are items (see lib/parse.ts).
+// Rows (authored): single-cell rows are [intro rows (0, 2 or 3)] + 5-6 config rows (autoplay,
+// autoplayInterval, loop, transitionEffect, simulateTouch, showOverlay?); multi-cell rows are items (see lib/parse.ts).
 import { CarouselController } from './carousel-controller';
 import { buildIntroMedia } from './cinematic/intro-media';
 import { deferred, wait } from './cinematic/timing';
@@ -44,9 +44,11 @@ export default function decorateSlider(block: HTMLElement): void {
   const { introRows, configRows } = splitBlockRows(rows.filter((row) => row.children.length <= 1));
   const itemRows = rows.filter((row) => row.children.length > 1);
 
-  const { autoplay, loop, intervalSeconds, transitionEffect, simulateTouch } = parseCarouselConfig(configRows);
+  const { autoplay, loop, intervalSeconds, transitionEffect, simulateTouch, showOverlay } =
+    parseCarouselConfig(configRows);
   const items = parseItems(itemRows);
   if (items.length === 0) return;
+  block.classList.toggle('hero-destination--no-overlay', !showOverlay);
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const staticMode = reducedMotion || isEditorOrFramed();
