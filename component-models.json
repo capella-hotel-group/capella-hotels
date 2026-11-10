@@ -3777,6 +3777,11 @@
         "value": "Submission in non-English is not supported"
       },
       {
+        "component": "tab",
+        "name": "errorTab",
+        "label": "Error Messages"
+      },
+      {
         "component": "text",
         "name": "salutationError",
         "label": "Salutation Error Message",

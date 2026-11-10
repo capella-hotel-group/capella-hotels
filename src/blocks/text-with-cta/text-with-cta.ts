@@ -224,7 +224,8 @@ function buildSelectField(
   const placeholder = el('option', undefined, label);
   placeholder.value = '';
   placeholder.disabled = true;
-  placeholder.selected = true;
+  // `defaultSelected` (the `selected` attribute) is what form.reset() restores to.
+  placeholder.defaultSelected = true;
   select.append(placeholder);
   appendOptions(select, options);
 
