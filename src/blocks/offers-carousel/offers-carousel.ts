@@ -185,6 +185,11 @@ const DOUBLE_STEP_MS = 500;
 const SWIPE_THRESHOLD = 40;
 const WHEEL_THRESHOLD = 24;
 const WHEEL_IDLE_MS = 220;
+// a wheel kept turning steps again after this long; events weaker than WHEEL_MIN_PUSH are
+// treated as the tail of trackpad momentum, and line-mode deltas are converted to pixels
+const WHEEL_REPEAT_MS = 700;
+const WHEEL_MIN_PUSH = 4;
+const WHEEL_LINE_PX = 16;
 const CLICK_SWALLOW_MS = 300;
 
 // the stack advances by itself at this pace while nobody hovers or focuses it
@@ -262,14 +267,43 @@ function prepareTitleLines(layout: HTMLElement): void {
   });
 }
 
+// share of the element (or of the viewport, for an element taller than it) that must be on
+// screen before its reveal plays, so the motion is seen instead of happening below the fold
+const COPY_REVEAL_RATIO = 0.5;
+const CARDS_REVEAL_RATIO = 0.6;
+const REVEAL_THRESHOLDS = Array.from({ length: 21 }, (_, step) => step / 20);
+
+function onceVisible(element: Element, ratio: number, callback: () => void): void {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries.some((entry) => {
+        if (!entry.isIntersecting) return false;
+        if (entry.intersectionRatio >= ratio) return true;
+        const viewport = entry.rootBounds?.height || window.innerHeight;
+        return entry.intersectionRect.height >= viewport * ratio;
+      });
+      if (!visible) return;
+      observer.disconnect();
+      callback();
+    },
+    { threshold: REVEAL_THRESHOLDS },
+  );
+  observer.observe(element);
+}
+
 /**
- * First view: the eyebrow and title lines rise, the cards build from the back to the front out
- * of depth, then the front card's copy follows.
+ * First view: the eyebrow and title lines rise once the copy is in view; the cards build from
+ * the back to the front out of depth once the stack itself is in view, then the front card's
+ * copy follows.
  */
 function initIntro(layout: HTMLElement, gate: Gate): void {
   gate.locked = true;
 
-  const play = () => {
+  const copy = layout.querySelector('.offers-carousel-copy');
+  const stage = layout.querySelector('.offers-carousel-stage');
+
+  const revealCopy = () => layout.classList.add('is-copy-in');
+  const buildCards = () => {
     layout.classList.add('is-building');
     requestAnimationFrame(() => requestAnimationFrame(() => layout.classList.add('is-in')));
     window.setTimeout(() => {
@@ -279,15 +313,10 @@ function initIntro(layout: HTMLElement, gate: Gate): void {
     }, INTRO_DURATION_MS);
   };
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      observer.disconnect();
-      play();
-    },
-    { threshold: 0.2 },
-  );
-  observer.observe(layout);
+  if (copy) onceVisible(copy, COPY_REVEAL_RATIO, revealCopy);
+  else revealCopy();
+  if (stage) onceVisible(stage, CARDS_REVEAL_RATIO, buildCards);
+  else buildCards();
 }
 
 function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): void {
@@ -305,15 +334,15 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): v
   const autoplay = shouldAutoplay() && cards.length > 1;
   let timer = 0;
   let paused = false;
-  let goNextRef: () => void = () => {};
+  let goNextRef: () => boolean = () => false;
   const tick = () => {
     window.clearTimeout(timer);
     if (autoplay && !paused && !gate.locked) timer = window.setTimeout(() => goNextRef(), AUTOPLAY_MS);
   };
 
   // the front card's ghost flies forward and fades while the card itself fades in at the back
-  const goNext = () => {
-    if (gate.locked || busy || cards.length < 2) return;
+  const goNext = (): boolean => {
+    if (gate.locked || busy || cards.length < 2) return false;
     busy = true;
     tick();
 
@@ -333,11 +362,12 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): v
     window.setTimeout(() => {
       busy = false;
     }, BUSY_MS);
+    return true;
   };
 
   // the rear card's ghost sinks away while the card itself comes down into the front slot
-  const goPrev = () => {
-    if (gate.locked || busy || cards.length < 2) return;
+  const goPrev = (): boolean => {
+    if (gate.locked || busy || cards.length < 2) return false;
     busy = true;
     tick();
 
@@ -357,6 +387,7 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): v
       back.classList.remove('is-enter-front', 'is-go');
       busy = false;
     }, ENTER_FRONT_MS);
+    return true;
   };
 
   goNextRef = goNext;
@@ -472,6 +503,8 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): v
   let wheelDelta = 0;
   let wheelLocked = false;
   let wheelIdle = 0;
+  let wheelStepAt = 0;
+  let wheelLastAbs = 0;
 
   // non-passive: a wheel over the stack drives the reel instead of scrolling the page
   stack?.addEventListener(
@@ -483,26 +516,39 @@ function wireInteraction(root: HTMLElement, cards: HTMLElement[], gate: Gate): v
       event.preventDefault();
       event.stopPropagation();
 
-      // one step per gesture: the rest of the burst, trackpad momentum included, is swallowed
-      // until the wheel has been idle again
+      // a wheel set to scroll by lines or pages reports far smaller numbers than pixels
+      const scale = event.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? 1 : WHEEL_LINE_PX;
+      const delta = event.deltaY * scale;
+      const magnitude = Math.abs(delta);
+      // trackpad momentum shrinks event after event, a wheel still being turned does not
+      const decaying = magnitude < wheelLastAbs || magnitude < WHEEL_MIN_PUSH;
+      wheelLastAbs = magnitude;
+
+      // after a step the rest of the burst is swallowed; the lock ends either when the wheel
+      // has been idle, or once the step has had time to play and the input is still being driven
       window.clearTimeout(wheelIdle);
       wheelIdle = window.setTimeout(() => {
         wheelLocked = false;
         wheelDelta = 0;
+        wheelLastAbs = 0;
       }, WHEEL_IDLE_MS);
-      if (wheelLocked) return;
+      if (wheelLocked && (performance.now() - wheelStepAt < WHEEL_REPEAT_MS || decaying)) {
+        wheelDelta = 0;
+        return;
+      }
 
-      const delta = event.deltaY;
       // a change of direction starts a fresh gesture
       if (Math.sign(delta) !== Math.sign(wheelDelta)) wheelDelta = 0;
       wheelDelta += delta;
 
       if (Math.abs(wheelDelta) < WHEEL_THRESHOLD) return;
+      // scrolling down brings the next offer, scrolling up brings the previous one back; if the
+      // previous move is still settling the delta is kept so the next event retries the step
+      const moved = delta > 0 ? goNext() : goPrev();
+      if (!moved) return;
       wheelDelta = 0;
       wheelLocked = true;
-      // scrolling down brings the next offer, scrolling up brings the previous one back
-      if (delta > 0) goNext();
-      else goPrev();
+      wheelStepAt = performance.now();
     },
     { passive: false },
   );
