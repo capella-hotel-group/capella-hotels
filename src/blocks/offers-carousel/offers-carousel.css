@@ -88,8 +88,9 @@
     transform: translateY(105%);
 }
 
-.offers-carousel .is-animated.is-in .offers-carousel-eyebrow,
-.offers-carousel .is-animated.is-in .offers-carousel-title-line-inner {
+/* the copy reveals on its own, so on mobile it does not wait for the stack further down */
+.offers-carousel .is-animated.is-copy-in .offers-carousel-eyebrow,
+.offers-carousel .is-animated.is-copy-in .offers-carousel-title-line-inner {
     opacity: 1;
     transform: none;
     transition:
@@ -98,7 +99,7 @@
 }
 
 /* --line-index is set per line by the block, starting at 1 */
-.offers-carousel .is-animated.is-in .offers-carousel-title-line-inner {
+.offers-carousel .is-animated.is-copy-in .offers-carousel-title-line-inner {
     transition-delay: calc(var(--line-index, 1) * 0.12s);
 }
 
@@ -498,7 +499,7 @@
         opacity 0.45s cubic-bezier(0.3, 0.6, 0.4, 1);
 }
 
-/* Intro: before the block is in view the cards wait deep behind their slots; on first view they
+/* Intro: before the stack is well in view the cards wait deep behind their slots; on first view they
    build from the rear card to the front one, then the front card's copy follows. The whole
    sequence is mirrored by INTRO_DURATION_MS in the block. */
 .offers-carousel .is-animated:not(.is-in) .offers-carousel-card {
