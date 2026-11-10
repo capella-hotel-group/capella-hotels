@@ -77,7 +77,6 @@ interface CardFields {
   imageAlt: string | null;
   href: string;
   ctaLabel: string;
-  darkOverlay: boolean;
   openInNewTab: boolean;
 }
 
@@ -97,7 +96,6 @@ function getCardFields(row: Element): CardFields {
       imageAlt: mediaCell?.querySelector('img')?.getAttribute('alt') || textFromPart(mediaCell, 1),
       href: cta.href,
       ctaLabel: cta.label,
-      darkOverlay: isEnabled(settingsParts[0] || settingsCell, true),
       openInNewTab: isEnabled(settingsParts[1], false),
     };
   }
@@ -106,7 +104,6 @@ function getCardFields(row: Element): CardFields {
   const ctaLinkCell = getCellByProp(cells, 'ctaLink');
   const ctaLabelCell = getCellByProp(cells, 'ctaName');
   const openInNewTabCell = getCellByProp(cells, 'openInNewTab');
-  const darkOverlayCell = getCellByProp(cells, 'darkOverlay');
   const imageAltCell = getCellByProp(cells, 'imageAlt');
   const isNewModelOrder = !!ctaLinkCell;
   const fallbackCtaLinkCell = isNewModelOrder ? cells[5] : cells[linkIndex];
@@ -138,9 +135,8 @@ function getCardFields(row: Element): CardFields {
         : null,
     href: cta.href,
     ctaLabel: textFromCell(ctaLabelCell || fallbackCtaLabelCell) || cta.label,
-    // the 2 boolean fields always follow whichever CTA cell (link or name) is authored last
+    // openInNewTab always follows whichever CTA cell (link or name) is authored last
     openInNewTab: isEnabled(openInNewTabCell || cells[isNewModelOrder ? 6 : lastCtaCellIndex + 1], false),
-    darkOverlay: isEnabled(darkOverlayCell || cells[isNewModelOrder ? 7 : lastCtaCellIndex + 2], true),
   };
 }
 
@@ -218,7 +214,6 @@ function buildCard(row: Element): HTMLLIElement {
 
   const media = document.createElement('figure');
   media.className = 'destination-cards-media';
-  if (!fields.darkOverlay) media.classList.add('destination-cards-media-no-overlay');
 
   if (fields.image) {
     const mediaNode =
@@ -328,6 +323,11 @@ export default function decorate(block: HTMLElement): HTMLElement {
 
   const introRows = rows.slice(0, firstCardIndex);
   const cardRows = rows.slice(firstCardIndex);
+  // root showOverlay is the last intro row (after subtitle); absent in older content, default on
+  const overlayRow = introRows.at(-1);
+  const hasOverlayRow = !!overlayRow && isBooleanToken(textFromCell(overlayRow));
+  if (hasOverlayRow) introRows.pop();
+  block.classList.toggle('destination-cards--no-overlay', hasOverlayRow && !isEnabled(overlayRow, true));
   const intro = buildIntro(introRows);
   const { anchorId } = intro.dataset;
   const authoredAnchorId = block.querySelector('[data-aue-prop="id"]')?.textContent?.trim();

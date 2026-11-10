@@ -2,7 +2,6 @@
 
 interface HeroDestinationItemBase {
   heading: string;
-  showOverlay: boolean;
   /** Original row element for moveInstrumentation */
   sourceRow: HTMLElement;
 }
