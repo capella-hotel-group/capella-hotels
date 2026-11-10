@@ -70,6 +70,26 @@ const MESSAGE_DEFAULTS: Record<MessageKey, string> = {
 // With all trailing cells present the row count is INFO_TEXT + 16 (blank infoText dropped) or one more (filled).
 const ROWS_WITHOUT_INFO_TEXT = ROW.INFO_TEXT + TRAILING_KEYS.length;
 
+const DEFAULT_SUCCESS_EYEBROW = 'Newsletter';
+const DEFAULT_SUCCESS_HEADING = ['Thank you', 'for subscribing'];
+const DEFAULT_SUCCESS_MESSAGE =
+  'You have successfully joined our mailing list. Look out for the latest news and exclusive offers from Capella.';
+const DEFAULT_SUCCESS_BUTTON_LABEL = 'Done';
+
+/** Splits a richtext cell into lines on paragraphs and `<br>`, whether or not it is wrapped in `<p>`. */
+function linesOf(cell?: Element | null): string[] {
+  if (!cell) return [];
+  const paragraphs = cell.querySelector('p') ? [...cell.querySelectorAll('p')] : [cell];
+  return paragraphs.flatMap((paragraph) => {
+    const lines = [''];
+    paragraph.childNodes.forEach((child) => {
+      if (child.nodeName === 'BR') lines.push('');
+      else lines[lines.length - 1] += child.textContent || '';
+    });
+    return lines.map((line) => line.trim()).filter(Boolean);
+  });
+}
+
 function rowText(rows: Element[], index: number): string {
   return rows[index]?.querySelector(':scope > div')?.textContent?.trim() ?? '';
 }
@@ -448,6 +468,92 @@ function buildModal(
   return { overlay, trigger };
 }
 
+interface SuccessModalContent {
+  eyebrow: string;
+  heading: string[];
+  message: string[];
+  buttonLabel: string;
+}
+
+/** Native <dialog> gives the focus trap, Escape handling and focus restore for free. */
+function buildSuccessModal(content: SuccessModalContent, id: string): { dialog: HTMLDialogElement; open: () => void } {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'newsletter-modal';
+  const headingId = `${id}-heading`;
+  const messageId = `${id}-message`;
+  dialog.setAttribute('aria-labelledby', headingId);
+  dialog.setAttribute('aria-describedby', messageId);
+  dialog.setAttribute('data-testid', 'newsletter-form-success-modal');
+
+  const panel = document.createElement('div');
+  panel.className = 'newsletter-modal-content';
+  const copy = document.createElement('div');
+  copy.className = 'newsletter-modal-copy';
+  const titleBlock = document.createElement('div');
+  titleBlock.className = 'newsletter-modal-title-block';
+
+  if (content.eyebrow) {
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'newsletter-modal-eyebrow';
+    eyebrow.textContent = content.eyebrow;
+    titleBlock.append(eyebrow);
+  }
+
+  const heading = document.createElement('h2');
+  heading.className = 'newsletter-modal-title';
+  heading.id = headingId;
+  content.heading.forEach((line, index) => {
+    if (index) heading.append(document.createElement('br'));
+    heading.append(line);
+  });
+  titleBlock.append(heading);
+
+  const messageBlock = document.createElement('div');
+  messageBlock.className = 'newsletter-modal-message';
+  messageBlock.id = messageId;
+  content.message.forEach((line) => {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = line;
+    messageBlock.append(paragraph);
+  });
+  copy.append(titleBlock, messageBlock);
+
+  const done = document.createElement('button');
+  done.type = 'button';
+  done.className = 'newsletter-modal-done';
+  done.textContent = content.buttonLabel;
+  done.setAttribute('data-testid', 'newsletter-form-success-done');
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'newsletter-modal-close';
+  closeButton.setAttribute('aria-label', 'Close');
+  closeButton.setAttribute('data-testid', 'newsletter-form-success-close');
+
+  panel.append(copy, done, closeButton);
+  dialog.append(panel);
+
+  const close = (): void => {
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  };
+  const open = (): void => {
+    if (dialog.open) return;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    done.focus();
+  };
+
+  done.addEventListener('click', close);
+  closeButton.addEventListener('click', close);
+  // The content panel fills the dialog, so a click landing on the dialog itself is on the backdrop.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) close();
+  });
+
+  return { dialog, open };
+}
+
 /** Writes the feedback message; `role` follows the kind so errors are announced assertively. */
 function showMessage(message: HTMLElement, text: string, kind?: 'error' | 'success'): void {
   message.setAttribute('role', kind === 'error' ? 'alert' : 'status');
@@ -479,6 +585,8 @@ interface InlineSubmitHandlers {
   revalidate: () => boolean;
   flagCountryInvalid: () => void;
   reset: () => void;
+  /** Opens the thank-you modal in place of the success status line. */
+  openSuccess: () => void;
 }
 
 interface SubmitConfig {
@@ -507,11 +615,12 @@ async function submitForm(
   if (result === 'success') {
     form.reset();
     config.inline?.reset();
-    showMessage(message, 'Thank you for subscribing!', 'success');
     if (config.captcha) config.captcha.reset();
     const captchaContainer = form.querySelector<HTMLElement>('.newsletter-captcha');
     if (captchaContainer) captchaContainer.hidden = true;
     submitBtn.disabled = false;
+    if (config.inline) config.inline.openSuccess();
+    else showMessage(message, 'Thank you for subscribing!', 'success');
     return;
   }
 
@@ -570,6 +679,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     messages: Object.fromEntries(
       MESSAGE_KEYS.map((key) => [key, trailing[key]?.textContent?.trim() || MESSAGE_DEFAULTS[key]]),
     ) as Record<MessageKey, string>,
+    success: {
+      eyebrow: trailing.successEyebrow?.textContent?.trim() || DEFAULT_SUCCESS_EYEBROW,
+      heading: linesOf(trailing.successHeading),
+      message: linesOf(trailing.successMessage),
+      buttonLabel: trailing.successButtonLabel?.textContent?.trim() || DEFAULT_SUCCESS_BUTTON_LABEL,
+    },
   };
 
   const property = await resolveNewsletterProperty(cfg.propertyPath);
@@ -781,8 +896,22 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     invalid[0]?.control.focus();
     return !invalid.length;
   };
+  const successModal =
+    cfg.layout === 'Inline'
+      ? buildSuccessModal(
+          {
+            ...cfg.success,
+            heading: cfg.success.heading.length ? cfg.success.heading : DEFAULT_SUCCESS_HEADING,
+            message: cfg.success.message.length ? cfg.success.message : [DEFAULT_SUCCESS_MESSAGE],
+          },
+          `newsletter-inline-${uid}-success`,
+        )
+      : null;
+  // Native dialogs restore focus themselves, but the submit button was disabled while the request ran.
+  successModal?.dialog.addEventListener('close', () => submitBtn.focus());
   const inlineHandlers: InlineSubmitHandlers = {
     messages: cfg.messages,
+    openSuccess: () => successModal?.open(),
     revalidate: validateInline,
     flagCountryInvalid: () => {
       if (!inlineCountry) return;
@@ -864,6 +993,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     block.textContent = '';
     block.classList.add('newsletter-inline');
     block.append(form);
+    if (successModal) block.append(successModal.dialog);
     return;
   }
 
