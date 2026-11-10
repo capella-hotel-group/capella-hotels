@@ -547,8 +547,14 @@ function buildSuccessModal(content: SuccessModalContent, id: string): { dialog: 
   done.addEventListener('click', close);
   closeButton.addEventListener('click', close);
   // The content panel fills the dialog, so a click landing on the dialog itself is on the backdrop.
+  // Requiring the press to start there too keeps a text-selection drag that ends outside from closing it.
+  let pressedOnBackdrop = false;
+  dialog.addEventListener('mousedown', (event) => {
+    pressedOnBackdrop = event.target === dialog;
+  });
   dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) close();
+    if (event.target === dialog && pressedOnBackdrop) close();
+    pressedOnBackdrop = false;
   });
 
   return { dialog, open };
@@ -737,6 +743,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   if (cfg.layout === 'Inline') {
     submitBtn.className = 'newsletter-inline-submit';
+    form.setAttribute('data-testid', 'newsletter-form');
+    submitBtn.setAttribute('data-testid', 'newsletter-form-submit');
     const { messages } = cfg;
     const fieldId = (name: string): string => `newsletter-inline-${uid}-${name}`;
 
