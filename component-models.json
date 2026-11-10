@@ -2957,6 +2957,11 @@
     "id": "newsletter-form",
     "fields": [
       {
+        "component": "tab",
+        "name": "formTab",
+        "label": "Form"
+      },
+      {
         "component": "text",
         "name": "title",
         "label": "Form Title",
@@ -3081,6 +3086,160 @@
         "description": "Optional information shown directly below the form title. Leave blank to omit it.",
         "valueType": "string",
         "value": "Submission in non-English is not supported"
+      },
+      {
+        "component": "tab",
+        "name": "errorTab",
+        "label": "Error Messages"
+      },
+      {
+        "component": "text",
+        "name": "salutationError",
+        "label": "Salutation Error Message",
+        "description": "Shown when no salutation is selected. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please select a title."
+      },
+      {
+        "component": "text",
+        "name": "firstNameError",
+        "label": "First Name Error Message",
+        "description": "Shown when the first name is blank or contains characters other than letters. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter your first name."
+      },
+      {
+        "component": "text",
+        "name": "lastNameError",
+        "label": "Last Name Error Message",
+        "description": "Shown when the last name is blank or contains characters other than letters. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter your last name."
+      },
+      {
+        "component": "text",
+        "name": "countryError",
+        "label": "Country Error Message",
+        "description": "Shown when no country is entered. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter your country."
+      },
+      {
+        "component": "text",
+        "name": "countryInvalidError",
+        "label": "Country Invalid Error Message",
+        "description": "Shown when the entered country name is not recognised. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Enter a valid country name."
+      },
+      {
+        "component": "text",
+        "name": "emailRequiredError",
+        "label": "Email Required Error Message",
+        "description": "Shown when the email is blank. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter a valid email address."
+      },
+      {
+        "component": "text",
+        "name": "emailFormatError",
+        "label": "Email Format Error Message",
+        "description": "Shown when the email does not follow the user@domain.com format. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please enter a valid email address."
+      },
+      {
+        "component": "text",
+        "name": "consentError",
+        "label": "Consent Error Message",
+        "description": "Shown when the consent checkbox is not ticked. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please accept the terms to continue."
+      },
+      {
+        "component": "text",
+        "name": "errorMessage",
+        "label": "Error Message",
+        "description": "Shown when the submission fails. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Sorry, something went wrong. Please try again."
+      },
+      {
+        "component": "text",
+        "name": "captchaRequiredError",
+        "label": "CAPTCHA Required Error Message",
+        "description": "Shown when hCaptcha is enabled and has not been completed. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Please complete the CAPTCHA verification."
+      },
+      {
+        "component": "text",
+        "name": "captchaUnavailableError",
+        "label": "CAPTCHA Unavailable Error Message",
+        "description": "Shown when hCaptcha cannot be loaded. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "CAPTCHA is unavailable. Please try again later."
+      },
+      {
+        "component": "text",
+        "name": "countryValidationUnavailableError",
+        "label": "Country Validation Unavailable Error Message",
+        "description": "Shown when the country cannot be validated. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Country validation is unavailable. Please try again later."
+      },
+      {
+        "component": "tab",
+        "name": "successTab",
+        "label": "Thank You Modal"
+      },
+      {
+        "component": "text",
+        "name": "successEyebrow",
+        "label": "Eyebrow",
+        "description": "Small label above the thank-you title. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Newsletter"
+      },
+      {
+        "component": "richtext",
+        "name": "successHeading",
+        "label": "Title",
+        "description": "Each paragraph renders as its own title line. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "<p>Thank you</p><p>for subscribing</p>"
+      },
+      {
+        "component": "richtext",
+        "name": "successMessage",
+        "label": "Body Text",
+        "description": "Thank-you message shown after a successful sign-up. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "<p>You have successfully joined our mailing list. Look out for the latest news and exclusive offers from Capella.</p>"
+      },
+      {
+        "component": "text",
+        "name": "successButtonLabel",
+        "label": "Button Label",
+        "description": "Label of the button that closes the thank-you modal. Inline layout only.",
+        "valueType": "string",
+        "required": true,
+        "value": "Done"
       }
     ]
   },
