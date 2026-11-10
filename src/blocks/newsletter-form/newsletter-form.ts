@@ -920,7 +920,11 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     },
     reset: () => {
       validationAttempted = false;
-      inlineRules.forEach(({ control, error }) => setFieldError(control, error, ''));
+      inlineRules.forEach(({ control, error }) => {
+        setFieldError(control, error, '');
+        // form.reset() lands on the first enabled option because the placeholder has no `selected` attribute.
+        if (control instanceof HTMLSelectElement) control.selectedIndex = 0;
+      });
     },
   };
 
