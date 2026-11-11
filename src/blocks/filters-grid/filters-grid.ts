@@ -82,6 +82,8 @@ interface BlockConfig {
   modeSettings: ModeSetting[];
   categorySettings: CategorySetting[];
   showModeLabels: boolean;
+  showModalEyebrow: boolean;
+  showModalCategoryTag: boolean;
   useAuthoredFilters: boolean;
   itemLayout?: boolean;
   headingElements?: Element[];
@@ -387,7 +389,33 @@ function rowBoolean(row: Element | undefined, name: string, fallback: boolean): 
 }
 
 function parseConfig(block: HTMLElement): BlockConfig {
-  const allRows = [...block.children] as HTMLElement[];
+  const originalRows = [...block.children] as HTMLElement[];
+  const rootRowIndex = originalRows.findIndex((row) => {
+    const value = row.querySelector('a[href]')?.getAttribute('href') || textOf(row);
+    return /^(?:https?:\/\/[^/]+)?\/content\/dam(?:\/|$)/i.test(value);
+  });
+  const modalFields = ['showModalEyebrow', 'showModalCategoryTag'] as const;
+  const hasItemParentFields =
+    rootRowIndex >= 0 &&
+    (['true', 'false'].includes(normalizeChoice(textOf(originalRows[rootRowIndex + 1]))) ||
+      Boolean(originalRows[rootRowIndex + 1]?.querySelector('input[type="checkbox"]'))) &&
+    !originalRows[rootRowIndex + 2]?.querySelector('hr, ul, ol');
+  const modalRows = modalFields.map((name, index) => {
+    const instrumented = originalRows.find((row) => row.querySelector(`[data-aue-prop="${name}"]`));
+    if (instrumented) return instrumented;
+    const candidate = hasItemParentFields ? originalRows[rootRowIndex + 3 + index] : undefined;
+    return candidate?.children.length === 1 &&
+      (['true', 'false'].includes(normalizeChoice(textOf(candidate))) ||
+        candidate.querySelector('input[type="checkbox"]'))
+      ? candidate
+      : undefined;
+  });
+  const modalVisibility = {
+    showModalEyebrow: rowBoolean(modalRows[0], modalFields[0], true),
+    showModalCategoryTag: rowBoolean(modalRows[1], modalFields[1], true),
+  };
+  modalRows.forEach((row) => row?.classList.add('filters-grid-config'));
+  const allRows = originalRows.filter((row) => !modalRows.includes(row));
   let itemRows = allRows.filter((row) =>
     row.dataset.aueModel ? row.dataset.aueModel === ITEM_MODEL : row.children.length > 1,
   );
@@ -415,6 +443,7 @@ function parseConfig(block: HTMLElement): BlockConfig {
     const [eyebrow, title, root, showLabels, reveal] = rows;
     rows.forEach((row) => row.classList.add('filters-grid-config'));
     return {
+      ...modalVisibility,
       eyebrow: rowValue(eyebrow, 'eyebrow'),
       titleHtml: rowHtml(title, 'title'),
       cfRootPath: rowHref(root, 'cfRootPath'),
@@ -491,6 +520,7 @@ function parseConfig(block: HTMLElement): BlockConfig {
     const showLabelsRow = contentRows[useAuthoredFilters ? 3 : 5];
     const revealRow = contentRows[useAuthoredFilters ? 5 : 6];
     return {
+      ...modalVisibility,
       backgroundTheme: 'white',
       eyebrow: rowValue(eyebrow, 'eyebrow'),
       titleHtml: rowHtml(title, 'title'),
@@ -528,6 +558,7 @@ function parseConfig(block: HTMLElement): BlockConfig {
     : parseModeSettings(contentRows[modeRowIndex]);
 
   return {
+    ...modalVisibility,
     backgroundTheme: rowValue(backgroundTheme, 'backgroundTheme') || 'white',
     eyebrow: rowValue(eyebrow, 'eyebrow'),
     titleHtml: [
@@ -685,7 +716,7 @@ function createImageSlider(images: HTMLImageElement[], className: string, placeh
   return slider;
 }
 
-function createModal() {
+function createModal(config: BlockConfig) {
   const overlay = document.createElement('div');
   overlay.className = 'filters-grid-modal';
   overlay.hidden = true;
@@ -740,7 +771,9 @@ function createModal() {
       .filter((image): image is HTMLImageElement => Boolean(image));
     const mediaCopy = document.createElement('div');
     mediaCopy.className = 'filters-grid-modal-media-copy';
-    appendText(mediaCopy, 'p', 'filters-grid-modal-eyebrow', labelFromTag(card.cardLocationTag?.[0]));
+    if (config.showModalEyebrow) {
+      appendText(mediaCopy, 'p', 'filters-grid-modal-eyebrow', labelFromTag(card.cardLocationTag?.[0]));
+    }
     appendText(mediaCopy, 'h2', 'filters-grid-modal-title', card.cardHeadline);
 
     if (variant === 'square') {
@@ -776,7 +809,10 @@ function createModal() {
 
     const body = document.createElement('div');
     body.className = 'filters-grid-modal-body';
-    appendText(body, 'p', 'filters-grid-modal-category', selectedFilterLabel);
+    body.classList.toggle('filters-grid-modal-body-no-category', !config.showModalCategoryTag);
+    if (config.showModalCategoryTag) {
+      appendText(body, 'p', 'filters-grid-modal-category', selectedFilterLabel);
+    }
     if (details.modalDescription?.html) {
       const description = document.createElement('div');
       description.className = 'filters-grid-modal-description';
@@ -969,7 +1005,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   reveal.dataset.testid = 'filters-grid-reveal-more';
   reveal.textContent = config.revealMoreLabel;
   if (config.revealElement) moveInstrumentation(config.revealElement, reveal);
-  const modal = createModal();
+  const modal = createModal(config);
   const itemFilterButtons = new Map<HTMLButtonElement, { modeKey: string; tag: string }>();
 
   if (config.itemLayout) {

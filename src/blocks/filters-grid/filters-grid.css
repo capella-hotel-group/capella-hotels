@@ -784,6 +784,14 @@ body.filters-grid-modal-open {
         align-self: end;
         justify-self: end;
     }
+
+    .filters-grid-modal-body-no-category {
+        grid-template-columns: minmax(0, 204px) minmax(0, 1fr);
+    }
+
+    .filters-grid-modal-body-no-category .filters-grid-modal-cta {
+        grid-column: 2;
+    }
 }
 
 @media (min-width: 1200px) {

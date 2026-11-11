@@ -1,0 +1,128 @@
+{
+  "definitions": [
+    {
+      "title": "Experience Events Grid",
+      "id": "experience-events-grid",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "Experience Events Grid",
+              "model": "experience-events-grid"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "experience-events-grid",
+      "fields": [
+        {
+          "component": "text",
+          "name": "id",
+          "label": "Block ID",
+          "valueType": "string"
+        },
+        {
+          "component": "text",
+          "name": "dataTestId",
+          "label": "Data Test ID",
+          "valueType": "string",
+          "value": "experience-events-grid"
+        },
+        {
+          "component": "text",
+          "name": "eyebrow",
+          "label": "Section Eyebrow",
+          "valueType": "string"
+        },
+        {
+          "component": "richtext",
+          "name": "title",
+          "label": "Section Title",
+          "valueType": "string",
+          "required": true
+        },
+        {
+          "component": "aem-content",
+          "name": "cfRootPath",
+          "label": "Content Fragment Root Path",
+          "description": "Select the hotel experience folder containing the existing Filters Grid Content Fragments. Cards, schedules, pricing, push-to-top settings, and popup details are managed in those fragments, not copied into this block.",
+          "valueType": "string",
+          "required": true,
+          "validation": {
+            "rootPath": "/content/dam/capella-hotels/content-fragment/experiences"
+          }
+        },
+        {
+          "component": "text",
+          "name": "dateFilterPlaceholder",
+          "label": "Date Range Filter Placeholder",
+          "description": "Label shown before the visitor selects an inclusive event date range. Dates are evaluated using each experience's schedule time zone. By-arrangement experiences remain eligible within their availability period.",
+          "valueType": "string",
+          "value": "Select event dates"
+        },
+        {
+          "component": "text",
+          "name": "allExperiencesLabel",
+          "label": "All Experiences Tab Label",
+          "description": "Label for the tab showing all experiences within the selected date range. No category tag is needed for this tab.",
+          "valueType": "string",
+          "value": "All Experiences",
+          "required": true
+        },
+        {
+          "component": "container",
+          "name": "categorySettings",
+          "label": "Category Tabs",
+          "description": "Add categories in display order. Select tags matching Associated Filter Tags on the experience Content Fragments. Filter first, then place push-to-top matches first. Within each group, sort by earliest matching date, earliest time, and title A-Z; undated by-arrangement items follow scheduled items.",
+          "multi": true,
+          "fields": [
+            {
+              "component": "aem-tag",
+              "name": "categoryTag",
+              "label": "Category Tag",
+              "description": "Select one category tag, such as Culture, Wellness, Indulgence, or Family.",
+              "valueType": "string",
+              "multi": false,
+              "required": true,
+              "validation": {
+                "rootPath": "/content/cq:tags/capella-hotels"
+              }
+            },
+            {
+              "component": "text",
+              "name": "label",
+              "label": "Category Tab Label",
+              "description": "Visitor-facing label for this category, translated for the page language.",
+              "valueType": "string",
+              "required": true
+            }
+          ]
+        },
+        {
+          "component": "number",
+          "name": "initialDisplayCount",
+          "label": "Initial Display Count",
+          "description": "Positive whole number of experiences initially displayed. Default: 8. Reveal More will append exactly 4 cards per click and hide when no matches remain; the increment is not author-configurable.",
+          "valueType": "number",
+          "value": 8,
+          "validation": {
+            "numberMin": 1
+          }
+        },
+        {
+          "component": "text",
+          "name": "revealMoreLabel",
+          "label": "Reveal More Button Label",
+          "valueType": "string",
+          "value": "REVEAL MORE"
+        }
+      ]
+    }
+  ],
+  "filters": []
+}
