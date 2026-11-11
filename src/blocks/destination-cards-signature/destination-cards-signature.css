@@ -273,17 +273,30 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    inset-inline: 60px;
+    inset-inline: var(--destination-cards-signature-carousel-padding-inline);
     inset-block: auto;
     height: 28px;
     pointer-events: none;
     z-index: 10;
 }
 
+@media (min-width: 768px) and (max-width: 1199px) {
+    .destination-cards-signature .destination-cards-signature-controls {
+        display: flex;
+        justify-content: space-between;
+        inset-inline: calc((100% - (349px * 2 + var(--destination-cards-signature-carousel-gap))) / 2 - 25px);
+        top: calc(16px + 426.56px / 2);
+        transform: none;
+    }
+}
+
 @media (min-width: 1200px) {
     .destination-cards-signature .destination-cards-signature-controls {
         display: flex;
         justify-content: space-between;
+        inset-inline: calc((100% - (522px * 2 + var(--destination-cards-signature-carousel-gap))) / 2 - 40px);
+        top: 319px;
+        transform: none;
     }
 }
 
