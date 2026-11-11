@@ -59,6 +59,13 @@
           "valueType": "string",
           "required": true,
           "value": ""
+        },
+        {
+          "component": "boolean",
+          "valueType": "boolean",
+          "name": "showOverlay",
+          "label": "Show Media Overlay",
+          "value": true
         }
       ]
     },
@@ -116,17 +123,6 @@
           "label": "Open in new tab",
           "valueType": "boolean",
           "value": false
-        },
-        {
-          "component": "select",
-          "name": "darkOverlay",
-          "label": "Dark Image Overlay",
-          "valueType": "string",
-          "value": "true",
-          "options": [
-            { "name": "Enabled", "value": "true" },
-            { "name": "Disabled", "value": "false" }
-          ]
         }
       ]
     }

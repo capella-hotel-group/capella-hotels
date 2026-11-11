@@ -78,11 +78,18 @@ function buildBlock(
   return block;
 }
 
-function fillRequiredFields(form: HTMLFormElement): void {
+/** Expands the form if needed so the lazily loaded country list is in place. */
+async function fillRequiredFields(form: HTMLFormElement): Promise<void> {
+  if (form.hidden)
+    form.closest('.text-with-cta-signup')!.querySelector<HTMLButtonElement>('.text-with-cta-trigger')!.click();
+  const country = form.querySelector<HTMLSelectElement>('select[name="country"]')!;
+  for (let i = 0; i < 20 && country.options.length < 2; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
   form.querySelector<HTMLSelectElement>('select[name="salutation"]')!.value = 'Mr';
   form.querySelector<HTMLInputElement>('input[name="firstName"]')!.value = 'Alex';
   form.querySelector<HTMLInputElement>('input[name="lastName"]')!.value = 'Morgan';
-  form.querySelector<HTMLInputElement>('input[name="country"]')!.value = 'Singapore';
+  country.value = 'Singapore';
   form.querySelector<HTMLInputElement>('input[name="email"]')!.value = 'alex@example.com';
   const consent = form.querySelector<HTMLInputElement>('input[name="consent"]')!;
   consent.checked = true;
@@ -117,7 +124,7 @@ describe('text-with-cta hCaptcha', () => {
     const block = buildBlock('false');
     decorate(block);
     const form = block.querySelector<HTMLFormElement>('form')!;
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     await dispatchSubmit(form);
     expect(form.querySelector('[role="status"]')?.textContent).toBe('');
     expect(form.querySelector('[type="submit"]')?.getAttribute('aria-busy')).toBe('true');
@@ -152,7 +159,7 @@ describe('text-with-cta hCaptcha', () => {
     form.querySelector<HTMLInputElement>('[name="consent"]')!.click();
     await Promise.resolve();
     options.callback('token');
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     await dispatchSubmit(form);
     options.callback('another-token');
     expect(form.querySelector<HTMLButtonElement>('[type="submit"]')!.disabled).toBe(true);
@@ -242,9 +249,11 @@ describe('text-with-cta hCaptcha', () => {
     expect(submit.disabled).toBe(false);
     expect(mockLoadHCaptcha).not.toHaveBeenCalled();
 
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     await dispatchSubmit(form);
-    expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Thanks for subscribing.');
+    expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('');
+    expect(block.querySelector<HTMLDialogElement>('.text-with-cta-modal')?.hasAttribute('open')).toBe(true);
+    expect(block.querySelector('.text-with-cta-modal-message')?.textContent).toBe('Thanks for subscribing.');
     expect(mockSubmitNewsletterForm).toHaveBeenCalledWith(
       form,
       expect.objectContaining({ captchaEnabled: false, captchaToken: '' }),
@@ -282,7 +291,7 @@ describe('text-with-cta hCaptcha', () => {
     );
     expect(submit.disabled).toBe(true);
 
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     dispatchSubmit(form);
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Please complete the CAPTCHA verification.');
 
@@ -290,7 +299,7 @@ describe('text-with-cta hCaptcha', () => {
     expect(submit.disabled).toBe(false);
     await dispatchSubmit(form);
 
-    expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Thanks for subscribing.');
+    expect(block.querySelector('.text-with-cta-modal')?.hasAttribute('open')).toBe(true);
     expect(mockSubmitNewsletterForm).toHaveBeenCalledWith(
       form,
       expect.objectContaining({
@@ -309,7 +318,7 @@ describe('text-with-cta hCaptcha', () => {
     expect(captcha.hidden).toBe(false);
     expect(api.render).toHaveBeenCalledTimes(1);
     expect(submit.disabled).toBe(false);
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     await dispatchSubmit(form);
     expect(mockSubmitNewsletterForm).toHaveBeenCalledTimes(1);
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe('Please complete the CAPTCHA verification.');
@@ -383,7 +392,7 @@ describe('text-with-cta hCaptcha', () => {
     decorate(block);
     const form = block.querySelector<HTMLFormElement>('.text-with-cta-form')!;
     block.querySelector<HTMLButtonElement>('.text-with-cta-trigger')!.click();
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     await dispatchSubmit(form);
 
     expect(mockResolveProperty).toHaveBeenCalledWith('/content/dam/property-mapping');
@@ -401,11 +410,158 @@ describe('text-with-cta hCaptcha', () => {
     decorate(block);
     const form = block.querySelector<HTMLFormElement>('.text-with-cta-form')!;
     block.querySelector<HTMLButtonElement>('.text-with-cta-trigger')!.click();
-    fillRequiredFields(form);
+    await fillRequiredFields(form);
     await dispatchSubmit(form);
 
     expect(form.querySelector('.text-with-cta-status')?.textContent).toBe(
       'Country validation is unavailable. Please try again later.',
     );
+  });
+});
+
+const TRAILING_CELLS = [
+  'Select a salutation',
+  'First name please',
+  'Last name please',
+  'Country please',
+  'Email is required',
+  'Email looks wrong',
+  'Tick the box',
+  'Mailing list',
+  '<p>Thanks</p><p>a lot</p>',
+  '<p>Welcome aboard.</p><p>See you soon.</p>',
+  'Close',
+];
+
+/** Rewrites the legacy fixture row into the current model order (success message moved to its tab). */
+function toCurrentLayout(block: HTMLElement, dropInfoText = false): void {
+  const row = block.querySelector<HTMLElement>('[data-aue-model]')!;
+  row.children[9].remove();
+  if (dropInfoText) row.lastElementChild!.remove();
+  row.removeAttribute('data-aue-model');
+  TRAILING_CELLS.forEach((html) => {
+    const cell = document.createElement('div');
+    cell.innerHTML = html;
+    row.append(cell);
+  });
+}
+
+describe('text-with-cta validation', () => {
+  beforeEach(() => {
+    jest.mocked(isUniversalEditor).mockReturnValue(false);
+    mockResolveProperty.mockResolvedValue('CHR');
+    mockSubmitNewsletterForm.mockResolvedValue('success');
+  });
+
+  afterEach(() => {
+    document.body.textContent = '';
+    jest.clearAllMocks();
+  });
+
+  const errorOf = (form: HTMLFormElement, name: string): HTMLElement | null => {
+    const control = form.querySelector(`[name="${name}"]`)!;
+    const id = control.getAttribute('aria-describedby');
+    return id ? form.querySelector(`#${id}`) : null;
+  };
+
+  it('flags every invalid field at once with the default messages', async () => {
+    const block = buildBlock('false');
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('form')!;
+
+    await dispatchSubmit(form);
+
+    expect(mockSubmitNewsletterForm).not.toHaveBeenCalled();
+    const messages = ['salutation', 'firstName', 'lastName', 'country', 'email', 'consent'].map((name) => {
+      expect(form.querySelector(`[name="${name}"]`)?.getAttribute('aria-invalid')).toBe('true');
+      return errorOf(form, name)?.textContent;
+    });
+    expect(messages).toEqual([
+      'Please select a title.',
+      'Please enter your first name.',
+      'Please enter your last name.',
+      'Please select your country.',
+      'Please enter a valid email address.',
+      'Please accept the terms to continue.',
+    ]);
+    expect(document.activeElement).toBe(form.querySelector('[name="salutation"]'));
+  });
+
+  it.each([false, true])('uses authored messages (info text dropped: %s)', async (dropInfoText) => {
+    const block = buildBlock('false');
+    toCurrentLayout(block, dropInfoText);
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('form')!;
+    await fillRequiredFields(form);
+    form.querySelector<HTMLInputElement>('[name="firstName"]')!.value = 'Alex2';
+    form.querySelector<HTMLInputElement>('[name="email"]')!.value = 'alex@';
+
+    await dispatchSubmit(form);
+
+    expect(errorOf(form, 'firstName')?.textContent).toBe('First name please');
+    expect(errorOf(form, 'email')?.textContent).toBe('Email looks wrong');
+    expect(errorOf(form, 'lastName')).toBeNull();
+    expect(block.querySelector('.text-with-cta-form-info-text') !== null).toBe(!dropInfoText);
+
+    form.querySelector<HTMLInputElement>('[name="email"]')!.value = '';
+    form.querySelector('[name="email"]')!.dispatchEvent(new Event('input'));
+    expect(errorOf(form, 'email')?.textContent).toBe('Email is required');
+  });
+
+  it('loads the ISO 3166 country list into a select only once the form is opened', async () => {
+    const block = buildBlock('false');
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('form')!;
+    const country = form.querySelector<HTMLSelectElement>('select[name="country"]')!;
+
+    expect(country.options).toHaveLength(1);
+    await fillRequiredFields(form);
+
+    const names = [...country.options].slice(1).map((option) => option.value);
+    expect(names).toHaveLength(250);
+    expect(names).toContain('Singapore');
+    expect([...names].sort((a, b) => a.localeCompare(b))).toEqual(names);
+    expect(country.value).toBe('Singapore');
+  });
+
+  it('clears an error as soon as the field becomes valid', async () => {
+    const block = buildBlock('false');
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('form')!;
+    await dispatchSubmit(form);
+
+    const lastName = form.querySelector<HTMLInputElement>('[name="lastName"]')!;
+    lastName.value = "O'Neil-Smith";
+    lastName.dispatchEvent(new Event('input'));
+
+    expect(lastName.hasAttribute('aria-invalid')).toBe(false);
+    expect(lastName.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('renders the authored success modal and exposes it for the backend', async () => {
+    const block = buildBlock('true');
+    toCurrentLayout(block);
+    decorate(block);
+    const form = block.querySelector<HTMLFormElement>('form')!;
+    const dialog = block.querySelector<HTMLDialogElement>('.text-with-cta-modal')!;
+
+    expect(dialog.hasAttribute('open')).toBe(false);
+    expect(block.querySelector('.text-with-cta-modal-eyebrow')?.textContent).toBe('Mailing list');
+    expect(block.querySelector('.text-with-cta-modal-title')?.innerHTML).toBe('Thanks<br>a lot');
+    expect([...block.querySelectorAll('.text-with-cta-modal-message p')].map((p) => p.textContent)).toEqual([
+      'Welcome aboard.',
+      'See you soon.',
+    ]);
+    expect(block.querySelector('.text-with-cta-modal-done')?.textContent).toBe('Close');
+    expect(block.querySelector('.text-with-cta-form-info-text')?.textContent).toBe(
+      'Submission in non-English is not supported',
+    );
+    expect(form.querySelector('.text-with-cta-captcha')).not.toBeNull();
+
+    expect(window.showNewsletterSuccessModal?.(form)).toBe(true);
+    expect(dialog.hasAttribute('open')).toBe(true);
+    block.querySelector<HTMLButtonElement>('.text-with-cta-modal-close')!.click();
+    expect(dialog.hasAttribute('open')).toBe(false);
+    expect(window.showNewsletterSuccessModal?.('unknown-form')).toBe(false);
   });
 });

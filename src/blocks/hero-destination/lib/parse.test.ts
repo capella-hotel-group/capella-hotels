@@ -11,52 +11,32 @@ function row(...cells: string[]): HTMLElement {
 const PICTURE = '<picture><img src="/a.png" alt=""></picture>';
 const VIDEO = '<a href="/clip.mp4">clip</a>';
 
-describe('hero-destination parseItems showOverlay', () => {
-  it.each([
-    ['true', true],
-    ['false', false],
-    ['yes', true],
-    ['no', false],
-  ])('reads "%s" before heading as showOverlay=%s', (value, expected) => {
+describe('hero-destination parseItems legacy per-item overlay cell', () => {
+  it.each(['true', 'false', 'yes', 'no'])('skips a stale "%s" cell before heading', (value) => {
     const [item] = parseItems([row('image', PICTURE, 'Alt', value, 'Heading')]);
-    expect(item.showOverlay).toBe(expected);
-    expect(item.heading).toBe('Heading');
+    expect(item).toMatchObject({ imageAlt: 'Alt', heading: 'Heading' });
+    expect(item).not.toHaveProperty('showOverlay');
   });
 
-  it('does not treat the overlay cell as alt text', () => {
+  it('does not treat the stale overlay cell as alt text', () => {
     const [item] = parseItems([row('image', PICTURE, 'false', 'Heading')]);
-    expect(item).toMatchObject({ mediaType: 'image', imageAlt: '', showOverlay: false });
+    expect(item).toMatchObject({ mediaType: 'image', imageAlt: '' });
   });
 
-  it('keeps alt text when overlay cell is present', () => {
-    const [item] = parseItems([row('image', PICTURE, PICTURE, 'Alt text', 'true', 'Heading')]);
-    expect(item).toMatchObject({ mediaType: 'image', imageAlt: 'Alt text', showOverlay: true });
-  });
-
-  it('parses video items with the overlay cell', () => {
+  it('parses video items with a stale overlay cell', () => {
     const [item] = parseItems([row('video', VIDEO, 'false', 'Heading')]);
-    expect(item).toMatchObject({ mediaType: 'video', desktopVideoUrl: '/clip.mp4', showOverlay: false });
+    expect(item).toMatchObject({ mediaType: 'video', desktopVideoUrl: '/clip.mp4' });
   });
 
-  it('defaults to true for legacy rows without the overlay cell', () => {
+  it('parses rows without the overlay cell', () => {
     const [image, legacy, video] = parseItems([
       row('image', PICTURE, 'Alt', 'Heading'),
       row(PICTURE, 'Heading'),
       row('video', VIDEO, 'Heading'),
     ]);
-    expect(image).toMatchObject({ imageAlt: 'Alt', showOverlay: true });
-    expect(legacy).toMatchObject({ mediaType: 'image', showOverlay: true });
-    expect(video).toMatchObject({ mediaType: 'video', showOverlay: true });
-  });
-
-  it('defaults to true when the overlay cell is empty', () => {
-    const [item] = parseItems([row('image', PICTURE, 'Alt', '', 'Heading')]);
-    expect(item).toMatchObject({ imageAlt: 'Alt', showOverlay: true });
-  });
-
-  it('keeps empty items selectable and honours the toggle', () => {
-    const [item] = parseItems([row('image', '', 'false', 'Heading')]);
-    expect(item).toMatchObject({ mediaType: 'empty', showOverlay: false });
+    expect(image).toMatchObject({ imageAlt: 'Alt' });
+    expect(legacy).toMatchObject({ mediaType: 'image' });
+    expect(video).toMatchObject({ mediaType: 'video' });
   });
 });
 
@@ -75,14 +55,15 @@ describe('hero-destination parseItems imageAlt', () => {
 });
 
 describe('hero-destination parseCarouselConfig', () => {
-  it('reads all five config rows by position', () => {
-    const rows = ['false', '7', 'false', 'cube', 'false'].map((value) => row(value));
+  it('reads all six config rows by position', () => {
+    const rows = ['false', '7', 'false', 'cube', 'false', 'false'].map((value) => row(value));
     expect(parseCarouselConfig(rows)).toEqual({
       autoplay: false,
       intervalSeconds: 7,
       loop: false,
       transitionEffect: 'cube',
       simulateTouch: false,
+      showOverlay: false,
     });
   });
 
@@ -93,20 +74,32 @@ describe('hero-destination parseCarouselConfig', () => {
       loop: true,
       transitionEffect: 'fade',
       simulateTouch: true,
+      showOverlay: true,
     });
   });
 });
 
-describe('hero-destination buildSlide overlay class', () => {
-  it('adds the no-overlay modifier only when showOverlay is false', async () => {
-    window.matchMedia = jest.fn().mockReturnValue({ matches: false, addEventListener: jest.fn() });
+describe('hero-destination root overlay class', () => {
+  it.each([
+    ['true', false],
+    ['false', true],
+  ])('showOverlay "%s" sets no-overlay=%s on the block', async (value, noOverlay) => {
+    window.matchMedia = jest
+      .fn()
+      .mockReturnValue({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+    window.ResizeObserver = jest.fn().mockReturnValue({ observe: jest.fn(), disconnect: jest.fn() });
+    jest.resetModules();
     jest.doMock('@/app/scripts.js', () => ({ moveInstrumentation: () => {} }));
     // media.ts reads matchMedia at module scope.
-    const { buildSlide } = await import('./dom-builder');
-    const [on, off] = parseItems([row('image', PICTURE, 'true', 'On'), row('image', PICTURE, 'false', 'Off')]);
-    const media = (item: typeof on) => buildSlide(item, 0, 'hd', 1).querySelector('.hero-destination-media')!;
-    expect(media(on).classList.contains('hero-destination-media--no-overlay')).toBe(false);
-    expect(media(off).classList.contains('hero-destination-media--no-overlay')).toBe(true);
+    const { default: decorateSlider } = await import('./slider-variant');
+    const block = document.createElement('div');
+    block.className = 'hero-destination';
+    block.append(
+      ...['true', '3', 'true', 'fade', 'true', value].map((cell) => row(cell)),
+      row('image', PICTURE, 'Slide'),
+    );
+    decorateSlider(block);
+    expect(block.classList.contains('hero-destination--no-overlay')).toBe(noOverlay);
   });
 });
 
@@ -132,6 +125,18 @@ describe('hero-destination splitBlockRows', () => {
   it('keeps short legacy config lists positional', () => {
     const rows = [row('true'), row('5')];
     expect(splitBlockRows(rows)).toEqual({ introRows: [], configRows: rows });
+  });
+
+  it.each([0, 2, 3])('takes a trailing showOverlay row as a sixth config row after %i intro rows', (introCount) => {
+    const intro = Array.from({ length: introCount }, () => row(PICTURE));
+    const configRows = [...config, 'false'].map((value) => row(value));
+    expect(splitBlockRows([...intro, ...configRows])).toEqual({ introRows: intro, configRows });
+  });
+
+  it('does not mistake legacy 5-row config for the 6-row layout', () => {
+    const intro = [row(PICTURE), row('Alt'), row(PICTURE)];
+    const configRows = config.map((value) => row(value));
+    expect(splitBlockRows([...intro, ...configRows])).toEqual({ introRows: intro, configRows });
   });
 });
 

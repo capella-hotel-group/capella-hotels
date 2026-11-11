@@ -8,7 +8,6 @@ const videoItem = (): HeroDestinationVideoItem => ({
   desktopVideoUrl: '/d.mp4',
   mobileVideoUrl: '/m.mp4',
   heading: 'Kyoto',
-  showOverlay: true,
   sourceRow: document.createElement('div'),
 });
 

@@ -1,7 +1,7 @@
 // src/blocks/hero-destination/lib/parse.ts
 // Rows (authored): single-cell block rows are [introImage, introImageAlt?, introImageMobile] followed
-// by 5 config rows (autoplay, autoplayInterval, loop, transitionEffect, simulateTouch); item rows carry mediaType, image, imageMobile, imageAlt,
-// video, videoMobile, showOverlay, heading fields, but conditionally-hidden fields can drop their cell from
+// by 5-6 config rows (autoplay, autoplayInterval, loop, transitionEffect, simulateTouch, showOverlay?); item rows carry
+// mediaType, image, imageMobile, imageAlt, video, videoMobile, heading fields, but conditionally-hidden fields can drop their cell from
 // the row entirely — see parseItem for how cells are matched by content instead of position.
 import { resolveDAMUrl } from '@/utils/env.js';
 import type { EffectName } from './effects/types';
@@ -11,6 +11,7 @@ const DEFAULT_INTERVAL_SECONDS = 3;
 const DEFAULT_EFFECT: EffectName = 'fade';
 const BOOLEAN_TEXTS = ['true', 'false', 'yes', 'no'];
 const CONFIG_ROW_COUNT = 5;
+const EFFECT_NAMES = ['fade', 'slide', 'cube', 'coverflow', 'flip', 'creative', 'cards'];
 
 export interface CarouselConfig {
   autoplay: boolean;
@@ -18,6 +19,7 @@ export interface CarouselConfig {
   intervalSeconds: number;
   transitionEffect: string;
   simulateTouch: boolean;
+  showOverlay: boolean;
 }
 
 function cellText(cell?: Element | null): string {
@@ -43,7 +45,8 @@ export function parseCarouselConfig(configRows: HTMLElement[]): CarouselConfig {
   const loop = parseBoolean(configRows[2]?.children[0], true);
   const transitionEffect = cellText(configRows[3]?.children[0]).toLowerCase() || DEFAULT_EFFECT;
   const simulateTouch = parseBoolean(configRows[4]?.children[0], true);
-  return { autoplay, loop, intervalSeconds, transitionEffect, simulateTouch };
+  const showOverlay = parseBoolean(configRows[5]?.children[0], true);
+  return { autoplay, loop, intervalSeconds, transitionEffect, simulateTouch, showOverlay };
 }
 
 export function parseItems(itemRows: HTMLElement[]): HeroDestinationItem[] {
@@ -65,10 +68,9 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
   const headingCell = cells[cells.length - 1];
   const heading = cellText(headingCell);
 
-  // showOverlay sits right before heading; legacy rows without it default to showing the overlay.
+  // Content authored before showOverlay moved to the block root may still carry a per-item flag before heading; skip it.
   const overlayCandidate = cells.length > 2 ? cells[cells.length - 2] : undefined;
   const overlayCell = BOOLEAN_TEXTS.includes(cellText(overlayCandidate).toLowerCase()) ? overlayCandidate : undefined;
-  const showOverlay = parseBoolean(overlayCell, true);
 
   const mediaType = cellText(cells[0]).toLowerCase();
   const otherCells = cells.slice(0, -1).filter((cell) => cell !== overlayCell);
@@ -82,7 +84,7 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
     const desktopVideoUrl = cellVideoUrl(videoCells[0]);
     if (desktopVideoUrl) {
       const mobileVideoUrl = cellVideoUrl(videoCells[1]) || desktopVideoUrl;
-      return { mediaType: 'video', desktopVideoUrl, mobileVideoUrl, heading, showOverlay, sourceRow: row };
+      return { mediaType: 'video', desktopVideoUrl, mobileVideoUrl, heading, sourceRow: row };
     }
   } else {
     const desktopPicture = pictureCells[0]?.querySelector('picture');
@@ -95,13 +97,12 @@ function parseItem(cells: HTMLElement[], row: HTMLElement): HeroDestinationItem 
         mobilePicture,
         imageAlt: cellText(altCell) || desktopPicture.querySelector('img')?.getAttribute('alt') || '',
         heading,
-        showOverlay,
         sourceRow: row,
       };
     }
   }
 
-  return { mediaType: 'empty', heading, showOverlay, sourceRow: row };
+  return { mediaType: 'empty', heading, sourceRow: row };
 }
 
 export interface SplitBlockRowsResult {
@@ -110,9 +111,16 @@ export interface SplitBlockRowsResult {
 }
 
 export function splitBlockRows(rows: HTMLElement[]): SplitBlockRowsResult {
-  // Config rows consist of exactly 5 rows. Everything before them is intro.
+  // Config rows are the trailing 5 rows, or 6 when the root showOverlay row is authored (then the
+  // effect sits 3rd from last / simulateTouch 2nd from last, instead of loop / effect). Everything before is intro.
   // Short legacy config (< 5 rows) are treated as config (not intro) to preserve position.
-  const configStartIndex = rows.length >= CONFIG_ROW_COUNT ? rows.length - CONFIG_ROW_COUNT : 0;
+  const fromEnd = (offset: number): string => cellText(rows[rows.length - offset]).toLowerCase();
+  const hasOverlayRow =
+    rows.length > CONFIG_ROW_COUNT &&
+    BOOLEAN_TEXTS.includes(fromEnd(1)) &&
+    (EFFECT_NAMES.includes(fromEnd(3)) || BOOLEAN_TEXTS.includes(fromEnd(2)));
+  const configCount = hasOverlayRow ? CONFIG_ROW_COUNT + 1 : CONFIG_ROW_COUNT;
+  const configStartIndex = rows.length >= configCount ? rows.length - configCount : 0;
   return {
     introRows: rows.slice(0, configStartIndex),
     configRows: rows.slice(configStartIndex),
