@@ -20,6 +20,110 @@ describe('filters-grid authored filters', () => {
   const fetchMock = jest.fn();
   const originalFetch = global.fetch;
 
+  it.each(
+    ['square', 'wide'].flatMap((variant) =>
+      [true, false].flatMap((showEyebrow) =>
+        [true, false].flatMap((showCategory) =>
+          [0, 1, 2].flatMap((identityRows) =>
+            [true, false].map(
+              (instrumented) => [variant, showEyebrow, showCategory, identityRows, instrumented] as const,
+            ),
+          ),
+        ),
+      ),
+    ),
+  )(
+    'controls %s modal texts independently (%s, %s) with %s identity rows and instrumentation %s',
+    async (variant, showEyebrow, showCategory, identityRows, instrumented) => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            filterGridCardDetailsList: {
+              items: [
+                {
+                  cardHeadline: 'Modal visibility',
+                  cardLocationTag: ['capella-hotels:destination/bangkok'],
+                  associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                  cardClickActionBehavior: 'popup',
+                  modalDetails: {
+                    modalImageAspectRatioVariant: variant,
+                    modalFeatureImageAsset: { _path: '/feature.jpg' },
+                    carouselImages: [{ _path: '/extra.jpg' }],
+                    modalDescription: { html: '<p>Experience details</p>' },
+                    modalCtaLabel: 'Explore',
+                    modalCtaUrlExternal: 'https://example.com',
+                    modalCtaUrlType: 'external',
+                  },
+                },
+              ],
+            },
+          },
+        }),
+      });
+      const block = createItemBlock(instrumented);
+      const firstItem = block.children[7];
+      [showEyebrow, showCategory].forEach((value, index) => {
+        const row = document.createElement('div');
+        const cell = document.createElement('div');
+        if (instrumented) {
+          cell.dataset.aueProp = index === 0 ? 'showModalEyebrow' : 'showModalCategoryTag';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = value;
+          cell.append(checkbox);
+        } else {
+          cell.textContent = String(value);
+        }
+        row.append(cell);
+        block.insertBefore(row, firstItem);
+      });
+      for (let index = 0; index < 2 - identityRows; index += 1) block.firstElementChild?.remove();
+      await decorate(block);
+      expect(block.querySelectorAll('[role="tab"]')).toHaveLength(2);
+      const action = block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!;
+      expect(action.textContent).toContain('Bangkok');
+      action.click();
+      const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
+      expect(Boolean(modal.querySelector('.filters-grid-modal-eyebrow'))).toBe(showEyebrow);
+      expect(Boolean(modal.querySelector('.filters-grid-modal-category'))).toBe(showCategory);
+      expect(
+        modal.querySelector('.filters-grid-modal-body')?.classList.contains('filters-grid-modal-body-no-category'),
+      ).toBe(!showCategory);
+      expect(modal.querySelector('.filters-grid-modal-description')?.textContent).toBe('Experience details');
+      expect(modal.querySelector('.filters-grid-modal-cta')).not.toBeNull();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    },
+  );
+
+  it.each(['square', 'wide'])('shows %s modal texts by default on existing pages', async (variant) => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          filterGridCardDetailsList: {
+            items: [
+              {
+                cardHeadline: 'Existing popup',
+                cardLocationTag: ['capella-hotels:destination/bangkok'],
+                associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                cardClickActionBehavior: 'popup',
+                modalDetails: { modalImageAspectRatioVariant: variant },
+              },
+            ],
+          },
+        },
+      }),
+    });
+    const block = createItemBlock();
+    await decorate(block);
+    block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
+    expect(modal.querySelector('.filters-grid-modal-eyebrow')?.textContent).toBe('Bangkok');
+    expect(modal.querySelector('.filters-grid-modal-category')?.textContent).toBe('Bangkok');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  });
+
   it.each([
     ['/content/capella-hotels/global', '/content/capella-hotels/global.html'],
     [
