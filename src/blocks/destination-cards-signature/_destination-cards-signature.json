@@ -110,12 +110,12 @@
           "multi": true,
           "fields": [
             {
-              "component": "text",
-              "name": "destinationName",
-              "label": "Destination Name",
+              "component": "aem-tag",
+              "name": "destinationTag",
+              "label": "Destination Tag",
               "valueType": "string",
-              "required": true,
-              "placeholder": "e.g., Bali, Dubai, Tokyo"
+              "multi": false,
+              "required": true
             },
             {
               "component": "aem-content",
