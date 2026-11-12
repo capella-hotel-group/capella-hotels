@@ -89,9 +89,9 @@
           "component": "text",
           "name": "countryPlaceholder",
           "label": "Country Field Placeholder",
-          "description": "Enter a country name (e.g., Singapore).",
+          "description": "Label of the blank first option in the country dropdown. Inline layout; Modal uses it as the text input placeholder.",
           "valueType": "string",
-          "value": "Country (e.g., Singapore)"
+          "value": "Country"
         },
         {
           "component": "richtext",
@@ -192,16 +192,16 @@
           "component": "text",
           "name": "countryError",
           "label": "Country Error Message",
-          "description": "Shown when no country is entered. Inline layout only.",
+          "description": "Shown when no country is selected. Inline layout only.",
           "valueType": "string",
           "required": true,
-          "value": "Please enter your country."
+          "value": "Please select your country."
         },
         {
           "component": "text",
           "name": "countryInvalidError",
           "label": "Country Invalid Error Message",
-          "description": "Shown when the entered country name is not recognised. Inline layout only.",
+          "description": "No longer used (country is a dropdown); kept so existing authored content keeps its cell order.",
           "valueType": "string",
           "required": true,
           "value": "Enter a valid country name."
