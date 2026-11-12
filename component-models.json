@@ -1354,21 +1354,17 @@
             "component": "aem-tag",
             "name": "categoryTag",
             "label": "Category Tag",
-            "description": "Select one category tag, such as Culture, Wellness, Indulgence, or Family.",
+            "description": "Select one tag under Capella Hotels matching Associated Filter Tags on the experience Content Fragments. Complete before publishing.",
             "valueType": "string",
             "multi": false,
-            "required": true,
-            "validation": {
-              "rootPath": "/content/cq:tags/capella-hotels"
-            }
+            "required": false
           },
           {
             "component": "text",
             "name": "label",
             "label": "Category Tab Label",
             "description": "Visitor-facing label for this category, translated for the page language.",
-            "valueType": "string",
-            "required": true
+            "valueType": "string"
           }
         ]
       },

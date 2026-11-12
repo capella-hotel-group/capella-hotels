@@ -11,10 +11,16 @@ jest.mock('@/app/scripts.js', () => ({
   },
 }));
 
+jest.mock('@/app/aem.js', () => ({ loadCSS: jest.fn().mockResolvedValue(undefined) }));
 jest.mock('@/utils/env.js', () => ({
   getPublishBaseUrl: () => 'https://publish.example.com',
   resolveDAMUrl: (value: string) => value,
 }));
+
+const flushModalOpen = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 describe('filters-grid authored filters', () => {
   const fetchMock = jest.fn();
@@ -84,6 +90,7 @@ describe('filters-grid authored filters', () => {
       const action = block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!;
       expect(action.textContent).toContain('Bangkok');
       action.click();
+      await flushModalOpen();
       const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
       expect(Boolean(modal.querySelector('.filters-grid-modal-eyebrow'))).toBe(showEyebrow);
       expect(Boolean(modal.querySelector('.filters-grid-modal-category'))).toBe(showCategory);
@@ -118,6 +125,7 @@ describe('filters-grid authored filters', () => {
     const block = createItemBlock();
     await decorate(block);
     block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    await flushModalOpen();
     const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
     expect(modal.querySelector('.filters-grid-modal-eyebrow')?.textContent).toBe('Bangkok');
     expect(modal.querySelector('.filters-grid-modal-category')?.textContent).toBe('Bangkok');
@@ -175,6 +183,7 @@ describe('filters-grid authored filters', () => {
     const block = createItemBlock();
     await decorate(block);
     block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    await flushModalOpen();
     const modal = document.querySelector('.filters-grid-modal:not([hidden])')!;
     expect(modal).not.toBeNull();
     expect(modal.querySelector('.filters-grid-modal-cta')).toBeNull();
@@ -248,7 +257,10 @@ describe('filters-grid authored filters', () => {
     });
     const block = createItemBlock();
     await decorate(block);
-    if (behavior === 'popup') block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    if (behavior === 'popup') {
+      block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+      await flushModalOpen();
+    }
     const link =
       behavior === 'popup'
         ? document.querySelector<HTMLAnchorElement>('.filters-grid-modal a')
@@ -782,6 +794,7 @@ describe('filters-grid authored filters', () => {
     const block = createItemBlock();
     await decorate(block);
     block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+    await flushModalOpen();
     const media = document.querySelector(
       variant === 'square' ? '.filters-grid-modal-feature' : '.filters-grid-modal-media',
     )!;
@@ -1267,6 +1280,7 @@ describe('filters-grid authored filters', () => {
     expect(imageSources).toHaveBeenCalledWith('/feature.jpg');
     if (variant === 'square') expect(imageSources).toHaveBeenCalledWith('/slide-one.jpg');
     trigger.click();
+    await flushModalOpen();
     const modal = document.querySelector<HTMLElement>('.filters-grid-modal')!;
     expect(modal.hidden).toBe(false);
     const media = modal.querySelector<HTMLElement>(
@@ -1283,6 +1297,7 @@ describe('filters-grid authored filters', () => {
     modal.querySelector<HTMLButtonElement>('.filters-grid-modal-pagination button:last-child')?.click();
     expect(modal.querySelector<HTMLImageElement>('img[src="/slide-two.jpg"]')?.loading).toBe('eager');
     trigger.click();
+    await flushModalOpen();
     expect(modal.querySelectorAll('.filters-grid-modal-content')).toHaveLength(1);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(modal.hidden).toBe(true);
@@ -1300,3 +1315,4 @@ describe('filters-grid authored filters', () => {
     expect(block.querySelectorAll('.filters-grid-mode-item:not(.is-inactive) .filters-grid-filter')).toHaveLength(2);
   });
 });
+jest.mock('@/utils/tag-title.js', () => ({ setTagTitle: jest.fn() }));

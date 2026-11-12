@@ -1,0 +1,412 @@
+main .experience-events-grid {
+    background: var(--color-surface-general-subtle);
+    color: var(--color-text-main-body);
+}
+
+main .experience-events-grid .experience-events-grid-config {
+    display: none;
+}
+
+main .experience-events-grid .experience-events-grid-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 96px 24px 48px;
+}
+
+main .experience-events-grid .experience-events-grid-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--color-text-main-heading);
+    text-align: center;
+}
+
+main .experience-events-grid .experience-events-grid-eyebrow,
+main .experience-events-grid .experience-events-grid-schedule {
+    margin: 0;
+    font-size: 12px;
+    line-height: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-box: trim-both cap alphabetic;
+}
+
+main .experience-events-grid .experience-events-grid-title {
+    font-family: var(--type-font-family-heading);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 40px;
+}
+
+main .experience-events-grid :is(.experience-events-grid-title, .experience-events-grid-eyebrow) p {
+    margin: 0;
+}
+
+main .experience-events-grid .experience-events-grid-heading > :empty {
+    display: none;
+}
+
+main .experience-events-grid .experience-events-grid-dates {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+}
+
+main .experience-events-grid button {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+main .experience-events-grid .experience-events-grid-date-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    min-height: 56px;
+    padding: 16px 0 16px 20px;
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-heading);
+    font-size: 16px;
+    line-height: 24px;
+    text-align: start;
+}
+
+main .experience-events-grid .experience-events-grid-date-toggle::before {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    background: currentcolor;
+    content: '';
+    mask: url('/icons/booking-calendar.svg') center / 20px 20px no-repeat;
+}
+
+main .experience-events-grid .experience-events-grid-date-toggle::after {
+    width: 8px;
+    height: 8px;
+    margin-inline: 8px;
+    border-inline-end: 1px solid currentcolor;
+    border-block-end: 1px solid currentcolor;
+    content: '';
+    transform: rotate(45deg);
+}
+
+main .experience-events-grid .experience-events-grid-date-panel {
+    position: absolute;
+    z-index: 4;
+    inset-block-start: 100%;
+    inset-inline-end: 0;
+    display: grid;
+    gap: 16px;
+    width: min(100%, 360px);
+    padding: 20px;
+    border: 1px solid var(--color-stroke-main-secondary);
+    background: var(--color-surface-general-subtle);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+
+main .experience-events-grid .experience-events-grid-date-label {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+main .experience-events-grid input[type='date'] {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px;
+    border: 1px solid var(--color-stroke-main-primary);
+    background: var(--color-surface-primary-default);
+    color: var(--color-text-main-body);
+    font: inherit;
+}
+
+main .experience-events-grid .experience-events-grid-date-actions {
+    display: flex;
+    gap: 24px;
+}
+
+main .experience-events-grid .experience-events-grid-date-actions button {
+    min-height: 44px;
+    padding: 8px;
+    text-decoration: underline;
+}
+
+main .experience-events-grid .experience-events-grid-tabs {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    overflow-x: auto;
+    padding-block: 4px;
+    scrollbar-width: none;
+}
+
+main .experience-events-grid .experience-events-grid-category-item {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 16px;
+}
+
+main .experience-events-grid .experience-events-grid-category-item::before {
+    width: 1px;
+    height: 20px;
+    background: var(--color-stroke-main-primary);
+    content: '';
+}
+
+main .experience-events-grid .experience-events-grid-category {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0;
+    color: var(--color-text-action-inactive);
+    font-size: 16px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+main .experience-events-grid .experience-events-grid-category[aria-pressed='true'] {
+    color: var(--color-text-action-default);
+}
+
+main .experience-events-grid .experience-events-grid-category:disabled {
+    cursor: default;
+}
+
+main .experience-events-grid .experience-events-grid-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+main .experience-events-grid .experience-events-grid-item {
+    min-width: 0;
+    margin: 0;
+}
+
+main .experience-events-grid .experience-events-grid-card {
+    display: grid;
+    grid-template-columns: minmax(0, 128px) minmax(0, 1fr);
+    gap: 16px;
+    width: 100%;
+    padding: 0;
+    color: inherit;
+    text-align: start;
+    text-decoration: none;
+}
+
+main .experience-events-grid .experience-events-grid-media {
+    position: relative;
+    align-self: start;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    background: var(--color-surface-general-default);
+}
+
+main .experience-events-grid .experience-events-grid-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+main .experience-events-grid .experience-events-grid-media:not(.no-overlay)::after {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 20%);
+    content: '';
+    pointer-events: none;
+}
+
+main .experience-events-grid .experience-events-grid-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    padding-top: 4px;
+    overflow-wrap: anywhere;
+}
+
+main .experience-events-grid .experience-events-grid-card-title {
+    margin: 0;
+    font-family: var(--type-font-family-heading);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 22px;
+}
+
+main .experience-events-grid .experience-events-grid-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+}
+
+main .experience-events-grid :is(.experience-events-grid-duration, .experience-events-grid-price) {
+    margin: 0;
+    font-size: 16px;
+    line-height: 18px;
+}
+
+main .experience-events-grid .experience-events-grid-duration {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+main .experience-events-grid .experience-events-grid-duration::before {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    background: currentcolor;
+    content: '';
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cg fill='none' stroke='black' stroke-width='1'%3E%3Ccircle cx='9' cy='9' r='7.5'/%3E%3Cpath d='M9 4.5V9l3 2'/%3E%3C/g%3E%3C/svg%3E")
+        center / contain no-repeat;
+}
+
+main .experience-events-grid .experience-events-grid-price {
+    font-family: var(--type-font-family-heading);
+}
+
+main .experience-events-grid .experience-events-grid-reveal-more {
+    align-self: center;
+    min-height: 44px;
+    padding: 12px 0;
+    color: var(--color-text-action-default);
+    font-size: 16px;
+    line-height: 18px;
+    text-decoration: underline;
+    text-transform: uppercase;
+}
+
+main .experience-events-grid .experience-events-grid-announcement {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+main
+    .experience-events-grid
+    :is(.experience-events-grid-status, .experience-events-grid-warning, .experience-events-grid-date-error) {
+    margin: 0;
+}
+
+main .experience-events-grid :is(button, a, input):focus-visible {
+    outline: 2px solid var(--color-text-action-default);
+    outline-offset: 3px;
+}
+
+@media (min-width: 768px) {
+    main .experience-events-grid .experience-events-grid-shell {
+        gap: 40px;
+        padding: 112px 48px 48px;
+    }
+
+    main .experience-events-grid .experience-events-grid-heading {
+        gap: 14px;
+        text-align: start;
+    }
+
+    main .experience-events-grid .experience-events-grid-title {
+        font-size: 44px;
+        line-height: 44px;
+    }
+
+    main .experience-events-grid .experience-events-grid-title > p + p {
+        padding-inline-start: 32px;
+    }
+
+    main .experience-events-grid :is(.experience-events-grid-eyebrow, .experience-events-grid-schedule) {
+        font-size: 14px;
+        line-height: 16px;
+    }
+
+    main .experience-events-grid .experience-events-grid-dates {
+        justify-content: flex-end;
+    }
+
+    main .experience-events-grid :is(.experience-events-grid-date-toggle, .experience-events-grid-category) {
+        font-size: 18px;
+        line-height: 18px;
+    }
+
+    main .experience-events-grid .experience-events-grid-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 64px 40px;
+    }
+
+    main .experience-events-grid .experience-events-grid-card {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: 100%;
+    }
+
+    main .experience-events-grid .experience-events-grid-card-content {
+        flex: 1;
+        gap: 14px;
+        width: 100%;
+        padding-top: 0;
+    }
+
+    main .experience-events-grid .experience-events-grid-card-title {
+        font-size: 24px;
+        line-height: 24px;
+    }
+
+    main .experience-events-grid .experience-events-grid-metadata {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    main .experience-events-grid :is(.experience-events-grid-duration, .experience-events-grid-price) {
+        font-size: 18px;
+    }
+
+    main .experience-events-grid .experience-events-grid-price {
+        margin-inline-start: auto;
+        text-align: end;
+    }
+}
+
+@media (min-width: 1200px) {
+    main .experience-events-grid .experience-events-grid-shell {
+        gap: 48px;
+        padding: 120px 80px 48px;
+    }
+
+    main .experience-events-grid .experience-events-grid-title {
+        font-size: 48px;
+        line-height: 48px;
+    }
+
+    main .experience-events-grid .experience-events-grid-list {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    main .experience-events-grid .experience-events-grid-card-content {
+        min-height: 103px;
+    }
+}
+
+main .experience-events-grid [hidden] {
+    display: none;
+}

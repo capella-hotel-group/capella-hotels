@@ -16,7 +16,7 @@ Use **Show Filter Tab Labels** to show or hide all tab labels together:
 - With two or more modes, labels are shown as tabs when enabled. The mode containing the default category is selected initially; otherwise, the first authored mode is used.
 - When labels are hidden, the active mode remains available for filtering, but no mode labels or tabs are displayed.
 
-Hiding labels also removes the space reserved for them. Choose each filter tag explicitly and add one category entry for every filter to display. A tag link's display title is used for its filter label when available; otherwise, the label is derived from the tag path. No tag API request is needed for the new child-item model.
+Hiding labels also removes the space reserved for them. Choose each filter tag explicitly and add one category entry for every filter to display. Display labels use the published tag title from the tag servlet, so changing a title such as Bangkok to Bangkok new does not change filtering. Lookups are cached per parent taxonomy and page language during the page session. Authored labels or tag-path labels remain as fallbacks when the title service is unavailable. Tag IDs, not titles, remain the matching keys.
 
 ## Category Settings And Default Category
 
@@ -43,6 +43,7 @@ Popup details are authored in a separate Content Fragment and selected from the 
 In the Filters Grid block settings, **Show Modal Eyebrow** and **Show Modal Category Tag** independently control these texts in every popup opened from that block, for both Split Image and Landscape layouts. Both default to shown, including on existing pages without these settings. Hiding the category removes its column so the description moves to the normal left edge. These settings affect popup display only; card labels, tags, and filtering remain unchanged. No Content Fragment or GraphQL changes are needed.
 
 Leave the CTA label blank to omit the CTA in either layout; its URL is not resolved when the label is empty.
+Filters Grid and Experience Events Grid share the same popup implementation and stylesheet; each grid keeps its own test IDs and category/eyebrow display behavior.
 At desktop sizes, Landscape uses a 792px-wide popup with a 720 x 405px banner; Split Image uses a 760px-wide popup with two 344 x 344px images. Both use a 600px popup height when a CTA is displayed, capped to fit the viewport. Without a displayed CTA, both layouts use content height. Normal modal padding remains. Smaller viewports retain responsive image ratios and scrolling for longer content.
 Carousel dots appear only when that carousel contains more than one image. In Split Image (square), the feature image is separate from the right-hand carousel. In Landscape (wide), the feature image is the first carousel slide.
 
