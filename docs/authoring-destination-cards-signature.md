@@ -91,6 +91,31 @@ These fields configure the entire block's appearance and behavior. Set them once
 
 ---
 
+### Destination Parent Tag Path
+
+**Field Type:** Text  
+**Required:** ✅ Yes  
+**Default:** `/content/cq:tags/capella-hotels/destination`  
+**Purpose:** Specifies the parent tag path from which all destination tags are fetched and cached. This enables the modal to display destination titles from the tag hierarchy.  
+**Example:** `/content/cq:tags/capella-hotels/destination` or `capella-hotels/destination`  
+**How It Works:**
+
+1. When the block loads, it fetches all child tags from this parent path
+2. The destination titles are cached for fast lookup
+3. When rendering each destination in the modal, the block looks up its title in the cache
+4. If a title is not found, the block displays the last segment of the tag path as a fallback (e.g., "bali" from "location:asia/bali")
+5. If the fetch fails, fallback to last segment is used gracefully
+
+**Best Practice:**
+
+- Use the default value unless you have a different tag hierarchy
+- Ensure the parent tag path exists in AEM tag manager
+- All destination tags should be children of this parent path
+- Tag children should have meaningful titles set in the tag manager
+- Common parent paths: `locations`, `destinations`, `capella-hotels/destination`
+
+---
+
 ### Modal Heading
 
 **Field Type:** Text  
