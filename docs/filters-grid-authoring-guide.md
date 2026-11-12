@@ -40,6 +40,8 @@ The five coloured backgrounds use the supplied Figma gradient angles, stops, and
 
 Popup details are authored in a separate Content Fragment and selected from the main card Content Fragment. Configure the popup description, image layout, feature and carousel images with alt text, and optional CTA. Publish the referenced popup Content Fragment before testing the card.
 
+In the Filters Grid block settings, **Show Modal Eyebrow** and **Show Modal Category Tag** independently control these texts in every popup opened from that block, for both Split Image and Landscape layouts. Both default to shown, including on existing pages without these settings. Hiding the category removes its column so the description moves to the normal left edge. These settings affect popup display only; card labels, tags, and filtering remain unchanged. No Content Fragment or GraphQL changes are needed.
+
 Leave the CTA label blank to omit the CTA in either layout; its URL is not resolved when the label is empty.
 At desktop sizes, Landscape uses a 792px-wide popup with a 720 x 405px banner; Split Image uses a 760px-wide popup with two 344 x 344px images. Both use a 600px popup height when a CTA is displayed, capped to fit the viewport. Without a displayed CTA, both layouts use content height. Normal modal padding remains. Smaller viewports retain responsive image ratios and scrolling for longer content.
 Carousel dots appear only when that carousel contains more than one image. In Split Image (square), the feature image is separate from the right-hand carousel. In Landscape (wide), the feature image is the first carousel slide.

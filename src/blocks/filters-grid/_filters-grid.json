@@ -83,6 +83,22 @@
           "label": "Reveal More CTA Text",
           "valueType": "string",
           "value": "Reveal More"
+        },
+        {
+          "component": "boolean",
+          "name": "showModalEyebrow",
+          "label": "Show Modal Eyebrow",
+          "description": "Show the location eyebrow in all popups opened from this block, in both image layouts. Hiding it does not change filtering.",
+          "valueType": "boolean",
+          "value": true
+        },
+        {
+          "component": "boolean",
+          "name": "showModalCategoryTag",
+          "label": "Show Modal Category Tag",
+          "description": "Show the selected category below the images in all popups opened from this block, in both image layouts. Hiding it removes its layout space without changing filtering.",
+          "valueType": "boolean",
+          "value": true
         }
       ]
     },
