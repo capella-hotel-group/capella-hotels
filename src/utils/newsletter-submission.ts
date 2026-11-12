@@ -19,6 +19,12 @@ function loadCountryCodes(): Promise<CountryCodesApi> {
   return countryCodesPromise;
 }
 
+/** ISO 3166 English names, which `submitNewsletterForm` maps back to alpha-2 codes. */
+export async function loadCountryNames(): Promise<string[]> {
+  const countryCodes = await loadCountryCodes();
+  return Object.values(countryCodes.getNames('en', { select: 'official' })).sort((a, b) => a.localeCompare(b));
+}
+
 const API_ENDPOINT = `${getBasePathBasedOnEnv()}/content/servlet.newslettersubscription.json`;
 const OPTIONS_GRAPHQL_QUERY = '/graphql/execute.json/capella-hotels/ListCF';
 const OPTION_KEYS = ['options', 'items', 'elements', 'values', 'list', 'salutations', 'countries'];

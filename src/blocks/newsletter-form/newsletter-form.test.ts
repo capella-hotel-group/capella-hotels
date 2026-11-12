@@ -50,6 +50,12 @@ function buildBlock({
   return block;
 }
 
+async function waitFor(condition: () => boolean): Promise<void> {
+  for (let i = 0; i < 50 && !condition(); i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
 function fillModalRequiredFields(country: string): HTMLFormElement {
   const form = document.querySelector<HTMLFormElement>('.newsletter-form-element')!;
   form.querySelector<HTMLSelectElement>('select[name="salutation"]')!.value = 'Mr';
@@ -194,14 +200,16 @@ describe('newsletter-form hCaptcha toggle', () => {
     expect(country.placeholder).toBe('Enter your country');
   });
 
-  it('keeps Country as a text input in Inline layout', async () => {
+  it('renders Country as a required dropdown of ISO country names in Inline layout', async () => {
     Object.assign(window, { hlx: { codeBasePath: '' } });
-    await decorate(buildBlock({ layout: 'Inline' }));
+    await decorate(buildBlock({ layout: 'Inline', countryPlaceholder: 'Select country' }));
 
-    expect(document.querySelector('select[name="country"]')).toBeNull();
-    const country = document.querySelector<HTMLInputElement>('input[name="country"]')!;
-    expect(country.type).toBe('text');
+    await waitFor(() => document.querySelectorAll('select[name="country"] option').length > 1);
+    expect(document.querySelector('input[name="country"]')).toBeNull();
+    const country = document.querySelector<HTMLSelectElement>('select[name="country"]')!;
     expect(country.required).toBe(true);
+    expect(country.options[0].textContent).toBe('Select country');
+    expect([...country.options].map((option) => option.value)).toContain('Singapore');
   });
 
   it('converts a full country name to an ISO alpha-2 code before submission', async () => {

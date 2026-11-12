@@ -1,6 +1,6 @@
 import { getHCaptchaSiteKey as getEnvHCaptchaSiteKey } from '@/utils/env.js';
 import { loadHCaptcha } from '@/utils/hcaptcha.js';
-import { resolveNewsletterProperty, submitNewsletterForm } from '@/utils/newsletter-submission.js';
+import { loadCountryNames, resolveNewsletterProperty, submitNewsletterForm } from '@/utils/newsletter-submission.js';
 
 const DEFAULT_SALUTATION_OPTIONS = ['Mr', 'Mrs', 'Ms', 'Mx', 'Dr'];
 
@@ -56,7 +56,7 @@ const MESSAGE_DEFAULTS: Record<MessageKey, string> = {
   salutationError: 'Please select a title.',
   firstNameError: 'Please enter your first name.',
   lastNameError: 'Please enter your last name.',
-  countryError: 'Please enter your country.',
+  countryError: 'Please select your country.',
   countryInvalidError: 'Enter a valid country name.',
   emailRequiredError: 'Please enter a valid email address.',
   emailFormatError: 'Please enter a valid email address.',
@@ -268,14 +268,18 @@ function buildSelect(name: string, placeholder: string, options: string[]): HTML
   blank.textContent = placeholder;
   select.append(blank);
 
+  appendOptions(select, options);
+
+  return select;
+}
+
+function appendOptions(select: HTMLSelectElement, options: string[]): void {
   options.forEach((opt) => {
     const option = document.createElement('option');
     option.value = opt;
     option.textContent = opt;
     select.append(option);
   });
-
-  return select;
 }
 
 /** Builds a text/email input. */
@@ -763,11 +767,12 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       cfg.lastNameLabel,
       fieldId('last-name'),
     );
-    const country = buildInlineField(
-      buildInput('country', 'text', cfg.countryPlaceholder),
-      cfg.countryLabel,
-      fieldId('country'),
-    );
+    const countrySelect = buildSelect('country', cfg.countryPlaceholder, []);
+    countrySelect.autocomplete = 'country-name';
+    const country = buildInlineField(countrySelect, cfg.countryLabel, fieldId('country'));
+    loadCountryNames()
+      .then((names) => appendOptions(countrySelect, names))
+      .catch((error: unknown) => console.error('Newsletter country list error:', error));
     const email = buildInlineField(buildInput('email', 'email', cfg.emailLabel), cfg.emailLabel, fieldId('email'));
     const consent = buildInlineConsent(cfg.consentHTML, `newsletter-inline-consent-${uid}`);
     consentCheckbox = consent.control;
@@ -923,7 +928,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     revalidate: validateInline,
     flagCountryInvalid: () => {
       if (!inlineCountry) return;
-      setFieldError(inlineCountry.control, inlineCountry.error, cfg.messages.countryInvalidError);
+      setFieldError(inlineCountry.control, inlineCountry.error, cfg.messages.countryError);
       inlineCountry.control.focus();
     },
     reset: () => {
