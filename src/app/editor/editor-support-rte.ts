@@ -6,6 +6,8 @@ const NAV_RTE_HELP_ITEMS = [
   '| open-in-new-tab: Opens a link in a new tab.',
   '| open-in-same-tab: Keeps a link in the current tab (default).',
   '| merge-columns: Joins this region with the next when the combined output has four or fewer columns.',
+  '| nav--global: Add to a first-level navigation entry on a global page.',
+  '| nav--destination: Add to a first-level navigation entry in a hotel page.',
 ];
 
 function addNavRteHelp(container: Document | HTMLElement): void {
