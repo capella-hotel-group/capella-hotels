@@ -71,6 +71,8 @@ link, a menu link, or a labeled region heading using ` | marker`:
   has four or fewer columns. If it would exceed four, the marker is ignored and both
   regions render separately; no links are dropped. Merging is pairwise and does not
   chain across additional regions. A marker on the last region has no effect.
+- `nav--global` is added to a first-level navigation entry on a global page.
+- `nav--destination` is added to a first-level navigation entry in a hotel page.
 
 A merged pair is laid out in a single row of up to four columns. For example, author two
 neighboring labeled regions with two links each:
