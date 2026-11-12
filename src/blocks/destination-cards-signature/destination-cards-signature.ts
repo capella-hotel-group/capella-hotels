@@ -1,5 +1,6 @@
 import { moveInstrumentation } from '@/app/scripts.js';
 import { createCarouselControls } from '../destination-cards/carousel.ts';
+import { tagTitle, normalizeTag } from '@/utils/tags.js';
 
 function stripHtml(html: string): string {
   const wrapper = document.createElement('div');
@@ -33,7 +34,7 @@ function setLinkAttributes(link: HTMLAnchorElement, href: string, openInNewTab: 
 }
 
 interface DestinationMapping {
-  location: string;
+  tag: string;
   url: string;
 }
 
@@ -224,8 +225,14 @@ function buildModal(config: BlockConfig): HTMLDivElement {
 
     const destinationName = document.createElement('h3');
     destinationName.className = 'destination-cards-signature-destination-name';
-    destinationName.textContent = mapping.location;
+    // Show fallback immediately while fetching tag title
+    destinationName.textContent = (mapping.tag.split('/').pop()?.split(':').pop() || mapping.tag).replace(/[-_]/g, ' ');
     destinationItem.append(destinationName);
+
+    // Fetch and update tag title asynchronously
+    void tagTitle(mapping.tag).then((title) => {
+      destinationName.textContent = title;
+    });
 
     destinationList.append(destinationItem);
   });
@@ -464,13 +471,14 @@ function getBlockConfig(rows: Element[]): { config: BlockConfig; cardStartIndex:
           continue;
         }
 
-        // Get destination name from current <p>
-        const namePara = child.tagName === 'P' ? child : null;
-        const destinationName = namePara ? textFromCell(namePara) : '';
+        // Get destination tag from current <p> or <a>
+        const tagPara = child.tagName === 'P' ? child : null;
+        const tagLink = tagPara?.querySelector<HTMLAnchorElement>('a[href*="/content/cq:tags/"]');
+        const destinationTag = normalizeTag(tagLink?.getAttribute('href') || textFromCell(tagPara));
 
         // Get destination link from next <p> with <a>
         let destinationLink = '';
-        if (destinationName && idx + 1 < children.length) {
+        if (destinationTag && idx + 1 < children.length) {
           const linkPara = children[idx + 1];
           if (linkPara && linkPara.tagName === 'P') {
             const link = linkPara.querySelector('a');
@@ -479,9 +487,9 @@ function getBlockConfig(rows: Element[]): { config: BlockConfig; cardStartIndex:
           }
         }
 
-        if (destinationName && destinationLink) {
+        if (destinationTag && destinationLink) {
           config.destinationMappings.push({
-            location: destinationName,
+            tag: destinationTag,
             url: destinationLink,
           });
         }
