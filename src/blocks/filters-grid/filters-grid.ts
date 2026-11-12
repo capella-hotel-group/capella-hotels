@@ -1,6 +1,13 @@
 import { moveInstrumentation } from '@/app/scripts.js';
+import { createExperienceModal } from '@/components/experience-modal.js';
+import { setTagTitle } from '@/utils/tag-title.js';
+import type { ExperienceCard } from '@/types/experience.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
+import { normalizeChoice, resolveCardHref } from '@/utils/experience-url.js';
 import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
+
+export type FilterGridCard = ExperienceCard;
+export { normalizeChoice, resolveCardHref };
 
 const PERSISTED_QUERY = '/graphql/execute.json/capella-hotels/Filter-grid-card';
 const PAGE_SIZE = 6;
@@ -9,41 +16,7 @@ const ITEM_MODEL = 'filters-grid-tab';
 
 const ALLOWED_RICH_TEXT_TAGS = new Set(['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'blockquote']);
 
-interface Reference {
-  _path?: string | null;
-  _publishUrl?: string | null;
-}
-
-interface ModalDetails {
-  modalDescription?: { html?: string | null } | null;
-  modalImageAspectRatioVariant?: string | null;
-  modalFeatureImageAsset?: Reference | null;
-  modalFeatureImageAssetAltText?: string | null;
-  modalFeatureImageDarkImageOverlay?: boolean | null;
-  carouselImages?: Array<Reference | null> | null;
-  carouselImagesAltText?: Array<string | null> | null;
-  modalCtaUrlType?: string | null;
-  modalCtaLabel?: string | null;
-  modalCtaUrlInternal?: Reference | null;
-  modalCtaUrlExternal?: string | null;
-  openInNewTab?: boolean | null;
-}
-
-export interface FilterGridCard {
-  _path?: string;
-  cardLocationTag?: string[] | null;
-  cardHeadline?: string | null;
-  cardBackgroundPhoto?: Reference | null;
-  cardBackgroundPhotoAltText?: string | null;
-  CardBackgroundPhotoDarkImageOverlay?: boolean | null;
-  associatedFilterTags?: string[] | null;
-  cardClickActionBehavior?: string | null;
-  directDestinationUrlType?: string | null;
-  directDestinationUrl?: Reference | null;
-  directDestinationExternalUrl?: string | null;
-  openInNewTab?: boolean | null;
-  modalDetails?: ModalDetails | null;
-}
+type Reference = NonNullable<ExperienceCard['cardBackgroundPhoto']>;
 
 interface AuthoredFilter {
   label: string;
@@ -94,10 +67,6 @@ const editorCardCache = new WeakMap<HTMLElement, { path: string; cards: FilterGr
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
 
-export function normalizeChoice(value?: string | null): string {
-  return (value || '').trim().toLowerCase();
-}
-
 function normalizeColor(value: string): string {
   return normalizeChoice(value).replace(/\s+/g, '-');
 }
@@ -105,39 +74,6 @@ function normalizeColor(value: string): string {
 function referenceUrl(reference?: Reference | null): string {
   const value = reference?._publishUrl || reference?._path || '';
   return value ? resolveDAMUrl(value) : '';
-}
-
-function pageReferenceUrl(reference?: Reference | null): string {
-  const value = reference?._path?.trim() || reference?._publishUrl?.trim() || '';
-  if (!value) return '';
-  const url = new URL(value, window.location.href);
-  const isEds = /(?:\.aem\.(?:page|live)$|^localhost$|^127\.0\.0\.1$)/i.test(window.location.hostname);
-  const root = '/content/capella-hotels';
-  if (url.pathname === root || url.pathname.startsWith(`${root}/`) || url.pathname === `${root}.html`) {
-    if (!isEds) {
-      const path = /\.html$/i.test(url.pathname) ? url.pathname : `${url.pathname}.html`;
-      return `${path}${url.search}${url.hash}`;
-    }
-    const path = url.pathname.slice(root.length).replace(/\.html$/i, '') || '/';
-    return `${path}${url.search}${url.hash}`;
-  }
-  return value;
-}
-
-export function resolveCardHref(
-  card: Pick<FilterGridCard, 'directDestinationUrlType' | 'directDestinationUrl' | 'directDestinationExternalUrl'>,
-): string {
-  if (normalizeChoice(card.directDestinationUrlType) === 'external') {
-    return card.directDestinationExternalUrl?.trim() || '';
-  }
-  return pageReferenceUrl(card.directDestinationUrl);
-}
-
-function resolveModalHref(details: ModalDetails): string {
-  if (normalizeChoice(details.modalCtaUrlType) === 'external') {
-    return details.modalCtaUrlExternal?.trim() || '';
-  }
-  return pageReferenceUrl(details.modalCtaUrlInternal);
 }
 
 export function cardMatchesFilter(
@@ -655,195 +591,6 @@ function createImage(reference: Reference | null | undefined, alt: string): HTML
   return image;
 }
 
-function createModalImage(
-  reference: Reference | null | undefined,
-  alt: string,
-  eager = false,
-): HTMLImageElement | null {
-  const image = createImage(reference, alt);
-  if (!image) return null;
-  image.classList.add('filters-grid-modal-image');
-  image.loading = eager ? 'eager' : 'lazy';
-  image.fetchPriority = eager ? 'high' : 'auto';
-  const reveal = () => image.classList.add('is-loaded');
-  image.addEventListener('load', reveal, { once: true });
-  if (image.complete && image.naturalWidth) reveal();
-  return image;
-}
-
-function createImageSlider(images: HTMLImageElement[], className: string, placeholder = ''): HTMLElement {
-  const slider = document.createElement('div');
-  slider.className = className;
-  if (placeholder) slider.style.backgroundImage = placeholder;
-  const viewport = document.createElement('div');
-  viewport.className = `${className}-viewport`;
-  let activeIndex = 0;
-  const dots: HTMLButtonElement[] = [];
-
-  images.forEach((image, index) => {
-    image.hidden = index !== activeIndex;
-    if (index === activeIndex) image.loading = 'eager';
-    viewport.append(image);
-  });
-  slider.append(viewport);
-
-  if (images.length > 1) {
-    const pagination = document.createElement('div');
-    pagination.className = 'filters-grid-modal-pagination';
-    pagination.setAttribute('aria-label', 'Choose image');
-    images.forEach((_, index) => {
-      const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.setAttribute('aria-label', `Show image ${index + 1}`);
-      dot.setAttribute('aria-pressed', String(index === activeIndex));
-      dot.addEventListener('click', () => {
-        const current = images[activeIndex];
-        if (current) current.hidden = true;
-        dots[activeIndex]?.setAttribute('aria-pressed', 'false');
-        activeIndex = index;
-        const next = images[activeIndex];
-        if (next) {
-          next.loading = 'eager';
-          next.hidden = false;
-        }
-        dots[activeIndex]?.setAttribute('aria-pressed', 'true');
-      });
-      dots.push(dot);
-      pagination.append(dot);
-    });
-    slider.append(pagination);
-  }
-  return slider;
-}
-
-function createModal(config: BlockConfig) {
-  const overlay = document.createElement('div');
-  overlay.className = 'filters-grid-modal';
-  overlay.hidden = true;
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-
-  const panel = document.createElement('div');
-  panel.className = 'filters-grid-modal-panel';
-  const closeButton = document.createElement('button');
-  closeButton.type = 'button';
-  closeButton.className = 'filters-grid-modal-close';
-  closeButton.dataset.testid = 'filters-grid-modal-close';
-  closeButton.setAttribute('aria-label', 'Close details');
-  panel.append(closeButton);
-  overlay.append(panel);
-
-  let lastFocused: HTMLElement | null = null;
-  const close = () => {
-    overlay.hidden = true;
-    panel.querySelectorAll('.filters-grid-modal-content').forEach((content) => content.remove());
-    document.body.classList.remove('filters-grid-modal-open');
-    lastFocused?.focus({ preventScroll: true });
-  };
-
-  closeButton.addEventListener('click', close);
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) close();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !overlay.hidden) close();
-  });
-
-  const open = (card: FilterGridCard, selectedFilterLabel: string) => {
-    const details = card.modalDetails;
-    if (!details) return;
-    panel.querySelectorAll('.filters-grid-modal-content').forEach((content) => content.remove());
-    const content = document.createElement('div');
-    content.className = 'filters-grid-modal-content';
-    const variant = normalizeChoice(details.modalImageAspectRatioVariant) === 'wide' ? 'wide' : 'square';
-    panel.dataset.variant = variant;
-    overlay.setAttribute('aria-label', card.cardHeadline || 'Experience details');
-    const thumbnail = referenceUrl(card.cardBackgroundPhoto);
-    const placeholder = thumbnail ? `url(${JSON.stringify(thumbnail)})` : '';
-
-    const feature = createModalImage(
-      details.modalFeatureImageAsset,
-      details.modalFeatureImageAssetAltText || card.cardHeadline || '',
-      true,
-    );
-    const carouselImages = (details.carouselImages || [])
-      .map((image, index) => createModalImage(image, details.carouselImagesAltText?.[index] || ''))
-      .filter((image): image is HTMLImageElement => Boolean(image));
-    const mediaCopy = document.createElement('div');
-    mediaCopy.className = 'filters-grid-modal-media-copy';
-    if (config.showModalEyebrow) {
-      appendText(mediaCopy, 'p', 'filters-grid-modal-eyebrow', labelFromTag(card.cardLocationTag?.[0]));
-    }
-    appendText(mediaCopy, 'h2', 'filters-grid-modal-title', card.cardHeadline);
-
-    if (variant === 'square') {
-      const gallery = document.createElement('div');
-      gallery.className = 'filters-grid-modal-gallery';
-      const featurePanel = document.createElement('div');
-      featurePanel.className = 'filters-grid-modal-feature';
-      if (details.modalFeatureImageDarkImageOverlay === false) {
-        featurePanel.classList.add('filters-grid-modal-no-overlay');
-      }
-      if (placeholder) featurePanel.style.backgroundImage = placeholder;
-      if (feature) featurePanel.append(feature);
-      featurePanel.append(mediaCopy);
-      gallery.append(featurePanel);
-      if (carouselImages.length) {
-        gallery.append(createImageSlider(carouselImages, 'filters-grid-modal-carousel', placeholder));
-      }
-      content.append(gallery);
-    } else {
-      const media = document.createElement('div');
-      media.className = 'filters-grid-modal-media';
-      if (details.modalFeatureImageDarkImageOverlay === false) {
-        media.classList.add('filters-grid-modal-no-overlay');
-      }
-      if (placeholder) media.style.backgroundImage = placeholder;
-      const bannerImages = [feature, ...carouselImages].filter((image): image is HTMLImageElement => Boolean(image));
-      if (bannerImages.length) {
-        media.append(createImageSlider(bannerImages, 'filters-grid-modal-banner-slider'));
-      }
-      media.append(mediaCopy);
-      content.append(media);
-    }
-
-    const body = document.createElement('div');
-    body.className = 'filters-grid-modal-body';
-    body.classList.toggle('filters-grid-modal-body-no-category', !config.showModalCategoryTag);
-    if (config.showModalCategoryTag) {
-      appendText(body, 'p', 'filters-grid-modal-category', selectedFilterLabel);
-    }
-    if (details.modalDescription?.html) {
-      const description = document.createElement('div');
-      description.className = 'filters-grid-modal-description';
-      description.append(sanitizeRichText(details.modalDescription.html));
-      body.append(description);
-    }
-    const ctaLabel = details.modalCtaLabel?.trim();
-    const href = ctaLabel ? resolveModalHref(details) : '';
-    panel.classList.toggle('filters-grid-modal-no-cta', !ctaLabel || !href);
-    if (ctaLabel && href) {
-      const cta = document.createElement('a');
-      cta.className = 'filters-grid-modal-cta';
-      cta.dataset.testid = 'filters-grid-modal-cta';
-      cta.href = href;
-      cta.textContent = ctaLabel;
-      setNewTab(cta, details.openInNewTab);
-      body.append(cta);
-    }
-    content.append(body);
-    panel.append(content);
-
-    if (overlay.hidden) lastFocused = document.activeElement as HTMLElement | null;
-    overlay.hidden = false;
-    document.body.classList.add('filters-grid-modal-open');
-    closeButton.focus({ preventScroll: true });
-  };
-
-  document.body.append(overlay);
-  return { open };
-}
-
 function createCard(
   card: FilterGridCard,
   openModal: (card: FilterGridCard, selectedFilterLabel: string) => void,
@@ -894,7 +641,8 @@ function createCard(
   article.append(shade);
   const copy = document.createElement('span');
   copy.className = 'filters-grid-card-copy';
-  appendText(copy, 'p', 'filters-grid-card-location', labelFromTag(card.cardLocationTag?.[0]));
+  const location = appendText(copy, 'p', 'filters-grid-card-location', labelFromTag(card.cardLocationTag?.[0]));
+  if (location) setTagTitle(location, card.cardLocationTag?.[0] || '');
   appendText(copy, 'h3', 'filters-grid-card-title', card.cardHeadline);
   article.append(copy);
   const icon = document.createElement('span');
@@ -1005,7 +753,16 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
   reveal.dataset.testid = 'filters-grid-reveal-more';
   reveal.textContent = config.revealMoreLabel;
   if (config.revealElement) moveInstrumentation(config.revealElement, reveal);
-  const modal = createModal(config);
+  const modal = createExperienceModal({
+    testIdPrefix: 'filters-grid',
+    showModalEyebrow: config.showModalEyebrow,
+    showModalCategoryTag: config.showModalCategoryTag,
+  });
+  const openModal = (card: FilterGridCard, selectedFilterLabel: string) => {
+    void modal
+      .open(card, selectedFilterLabel, labelFromTag(card.cardLocationTag?.[0]), config.showModalCategoryTag)
+      .catch((error: unknown) => console.error('Filters Grid: popup could not be opened.', error));
+  };
   const itemFilterButtons = new Map<HTMLButtonElement, { modeKey: string; tag: string }>();
 
   if (config.itemLayout) {
@@ -1017,12 +774,16 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
       mode.labelElement?.classList.add('filters-grid-item-label');
       const filterList = document.createElement('div');
       filterList.className = 'filters-grid-filters';
-      mode.filters.forEach(({ tag, label }) => {
+      mode.filters.forEach((filter) => {
+        const { tag, label } = filter;
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'filters-grid-filter';
         button.dataset.testid = 'filters-grid-filter';
         button.textContent = label;
+        setTagTitle(button, tag, (title) => {
+          filter.label = title;
+        });
         button.addEventListener('click', () => {
           activateMode(mode.key);
           activeTag = tag;
@@ -1062,7 +823,7 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
           : [];
     const selectedFilterLabel =
       modes.find(({ key }) => key === activeMode)?.filters.find(({ tag }) => tag === activeTag)?.label || '';
-    const items = filtered.slice(0, visibleCount).map((card) => createCard(card, modal.open, selectedFilterLabel));
+    const items = filtered.slice(0, visibleCount).map((card) => createCard(card, openModal, selectedFilterLabel));
     if (!items.length) {
       const empty = document.createElement('li');
       empty.className = 'filters-grid-empty';
@@ -1093,13 +854,17 @@ function render(block: HTMLElement, config: BlockConfig, cards: FilterGridCard[]
       return;
     }
     const filterButtons: HTMLButtonElement[] = [];
-    (mode?.filters || []).forEach(({ label, tag }) => {
+    (mode?.filters || []).forEach((filter) => {
+      const { label, tag } = filter;
       const button = document.createElement('button');
       button.type = 'button';
       const selected = normalizeTagId(tag) === normalizeTagId(activeTag);
       button.className = `filters-grid-filter${selected ? ' is-active' : ''}`;
       button.dataset.testid = 'filters-grid-filter';
       button.textContent = label || labelFromTag(tag);
+      setTagTitle(button, tag, (title) => {
+        filter.label = title;
+      });
       button.setAttribute('aria-pressed', String(selected));
       button.addEventListener('click', () => {
         activeTag = tag;
