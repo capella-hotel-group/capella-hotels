@@ -551,6 +551,11 @@ button.header-menu-category-trigger::after {
     list-style: none;
 }
 
+header .header-menu-category-content.nav-destination .header-menu-link-grid,
+header .header-menu-category-content.nav-destination .header-menu-merged-row {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .header-menu-link-grid li,
 .header-menu-merged-cell {
     /* Grid items default to min-width:auto, which ignores the track's minmax(...) lower
@@ -777,6 +782,11 @@ button.header-menu-category-trigger::after {
 
 /* Desktop (>=1200px): rail + independent side panel, matching Figma node 4072:1805 */
 @media (min-width: 1200px) {
+    header .header-menu-category-content.nav-destination .header-menu-link-grid,
+    header .header-menu-category-content.nav-destination .header-menu-merged-row {
+        grid-template-columns: repeat(auto-fill, 125px);
+    }
+
     header {
         --site-header-inline: 80px;
     }

@@ -58,6 +58,30 @@ Author the Text component as a bullet-list RTE. Use either supported structure:
 
 Link destinations that should navigate. Plain-text entries render as non-clickable items.
 
+### Global and destination categories
+
+Append ` | nav--global` or ` | nav--destination` to each category's top-level
+label, for example:
+
+- Experiences | nav--destination
+  - [Overview](/singapore/en/overview) | open-in-new-tab
+  - [Little Star](/singapore/en/little-star) | open-in-same-tab
+
+The marker is removed from the displayed label and selects the category's
+`nav-global` or `nav-destination` CSS class. Classification uses this category
+marker, not the page URL or section `menu` metadata. Unmarked categories keep
+the existing global layout; unknown markers remain visible as authored text.
+
+Global categories retain their wrapping link grid. Destination links stack in
+one column on mobile and tablet, with 24px link boxes and 24px vertical gaps.
+On desktop (1200px and above), they use 125px grid columns with 48px horizontal
+gaps. Typography and accordion behavior remain shared with global navigation.
+
+Category target markers can appear before or after the navigation marker:
+`Experiences | nav--destination | open-in-new-tab` and
+`Experiences | open-in-new-tab | nav--destination` both preserve the target.
+Region `merge-columns` and individual link target markers work as before.
+
 ## 4. RTE markers
 
 Append one marker to the end of the logo-link Button, Book CTA, a language link, a category
