@@ -1,6 +1,6 @@
 import { moveInstrumentation } from '@/app/scripts.js';
 import { createCarouselControls } from '../destination-cards/carousel.ts';
-import { tagTitle, normalizeTag } from '@/utils/tags.js';
+import { fetchTagChildren, getTagTitle, normalizeTag } from '@/utils/tags.js';
 
 function stripHtml(html: string): string {
   const wrapper = document.createElement('div');
@@ -57,6 +57,7 @@ interface BlockConfig {
   title: string;
   description: string;
   backgroundStyle: string;
+  parentTagPath: string;
   modalHeading: string;
   destinationMappings: DestinationMapping[];
   modalSubmitLabel: string;
@@ -182,7 +183,7 @@ function buildCard(row: Element): HTMLLIElement {
   return item;
 }
 
-function buildModal(config: BlockConfig): HTMLDivElement {
+function buildModal(config: BlockConfig, childTitlesMap: Map<string, string>): HTMLDivElement {
   const modal = document.createElement('div');
   modal.className = 'destination-cards-signature-modal-wrapper';
 
@@ -225,15 +226,13 @@ function buildModal(config: BlockConfig): HTMLDivElement {
 
     const destinationName = document.createElement('h3');
     destinationName.className = 'destination-cards-signature-destination-name';
-    // Show fallback immediately while fetching tag title
-    destinationName.textContent = (mapping.tag.split('/').pop()?.split(':').pop() || mapping.tag).replace(/[-_]/g, ' ');
-    destinationItem.append(destinationName);
 
-    // Fetch and update tag title asynchronously
-    void tagTitle(mapping.tag).then((title) => {
+    // Get title from cached children map or fallback to last segment
+    void getTagTitle(mapping.tag, childTitlesMap).then((title) => {
       destinationName.textContent = title;
     });
 
+    destinationItem.append(destinationName);
     destinationList.append(destinationItem);
   });
 
@@ -423,8 +422,17 @@ function setupModalHandlers(block: Element, modal: HTMLElement): void {
 }
 
 function getBlockConfig(rows: Element[]): { config: BlockConfig; cardStartIndex: number } {
-  const [idRow, testIdRow, eyebrowRow, titleRow, descriptionRow, bgStyleRow, modalHeadingRow, modalSubmitLabelRow] =
-    rows.slice(0, 8);
+  const [
+    idRow,
+    testIdRow,
+    eyebrowRow,
+    titleRow,
+    descriptionRow,
+    bgStyleRow,
+    parentTagPathRow,
+    modalHeadingRow,
+    modalSubmitLabelRow,
+  ] = rows.slice(0, 9);
 
   const config: BlockConfig = {
     id: textFromCell(idRow?.firstElementChild || idRow),
@@ -433,14 +441,15 @@ function getBlockConfig(rows: Element[]): { config: BlockConfig; cardStartIndex:
     title: textFromCell(titleRow?.firstElementChild || titleRow),
     description: textFromCell(descriptionRow?.firstElementChild || descriptionRow),
     backgroundStyle: textFromCell(bgStyleRow?.firstElementChild || bgStyleRow) || 'signature-warm',
+    parentTagPath: textFromCell(parentTagPathRow?.firstElementChild || parentTagPathRow),
     modalHeading: textFromCell(modalHeadingRow?.firstElementChild || modalHeadingRow),
     destinationMappings: [],
     modalSubmitLabel: textFromCell(modalSubmitLabelRow?.firstElementChild || modalSubmitLabelRow),
   };
 
   // Parse destinationMappings: they are rows after config but before the first card row (which has an image)
-  let cardStartIndex = 8;
-  for (let i = 8; i < rows.length; i += 1) {
+  let cardStartIndex = 9;
+  for (let i = 9; i < rows.length; i += 1) {
     const row = rows[i];
     if (!row) break;
 
@@ -529,6 +538,9 @@ export default async function decorate(block: Element): Promise<void> {
     }
   }
 
+  // Fetch tag children from parent path and cache them
+  const childTitlesMap = await fetchTagChildren(config.parentTagPath);
+
   // Build intro section
   const intro = buildIntro(config);
   block.prepend(intro);
@@ -579,7 +591,7 @@ export default async function decorate(block: Element): Promise<void> {
   block.append(carousel);
 
   // Build and setup modal
-  const modal = buildModal(config);
+  const modal = buildModal(config, childTitlesMap);
   block.append(modal);
   setupModalHandlers(block, modal);
 }

@@ -1096,6 +1096,14 @@
       },
       {
         "component": "text",
+        "name": "parentTagPath",
+        "label": "Destination Parent Tag Path",
+        "valueType": "string",
+        "required": true,
+        "value": "/content/cq:tags/capella-hotels/destination"
+      },
+      {
+        "component": "text",
         "name": "modalHeading",
         "label": "Modal Heading",
         "valueType": "string",
