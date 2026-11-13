@@ -79,8 +79,11 @@ interface NavPromo {
   ctaHref: string;
 }
 
+type NavVariant = 'global' | 'destination';
+
 interface NavCategory {
   label: string;
+  variant: NavVariant;
   href: string;
   openInNewTab: boolean;
   regions: NavRegion[];
@@ -96,6 +99,16 @@ function splitMarker(raw: string): { label: string; marker: NavMarker | null } {
   const match = raw.match(/^(.*)\|\s*(open-in-new-tab|open-in-same-tab|merge-columns)\s*$/i);
   if (!match) return { label: raw.trim(), marker: null };
   return { label: (match[1] ?? '').trim(), marker: (match[2] ?? '').toLowerCase() as NavMarker };
+}
+
+function readCategoryMarker(raw: string): { label: string; variant: NavVariant } {
+  const { label, marker } = splitMarker(raw);
+  const match = label.match(/^(.*)\|\s*nav--(global|destination)\s*$/i);
+  if (!match) return { label: raw, variant: 'global' };
+  return {
+    label: `${match[1]?.trim() ?? ''}${marker ? ` | ${marker}` : ''}`,
+    variant: match[2]?.toLowerCase() === 'destination' ? 'destination' : 'global',
+  };
 }
 
 function getFragmentBasePath(): string {
@@ -223,9 +236,11 @@ function readCategoryFromList(rootList: Element): NavCategory | null {
   const topItem = rootList.querySelector(':scope > li');
   if (!topItem) return null;
   const anchor = topItem.querySelector<HTMLAnchorElement>(':scope > a');
-  const { label, marker } = splitMarker(directText(topItem));
+  const category = readCategoryMarker(directText(topItem));
+  const { label, marker } = splitMarker(category.label);
   return {
     label,
+    variant: category.variant,
     href: anchor?.getAttribute('href') ?? '',
     openInNewTab: marker === 'open-in-new-tab',
     regions: readCategoryRegions(topItem),
@@ -600,7 +615,7 @@ let regionLabelCount = 0;
 
 function buildCategoryContent(category: NavCategory): HTMLDivElement {
   const content = document.createElement('div');
-  content.className = 'header-menu-category-content';
+  content.className = `header-menu-category-content nav-${category.variant}`;
   content.inert = true;
 
   const inner = document.createElement('div');
