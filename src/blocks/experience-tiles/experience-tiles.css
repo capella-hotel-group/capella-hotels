@@ -153,6 +153,12 @@
    paths, so containment would only ever fire once the controller has deliberately released the page. */
 .experience-tiles .experience-tiles-overlay--scrollable {
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-text-main-inverse-heading) 65%, transparent) transparent;
+}
+
+.experience-tiles .experience-tiles-overlay--scrollable:is(:hover, :focus-visible) {
+    scrollbar-color: var(--color-text-main-inverse-heading) transparent;
 }
 
 /* Text starts as the panel approaches its resting position, connecting the two motions. */
@@ -313,15 +319,6 @@
 
     .experience-tiles .experience-tiles-item--left .experience-tiles-overlay {
         --experience-tiles-text-offset: calc(100% + var(--experience-tiles-media-padding-bottom));
-    }
-
-    .experience-tiles .experience-tiles-overlay--scrollable {
-        scrollbar-width: thin;
-        scrollbar-color: color-mix(in srgb, var(--color-text-main-inverse-heading) 65%, transparent) transparent;
-    }
-
-    .experience-tiles .experience-tiles-overlay--scrollable:is(:hover, :focus-visible) {
-        scrollbar-color: var(--color-text-main-inverse-heading) transparent;
     }
 
     .experience-tiles .experience-tiles-slide {
