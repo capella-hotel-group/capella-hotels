@@ -33,8 +33,13 @@
 
 .destination-cards-signature--default-light {
     background: var(--color-surface-page);
-    color: var(--color-text-main-body);
+    color: var(--color-text-main-heading);
     padding-block: var(--dimension-layout-module-padding-block);
+}
+
+.destination-cards-signature--default-light .destination-cards-signature-description,
+.destination-cards-signature--default-light .destination-cards-signature-card-description {
+    color: var(--color-text-main-body);
 }
 
 /* Intro Section */
