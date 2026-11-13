@@ -156,12 +156,16 @@
 }
 
 /* Text starts as the panel approaches its resting position, connecting the two motions. */
-.experience-tiles:not(.experience-tiles-pending) .experience-tiles-slide[aria-hidden='false'] .experience-tiles-overlay {
+.experience-tiles:not(.experience-tiles-pending)
+    .experience-tiles-slide[aria-hidden='false']
+    .experience-tiles-overlay {
     opacity: 1;
     transform: translateY(0);
     transition:
-        opacity var(--experience-tiles-text-duration) var(--experience-tiles-motion-easing) var(--experience-tiles-text-delay),
-        transform var(--experience-tiles-text-duration) var(--experience-tiles-motion-easing) var(--experience-tiles-text-delay);
+        opacity var(--experience-tiles-text-duration) var(--experience-tiles-motion-easing)
+            var(--experience-tiles-text-delay),
+        transform var(--experience-tiles-text-duration) var(--experience-tiles-motion-easing)
+            var(--experience-tiles-text-delay);
 }
 
 /* The right panel's text follows the same stagger as its image. */
@@ -297,6 +301,29 @@
         --experience-tiles-panel-stagger: 0ms;
     }
 
+    .experience-tiles .experience-tiles-media {
+        --experience-tiles-media-padding-bottom: 189px;
+
+        padding-bottom: var(--experience-tiles-media-padding-bottom);
+    }
+
+    .experience-tiles .experience-tiles-item--right .experience-tiles-media {
+        --experience-tiles-media-padding-bottom: 135px;
+    }
+
+    .experience-tiles .experience-tiles-item--left .experience-tiles-overlay {
+        --experience-tiles-text-offset: calc(100% + var(--experience-tiles-media-padding-bottom));
+    }
+
+    .experience-tiles .experience-tiles-overlay--scrollable {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--color-text-main-inverse-heading) 65%, transparent) transparent;
+    }
+
+    .experience-tiles .experience-tiles-overlay--scrollable:is(:hover, :focus-visible) {
+        scrollbar-color: var(--color-text-main-inverse-heading) transparent;
+    }
+
     .experience-tiles .experience-tiles-slide {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr;
@@ -330,15 +357,23 @@
    cancelled transition can finish at its final opacity/position too.
    The `:not()` only matches the specificity the active state gained from the same guard — without
    it these suppressions silently stop applying to the overlay. Same for the two rules below. */
-.experience-tiles:not(.experience-tiles-pending) .experience-tiles-slide.experience-tiles-slide--settling .experience-tiles-item,
-.experience-tiles:not(.experience-tiles-pending) .experience-tiles-slide.experience-tiles-slide--settling .experience-tiles-overlay {
+.experience-tiles:not(.experience-tiles-pending)
+    .experience-tiles-slide.experience-tiles-slide--settling
+    .experience-tiles-item,
+.experience-tiles:not(.experience-tiles-pending)
+    .experience-tiles-slide.experience-tiles-slide--settling
+    .experience-tiles-overlay {
     transition: none;
 }
 
 /* crossing a breakpoint mid-page-life recomputes each item's enter/exit transform; without this,
    hidden slides would visibly sweep through the frame while the media query switches */
-.experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending) .experience-tiles-slide .experience-tiles-item,
-.experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending) .experience-tiles-slide .experience-tiles-overlay {
+.experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending)
+    .experience-tiles-slide
+    .experience-tiles-item,
+.experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending)
+    .experience-tiles-slide
+    .experience-tiles-overlay {
     transition: none;
 }
 
