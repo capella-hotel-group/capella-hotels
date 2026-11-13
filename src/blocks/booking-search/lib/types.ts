@@ -38,6 +38,7 @@ export interface BookingConfig {
   bookingUrl: string;
   openInNewTab: boolean;
   showLocation: boolean;
+  hotelId: string;
 }
 
 export interface Selection {

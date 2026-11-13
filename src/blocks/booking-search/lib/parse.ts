@@ -19,8 +19,9 @@ const ROW = {
   maxAdults: 10,
   maxChildren: 11,
   showLocation: 12,
+  hotelId: 13,
 } as const;
-/** `showLocation` is excluded: it is a trailing optional row, so pages authored without it keep their identity rows aligned. */
+/** Trailing optional rows (`showLocation`, `hotelId`) are excluded, so pages authored without them keep their identity rows aligned. */
 const CONTENT_ROWS = ROW.showLocation;
 
 /** Upper bound on an authored maximum, so a typo cannot build a huge counter. */
@@ -38,7 +39,8 @@ function isLocationRow(row: HTMLElement, editing: boolean): boolean {
 function parseLocation(row: HTMLElement): Location | null {
   const [labelCell, codeCell] = cellsOf(row);
   const label = cellText(labelCell);
-  return label ? { label, code: cellText(codeCell) || label } : null;
+  const code = cellText(codeCell);
+  return label && code ? { label, code } : null;
 }
 
 /** Reads the authored rows and hides them, keeping them in the DOM so the editor tree stays intact. */
@@ -88,5 +90,6 @@ export function parseConfig(block: HTMLElement): BookingConfig {
     openInNewTab: cellText(contentRows[ROW.checkRatesOpenInNewTab]).toLowerCase() === 'true',
     // Rows authored before this field existed are empty, so the selector stays visible.
     showLocation: cellText(contentRows[ROW.showLocation]).toLowerCase() !== 'false',
+    hotelId: cellText(contentRows[ROW.hotelId]),
   };
 }

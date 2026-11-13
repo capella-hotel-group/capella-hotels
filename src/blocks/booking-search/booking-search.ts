@@ -1,5 +1,5 @@
 import { getPageLang } from '@/app/scripts';
-import { buildBookingUrl } from './lib/booking-url';
+import { buildBookingUrl, toSynxisLocale } from './lib/booking-url';
 import { buildCalendar } from './lib/calendar';
 import { el } from './lib/dom';
 import { buildField, isOpen } from './lib/field';
@@ -12,8 +12,9 @@ import { BLOCK, DEFAULT_ADULTS } from './lib/types';
 import type { Field, Selection } from './lib/types';
 
 export default function decorate(block: HTMLElement): void {
-  const { labels, locations, limits, bookingUrl, openInNewTab, showLocation } = parseConfig(block);
+  const { labels, locations, limits, bookingUrl, openInNewTab, showLocation, hotelId } = parseConfig(block);
   const lang = getPageLang();
+  const urlOptions = { requireLocation: showLocation, hotelId, locale: toSynxisLocale(lang) };
   // Figma writes dates day-first ("30 Jul - 31 Jul 2026"), which plain `en` (US) would not.
   const dateLocale = lang === 'en' ? 'en-GB' : lang;
   const shortDate = new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'short' });
@@ -29,7 +30,7 @@ export default function decorate(block: HTMLElement): void {
     submit.rel = 'noopener noreferrer';
   }
   const syncSubmit = (): void => {
-    const href = buildBookingUrl(bookingUrl, selection, showLocation);
+    const href = buildBookingUrl(bookingUrl, selection, urlOptions);
     if (href) {
       submit.href = href;
       submit.removeAttribute('aria-disabled');
