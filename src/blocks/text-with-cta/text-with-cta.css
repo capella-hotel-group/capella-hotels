@@ -288,6 +288,10 @@
     border-block-end-color: var(--color-text-action-default);
 }
 
+.text-with-cta .text-with-cta-field-control[aria-invalid='true'] {
+    border-block-end-color: var(--color-text-main-error);
+}
+
 .text-with-cta .text-with-cta-field-select .text-with-cta-field-control {
     appearance: none;
     padding-inline-end: calc(24px + var(--dimension-spacing-general-xs));
