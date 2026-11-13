@@ -539,9 +539,17 @@
         "component": "boolean",
         "name": "showLocation",
         "label": "Show Location Selector",
-        "description": "When off, the Location selector is hidden and no location is sent to the booking engine.",
+        "description": "When off, the Location selector is hidden and the Hotel ID below is sent to the booking engine.",
         "valueType": "boolean",
         "value": true
+      },
+      {
+        "component": "text",
+        "name": "hotelId",
+        "label": "Hotel ID",
+        "description": "SynXis Hotel ID used when the Location selector is hidden, e.g. 75985.",
+        "valueType": "string",
+        "value": ""
       }
     ]
   },
