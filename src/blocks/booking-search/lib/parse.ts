@@ -38,7 +38,8 @@ function isLocationRow(row: HTMLElement, editing: boolean): boolean {
 function parseLocation(row: HTMLElement): Location | null {
   const [labelCell, codeCell] = cellsOf(row);
   const label = cellText(labelCell);
-  return label ? { label, code: cellText(codeCell) || label } : null;
+  const code = cellText(codeCell);
+  return label && code ? { label, code } : null;
 }
 
 /** Reads the authored rows and hides them, keeping them in the DOM so the editor tree stays intact. */

@@ -498,7 +498,7 @@
         "component": "text",
         "name": "bookingUrl",
         "label": "Booking Engine URL",
-        "description": "Absolute https URL. The selected dates, guests and location are appended as query parameters.",
+        "description": "SynXis booking engine URL, e.g. https://be.synxis.com/. Chain, hotel, dates and guests are appended as query parameters.",
         "valueType": "string",
         "required": true,
         "value": ""
@@ -560,9 +560,10 @@
       {
         "component": "text",
         "name": "code",
-        "label": "Property Code",
-        "description": "Sent to the booking engine for this location. Falls back to the name when empty.",
+        "label": "Hotel ID",
+        "description": "SynXis Hotel ID for this location, e.g. 75985. Locations without it are not listed.",
         "valueType": "string",
+        "required": true,
         "value": ""
       }
     ]
