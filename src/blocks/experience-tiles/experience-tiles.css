@@ -406,7 +406,7 @@
 /* Keyboard-only: invisible until a control takes focus. */
 .experience-tiles .experience-tiles-controls {
     position: absolute;
-    inset-block-start: var(--dimension-spacing-general-m);
+    inset-block-end: var(--dimension-spacing-general-m);
     inset-inline-end: var(--dimension-spacing-general-m);
     z-index: 2;
     display: flex;
