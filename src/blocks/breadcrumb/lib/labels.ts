@@ -1,4 +1,4 @@
-import { deslug, toHref } from './path';
+import { deslug, homeOf, toHref } from './path';
 
 export interface Crumb {
   label: string;
@@ -30,6 +30,16 @@ async function fetchLabel(href: string, fetchImpl: typeof fetch): Promise<string
   }
 }
 
+async function ancestorCrumb(segments: string[], isAuthor: boolean, fetchImpl: typeof fetch): Promise<Crumb> {
+  const href = toHref(segments, isAuthor);
+  return { label: await fetchLabel(href, fetchImpl), href, current: false };
+}
+
+async function rootCrumb(root: string[], isAuthor: boolean, fetchImpl: typeof fetch): Promise<Crumb> {
+  const home = await ancestorCrumb(homeOf(root), isAuthor, fetchImpl);
+  return home.label ? home : ancestorCrumb(root, isAuthor, fetchImpl);
+}
+
 export async function resolveTrail(
   trail: string[][],
   isAuthor: boolean,
@@ -41,10 +51,9 @@ export async function resolveTrail(
   if (!current) return [];
 
   const ancestorCrumbs = await Promise.all(
-    ancestors.map(async (segments) => {
-      const href = toHref(segments, isAuthor);
-      return { label: await fetchLabel(href, fetchImpl), href, current: false };
-    }),
+    ancestors.map((segments, index) =>
+      index === 0 ? rootCrumb(segments, isAuthor, fetchImpl) : ancestorCrumb(segments, isAuthor, fetchImpl),
+    ),
   );
   const currentCrumb: Crumb = {
     label: labelFromDocument(doc) || deslug(current[current.length - 1] ?? ''),

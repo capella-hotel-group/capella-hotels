@@ -85,7 +85,40 @@ describe('resolveTrail', () => {
       fetchMock as unknown as typeof fetch,
     );
 
-    expect(fetchMock).toHaveBeenCalledWith('/content/capella-hotels/singapore/en.html', expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith('/content/capella-hotels/singapore/en/home.html', expect.anything());
+  });
+
+  it('links the root crumb to the home page when it exists', async () => {
+    const fetchMock = jest.fn(async (url: string) =>
+      url === '/singapore/en/home'
+        ? page('<meta name="breadcrumbtitle" content="Singapore"><title>Home</title>')
+        : page('<title>en</title>'),
+    );
+
+    const crumbs = await resolveTrail(
+      trail.slice(0, 1).concat([trail[2]!]),
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(crumbs[0]).toEqual({ label: 'Singapore', href: '/singapore/en/home', current: false });
+    expect(fetchMock).not.toHaveBeenCalledWith('/singapore/en', expect.anything());
+  });
+
+  it('falls back to the language root when there is no home page', async () => {
+    const fetchMock = jest.fn(async (url: string) =>
+      url === '/singapore/en' ? page('<title>Sanya</title>') : page('', false),
+    );
+
+    const crumbs = await resolveTrail(
+      trail.slice(0, 1).concat([trail[2]!]),
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(crumbs[0]).toEqual({ label: 'Sanya', href: '/singapore/en', current: false });
   });
 
   it('drops an ancestor whose request does not answer in time', async () => {
@@ -98,12 +131,12 @@ describe('resolveTrail', () => {
     );
 
     const pending = resolveTrail(
-      trail.slice(1),
+      trail,
       false,
       htmlDoc('<title>Colonial</title>'),
       fetchMock as unknown as typeof fetch,
     );
-    jest.advanceTimersByTime(5000);
+    await jest.advanceTimersByTimeAsync(10000);
     const crumbs = await pending;
     jest.useRealTimers();
 
