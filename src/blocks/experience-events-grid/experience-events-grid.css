@@ -54,6 +54,7 @@ main .experience-events-grid .experience-events-grid-dates {
     display: flex;
     justify-content: center;
     min-width: 0;
+    width: 100%;
 }
 
 main .experience-events-grid button {
@@ -67,36 +68,61 @@ main .experience-events-grid button {
 }
 
 main .experience-events-grid .experience-events-grid-date-toggle {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    flex: 0 1 345px;
+    width: min(345px, 100%);
+    min-width: min(201px, 100%);
+    height: 56px;
     gap: 20px;
-    min-height: 56px;
-    padding: 16px 0 16px 20px;
-    color: var(--color-text-action-default);
+    padding: 16px 20px;
+    color: var(--color-text-main-body);
     font-family: var(--type-font-family-heading);
     font-size: 16px;
-    line-height: 24px;
+    line-height: 16px;
     text-align: start;
 }
 
-main .experience-events-grid .experience-events-grid-date-toggle::before {
+main .experience-events-grid .experience-events-grid-date-label-group {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    max-width: 187px;
+}
+
+main .experience-events-grid .experience-events-grid-date-label-group::before {
     flex: 0 0 24px;
     width: 24px;
     height: 24px;
-    background: currentcolor;
+    background: var(--color-icon-main-primary);
     content: '';
     mask: url('/icons/booking-calendar.svg') center / 20px 20px no-repeat;
 }
 
+main .experience-events-grid .experience-events-grid-date-label-group > * {
+    min-width: 0;
+    overflow: hidden;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+main .experience-events-grid .experience-events-grid-date-toggle p {
+    margin: 0;
+}
+
 main .experience-events-grid .experience-events-grid-date-toggle::after {
-    width: 8px;
-    height: 8px;
-    margin-inline: 8px;
-    border-inline-end: 1px solid currentcolor;
-    border-block-end: 1px solid currentcolor;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    background: var(--color-icon-main-primary);
     content: '';
-    transform: rotate(45deg);
+    mask: url('/icons/chevron-down-28.svg') center / 20px 20px no-repeat;
 }
 
 main .experience-events-grid .experience-events-grid-date-panel {
@@ -104,19 +130,148 @@ main .experience-events-grid .experience-events-grid-date-panel {
     z-index: 4;
     inset-block-start: 100%;
     inset-inline-end: 0;
-    display: grid;
-    gap: 16px;
-    width: min(100%, 360px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 20px;
+    box-sizing: border-box;
+    width: min(345px, calc(100vw - 48px));
     padding: 20px;
-    border: 1px solid var(--color-stroke-main-secondary);
-    background: var(--color-surface-general-subtle);
-    box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+    border: 0;
+    border-radius: 4px;
+    background: #fff;
 }
 
 main .experience-events-grid .experience-events-grid-date-label {
+    display: none;
+}
+
+main .experience-events-grid .experience-events-grid-calendar {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    align-self: stretch;
+    width: 100%;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 36px;
+    border-block-end: 1px solid var(--color-stroke-main-secondary);
+}
+
+main .experience-events-grid .experience-events-grid-calendar-title {
+    flex: 1;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: 20px;
+    font-weight: var(--type-font-weight-body-light);
+    line-height: 16px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-prev,
+main .experience-events-grid .experience-events-grid-calendar-next {
+    display: flex;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: var(--color-text-action-default);
+}
+
+main .experience-events-grid .experience-events-grid-calendar-prev::before,
+main .experience-events-grid .experience-events-grid-calendar-next::before {
+    width: 28px;
+    height: 28px;
+    background: currentcolor;
+    content: '';
+    mask: url('/icons/chevron-down-28.svg') center / 28px 28px no-repeat;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-prev::before {
+    transform: rotate(90deg);
+}
+
+main .experience-events-grid .experience-events-grid-calendar-next::before {
+    transform: rotate(-90deg);
+}
+
+main .experience-events-grid .experience-events-grid-calendar-prev:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-weekdays,
+main .experience-events-grid .experience-events-grid-calendar-grid {
     display: grid;
-    gap: 8px;
-    min-width: 0;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: 100%;
+}
+
+main .experience-events-grid .experience-events-grid-weekday,
+main .experience-events-grid .experience-events-grid-calendar-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    height: 36px;
+    padding: 0;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: 16px;
+    font-weight: var(--type-font-weight-body-light);
+    line-height: 16px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-day {
+    border: 0;
+    background: transparent;
+    text-transform: none;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-day.is-outside,
+main .experience-events-grid .experience-events-grid-calendar-day:disabled {
+    color: #9f9f9f;
+    cursor: default;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-day.is-start {
+    background: #1b364b;
+    color: #fff;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-day.is-end,
+main .experience-events-grid .experience-events-grid-calendar-day.is-in-range {
+    background: #a4afb7;
+    color: #fff;
+}
+
+main .experience-events-grid .experience-events-grid-calendar-day.is-start.is-end {
+    background: #1b364b;
+    color: #fff;
+}
+
+main .experience-events-grid .experience-events-grid-date-error {
+    align-self: stretch;
+    color: var(--color-text-main-error);
+    font-size: 14px;
+    line-height: 16px;
 }
 
 main .experience-events-grid input[type='date'] {
@@ -133,15 +288,22 @@ main .experience-events-grid input[type='date'] {
 
 main .experience-events-grid .experience-events-grid-date-actions {
     display: flex;
-    gap: 24px;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    width: 100%;
+    min-height: 40px;
 }
 
 main .experience-events-grid .experience-events-grid-date-actions button {
-    min-height: 44px;
-    padding: 8px;
+    min-height: 40px;
+    padding: 4px 0;
+    color: var(--color-text-action-default);
+    font-size: 16px;
+    line-height: 16px;
     text-decoration: underline;
+    text-transform: uppercase;
 }
-
 main .experience-events-grid .experience-events-grid-tabs {
     display: flex;
     align-items: center;
@@ -313,6 +475,13 @@ main .experience-events-grid :is(button, a, input):focus-visible {
     outline-offset: 3px;
 }
 
+@media (max-width: 767px) {
+    main .experience-events-grid .experience-events-grid-dates {
+        align-self: flex-start;
+        width: min(345px, calc(100vw - 48px));
+    }
+}
+
 @media (min-width: 768px) {
     main .experience-events-grid .experience-events-grid-shell {
         gap: 40px;
@@ -340,6 +509,24 @@ main .experience-events-grid :is(button, a, input):focus-visible {
 
     main .experience-events-grid .experience-events-grid-dates {
         justify-content: flex-end;
+    }
+
+    main .experience-events-grid .experience-events-grid-date-toggle {
+        flex: 0 0 274px;
+        width: 274px;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px;
+        font-size: 18px;
+        line-height: 18px;
+    }
+
+    main .experience-events-grid .experience-events-grid-date-label-group {
+        max-width: 206px;
+    }
+
+    main .experience-events-grid .experience-events-grid-date-panel {
+        width: 390px;
     }
 
     main .experience-events-grid :is(.experience-events-grid-date-toggle, .experience-events-grid-category) {
@@ -391,6 +578,22 @@ main .experience-events-grid :is(button, a, input):focus-visible {
     main .experience-events-grid .experience-events-grid-shell {
         gap: 48px;
         padding: 120px 80px 48px;
+    }
+
+    main .experience-events-grid .experience-events-grid-date-toggle {
+        flex-basis: 306px;
+        width: 306px;
+        justify-content: center;
+        gap: 20px;
+        padding: 16px 28px;
+    }
+
+    main .experience-events-grid .experience-events-grid-date-label-group {
+        max-width: 206px;
+    }
+
+    main .experience-events-grid .experience-events-grid-date-panel {
+        width: 345px;
     }
 
     main .experience-events-grid .experience-events-grid-title {

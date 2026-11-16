@@ -190,6 +190,29 @@ describe('Experience Events Grid', () => {
     expect(placeholder.hasAttribute('hidden')).toBe(false);
   });
 
+  it('renders the custom month calendar and applies the selected range on Done', async () => {
+    fetchMock.mockResolvedValueOnce(response([card(1)]));
+    const root = block();
+    await decorate(root);
+    click(root, 'date-toggle');
+
+    expect(root.querySelector('.experience-events-grid-calendar-title')?.textContent).toBe('November 2026');
+    expect(root.querySelectorAll('.experience-events-grid-calendar-weekdays > *')).toHaveLength(7);
+    expect(root.querySelectorAll('.experience-events-grid-calendar-day')).toHaveLength(42);
+    expect(
+      root.querySelector<HTMLButtonElement>('[data-testid="experience-events-grid-calendar-previous"]')?.disabled,
+    ).toBe(false);
+
+    root.querySelector<HTMLButtonElement>('[data-date="2026-11-12"]')!.click();
+    root.querySelector<HTMLButtonElement>('[data-date="2026-11-14"]')!.click();
+    expect(root.querySelector<HTMLInputElement>('.experience-events-grid-date-from')?.value).toBe('2026-11-12');
+    expect(root.querySelector<HTMLInputElement>('.experience-events-grid-date-to')?.value).toBe('2026-11-14');
+    click(root, 'date-apply');
+
+    expect(root.querySelector('.experience-events-grid-date-selection')?.textContent).toBe('12 NOV - 14 NOV, 2026');
+    expect(root.querySelector('.experience-events-grid-date-panel')?.hasAttribute('hidden')).toBe(true);
+  });
+
   it('validates empty or reversed dates without changing the existing results', async () => {
     fetchMock.mockResolvedValueOnce(response([card(1)]));
     const root = block();
