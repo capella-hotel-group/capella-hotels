@@ -153,17 +153,38 @@ it('keeps your place when you come back up to a block you had already started', 
   expect(y).toBe(500);
   expect(controller.index).toBe(1);
 });
-it('restarts the story whenever the block is entered travelling downwards', () => {
+it('keeps your place when the block drifts off the top and you carry on scrolling down', () => {
   const { controller } = setup(500);
   y = 500;
   wheel(40);
   expect(controller.index).toBe(1);
-  y = 350;
+  // e.g. trackpad momentum after preventDefault nudges the page a few px
+  y = 480;
   fresh();
   wheel(40);
   settled();
   expect(y).toBe(500);
+  expect(controller.index).toBe(1);
+});
+it('catches a block that a fast scroll carried past the alignment point', () => {
+  const { controller } = setup(300);
+  y = 340;
+  window.dispatchEvent(new Event('scroll'));
+  settled();
+  expect(y).toBe(300);
   expect(controller.index).toBe(0);
+  fresh();
+  wheel(40);
+  expect(controller.index).toBe(1);
+});
+it('does not grab back a block you just left downwards', () => {
+  const { controller } = setup(0, 2);
+  controller.select(1);
+  wheel(40);
+  y = 60;
+  window.dispatchEvent(new Event('scroll'));
+  settled();
+  expect(y).toBe(60);
 });
 it('settles onto the alignment point with an animation instead of jumping', () => {
   window.matchMedia = jest
@@ -243,8 +264,10 @@ it('enters once per burst when alignment never settles', () => {
   expect(select).toHaveBeenCalledTimes(1);
   expect(controller.index).toBe(0);
   settled();
-  wheel(120);
-  expect(select).toHaveBeenCalledTimes(2);
+  // a new burst re-enters, but a block already visited keeps its slide
+  expect(wheel(120).defaultPrevented).toBe(true);
+  expect(select).toHaveBeenCalledTimes(1);
+  expect(controller.index).toBe(0);
 });
 it('re-settles instead of releasing when the browser keeps scrolling mid-burst', () => {
   const { controller } = setup(60);

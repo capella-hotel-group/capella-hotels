@@ -15,10 +15,9 @@ import { bindGestures } from './gesture';
  *                   scroll listener keeps ownership, and a boundary will not release the page. Must
  *                   outlast the gaps in macOS trackpad inertia or one swipe would skip slides.
  *                   lower: inertia leaks through and skips slides — raise: slower to let go.
- * SETTLE_MIN/MAX_MS bounds of the ease-out that lands the block on the viewport top. The duration
- *                   scales with the travel between them, so a few px of correction and a near-full
- *                   viewport jump do not share one timing. MAX also drives the x3 fallback timer,
- *                   since background tabs freeze animation frames.
+ * SETTLE_MIN/MAX_MS bounds of the ease-out that lands the block on the viewport top; between them the
+ * SETTLE_MS_PER_PX  duration is travel x SETTLE_MS_PER_PX, so the settle never starts faster than a
+ *                   trackpad scroll. The x3 fallback timer covers background tabs freezing frames.
  *                   lower: abrupt snap — raise: sluggish, user can out-scroll it.
  * FLING_DECAY       per-16ms survival of the touch momentum the block runs itself, because the track
  *                   suppresses native panning and there is no browser fling to inherit.
@@ -29,21 +28,24 @@ import { bindGestures } from './gesture';
  *                   wheel delta: trackpad deltas are a few px and the block slips past.
  *                   lower: user can park the block near the top and nothing ever snaps — raise:
  *                   grabs the page early, long involuntary jump.
- *                   0.25 claims a 100dvh block from 25% off the top, i.e. once ~75% of it is visible.
+ *                   0.35 claims a 100dvh block from 35% off the top, i.e. once ~65% of it is visible.
+ *                   A block carried across the alignment point between two events is caught too.
  */
 const ALIGN_TOLERANCE = 3;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
-const SETTLE_MIN_MS = 220;
-const SETTLE_MAX_MS = 620;
+const SETTLE_MIN_MS = 360;
+const SETTLE_MAX_MS = 720;
+const SETTLE_MS_PER_PX = 2;
 const FLING_DECAY = 0.95;
 const FLING_MIN_SPEED = 0.02;
-export const SNAP_DISTANCE = 0.25;
+export const SNAP_DISTANCE = 0.35;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
   cancelGesture: () => void;
   visited: boolean;
+  lastTop?: number;
 }
 interface WheelBurst {
   time: number;
@@ -144,10 +146,8 @@ function align(entry: Entry, animate = false): void {
     jump(start + distance);
     return;
   }
-  // Scale with the travel, otherwise a few px of correction reads as abrupt at the same duration
-  // that leaves a near-full-viewport jump feeling sluggish enough to be out-scrolled.
-  const viewport = window.innerHeight || 1;
-  const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, (Math.abs(distance) / viewport) * SETTLE_MAX_MS));
+  // Scale with the travel so the settle starts no faster than the reader was scrolling.
+  const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, Math.abs(distance) * SETTLE_MS_PER_PX));
   const begin = performance.now();
   const step = (now: number): void => {
     const progress = Math.min((now - begin) / duration, 1);
@@ -171,10 +171,8 @@ function claim(entry: Entry): void {
   entry.visited = true;
 }
 function enter(entry: Entry, direction: Direction): void {
-  // Downwards is the reading direction, so it always restarts the story. Upwards only rewinds to the
-  // end on a first encounter: coming back to a block you were half way through keeps your place.
-  if (direction > 0) entry.carousel.select(0);
-  else if (!entry.visited) entry.carousel.select(entry.carousel.count - 1);
+  // Only a first encounter picks the edge slide; coming back to a block you started keeps your place.
+  if (!entry.visited) entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
   claim(entry);
   align(entry, true);
 }
@@ -206,6 +204,21 @@ function candidate(delta: number, excluded?: Entry): Entry | undefined {
     bestDistance = Math.abs(rect.top);
   });
   return best;
+}
+// A fast wheel notch or native momentum can carry a block across the alignment point between two events.
+function crossed(): Entry | undefined {
+  let hit: Entry | undefined;
+  const reach = SNAP_DISTANCE * window.innerHeight;
+  entries.forEach((entry) => {
+    const { top } = entry.block.getBoundingClientRect();
+    const previous = entry.lastTop;
+    entry.lastTop = top;
+    if (hit || previous === undefined || Math.abs(top) > reach) return;
+    const down = previous > ALIGN_TOLERANCE && top < -ALIGN_TOLERANCE;
+    const up = previous < -ALIGN_TOLERANCE && top > ALIGN_TOLERANCE;
+    if (down || up) hit = entry;
+  });
+  return hit;
 }
 /**
  * Touch release. The track suppresses native panning, so there is no browser fling to inherit: the
@@ -319,6 +332,11 @@ function attach(): void {
         owner.cancelGesture();
         setOwner(undefined);
       }
+      const slipped = crossed();
+      if (!slipped || owner || settling() || (wheeling() && burst?.released === slipped) || suspended()) return;
+      enter(slipped, (slipped.lastTop ?? 0) < 0 ? 1 : -1);
+      // The rest of this burst is momentum that carried the page past; it must not also step slides.
+      if (burst) burst.consumed = true;
     },
     { passive: true, signal },
   );
@@ -339,7 +357,13 @@ export function registerScrollController(
 } {
   if (carousel.count < 2 || block.closest('.adobe-ue-edit'))
     return { cleanup() {}, cancel() {}, resize() {}, snap() {}, isAligned: () => true };
-  const entry: Entry = { block, carousel, cancelGesture: () => {}, visited: false };
+  const entry: Entry = {
+    block,
+    carousel,
+    cancelGesture: () => {},
+    visited: false,
+    lastTop: block.getBoundingClientRect().top,
+  };
   let gesture: 'slide' | 'copy' | 'entry' | 'page' | undefined;
   let copy: HTMLElement | undefined;
   let exited: Entry | undefined;
