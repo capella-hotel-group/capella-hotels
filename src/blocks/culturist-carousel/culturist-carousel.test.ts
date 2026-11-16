@@ -44,6 +44,56 @@ describe('culturist-carousel overlay toggle', () => {
     expect(block.querySelectorAll('.culturist-carousel-carousel-card')).toHaveLength(1);
   });
 
+  it.each([
+    ['plain string', 'Tea ceremony in Gion'],
+    ['rich text html', { html: '<p>Tea ceremony in <b>Gion</b></p>' }],
+    ['rich text plaintext', { plaintext: 'Tea ceremony in Gion' }],
+  ])('renders a %s card description inside the text overlay', async (_label, description) => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          culturistTabDetailsByPath: {
+            item: { ...cfItem, cardContentReference: [{ title: 'Card', description, image: { _path: '/a.jpg' } }] },
+          },
+        },
+      }),
+    }) as jest.Mock;
+    const block = buildBlock([['Tab', '/cf/a']]);
+    await decorate(block);
+    const content = block.querySelector('.culturist-carousel-card-content');
+    const text = content?.querySelector('.culturist-carousel-card-text');
+    expect(text?.querySelector('.culturist-carousel-card-title')?.textContent).toBe('Card');
+    expect(text?.querySelector('.culturist-carousel-card-description')?.textContent).toBe('Tea ceremony in Gion');
+    expect(content?.classList.contains('culturist-carousel-card-content--has-description')).toBe(true);
+  });
+
+  it('renders the location eyebrow above the title', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          culturistTabDetailsByPath: {
+            item: { ...cfItem, cardContentReference: [{ title: 'Card', eyebrowLocation: ' Gion, Kyoto ' }] },
+          },
+        },
+      }),
+    }) as jest.Mock;
+    const block = buildBlock([['Tab', '/cf/a']]);
+    await decorate(block);
+    const text = block.querySelector('.culturist-carousel-card-text');
+    expect(text?.firstElementChild?.className).toBe('culturist-carousel-card-location');
+    expect(text?.firstElementChild?.textContent).toBe('Gion, Kyoto');
+  });
+
+  it('omits the description element when the card has none', async () => {
+    const block = buildBlock([['Tab', '/cf/a']]);
+    await decorate(block);
+    expect(block.querySelector('.culturist-carousel-card-location')).toBeNull();
+    expect(block.querySelector('.culturist-carousel-card-description')).toBeNull();
+    expect(block.querySelector('.culturist-carousel-card-content--has-description')).toBeNull();
+  });
+
   it('updates the class when switching tabs', async () => {
     jest.useFakeTimers();
     const block = buildBlock([

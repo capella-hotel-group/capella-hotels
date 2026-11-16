@@ -24,26 +24,24 @@
     --culturist-carousel-avatar-size: 120px;
 }
 
-@media (width >= 768px) and (width < 1200px) {
+@media (width >= 768px) and (width < 1024px) {
     .culturist-carousel-grid {
         --culturist-carousel-avatar-size: 240px;
     }
 }
 
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-grid {
         gap: 4px;
         padding: 0;
-        min-height: 720px;
-        grid-template-rows: minmax(720px, auto);
     }
 }
 
-/* Desktop 1200-1919px spec: profile-concept is a fixed 720px (not a fluid 50%) -
+/* Desktop 1024-1919px spec: profile-concept is 720px at most; below ~1310px it shrinks to 55% so the carousel keeps room -
    confirmed via get_metadata, same fixed-per-tier pattern as the 1920 override below */
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-grid {
-        grid-template-columns: 720px minmax(0, 1fr);
+        grid-template-columns: minmax(0, min(720px, 55%)) minmax(0, 1fr);
         --culturist-carousel-avatar-size: 160px;
     }
 
@@ -103,7 +101,7 @@
 }
 
 /* Desktop only: no padding on the title block */
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-title-block {
         padding: 0;
         margin-left: 140px;
@@ -156,7 +154,7 @@
    but the destination dropdown hugs its own content and right-aligns flush with
    the heading lines' right edge, via align-items:flex-end on the column - no
    left-padding push like the mobile/tablet variant. */
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-destination-wrapper {
         width: auto;
         align-self: flex-end;
@@ -244,7 +242,7 @@
 }
 
 /* Desktop dropdown is wider and sits on a subtle tinted surface instead of pure white */
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-destination-dropdown {
         width: min(319px, calc(100vw - var(--dimension-spacing-general-2xl)));
         background: var(--color-surface-general-subtle);
@@ -326,7 +324,7 @@
     margin-bottom: var(--dimension-spacing-general-s);
 }
 
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-destination-list > li:not(.culturist-carousel-destination-scrollbar):not(:last-child) {
         margin-bottom: var(--dimension-spacing-general-l);
     }
@@ -491,7 +489,7 @@
 }
 
 /* Compact composition (mobile through pre-1024 desktop) to match the approved visual layout */
-@media (width < 1200px) {
+@media (width < 1024px) {
     .culturist-carousel-grid {
         gap: 0;
         padding: 0;
@@ -527,7 +525,7 @@
 }
 
 /* Sub-1024 overrides: split background, overlapping avatar, right-aligned dropdown */
-@media (width < 1200px) {
+@media (width < 1024px) {
     .culturist-carousel-grid {
         --culturist-carousel-tablet-inline-inset: 24px;
     }
@@ -581,7 +579,7 @@
 }
 
 /* Tablet-only: the shared inline inset steps up from 24px (mobile) to 48px */
-@media (width >= 768px) and (width < 1200px) {
+@media (width >= 768px) and (width < 1024px) {
     .culturist-carousel-grid {
         --culturist-carousel-tablet-inline-inset: 48px;
     }
@@ -631,7 +629,7 @@
 }
 
 /* Desktop navigates via the prev/next arrows only, no wheel/drag scrolling */
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-carousel-track {
         overflow-x: hidden;
         scroll-snap-type: none;
@@ -652,14 +650,14 @@
     scroll-snap-stop: always;
 }
 
-@media (width >= 768px) and (width < 1200px) {
+@media (width >= 768px) and (width < 1024px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 360px;
     }
 }
 
 /* Figma 1024px spec: first card fixed at 589px, remaining space peeks the next card */
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-carousel-card {
         flex: 0 0 min(589px, calc(100% - 24px));
         min-width: 0;
@@ -684,6 +682,11 @@
     background: transparent;
     cursor: pointer;
     isolation: isolate;
+
+    /* 0 = resting, 1 = hovered/focused; drives the description reveal */
+    --culturist-carousel-card-reveal: 0;
+    --culturist-carousel-card-duration: 0.6s;
+    --culturist-carousel-card-easing: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .culturist-carousel-card-slot-img {
@@ -696,7 +699,7 @@
     object-position: center center;
     display: block;
     z-index: 1;
-    transition: transform 0.3s ease;
+    transition: transform var(--culturist-carousel-card-duration) var(--culturist-carousel-card-easing);
 }
 
 /* Scrim sits above the image (z 1) and below the title (z 3) */
@@ -714,13 +717,35 @@
 }
 
 @media (hover: hover) {
+    .culturist-carousel-card-content:hover {
+        --culturist-carousel-card-reveal: 1;
+    }
+
     .culturist-carousel-card-content:hover .culturist-carousel-card-slot-img {
         transform: scale(1.05);
     }
 }
 
+.culturist-carousel-card-content:focus-visible,
+.culturist-carousel-card-content:active {
+    --culturist-carousel-card-reveal: 1;
+}
+
 .culturist-carousel-card-content:active .culturist-carousel-card-slot-img {
     transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .culturist-carousel-card-slot-img,
+    .culturist-carousel-card-description {
+        transition-duration: 0.01ms;
+        transition-delay: 0s;
+    }
+
+    .culturist-carousel-card-content:hover .culturist-carousel-card-slot-img,
+    .culturist-carousel-card-content:active .culturist-carousel-card-slot-img {
+        transform: none;
+    }
 }
 
 /* Prev/Next Arrows - minimal chevrons, no button chrome */
@@ -783,12 +808,32 @@
     display: none;
 }
 
-/* Card Title Overlay */
-.culturist-carousel-card-title {
+/* Card Text Overlay (location eyebrow + title + hover description) */
+.culturist-carousel-card-text {
     position: absolute;
     top: var(--dimension-layout-card-padding-block);
     left: var(--dimension-layout-card-padding-inline);
     right: var(--dimension-layout-card-padding-inline);
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-spacing-eyebrow-to-title);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.culturist-carousel-card-location {
+    color: var(--color-text-main-inverse-heading);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-eyebrow);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-eyebrow);
+    letter-spacing: var(--typography-letter-spacing-body-eyebrow);
+    text-transform: uppercase;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+}
+
+.culturist-carousel-card-title {
     color: var(--color-text-main-inverse-heading);
     font-family: var(--type-font-family-heading);
     font-size: var(--typography-fontsize-heading-h4);
@@ -796,32 +841,67 @@
     text-align: left;
     font-weight: var(--type-font-weight-heading);
     line-height: var(--typography-line-height-heading-h4);
-    pointer-events: none;
-    z-index: 3;
     word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
 }
 
-@media (width >= 768px) and (width < 1200px) {
+.culturist-carousel-card-description {
+    margin: 0;
+    color: var(--color-text-main-inverse-body);
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    overflow: hidden;
+
+    /* Rest state is hidden but stays in the DOM for assistive tech */
+    opacity: var(--culturist-carousel-card-reveal);
+    transform: translateY(calc((1 - var(--culturist-carousel-card-reveal)) * 12px));
+    transition:
+        opacity var(--culturist-carousel-card-duration) var(--culturist-carousel-card-easing),
+        transform var(--culturist-carousel-card-duration) var(--culturist-carousel-card-easing);
+}
+
+@media (width >= 768px) and (width < 1024px) {
     .culturist-carousel-card-title {
         font-size: var(--typography-fontsize-heading-h3);
         line-height: var(--typography-line-height-heading-h3);
     }
+
+    .culturist-carousel-card-description {
+        -webkit-line-clamp: 6;
+        line-clamp: 6;
+    }
 }
 
-@media (width >= 1200px) {
-    .culturist-carousel-card-title {
+@media (width >= 1024px) {
+    .culturist-carousel-card-text {
         top: var(--dimension-layout-card-padding-xl);
         left: var(--dimension-layout-card-padding-2xl);
         right: var(--dimension-layout-card-padding-2xl);
+    }
+
+    .culturist-carousel-card-title {
         font-size: var(--typography-fontsize-heading-h1);
         line-height: var(--typography-line-height-heading-h1); /* 100% */
+    }
+
+    .culturist-carousel-card-description {
+        max-width: 280px;
+        -webkit-line-clamp: 8;
+        line-clamp: 8;
     }
 }
 
 /* Sub-1024: 2 full cards + a peek of the 3rd, no arrows (swipe/scroll only) */
-@media (width < 1200px) {
+@media (width < 1024px) {
     /* Inset lives on the non-scrolling column so it stays put while the track scrolls */
     .culturist-carousel-carousel-col {
         background-color: var(--color-surface-general-light);
@@ -834,9 +914,9 @@
     }
 }
 
-@media (width >= 1200px) {
+@media (width >= 1024px) {
     .culturist-carousel-grid {
-        grid-template-columns: 720px minmax(0, 1fr);
+        grid-template-columns: minmax(0, min(720px, 55%)) minmax(0, 1fr);
     }
 
     .culturist-carousel-info-col {

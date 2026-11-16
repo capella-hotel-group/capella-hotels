@@ -147,6 +147,17 @@ async function renderCulturistInfo(slot: HTMLElement, cfPath: string): Promise<v
   slot.append(contentCol);
 }
 
+// Card descriptions may arrive as plain text or as a rich-text object; the overlay only needs text
+function cardDescriptionText(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  const { plaintext, html } = (value as { plaintext?: string; html?: string } | null) || {};
+  if (plaintext) return plaintext.trim();
+  if (!html) return '';
+  const holder = document.createElement('div');
+  holder.innerHTML = html;
+  return (holder.textContent || '').trim();
+}
+
 function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
   const slide = document.createElement('li');
   slide.className = 'culturist-carousel-carousel-card';
@@ -167,11 +178,35 @@ function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
     cardImg.alt = card.imagealt || card.title || 'Gallery card';
     cardContent.append(cardImg);
   }
-  if (card.title) {
-    const cardTitle = document.createElement('span');
-    cardTitle.className = 'culturist-carousel-card-title';
-    cardTitle.textContent = card.title;
-    cardContent.append(cardTitle);
+  const location = typeof card.eyebrowLocation === 'string' ? card.eyebrowLocation.trim() : '';
+  const description = cardDescriptionText(card.description);
+  if (location || card.title || description) {
+    const cardText = document.createElement('div');
+    cardText.className = 'culturist-carousel-card-text';
+
+    if (location) {
+      const cardLocation = document.createElement('span');
+      cardLocation.className = 'culturist-carousel-card-location';
+      cardLocation.textContent = location;
+      cardText.append(cardLocation);
+    }
+
+    if (card.title) {
+      const cardTitle = document.createElement('span');
+      cardTitle.className = 'culturist-carousel-card-title';
+      cardTitle.textContent = card.title;
+      cardText.append(cardTitle);
+    }
+
+    if (description) {
+      const cardDescription = document.createElement('p');
+      cardDescription.className = 'culturist-carousel-card-description';
+      cardDescription.textContent = description;
+      cardText.append(cardDescription);
+      cardContent.classList.add('culturist-carousel-card-content--has-description');
+    }
+
+    cardContent.append(cardText);
   }
 
   slide.append(cardContent);
@@ -236,7 +271,7 @@ async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): 
   };
 
   // Desktop navigates via the prev/next arrows only; wheel/drag scrolling is a tablet/mobile-only affordance
-  const isDesktop = window.matchMedia('(min-width: 1200px)').matches;
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
   if (!isDesktop && track.dataset.loopEvents !== 'true') {
     let touchStartX: number | null = null;
     let touchStartedAtBoundary = false;
