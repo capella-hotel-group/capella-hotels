@@ -82,12 +82,6 @@
       {
         "component": "text",
         "valueType": "string",
-        "name": "pageTitle",
-        "label": "Page Title"
-      },
-      {
-        "component": "text",
-        "valueType": "string",
         "name": "breadcrumbTitle",
         "label": "Breadcrumb Title",
         "description": "Overrides this page's label in breadcrumbs without changing the page heading"

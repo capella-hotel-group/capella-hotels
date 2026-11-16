@@ -101,7 +101,7 @@ describe('populate', () => {
   });
 
   it('renders the trail with parent labels from metadata', async () => {
-    mockFetch({ '/singapore/en': '<meta name="pagetitle" content="Capella Singapore">' });
+    mockFetch({ '/singapore/en': '<title>Capella Singapore</title>' });
     document.title = 'Accommodation';
     const block = createBlock('breadcrumb inverse block');
 

@@ -20,8 +20,7 @@ Each item uses the first value that is set on that page's properties:
 
 1. **Breadcrumb Title**: a short label for breadcrumbs only. It does not
    change the page heading.
-2. **Page Title**
-3. **Title**
+2. **Title**
 
 If the current page has none of these, its URL name is used (`colonial-manor`
 becomes `Colonial Manor`).
