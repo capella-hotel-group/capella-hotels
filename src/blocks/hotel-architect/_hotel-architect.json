@@ -127,6 +127,14 @@
               "valueType": "string",
               "value": "",
               "required": true
+            },
+            {
+              "component": "boolean",
+              "name": "darkOverlay",
+              "label": "Enable Dark Image Overlay",
+              "description": "Tints this thumbnail.",
+              "valueType": "boolean",
+              "value": false
             }
           ]
         },
@@ -192,6 +200,14 @@
               "valueType": "string",
               "value": "",
               "required": true
+            },
+            {
+              "component": "boolean",
+              "name": "darkOverlay",
+              "label": "Enable Dark Image Overlay",
+              "description": "Tints this image, which also keeps the white carousel arrows legible.",
+              "valueType": "boolean",
+              "value": false
             }
           ]
         }

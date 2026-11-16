@@ -12,7 +12,8 @@ const IMAGE_MODEL = 'destination-introduction-image';
 // Cell indices mirror the field order of the `destination-introduction-image`
 // model; the `*Alt` fields collapse into the cell of the field they suffix and
 // so claim no index of their own.
-const ITEM = { thumbnail: 0, media: 1, mediaAsset: 2, darkOverlay: 3 } as const;
+const ITEM = { thumbnail: 0, thumbnailDarkOverlay: 1, media: 2, mediaAsset: 3, darkOverlay: 4 } as const;
+const MEDIA_TYPES = ['image', 'video'];
 const MAX_MEDIA_ITEMS = 3;
 const SCROLL_SETTLE_MS = 120;
 
@@ -228,23 +229,41 @@ function buildVideo(cell: Element | null | undefined, poster: string, alt: strin
 interface Slide {
   element: HTMLLIElement;
   video: HTMLVideoElement | null;
+  thumbnailOverlay: boolean;
   thumbnail: Element | null;
   authoredThumbnail: boolean;
   label: string;
 }
 
-function buildSlide(row: HTMLElement, index: number): Slide {
+function isMediaType(cell?: Element): boolean {
+  return MEDIA_TYPES.includes(textOf(cell).toLowerCase());
+}
+
+// items authored before the thumbnail overlay existed lack its cell, so every later cell sits one index earlier
+function itemCells(row: HTMLElement): Partial<Record<keyof typeof ITEM, Element>> {
   const cells = [...row.children];
+  const hasThumbnailOverlay = cells.length > 4 || (!isMediaType(cells[1]) && isMediaType(cells[2]));
+  return Object.fromEntries(
+    Object.entries(ITEM).map(([key, position]) => {
+      if (hasThumbnailOverlay || position === ITEM.thumbnail) return [key, cells[position]];
+      return [key, position === ITEM.thumbnailDarkOverlay ? undefined : cells[position - 1]];
+    }),
+  );
+}
+
+function buildSlide(row: HTMLElement, index: number): Slide {
+  const cells = itemCells(row);
+  const single = row.children.length <= 1;
   const element = document.createElement('li');
   element.className = 'destination-introduction-slide';
   moveInstrumentation(row, element);
 
-  const thumbnailCell = cells[ITEM.thumbnail];
+  const thumbnailCell = cells.thumbnail;
   const thumbnail = thumbnailCell?.querySelector('picture') ?? null;
   // items authored before the media fields existed carry one image cell, which
   // stands in for both the thumbnail and the media
-  const mediaCell = cells.length > 1 ? cells[ITEM.mediaAsset] : thumbnailCell;
-  const isVideo = textOf(cells[ITEM.media]).toLowerCase() === 'video';
+  const mediaCell = single ? thumbnailCell : cells.mediaAsset;
+  const isVideo = textOf(cells.media).toLowerCase() === 'video';
   const poster = thumbnail?.querySelector('img')?.getAttribute('src') || '';
   // read both alts while the assets are still in their cells
   const thumbnailAlt = altOf(thumbnailCell);
@@ -254,11 +273,12 @@ function buildSlide(row: HTMLElement, index: number): Slide {
   const media = video ?? picture;
   if (media) element.append(media);
   // the tint belongs to the hero media, so the thumbnail clone never inherits it
-  if (textOf(cells[ITEM.darkOverlay]).toLowerCase() === 'true') element.classList.add('has-dark-overlay');
+  if (textOf(cells.darkOverlay).toLowerCase() === 'true') element.classList.add('has-dark-overlay');
 
   return {
     element,
     video,
+    thumbnailOverlay: textOf(cells.thumbnailDarkOverlay).toLowerCase() === 'true',
     // without an authored thumbnail an image slide can still supply one; a video
     // slide cannot, so it falls back to a numbered button
     thumbnail: thumbnail ?? picture,
@@ -299,6 +319,7 @@ function buildThumbs(slides: Slide[]): HTMLUListElement {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'destination-introduction-thumb';
+    button.classList.toggle('has-dark-overlay', slide.thumbnailOverlay);
     button.dataset.index = String(index);
     button.setAttribute('aria-label', slide.label);
 

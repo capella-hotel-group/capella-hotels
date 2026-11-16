@@ -40,7 +40,7 @@ const ARROW_PATHS: Record<'prev' | 'next', string> = {
 
 let blockCount = 0;
 
-function textOf(node?: Element | null): string {
+function textOf(node?: Node | null): string {
   return node?.textContent?.trim() || '';
 }
 
@@ -74,7 +74,7 @@ function altOf(cell?: Element | null): string {
   const authored = cell?.querySelector('img')?.getAttribute('alt');
   if (authored) return authored;
   const sibling = [...(cell?.children || [])].find(
-    (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a'),
+    (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a') && !isFlag(element),
   );
   return textOf(sibling);
 }
@@ -98,10 +98,19 @@ function multifieldEntries(cell: Element | null | undefined): HTMLElement[] {
   return listItems.length ? listItems : [...cell.querySelectorAll<HTMLElement>('picture')];
 }
 
+/** A multifield entry carries its overlay flag as text beside the picture. */
+function hasDarkOverlay(entry: HTMLElement): boolean {
+  if (entry.matches('picture')) return false;
+  return [...entry.childNodes].some(
+    (node) => !(node instanceof Element && node.matches('picture, img')) && textOf(node) === 'true',
+  );
+}
+
 /** Moves one multifield entry into a fresh list item, keeping its editor instrumentation. */
 function buildEntry(entry: HTMLElement, className: string): { item: HTMLLIElement; picture: HTMLElement | null } {
   const item = document.createElement('li');
   item.className = className;
+  item.classList.toggle('has-dark-overlay', hasDarkOverlay(entry));
   if (entry.matches('li')) moveInstrumentation(entry, item);
   const picture = entry.matches('picture') ? entry : buildPicture(entry);
   if (picture) item.append(picture);
