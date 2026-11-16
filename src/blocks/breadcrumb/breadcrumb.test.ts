@@ -5,7 +5,7 @@ jest.mock('@/app/scripts.js', () => ({
 jest.mock('@/utils/env.js', () => ({ isUniversalEditor: jest.fn(() => false) }));
 
 import { isUniversalEditor } from '@/utils/env.js';
-import decorate, { renderTrail } from './breadcrumb';
+import decorate, { populate, renderTrail } from './breadcrumb';
 import type { Crumb } from './lib/labels';
 
 const crumb = (label: string, current = false): Crumb => ({ label, href: `/${label.toLowerCase()}`, current });
@@ -51,9 +51,38 @@ describe('renderTrail', () => {
     expect(button?.getAttribute('aria-expanded')).toBe('true');
     expect(nav.classList.contains('is-expanded')).toBe(true);
   });
+
+  it('moves focus to the first revealed link after expanding', () => {
+    const nav = renderTrail([crumb('Root'), crumb('A'), crumb('B'), crumb('Current', true)]);
+    document.body.append(nav);
+
+    nav.querySelector<HTMLButtonElement>('[data-testid="breadcrumb-expand"]')?.click();
+
+    expect(document.activeElement?.textContent).toBe('A');
+    nav.remove();
+  });
 });
 
 describe('decorate', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('returns without waiting for parent pages', () => {
+    global.fetch = jest.fn(() => new Promise(() => {})) as unknown as typeof fetch;
+    window.history.pushState({}, '', '/singapore/en/accommodation');
+    const block = createBlock();
+
+    const result = decorate(block);
+
+    expect(result).toBeUndefined();
+    expect(global.fetch).toHaveBeenCalled();
+    expect(block.classList.contains('is-loading')).toBe(true);
+    window.history.pushState({}, '', '/');
+  });
+});
+
+describe('populate', () => {
   afterEach(() => {
     document.body.replaceChildren();
     document.title = '';
@@ -64,7 +93,7 @@ describe('decorate', () => {
     const fetchMock = mockFetch({});
     const block = createBlock();
 
-    await decorate(block, '/singapore/en');
+    await populate(block, '/singapore/en');
 
     expect(block.childElementCount).toBe(0);
     expect(block.hidden).toBe(true);
@@ -76,7 +105,7 @@ describe('decorate', () => {
     document.title = 'Accommodation';
     const block = createBlock('breadcrumb inverse block');
 
-    await decorate(block, '/singapore/en/accommodation');
+    await populate(block, '/singapore/en/accommodation');
 
     const link = block.querySelector<HTMLAnchorElement>('[data-testid="breadcrumb-link"]');
     expect(link?.textContent).toBe('Capella Singapore');
@@ -90,7 +119,7 @@ describe('decorate', () => {
     mockFetch({});
     const block = createBlock();
 
-    await decorate(block, '/singapore/en/accommodation');
+    await populate(block, '/singapore/en/accommodation');
 
     expect(block.childElementCount).toBe(0);
   });
@@ -100,7 +129,7 @@ describe('decorate', () => {
     mockFetch({});
     const block = createBlock();
 
-    await decorate(block, '/singapore/en/accommodation');
+    await populate(block, '/singapore/en/accommodation');
 
     expect(block.querySelector('.breadcrumb-placeholder')).not.toBeNull();
     expect(block.hidden).toBe(false);

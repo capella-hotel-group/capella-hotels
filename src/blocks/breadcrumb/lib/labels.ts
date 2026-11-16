@@ -14,13 +14,19 @@ export function labelFromDocument(doc: Document): string {
   return metaContent(doc, 'breadcrumbtitle') || metaContent(doc, 'pagetitle') || doc.title.trim();
 }
 
+const FETCH_TIMEOUT_MS = 5000;
+
 async function fetchLabel(href: string, fetchImpl: typeof fetch): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const response = await fetchImpl(href);
+    const response = await fetchImpl(href, { signal: controller.signal });
     if (!response.ok) return '';
     return labelFromDocument(new DOMParser().parseFromString(await response.text(), 'text/html'));
   } catch {
     return '';
+  } finally {
+    clearTimeout(timer);
   }
 }
 

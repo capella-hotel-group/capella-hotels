@@ -86,6 +86,28 @@ describe('resolveTrail', () => {
       fetchMock as unknown as typeof fetch,
     );
 
-    expect(fetchMock).toHaveBeenCalledWith('/content/capella-hotels/singapore/en.html');
+    expect(fetchMock).toHaveBeenCalledWith('/content/capella-hotels/singapore/en.html', expect.anything());
+  });
+
+  it('drops an ancestor whose request does not answer in time', async () => {
+    jest.useFakeTimers();
+    const fetchMock = jest.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    );
+
+    const pending = resolveTrail(
+      trail.slice(1),
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+    jest.advanceTimersByTime(5000);
+    const crumbs = await pending;
+    jest.useRealTimers();
+
+    expect(crumbs).toEqual([{ label: 'Colonial', href: '/singapore/en/accommodation/colonial-manor', current: true }]);
   });
 });

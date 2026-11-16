@@ -34,6 +34,7 @@ function expandItem(nav: HTMLElement): HTMLLIElement {
   button.addEventListener('click', () => {
     button.setAttribute('aria-expanded', 'true');
     nav.classList.add('is-expanded');
+    nav.querySelector<HTMLAnchorElement>('.breadcrumb-collapsible a')?.focus();
   });
   item.append(button);
   return item;
@@ -64,7 +65,7 @@ function renderPlaceholder(): HTMLParagraphElement {
   return placeholder;
 }
 
-export default async function decorate(block: HTMLElement, pathname = window.location.pathname): Promise<void> {
+export async function populate(block: HTMLElement, pathname: string): Promise<void> {
   block.classList.add('is-loading');
   const page = parsePagePath(pathname);
   const trail = trailPaths(page);
@@ -74,4 +75,9 @@ export default async function decorate(block: HTMLElement, pathname = window.loc
   else block.replaceChildren(...(isUniversalEditor() ? [renderPlaceholder()] : []));
   block.hidden = !block.childElementCount;
   block.classList.remove('is-loading');
+}
+
+// Not awaited: section reveal and lazy loading must not wait on parent page requests.
+export default function decorate(block: HTMLElement): void {
+  void populate(block, window.location.pathname);
 }
