@@ -198,12 +198,20 @@ export function createExperienceModal(options: ExperienceModalOptions) {
     if (details.modalFeatureImageDarkImageOverlay === false) media.classList.add('filters-grid-modal-no-overlay');
     if (placeholder) media.style.backgroundImage = placeholder;
     if (variant === 'square') {
-      if (feature) media.append(feature);
-      media.append(mediaCopy);
-      const gallery = node('div', 'gallery');
-      gallery.append(media);
-      if (extras.length) gallery.append(slider(extras, 'carousel', placeholder, options.imageTestId));
-      content.append(gallery);
+      const carouselBelowDesktop =
+        typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 1199px)').matches;
+      if (carouselBelowDesktop) {
+        const images = [feature, ...extras].filter((item): item is HTMLImageElement => Boolean(item));
+        media.append(slider(images, 'carousel', placeholder, options.imageTestId), mediaCopy);
+        content.append(media);
+      } else {
+        if (feature) media.append(feature);
+        media.append(mediaCopy);
+        const gallery = node('div', 'gallery');
+        gallery.append(media);
+        if (extras.length) gallery.append(slider(extras, 'carousel', placeholder, options.imageTestId));
+        content.append(gallery);
+      }
     } else {
       const bannerImages = [feature, ...extras].filter((item): item is HTMLImageElement => Boolean(item));
       if (bannerImages.length) media.append(slider(bannerImages, 'banner-slider', '', options.imageTestId));
