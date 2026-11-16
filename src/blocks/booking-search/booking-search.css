@@ -33,20 +33,22 @@
     width: 100%;
 }
 
-/* Columns and divider gaps from Figma's 227/286/219 selectors: 11px gaps on desktop (776px fields), 1.5px on tablet (738px fields). */
+/* Figma's selectors hug their label (227/286/219 by default, 322 once dates are picked); only the gaps around the dividers give way. */
 @media (width >= 768px) {
     .booking-search .booking-search-fields {
-        display: grid;
-        grid-template-columns:
-            minmax(0, 227fr) var(--stroke-weight-s) minmax(0, 286fr)
-            var(--stroke-weight-s) minmax(0, 219fr);
+        flex-direction: row;
         align-items: center;
-        column-gap: 11px;
-        row-gap: 0;
+        justify-content: space-between;
+        /* The triggers' own inline padding keeps the labels clear of the dividers, so the gaps may close up entirely. */
+        gap: 0;
+    }
+
+    .booking-search .booking-search-field {
+        flex: 0 1 auto;
     }
 }
 
-/* Without Location (Figma 9816:53284): selectors hug their label (286/219 in the frames); tablet stacks the link below, desktop keeps it on the row. */
+/* Without Location (Figma 9816:51954): selectors hug their label; tablet stacks the link below, desktop keeps it on the row. */
 @media (width >= 768px) {
     .booking-search .booking-search-form.booking-search-form-no-location {
         flex-direction: column;
@@ -54,12 +56,13 @@
         max-width: none;
     }
 
+    /* Figma spreads the selectors across a 550px row, leaving 31.5px either side of the divider. */
     .booking-search .booking-search-form-no-location .booking-search-fields {
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 22.5px;
+        gap: 31.5px;
         width: auto;
     }
 
@@ -73,7 +76,7 @@
 
     /* Figma starts the guests flyout at the divider, not at the selector. */
     .booking-search .booking-search-form-no-location .booking-search-panel-guests {
-        inset-inline: -22.5px auto;
+        inset-inline: -31.5px auto;
     }
 }
 
@@ -81,7 +84,7 @@
     .booking-search .booking-search-form.booking-search-form-no-location {
         flex-direction: row;
         gap: var(--dimension-spacing-general-5xl);
-        max-width: 848px;
+        max-width: 960px;
     }
 
     .booking-search .booking-search-form-no-location .booking-search-fields {
@@ -93,12 +96,6 @@
 
     .booking-search .booking-search-form-no-location .booking-search-panel-guests {
         inset-inline-start: calc(-1 * var(--dimension-spacing-general-3xl));
-    }
-}
-
-@media (768px <= width < 1200px) {
-    .booking-search .booking-search-fields {
-        column-gap: 1.5px;
     }
 }
 
@@ -116,6 +113,25 @@
         min-width: 0;
         width: auto;
     }
+
+    /* The 80px between the selectors and CHECK RATES is a spacer that gives way first, so a long date or guest count widens the selectors before any label truncates. */
+    .booking-search .booking-search-form:not(.booking-search-form-no-location) {
+        gap: 0;
+    }
+
+    .booking-search .booking-search-form:not(.booking-search-form-no-location)::before {
+        content: '';
+        order: 1;
+        flex: 0 1000 var(--dimension-spacing-general-5xl);
+    }
+
+    .booking-search .booking-search-form:not(.booking-search-form-no-location) .booking-search-fields {
+        flex: 1 1 auto;
+    }
+
+    .booking-search .booking-search-form:not(.booking-search-form-no-location) .booking-search-submit {
+        order: 2;
+    }
 }
 
 /* divider: horizontal on mobile, vertical from tablet up */
@@ -125,6 +141,13 @@
     width: 100%;
     height: var(--stroke-weight-s);
     background-color: var(--color-stroke-main-primary);
+}
+
+/* Figma's mobile dividers are hairlines that take no layout space. */
+@media (width < 768px) {
+    .booking-search .booking-search-divider {
+        margin-block-end: calc(-1 * var(--stroke-weight-s));
+    }
 }
 
 @media (width >= 768px) {
@@ -301,6 +324,11 @@
 @media (width >= 1200px) {
     .booking-search .booking-search-panel-location {
         width: 240px;
+    }
+
+    /* Figma starts the guests flyout 11px before the selector, around the divider. */
+    .booking-search .booking-search-panel-guests {
+        inset-inline-start: -11px;
     }
 }
 

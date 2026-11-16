@@ -62,7 +62,7 @@ export default function decorate(block: HTMLElement): void {
     const { label } = datesField;
     if (arrival && departure) {
       // The year is its own node so CSS can drop it where the bar is too narrow.
-      const year = el('span', `${BLOCK}-label-year`, ` ${yearFormat.format(departure)}`);
+      const year = el('span', `${BLOCK}-label-year`, `, ${yearFormat.format(departure)}`);
       label.replaceChildren(`${shortDate.format(arrival)} - ${shortDate.format(departure)}`, year);
     } else {
       label.textContent = arrival ? shortDate.format(arrival) : labels.dates;
