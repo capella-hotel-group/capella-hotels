@@ -23,9 +23,20 @@ interface RitualOptions {
   model?: boolean;
   eyebrow?: string | null;
   secondary?: boolean;
+  thumbOverlays?: boolean[];
+  imageOverlays?: boolean[];
 }
 
-function multifield(prefix: string, count: number, instrumented: boolean): string {
+// An entry holding only its image renders as a list item; once it also carries its alt
+// text or overlay flag the entries render flat, separated by <hr>.
+function multifield(prefix: string, count: number, instrumented: boolean, overlays: boolean[] = []): string {
+  if (overlays.length) {
+    const entries = Array.from({ length: count }, (_value, index) => {
+      const flag = index in overlays ? `<p>${overlays[index]}</p>` : '';
+      return `<picture><img src="${prefix}-${index + 1}.jpg" alt=""></picture><p>${prefix} alt ${index + 1}</p>${flag}`;
+    });
+    return count ? `<hr>${entries.join('<hr>')}<hr>` : '';
+  }
   const items = Array.from({ length: count }, (_value, index) => {
     const attribute = instrumented ? ` data-aue-resource="urn:${prefix}/item${index}"` : '';
     return `<li${attribute}><picture><img src="${prefix}-${index + 1}.jpg" alt="${prefix} ${index + 1}"></picture></li>`;
@@ -37,7 +48,15 @@ function multifield(prefix: string, count: number, instrumented: boolean): strin
 // collapses its label, link and flag into one grouped cell.
 function ritualRow(
   label: string,
-  { images = 2, thumbnails = 3, model = false, eyebrow = 'RITUAL', secondary = true }: RitualOptions = {},
+  {
+    images = 2,
+    thumbnails = 3,
+    model = false,
+    eyebrow = 'RITUAL',
+    secondary = true,
+    thumbOverlays = [],
+    imageOverlays = [],
+  }: RitualOptions = {},
 ): string {
   const attribute = model ? ` data-aue-model="hotel-architect-ritual" data-aue-resource="urn:${label}"` : '';
   const cells = [
@@ -45,10 +64,10 @@ function ritualRow(
     eyebrow === null ? '' : `<div>${eyebrow}</div>`,
     `<div>${label.toUpperCase()},<br>SECOND LINE</div>`,
     `<div>About ${label}.</div>`,
-    `<div>${multifield(`${label}-thumb`, thumbnails, model)}</div>`,
+    `<div>${multifield(`${label}-thumb`, thumbnails, model, thumbOverlays)}</div>`,
     '<div><p>Enquire</p><p><a href="/enquire">/enquire</a></p><p>false</p></div>',
     secondary ? '<div><p>Details</p><p><a href="/details">/details</a></p><p>true</p></div>' : '<div>false</div>',
-    `<div>${multifield(label, images, model)}</div>`,
+    `<div>${multifield(label, images, model, imageOverlays)}</div>`,
   ];
   return `<div${attribute}>${cells.join('')}</div>`;
 }
@@ -171,6 +190,23 @@ describe('hotel-architect with a single ritual', () => {
 
     thumbs[1]!.click();
     expect(block.querySelector('.hotel-architect-slide.is-selected img')?.getAttribute('alt')).toBe('Resort 1');
+  });
+
+  it('tints only the thumbnails and primary images that enable their own overlay', () => {
+    const block = build(
+      IDENTITY_ROWS + ritualRow('Resort', { images: 2, thumbOverlays: [false, true], imageOverlays: [true, false] }),
+    );
+    decorate(block);
+
+    const tinted = (selector: string): boolean[] =>
+      [...block.querySelectorAll(selector)].map((item) => item.classList.contains('has-dark-overlay'));
+    expect(tinted('.hotel-architect-thumb')).toEqual([false, true, false]);
+    expect(tinted('.hotel-architect-slide')).toEqual([true, false]);
+    expect(block.querySelector('.hotel-architect-thumb p, .hotel-architect-slide p')).toBeNull();
+    const alts = (selector: string): (string | null)[] =>
+      [...block.querySelectorAll(`${selector} img`)].map((img) => img.getAttribute('alt'));
+    expect(alts('.hotel-architect-thumb')).toEqual(['Resort-thumb alt 1', 'Resort-thumb alt 2', 'Resort-thumb alt 3']);
+    expect(alts('.hotel-architect-slide')).toEqual(['Resort alt 1', 'Resort alt 2']);
   });
 
   it('shows only the first architect card', () => {

@@ -111,13 +111,27 @@ function decorateCtas(cell: HTMLElement): void {
 }
 
 // decoration happens in place so that every instrumented cell survives for the Universal Editor
+// decorateBlock wraps a bare text cell in a <p>, so the flag may sit one level down
+function isFlagCell(cell: HTMLElement | undefined, allowEmpty = false): cell is HTMLElement {
+  if (!cell || cell.querySelector('picture, img, a')) return false;
+  return isBooleanFlag(cell) || (allowEmpty && !cell.textContent?.trim());
+}
+
+// the overlay cell sits right after the media cell; content published before it moved keeps it last
+function findOverlayCell(cells: HTMLElement[]): HTMLElement | undefined {
+  if (cells.length < 4) return undefined;
+  const [, current, , legacy] = cells;
+  return [current, legacy].find((cell) => isFlagCell(cell)) || [current, legacy].find((cell) => isFlagCell(cell, true));
+}
+
 function decorateCard(row: HTMLElement): void {
   row.classList.add('offers-carousel-card');
 
-  const [mediaCell, contentCell, ctaCell] = [...row.children] as HTMLElement[];
+  const cells = [...row.children] as HTMLElement[];
+  const overlayField = getField(row, 'darkOverlay') || findOverlayCell(cells);
+  const [mediaCell, contentCell, ctaCell] = cells.filter((cell) => cell !== overlayField);
   if (!mediaCell || !contentCell) return;
 
-  const overlayField = getField(row, 'darkOverlay') || row.children[3];
   if (overlayField) {
     mediaCell.classList.toggle(
       'offers-carousel-card-media-no-overlay',

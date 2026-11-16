@@ -137,6 +137,14 @@
           "value": ""
         },
         {
+          "component": "boolean",
+          "name": "thumbnailDarkOverlay",
+          "label": "Enable Dark Thumbnail Overlay",
+          "description": "Tints the desktop thumbnail. Does not affect the main media.",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
           "component": "select",
           "name": "media",
           "label": "Media Type",

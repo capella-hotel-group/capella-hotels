@@ -87,8 +87,9 @@
 
         /* Figma stacks two flat rgba(0,0,0,0.4) layers over the media at every
            breakpoint (the Container fill and the Overlay node); painting both keeps
-           the white copy legible over a pale image or a moving video */
-        &::after {
+           the white copy legible over a pale image or a moving video. Authors opt in
+           per space. */
+        &.has-dark-overlay::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -407,6 +408,7 @@
     }
 
     .choose-space-tab-media {
+        position: relative;
         display: block;
         width: 100%;
         /* Figma image-ratio: 140x105 mobile, 160x120 tablet and desktop, 180x135 desktop-xl */
@@ -422,6 +424,13 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        &.has-dark-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgb(0 0 0 / 40%);
         }
     }
 

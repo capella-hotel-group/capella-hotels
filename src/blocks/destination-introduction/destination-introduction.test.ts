@@ -34,7 +34,15 @@ function picture(src: string, alt = ''): string {
 
 function mediaItem(
   index: number,
-  options: { editor?: boolean; video?: boolean; overlay?: boolean; thumbAlt?: boolean; mediaAlt?: boolean } = {},
+  options: {
+    editor?: boolean;
+    video?: boolean;
+    overlay?: boolean;
+    thumbOverlay?: boolean;
+    legacy?: boolean;
+    thumbAlt?: boolean;
+    mediaAlt?: boolean;
+  } = {},
 ): string {
   const attributes = options.editor
     ? ` data-aue-resource="urn:item-${index}" data-aue-model="destination-introduction-image" data-aue-type="component"`
@@ -46,7 +54,8 @@ function mediaItem(
     ? `<a href="${videoPath}">${mediaAlt || videoPath}</a>`
     : picture(`media${index}.jpg`, mediaAlt);
   const thumb = picture(`thumb${index}.jpg`, options.thumbAlt === false ? '' : `Thumb ${index}`);
-  return `<div${attributes}><div>${thumb}</div><div>${options.video ? 'video' : 'image'}</div><div>${media}</div><div>${options.overlay ? 'true' : 'false'}</div></div>`;
+  const thumbOverlay = options.legacy ? '' : `<div>${options.thumbOverlay ? 'true' : 'false'}</div>`;
+  return `<div${attributes}><div>${thumb}</div>${thumbOverlay}<div>${options.video ? 'video' : 'image'}</div><div>${media}</div><div>${options.overlay ? 'true' : 'false'}</div></div>`;
 }
 
 function items(count: number, editor = false): string {
@@ -105,6 +114,27 @@ describe('destination-introduction', () => {
     expect(slides[1]!.querySelector('video source')?.getAttribute('src')).toBe('/content/dam/video2.mp4');
     expect(slides[1]!.querySelector('video')?.getAttribute('poster')).toBe('thumb2.jpg');
     expect(slides[1]!.querySelector('video')?.getAttribute('aria-label')).toBe('Video 2');
+  });
+
+  it('tints only the thumbnails that enable their own overlay', () => {
+    const block = build(COPY_ROWS + mediaItem(1, { thumbOverlay: true }) + mediaItem(2, { overlay: true }));
+    decorate(block);
+    const thumbs = [...block.querySelectorAll('.destination-introduction-thumb')];
+    expect(thumbs.map((thumb) => thumb.classList.contains('has-dark-overlay'))).toEqual([true, false]);
+    const slides = [...block.querySelectorAll(REAL_SLIDES)];
+    expect(slides.map((slide) => slide.classList.contains('has-dark-overlay'))).toEqual([false, true]);
+  });
+
+  it('reads items authored before the thumbnail overlay existed', () => {
+    const block = build(
+      COPY_ROWS + mediaItem(1, { legacy: true, overlay: true }) + mediaItem(2, { legacy: true, video: true }),
+    );
+    decorate(block);
+    const slides = [...block.querySelectorAll(REAL_SLIDES)];
+    expect(slides[0]!.classList.contains('has-dark-overlay')).toBe(true);
+    expect(slides[0]!.querySelector('img')?.getAttribute('src')).toBe('media1.jpg');
+    expect(slides[1]!.querySelector('video source')?.getAttribute('src')).toContain('video2.mp4');
+    expect(block.querySelector('.destination-introduction-thumb.has-dark-overlay')).toBeNull();
   });
 
   it('labels a thumbnail without its own alt with the media alt', () => {
