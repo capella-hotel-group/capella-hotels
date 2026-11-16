@@ -391,3 +391,34 @@ it('releases when a modal opens and cleans all listeners when unregistered', () 
   fresh();
   expect(wheel(40).defaultPrevented).toBe(false);
 });
+it('watches for modals only while it owns the page', () => {
+  const observe = jest.spyOn(MutationObserver.prototype, 'observe');
+  const disconnect = jest.spyOn(MutationObserver.prototype, 'disconnect');
+  setup();
+  expect(observe).not.toHaveBeenCalled();
+  wheel(40);
+  expect(observe).toHaveBeenCalledTimes(1);
+  fresh();
+  y = 950;
+  window.dispatchEvent(new Event('scroll'));
+  expect(disconnect).toHaveBeenCalled();
+  observe.mockRestore();
+  disconnect.mockRestore();
+});
+it('does not query the document for wheel input far from any block', () => {
+  setup(3000);
+  const query = jest.spyOn(document, 'querySelector');
+  expect(wheel(40).defaultPrevented).toBe(false);
+  expect(query).not.toHaveBeenCalled();
+  query.mockRestore();
+});
+it('snaps a misaligned block to the top without changing the slide', () => {
+  const { block, controller, binding } = setup(100);
+  expect(binding.isAligned()).toBe(false);
+  binding.snap();
+  settled();
+  expect(y).toBe(100);
+  expect(binding.isAligned()).toBe(true);
+  expect(controller.index).toBe(0);
+  expect(block.isConnected).toBe(true);
+});

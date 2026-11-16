@@ -105,12 +105,35 @@ function stopScrollAnimation(): void {
   settleFrame = undefined;
   flingFrame = undefined;
   settleTimer = undefined;
+  syncWatch();
 }
 function settling(): boolean {
   return settleFrame !== undefined;
 }
 function flinging(): boolean {
   return flingFrame !== undefined;
+}
+function syncWatch(): void {
+  const needed = Boolean(owner) || settling() || flinging();
+  if (needed && !modalObserver) {
+    // Menus can open without a subsequent wheel event; release on their DOM update.
+    modalObserver = new MutationObserver(() => {
+      if (suspended()) reset();
+    });
+    modalObserver.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['class', 'open', 'style', 'aria-modal', 'aria-hidden', 'hidden'],
+    });
+  } else if (!needed && modalObserver) {
+    modalObserver.disconnect();
+    modalObserver = undefined;
+  }
+}
+function setOwner(entry: Entry | undefined): void {
+  owner = entry;
+  syncWatch();
 }
 function align(entry: Entry, animate = false): void {
   stopScrollAnimation();
@@ -131,6 +154,7 @@ function align(entry: Entry, animate = false): void {
     jump(start + distance * (1 - (1 - progress) ** 3));
     if (progress < 1) {
       settleFrame = requestAnimationFrame(step);
+      syncWatch();
       return;
     }
     stopScrollAnimation();
@@ -143,7 +167,7 @@ function align(entry: Entry, animate = false): void {
   }, duration * 3);
 }
 function claim(entry: Entry): void {
-  owner = entry;
+  setOwner(entry);
   entry.visited = true;
 }
 function enter(entry: Entry, direction: Direction): void {
@@ -156,7 +180,7 @@ function enter(entry: Entry, direction: Direction): void {
 }
 function reset(): void {
   stopScrollAnimation();
-  owner = undefined;
+  setOwner(undefined);
   burst = undefined;
   entries.forEach((entry) => entry.cancelGesture());
 }
@@ -215,27 +239,30 @@ function fling(velocity: number, excluded?: Entry): void {
     flingFrame = requestAnimationFrame(step);
   };
   flingFrame = requestAnimationFrame(step);
+  syncWatch();
 }
 function onWheel(event: WheelEvent): void {
-  if (suspended()) {
-    reset();
-    return;
-  }
   if (flinging()) stopScrollAnimation();
   if (event.defaultPrevented || !event.cancelable || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX))
     return;
   const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
+  if (owner && !owner.block.isConnected) setOwner(undefined);
+  // Most wheel input happens far from any block: settle that before touching the DOM.
+  if (!owner && !candidate(delta, wheeling() ? burst?.released : undefined)) return;
+  if (suspended()) {
+    reset();
+    return;
+  }
   const direction: Direction = delta > 0 ? 1 : -1;
   const time = performance.now();
   const fresh = !burst || time - burst.time >= WHEEL_IDLE_MS;
   if (fresh) burst = { time, total: 0, consumed: false };
   const current = burst!;
   current.time = time;
-  if (owner && !owner.block.isConnected) owner = undefined;
   // Chrome keeps animating its fling after preventDefault; re-settle rather than hand the page back mid-gesture.
-  else if (owner && !aligned(owner) && !settling()) {
+  if (owner && !aligned(owner) && !settling()) {
     if (current.consumed) align(owner, true);
-    else owner = undefined;
+    else setOwner(undefined);
   }
   let entry = owner;
   if (!entry) {
@@ -270,7 +297,7 @@ function onWheel(event: WheelEvent): void {
   }
   if (edge(entry, direction)) {
     current.released = entry;
-    owner = undefined;
+    setOwner(undefined);
     return;
   }
   event.preventDefault();
@@ -290,23 +317,13 @@ function attach(): void {
     () => {
       if (owner && !aligned(owner) && !wheeling() && !settling() && !flinging()) {
         owner.cancelGesture();
-        owner = undefined;
+        setOwner(undefined);
       }
     },
     { passive: true, signal },
   );
   window.addEventListener('blur', reset, { signal });
   document.addEventListener('visibilitychange', reset, { signal });
-  // Menus can open without a subsequent wheel event. Release immediately on their DOM update.
-  modalObserver = new MutationObserver(() => {
-    if (suspended()) reset();
-  });
-  modalObserver.observe(document.body, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['class', 'open', 'style', 'aria-modal', 'aria-hidden', 'hidden'],
-  });
 }
 
 /** Shared wheel ownership; per-block gestures feed the same finite carousel controller. */
@@ -317,8 +334,11 @@ export function registerScrollController(
   cleanup: () => void;
   cancel: () => void;
   resize: () => void;
+  snap: () => void;
+  isAligned: () => boolean;
 } {
-  if (carousel.count < 2 || block.closest('.adobe-ue-edit')) return { cleanup() {}, cancel() {}, resize() {} };
+  if (carousel.count < 2 || block.closest('.adobe-ue-edit'))
+    return { cleanup() {}, cancel() {}, resize() {}, snap() {}, isAligned: () => true };
   const entry: Entry = { block, carousel, cancelGesture: () => {}, visited: false };
   let gesture: 'slide' | 'copy' | 'entry' | 'page' | undefined;
   let copy: HTMLElement | undefined;
@@ -345,7 +365,7 @@ export function registerScrollController(
           gesture = 'slide';
           return true;
         }
-        owner = undefined;
+        setOwner(undefined);
         exited = entry;
       }
       // Nothing inside the block can consume this swipe, and the track suppresses native panning, so
@@ -390,12 +410,18 @@ export function registerScrollController(
       binding.cancel();
       if (owner === entry && !suspended()) align(entry);
     },
+    snap() {
+      if (suspended()) return;
+      claim(entry);
+      align(entry, true);
+    },
+    isAligned: () => aligned(entry),
     cleanup() {
       binding.cleanup();
       entries.delete(entry);
       if (owner === entry) {
         stopScrollAnimation();
-        owner = undefined;
+        setOwner(undefined);
       }
       if (burst?.released === entry || !entries.size) burst = undefined;
       if (!entries.size) {
