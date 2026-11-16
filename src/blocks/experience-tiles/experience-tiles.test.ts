@@ -135,7 +135,7 @@ describe('experience-tiles integration', () => {
     expect(element.getAttribute('role')).toBe('region');
     expect(element.getAttribute('aria-roledescription')).toBe('carousel');
     expect(element.getAttribute('aria-label')).toBe('Experience tiles');
-    expect(element.hasAttribute('tabindex')).toBe(false);
+    expect(element.getAttribute('tabindex')).toBe('-1');
     expect(status.getAttribute('aria-live')).toBe('polite');
     expect(previous.getAttribute('aria-disabled')).toBe('true');
     expect(status.textContent).toBe('');
@@ -172,10 +172,35 @@ describe('experience-tiles integration', () => {
   it('hands focus to the matching control when the focused slide leaves', () => {
     const element = block();
     decorate(element);
+    const original = Element.prototype.matches;
+    const matches = jest.spyOn(Element.prototype, 'matches').mockImplementation(function (
+      this: Element,
+      selector: string,
+    ) {
+      return selector === ':focus-visible' ? true : original.call(this, selector);
+    });
     element.querySelector<HTMLElement>('.experience-tiles-slide a')!.focus();
     const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
     next.click();
     expect(document.activeElement).toBe(next);
+    matches.mockRestore();
+  });
+  it('keeps focus on the block for a pointer-driven step', () => {
+    const element = block();
+    decorate(element);
+    const original = Element.prototype.matches;
+    const matches = jest.spyOn(Element.prototype, 'matches').mockImplementation(function (
+      this: Element,
+      selector: string,
+    ) {
+      return selector === ':focus-visible' ? false : original.call(this, selector);
+    });
+    element.querySelector<HTMLElement>('.experience-tiles-slide a')!.focus();
+    const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
+    next.click();
+    expect(document.activeElement).toBe(element);
+    expect(element.getAttribute('tabindex')).toBe('-1');
+    matches.mockRestore();
   });
   it('renders no controls in the editor', () => {
     document.body.classList.add('adobe-ue-edit');

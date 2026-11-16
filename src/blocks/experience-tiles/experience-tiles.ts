@@ -6,6 +6,15 @@ import { registerScrollController } from './lib/scroll-controller';
 import { suppressTransitionsDuringResize } from './lib/resize-guard';
 import { isUniversalEditor } from '@/utils/env';
 
+// jsdom's nwsapi may not implement :focus-visible.
+function isFocusVisible(element: Element | null): boolean {
+  try {
+    return element?.matches(':focus-visible') ?? false;
+  } catch {
+    return false;
+  }
+}
+
 // A single observer covers all instances, including UE replacing children in place.
 const instances = new Map<HTMLElement, { track: HTMLElement; cleanup: () => void }>();
 let removalObserver: MutationObserver | undefined;
@@ -180,7 +189,8 @@ export default function decorate(block: HTMLElement): void {
       controls?.update(index);
       if (near && !editing) preloadNeighbours(slideEls, index);
     },
-    focusTarget: (direction) => controls?.focusTarget(direction) ?? null,
+    focusTarget: (direction) =>
+      isFocusVisible(document.activeElement) ? (controls?.focusTarget(direction) ?? null) : null,
   });
   carousel.init();
   const stopNear = editing
@@ -197,6 +207,8 @@ export default function decorate(block: HTMLElement): void {
   }
   if (multiple && !editing) {
     track.classList.add('experience-tiles-track--scroll');
+    // Focusable without a Tab stop, so stepping via pointer/touch can still hand focus to the block.
+    block.tabIndex = -1;
     controls = buildControls(slides.length, (direction) => {
       if (!scroll.isAligned()) scroll.snap();
       carousel.requestStep(direction);
@@ -245,5 +257,6 @@ export default function decorate(block: HTMLElement): void {
     stopNear();
     controls?.element.remove();
     controls?.status.remove();
+    block.removeAttribute('tabindex');
   });
 }

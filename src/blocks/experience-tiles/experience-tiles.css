@@ -401,6 +401,12 @@
     outline-offset: -2px;
 }
 
+/* Programmatic focus after a pointer-driven step lands on the block itself (tabindex=-1, never a
+   Tab stop); it must not show an outline since it isn't keyboard navigation. */
+.experience-tiles:focus:not(:focus-visible) {
+    outline: none;
+}
+
 /* Keyboard-only: invisible until a control takes focus. */
 .experience-tiles .experience-tiles-controls {
     position: absolute;
