@@ -1,8 +1,3 @@
-jest.mock('@/app/scripts.js', () => ({
-  LANG_MAP: {},
-  VALID_LANG_PRIMARIES: new Set(['en']),
-}));
-
 import { labelFromDocument, resolveTrail } from './labels';
 
 function htmlDoc(head: string): Document {

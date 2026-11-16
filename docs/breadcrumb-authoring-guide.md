@@ -25,13 +25,18 @@ Each item uses the first value that is set on that page's properties:
 If the current page has none of these, its URL name is used (`colonial-manor`
 becomes `Colonial Manor`).
 
+If a page's **Title** is written for search engines (for example
+"5 Star Hotel in Singapore | Capella Hotel Singapore"), set a short
+**Breadcrumb Title** such as "Capella Singapore"; otherwise the full Title
+appears in the breadcrumb.
+
 ## What visitors see
 
-- The first item is the site's home page for that language, for example
-  `/singapore/en/home`. If a site has no `/home` page, the language root
-  (for example `/sanya/en`) is used instead. On the home page itself, no
-  breadcrumb is shown. To change the first item's label, set
-  **Breadcrumb Title** on that home page.
+- The first item is the page at the second level of the URL, for example the
+  hotel page `/en/capella-singapore`. If a `/home` page exists below it (for
+  example `/singapore/en/home`), the first item links to that home page
+  instead. On the first-item page itself, no breadcrumb is shown. To change
+  the first item's label, set **Breadcrumb Title** on that page.
 - Parent pages are links; the current page is plain text.
 - A parent page that is unpublished, deleted or is only a folder is left out,
   so the breadcrumb never links to a missing page.

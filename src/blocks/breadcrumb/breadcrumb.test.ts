@@ -1,7 +1,3 @@
-jest.mock('@/app/scripts.js', () => ({
-  LANG_MAP: {},
-  VALID_LANG_PRIMARIES: new Set(['en']),
-}));
 jest.mock('@/utils/env.js', () => ({ isUniversalEditor: jest.fn(() => false) }));
 
 import { isUniversalEditor } from '@/utils/env.js';

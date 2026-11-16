@@ -1,5 +1,3 @@
-import { LANG_MAP, VALID_LANG_PRIMARIES } from '@/app/scripts.js';
-
 const AUTHOR_ROOT = '/content/capella-hotels';
 
 export interface PagePath {
@@ -14,23 +12,15 @@ export function parsePagePath(pathname: string): PagePath {
   return { segments: path.split('/').filter(Boolean), isAuthor };
 }
 
-function isLanguage(segment: string): boolean {
-  const lower = segment.toLowerCase();
-  return Boolean(LANG_MAP[lower]) || VALID_LANG_PRIMARIES.has(lower.split('-')[0] ?? '');
-}
-
-export function rootDepth(segments: string[]): number {
-  if (!segments.length) return 0;
-  const index = segments.findIndex(isLanguage);
-  return index === -1 ? 1 : index + 1;
-}
-
+// The root page is always the second URL level: `/en/capella-singapore` in
+// production, `/singapore/en` in the current dev content.
+const ROOT_DEPTH = 2;
 const HOME_SEGMENT = 'home';
 
-// The site's landing page lives at `{root}/home`; the root crumb stands for it,
+// Some sites keep their landing page at `{root}/home`; the root crumb stands for it,
 // so the home page shows no trail and is never listed as a separate ancestor.
 export function trailPaths(page: PagePath): string[][] {
-  const root = rootDepth(page.segments);
+  const root = ROOT_DEPTH;
   if (page.segments.length <= root) return [];
   const isUnderHome = page.segments[root]?.toLowerCase() === HOME_SEGMENT;
   if (isUnderHome && page.segments.length === root + 1) return [];
