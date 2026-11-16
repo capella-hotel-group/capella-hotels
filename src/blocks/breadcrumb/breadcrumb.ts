@@ -72,5 +72,6 @@ export default async function decorate(block: HTMLElement, pathname = window.loc
 
   if (crumbs.length >= 2) block.replaceChildren(renderTrail(crumbs));
   else block.replaceChildren(...(isUniversalEditor() ? [renderPlaceholder()] : []));
+  block.hidden = !block.childElementCount;
   block.classList.remove('is-loading');
 }

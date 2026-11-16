@@ -67,6 +67,7 @@ describe('decorate', () => {
     await decorate(block, '/singapore/en');
 
     expect(block.childElementCount).toBe(0);
+    expect(block.hidden).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -102,5 +103,6 @@ describe('decorate', () => {
     await decorate(block, '/singapore/en/accommodation');
 
     expect(block.querySelector('.breadcrumb-placeholder')).not.toBeNull();
+    expect(block.hidden).toBe(false);
   });
 });
