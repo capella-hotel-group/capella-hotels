@@ -134,3 +134,26 @@ it('leaves every slide accessible in the editor', () => {
     expect(slide.hasAttribute('aria-hidden')).toBe(false);
   });
 });
+it('reports every active change and asks where focus should go', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const host = document.createElement('div');
+  const target = document.createElement('button');
+  const items = [0, 1].map(() => {
+    const slide = document.createElement('div');
+    slide.innerHTML = '<a href="#x">x</a>';
+    host.append(slide);
+    return slide;
+  });
+  host.append(target);
+  document.body.append(host);
+  const onChange = jest.fn();
+  controller = new CarouselController(items, { onChange, focusTarget: () => target });
+  controller.init();
+  expect(onChange).toHaveBeenLastCalledWith(0);
+  items[0]!.querySelector('a')!.focus();
+  controller.requestStep(1);
+  expect(onChange).toHaveBeenLastCalledWith(1);
+  expect(document.activeElement).toBe(target);
+});

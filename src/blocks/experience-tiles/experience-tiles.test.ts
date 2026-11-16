@@ -50,12 +50,12 @@ function active(element: HTMLElement): number {
     (slide) => slide.getAttribute('aria-hidden') === 'false',
   );
 }
-/** Stubs IntersectionObserver, which jsdom does not provide, and returns its callback. */
+/** Stubs IntersectionObserver, which jsdom does not provide, and returns a trigger for every observer. */
 function observeIntersection(): (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void {
-  let notify: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void = () => {};
+  const callbacks: ((records: { isIntersecting: boolean; intersectionRatio: number }[]) => void)[] = [];
   globalThis.IntersectionObserver = class {
     constructor(callback: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void) {
-      notify = callback;
+      callbacks.push(callback);
     }
     observe(): void {}
     disconnect(): void {}
@@ -64,7 +64,7 @@ function observeIntersection(): (records: { isIntersecting: boolean; intersectio
       return [];
     }
   } as unknown as typeof IntersectionObserver;
-  return (records) => notify(records);
+  return (records) => callbacks.forEach((callback) => callback(records));
 }
 describe('experience-tiles integration', () => {
   beforeEach(() => {
@@ -258,5 +258,18 @@ describe('experience-tiles integration', () => {
     decorate(element);
     expect(element.querySelector('.experience-tiles-description')).toBe(description);
     expect(description.closest('.experience-tiles-hidden')).toBeNull();
+  });
+
+  it('preloads only the neighbouring slides once the block is near the viewport', () => {
+    const near = observeIntersection();
+    const element = block();
+    element.querySelectorAll('img').forEach((img) => img.setAttribute('loading', 'lazy'));
+    decorate(element);
+    const slides = [...element.querySelectorAll('.experience-tiles-slide')];
+    const loading = (index: number) => slides[index]!.querySelector('img')!.getAttribute('loading');
+    expect(loading(1)).toBe('lazy');
+    near([{ isIntersecting: true, intersectionRatio: 0.1 }]);
+    expect(loading(1)).toBe('eager');
+    expect(loading(2)).toBe('lazy');
   });
 });

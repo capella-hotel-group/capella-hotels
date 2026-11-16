@@ -114,6 +114,32 @@ function observeRemoval(block: HTMLElement, track: HTMLElement, cleanup: () => v
   removalObserver.observe(document.body, { childList: true, subtree: true });
 }
 
+// Hidden slides sit outside the clipped track, so native lazy loading never fetches them.
+function preloadNeighbours(slides: HTMLElement[], index: number): void {
+  [slides[index - 1], slides[index + 1]].forEach((slide) =>
+    slide?.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((img) => {
+      img.setAttribute('loading', 'eager');
+    }),
+  );
+}
+
+function whenNear(block: HTMLElement, callback: () => void): () => void {
+  if (typeof IntersectionObserver === 'undefined') {
+    callback();
+    return () => {};
+  }
+  const observer = new IntersectionObserver(
+    (records) => {
+      if (!records.some((record) => record.isIntersecting)) return;
+      observer.disconnect();
+      callback();
+    },
+    { rootMargin: '100% 0px' },
+  );
+  observer.observe(block);
+  return () => observer.disconnect();
+}
+
 export default function decorate(block: HTMLElement): void {
   if (instances.get(block)?.track.parentElement === block) return;
   instances.get(block)?.cleanup();
@@ -144,8 +170,19 @@ export default function decorate(block: HTMLElement): void {
   const { signal } = listeners;
   const slideEls = [...track.children] as HTMLElement[];
   const releaseEntrance = holdEntrance(block, editing);
-  const carousel = new CarouselController(slideEls);
+  let near = false;
+  const carousel = new CarouselController(slideEls, {
+    onChange: (index) => {
+      if (near && !editing) preloadNeighbours(slideEls, index);
+    },
+  });
   carousel.init();
+  const stopNear = editing
+    ? () => {}
+    : whenNear(block, () => {
+        near = true;
+        preloadNeighbours(slideEls, carousel.index);
+      });
   const scroll = registerScrollController(block, carousel);
   if (multiple && !editing) track.classList.add('experience-tiles-track--scroll');
   if (multiple) {
@@ -190,5 +227,6 @@ export default function decorate(block: HTMLElement): void {
     clearResize();
     releaseEntrance();
     stopOverflowWatch();
+    stopNear();
   });
 }
