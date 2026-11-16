@@ -4,6 +4,7 @@ import { INTERACTIVE_TARGET } from './lib/gesture';
 import { isItemRow, parseBlockConfig, parseSlides } from './lib/parse';
 import { registerScrollController } from './lib/scroll-controller';
 import { suppressTransitionsDuringResize } from './lib/resize-guard';
+import { isUniversalEditor } from '@/utils/env';
 
 // A single observer covers all instances, including UE replacing children in place.
 const instances = new Map<HTMLElement, { track: HTMLElement; cleanup: () => void }>();
@@ -54,25 +55,52 @@ function contentHeight(overlay: HTMLElement): number {
 
 // Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard. A copy that fits
 // must stay out of the way: a scroll container would swallow page scrolling via overscroll containment.
-function syncCopyFocus(slides: HTMLElement[]): void {
-  slides.forEach((slide) => {
-    slide.querySelectorAll<HTMLElement>('.experience-tiles-overlay').forEach((overlay) => {
-      const scrollable = contentHeight(overlay) > overlay.clientHeight + 1;
-      overlay.classList.toggle('experience-tiles-overlay--scrollable', scrollable);
-      if (scrollable) {
-        overlay.tabIndex = 0;
-        overlay.setAttribute('role', 'group');
-      } else {
-        overlay.removeAttribute('tabindex');
-        overlay.removeAttribute('role');
-      }
+function syncOverlay(overlay: HTMLElement): void {
+  const scrollable = contentHeight(overlay) > overlay.clientHeight + 1;
+  overlay.classList.toggle('experience-tiles-overlay--scrollable', scrollable);
+  if (scrollable) {
+    overlay.tabIndex = 0;
+    overlay.setAttribute('role', 'group');
+  } else {
+    overlay.removeAttribute('tabindex');
+    overlay.removeAttribute('role');
+  }
+}
+
+// Late web fonts, URL-bar height changes and UE edits all resize the copy without a window resize.
+function watchCopyOverflow(track: HTMLElement): () => void {
+  const overlays = [...track.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
+  overlays.forEach(syncOverlay);
+  if (typeof ResizeObserver === 'undefined') return () => {};
+  const dirty = new Set<HTMLElement>();
+  let frame: number | undefined;
+  const observer = new ResizeObserver((records) => {
+    records.forEach(({ target }) => {
+      const overlay = target.closest<HTMLElement>('.experience-tiles-overlay');
+      if (overlay) dirty.add(overlay);
+    });
+    frame ??= requestAnimationFrame(() => {
+      frame = undefined;
+      dirty.forEach(syncOverlay);
+      dirty.clear();
     });
   });
+  overlays.forEach((overlay) => {
+    observer.observe(overlay);
+    const body = overlay.querySelector(':scope > .experience-tiles-body');
+    if (body) observer.observe(body);
+  });
+  return () => {
+    observer.disconnect();
+    if (frame !== undefined) cancelAnimationFrame(frame);
+  };
 }
 
 function observeRemoval(block: HTMLElement, track: HTMLElement, cleanup: () => void): void {
   instances.set(block, { track, cleanup });
-  removalObserver ??= new MutationObserver(() => {
+  // Published pages never replace blocks; only UE swaps them in place.
+  if (!isUniversalEditor() || removalObserver) return;
+  removalObserver = new MutationObserver(() => {
     instances.forEach((instance, element) => {
       if (element.isConnected && element.contains(instance.track)) return;
       instance.cleanup();
@@ -120,7 +148,6 @@ export default function decorate(block: HTMLElement): void {
   carousel.init();
   const scroll = registerScrollController(block, carousel);
   if (multiple && !editing) track.classList.add('experience-tiles-track--scroll');
-  syncCopyFocus(slideEls);
   if (multiple) {
     block.tabIndex = 0;
     block.setAttribute('role', 'region');
@@ -145,9 +172,11 @@ export default function decorate(block: HTMLElement): void {
     onEnd: () => {
       carousel.endResize();
       scroll.resize();
-      syncCopyFocus(slideEls);
     },
   });
+  // Constructed after the resize guard's own observer: order is otherwise inert, but the test
+  // double for ResizeObserver only tracks the most recently constructed instance's callback.
+  const stopOverflowWatch = watchCopyOverflow(track);
   block.addEventListener(
     'aue:ui-select',
     (event) => {
@@ -162,5 +191,6 @@ export default function decorate(block: HTMLElement): void {
     listeners.abort();
     clearResize();
     releaseEntrance();
+    stopOverflowWatch();
   });
 }

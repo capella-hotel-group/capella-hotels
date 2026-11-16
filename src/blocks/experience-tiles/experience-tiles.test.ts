@@ -15,6 +15,23 @@ jest.mock(
   { virtual: true },
 );
 
+const editor = { active: false };
+jest.mock('@/utils/env', () => ({ isUniversalEditor: () => editor.active }));
+
+/** Stubs ResizeObserver, which jsdom lacks, and returns a trigger for its callback. */
+function observeResize(): (targets: Element[]) => void {
+  let notify: (records: { target: Element }[]) => void = () => {};
+  globalThis.ResizeObserver = class {
+    constructor(callback: (records: { target: Element }[]) => void) {
+      notify = callback;
+    }
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  } as unknown as typeof ResizeObserver;
+  return (targets) => notify(targets.map((target) => ({ target })));
+}
+
 function block(config: string[] = [], count = 3): HTMLElement {
   const element = document.createElement('div');
   element.className = 'experience-tiles';
@@ -60,6 +77,8 @@ describe('experience-tiles integration', () => {
   afterEach(async () => {
     document.body.replaceChildren();
     Reflect.deleteProperty(globalThis, 'IntersectionObserver');
+    Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    editor.active = false;
     await Promise.resolve();
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
@@ -96,6 +115,7 @@ describe('experience-tiles integration', () => {
     expect(key('Tab').defaultPrevented).toBe(false);
   });
   it('retains instrumented config and cleans up when UE replaces the track', async () => {
+    editor.active = true;
     const element = block(['false']);
     const field = element.firstElementChild!.firstElementChild!;
     field.setAttribute('data-aue-prop', 'autoplay');
@@ -105,6 +125,13 @@ describe('experience-tiles integration', () => {
     await Promise.resolve();
     window.dispatchEvent(new Event('resize'));
     expect(jest.getTimerCount()).toBe(0);
+  });
+  it('does not watch the page for removals outside the editor', () => {
+    const observe = jest.spyOn(MutationObserver.prototype, 'observe');
+    const element = block();
+    decorate(element);
+    expect(observe).not.toHaveBeenCalledWith(document.body, { childList: true, subtree: true });
+    observe.mockRestore();
   });
   it('keeps single slides free of carousel interaction', () => {
     const element = block([], 1);
@@ -131,28 +158,25 @@ describe('experience-tiles integration', () => {
     document.body.classList.remove('adobe-ue-edit');
   });
   it('lets the keyboard reach copy that overflows its panel', () => {
+    const resize = observeResize();
     const element = block();
     decorate(element);
     const [overflowing, fitting] = [...element.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
+    const body = (overlay: HTMLElement) => overlay.querySelector<HTMLElement>('.experience-tiles-body')!;
     Object.defineProperties(overflowing!, { clientHeight: { value: 200 } });
-    Object.defineProperties(overflowing!.firstElementChild!, { offsetHeight: { value: 600 } });
+    Object.defineProperties(body(overflowing!), { offsetHeight: { value: 600 } });
     // Windows glyph overflow inflates scrollHeight on copy whose layout fits
     Object.defineProperties(fitting!, { scrollHeight: { value: 205 }, clientHeight: { value: 200 } });
-    Object.defineProperties(fitting!.firstElementChild!, { offsetHeight: { value: 200 } });
+    Object.defineProperties(body(fitting!), { offsetHeight: { value: 200 } });
 
-    // the guard only reacts to a width change, and jsdom reports a zero-sized track
-    const track = element.querySelector<HTMLElement>('.experience-tiles-track')!;
-    track.getBoundingClientRect = () =>
-      ({ width: 834, height: 900, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} }) as DOMRect;
-    window.dispatchEvent(new Event('resize'));
-    jest.advanceTimersByTime(150);
+    // e.g. a web font finishing after decoration: no window resize involved
+    resize([body(overflowing!), body(fitting!)]);
+    jest.advanceTimersByTime(16);
 
     expect(overflowing!.tabIndex).toBe(0);
     expect(overflowing!.getAttribute('role')).toBe('group');
     expect(overflowing!.classList.contains('experience-tiles-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
-    // a non-overflowing overlay must not become a scroll container, or it takes focus and wheel input
-    // the page is better off keeping
     expect(fitting!.classList.contains('experience-tiles-overlay--scrollable')).toBe(false);
   });
   it('holds the entrance animation until the block is scrolled into view', () => {
