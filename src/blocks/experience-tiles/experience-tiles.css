@@ -292,11 +292,6 @@
     background: var(--color-stroke-action-inverse-default);
 }
 
-.experience-tiles:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: -2px;
-}
-
 @media (width >= 768px) {
     /* tablet+desktop lay the heading and the description+links out as two side-by-side
        columns; mobile keeps them stacked (the body's own flex column above) */
@@ -404,8 +399,47 @@
 
 .experience-tiles .experience-tiles-overlay:focus-visible,
 .experience-tiles a:focus-visible {
-    outline: 2px solid currentColor;
+    outline: var(--stroke-weight-m) solid var(--color-text-main-inverse-heading);
     outline-offset: -2px;
+}
+
+/* Keyboard-only: invisible until a control takes focus. */
+.experience-tiles .experience-tiles-controls {
+    position: absolute;
+    inset-block-start: var(--dimension-spacing-general-m);
+    inset-inline-end: var(--dimension-spacing-general-m);
+    z-index: 2;
+    display: flex;
+    gap: var(--dimension-spacing-general-xs);
+}
+
+.experience-tiles .experience-tiles-controls:not(:focus-within) {
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.experience-tiles .experience-tiles-control {
+    padding: var(--dimension-spacing-general-xs) var(--dimension-spacing-general-m);
+    border: var(--stroke-weight-s) solid var(--color-stroke-action-default);
+    background: var(--color-surface-action-inverse-default);
+    color: var(--color-text-action-default);
+    font-family: var(--type-font-family-cta);
+    font-size: var(--typography-fontsize-body-m);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.experience-tiles .experience-tiles-control[aria-disabled='true'] {
+    color: var(--color-text-main-disabled);
+    cursor: default;
+}
+
+.experience-tiles .experience-tiles-control:focus-visible {
+    outline: var(--stroke-weight-m) solid var(--color-text-main-inverse-heading);
+    outline-offset: 2px;
 }
 
 .experience-tiles .experience-tiles-placeholder {

@@ -1,6 +1,6 @@
+import { buildControls, LABELS, type CarouselControls } from './lib/a11y-controls';
 import { CarouselController } from './lib/carousel-controller';
 import { buildSlide } from './lib/dom-builder';
-import { INTERACTIVE_TARGET } from './lib/gesture';
 import { isItemRow, parseBlockConfig, parseSlides } from './lib/parse';
 import { registerScrollController } from './lib/scroll-controller';
 import { suppressTransitionsDuringResize } from './lib/resize-guard';
@@ -174,10 +174,13 @@ export default function decorate(block: HTMLElement): void {
   const slideEls = [...track.children] as HTMLElement[];
   const releaseEntrance = holdEntrance(block, editing);
   let near = false;
+  let controls: CarouselControls | undefined;
   const carousel = new CarouselController(slideEls, {
     onChange: (index) => {
+      controls?.update(index);
       if (near && !editing) preloadNeighbours(slideEls, index);
     },
+    focusTarget: (direction) => controls?.focusTarget(direction) ?? null,
   });
   carousel.init();
   const stopNear = editing
@@ -187,18 +190,27 @@ export default function decorate(block: HTMLElement): void {
         preloadNeighbours(slideEls, carousel.index);
       });
   const scroll = registerScrollController(block, carousel);
-  if (multiple && !editing) track.classList.add('experience-tiles-track--scroll');
   if (multiple) {
-    block.tabIndex = 0;
     block.setAttribute('role', 'region');
     block.setAttribute('aria-roledescription', 'carousel');
-    block.setAttribute('aria-label', 'Experience tiles slideshow');
+    block.setAttribute('aria-label', LABELS.carousel);
+  }
+  if (multiple && !editing) {
+    track.classList.add('experience-tiles-track--scroll');
+    controls = buildControls(slides.length, (direction) => {
+      if (!scroll.isAligned()) scroll.snap();
+      carousel.requestStep(direction);
+    });
+    block.prepend(controls.element);
+    block.append(controls.status);
+    controls.update(carousel.index);
     block.addEventListener(
       'keydown',
       (event) => {
-        if (editing || event.target !== block || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
-        if (!(event.target instanceof Element) || event.target.closest(INTERACTIVE_TARGET)) return;
+        if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
         if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        if (!(event.target instanceof Element) || !event.target.closest('.experience-tiles-controls')) return;
+        if (!scroll.isAligned()) return;
         if (carousel.requestStep(event.key === 'ArrowDown' ? 1 : -1) !== 'edge') event.preventDefault();
       },
       { signal },
@@ -231,5 +243,7 @@ export default function decorate(block: HTMLElement): void {
     releaseEntrance();
     stopOverflowWatch();
     stopNear();
+    controls?.element.remove();
+    controls?.status.remove();
   });
 }

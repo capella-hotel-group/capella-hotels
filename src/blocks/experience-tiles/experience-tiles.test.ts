@@ -83,7 +83,7 @@ describe('experience-tiles integration', () => {
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
   });
-  it('ignores legacy settings and renders no navigation or automatic changes', () => {
+  it('ignores legacy settings and never advances on its own', () => {
     const element = block(['id', 'qa', 'true', '6', 'true', 'true']);
     decorate(element);
     jest.advanceTimersByTime(60000);
@@ -92,27 +92,97 @@ describe('experience-tiles integration', () => {
     expect(element.dataset.automationKey).toBe('qa');
     expect(element.hasAttribute('data-test-id')).toBe(false);
     expect(element.dataset.testid).toBe('experience-tiles');
-    expect(element.querySelector('button')).toBeNull();
+    expect(element.querySelectorAll('.experience-tiles-control')).toHaveLength(2);
     expect(element.hasAttribute('aria-keyshortcuts')).toBe(false);
   });
-  it('uses vertical keys only at the root, leaves boundary/default interaction intact', () => {
+  it('steps with vertical arrows from the controls only while the block is aligned', () => {
     const element = block();
     decorate(element);
-    const key = (name: string, target: Element = element) => {
+    const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
+    const key = (name: string, target: Element) => {
       const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
       target.dispatchEvent(event);
       return event;
     };
-    expect(key('ArrowUp').defaultPrevented).toBe(false);
-    expect(key('ArrowDown').defaultPrevented).toBe(true);
+    expect(key('ArrowUp', next).defaultPrevented).toBe(false);
+    expect(key('ArrowDown', next).defaultPrevented).toBe(true);
     expect(active(element)).toBe(1);
-    key('ArrowDown', element.querySelector('a')!);
+    key('ArrowDown', element.querySelector('.experience-tiles-slide a')!);
     expect(active(element)).toBe(1);
-    key('ArrowDown');
+    expect(key(' ', next).defaultPrevented).toBe(false);
+    element.getBoundingClientRect = () =>
+      ({
+        top: 300,
+        bottom: 1100,
+        height: 800,
+        width: 1000,
+        left: 0,
+        right: 1000,
+        x: 0,
+        y: 300,
+        toJSON() {},
+      }) as DOMRect;
+    expect(key('ArrowDown', next).defaultPrevented).toBe(false);
+    expect(active(element)).toBe(1);
+  });
+  it('exposes hidden previous/next controls that track the active slide', () => {
+    const element = block();
+    decorate(element);
+    const previous = element.querySelector<HTMLButtonElement>('.experience-tiles-control--previous')!;
+    const next = element.querySelector<HTMLButtonElement>('.experience-tiles-control--next')!;
+    const status = element.querySelector('.experience-tiles-status')!;
+    expect(element.firstElementChild).toBe(previous.parentElement);
+    expect(element.getAttribute('role')).toBe('region');
+    expect(element.getAttribute('aria-roledescription')).toBe('carousel');
+    expect(element.getAttribute('aria-label')).toBe('Experience tiles');
+    expect(element.hasAttribute('tabindex')).toBe(false);
+    expect(status.getAttribute('aria-live')).toBe('polite');
+    expect(previous.getAttribute('aria-disabled')).toBe('true');
+    expect(status.textContent).toBe('');
+    next.click();
+    expect(active(element)).toBe(1);
+    expect(previous.getAttribute('aria-disabled')).toBe('false');
+    expect(status.textContent).toBe('Slide 2 of 3');
+    next.click();
+    expect(next.getAttribute('aria-disabled')).toBe('true');
+    next.click();
     expect(active(element)).toBe(2);
-    expect(key('ArrowDown').defaultPrevented).toBe(false);
-    expect(key(' ').defaultPrevented).toBe(false);
-    expect(key('Tab').defaultPrevented).toBe(false);
+  });
+  it('aligns a half-visible block before stepping from a control', () => {
+    window.scrollTo = jest.fn();
+    const element = block();
+    decorate(element);
+    element.getBoundingClientRect = () =>
+      ({
+        top: 300,
+        bottom: 1100,
+        height: 800,
+        width: 1000,
+        left: 0,
+        right: 1000,
+        x: 0,
+        y: 300,
+        toJSON() {},
+      }) as DOMRect;
+    element.querySelector<HTMLButtonElement>('.experience-tiles-control--next')!.click();
+    jest.advanceTimersByTime(2000);
+    expect(window.scrollTo).toHaveBeenCalled();
+    expect(active(element)).toBe(1);
+  });
+  it('hands focus to the matching control when the focused slide leaves', () => {
+    const element = block();
+    decorate(element);
+    element.querySelector<HTMLElement>('.experience-tiles-slide a')!.focus();
+    const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
+    next.click();
+    expect(document.activeElement).toBe(next);
+  });
+  it('renders no controls in the editor', () => {
+    document.body.classList.add('adobe-ue-edit');
+    const element = block();
+    decorate(element);
+    expect(element.querySelector('.experience-tiles-controls')).toBeNull();
+    document.body.classList.remove('adobe-ue-edit');
   });
   it('retains instrumented config and cleans up when UE replaces the track', async () => {
     editor.active = true;
@@ -137,6 +207,7 @@ describe('experience-tiles integration', () => {
     const element = block([], 1);
     decorate(element);
     expect(element.querySelector('button')).toBeNull();
+    expect(element.querySelector('.experience-tiles-controls')).toBeNull();
     expect(element.hasAttribute('tabindex')).toBe(false);
     expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
       false,
@@ -287,7 +358,7 @@ describe('experience-tiles integration', () => {
     expect(loading(1)).toBe('eager');
     expect(loading(2)).toBe('lazy');
     expect(loading(3)).toBe('lazy');
-    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    element.querySelector<HTMLElement>('.experience-tiles-control--next')!.click();
     expect(active(element)).toBe(1);
     expect(loading(2)).toBe('eager');
     expect(loading(3)).toBe('lazy');
