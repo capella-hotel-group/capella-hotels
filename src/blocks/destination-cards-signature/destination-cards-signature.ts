@@ -340,6 +340,11 @@ function setupModalHandlers(block: Element, modal: HTMLElement): void {
     }
     // Remove modal-open class from body to restore scroll
     document.body.classList.remove('modal-open');
+    // Remove focus from any CTA button that opened the modal
+    const focusedElement = document.activeElement as HTMLElement;
+    if (focusedElement && focusedElement.classList.contains('destination-cards-signature-cta')) {
+      focusedElement.blur();
+    }
   };
 
   destinationItems.forEach((item: Element) => {
