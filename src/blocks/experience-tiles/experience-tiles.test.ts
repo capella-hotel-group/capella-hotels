@@ -178,6 +178,9 @@ describe('experience-tiles integration', () => {
     expect(overflowing!.classList.contains('experience-tiles-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
     expect(fitting!.classList.contains('experience-tiles-overlay--scrollable')).toBe(false);
+    const heading = overflowing!.querySelector('.experience-tiles-headline')!;
+    expect(overflowing!.getAttribute('aria-labelledby')).toBe(heading.id);
+    expect(fitting!.hasAttribute('aria-labelledby')).toBe(false);
   });
   it('holds the entrance animation until the block is scrolled into view', () => {
     const element = block();
@@ -288,5 +291,36 @@ describe('experience-tiles integration', () => {
     expect(active(element)).toBe(1);
     expect(loading(2)).toBe('eager');
     expect(loading(3)).toBe('lazy');
+  });
+
+  it('labels slides as groups and renders real headings', () => {
+    const element = block();
+    decorate(element);
+    const slides = [...element.querySelectorAll<HTMLElement>('.experience-tiles-slide')];
+    expect(element.querySelector('.experience-tiles-track')!.tagName).toBe('DIV');
+    expect(slides[1]!.tagName).toBe('DIV');
+    expect(slides[1]!.getAttribute('role')).toBe('group');
+    expect(slides[1]!.getAttribute('aria-roledescription')).toBe('slide');
+    expect(slides[1]!.getAttribute('aria-label')).toBe('2 of 3');
+    expect(slides[0]!.querySelector('.experience-tiles-item--left .experience-tiles-headline')!.tagName).toBe('H2');
+    expect(slides[0]!.querySelector('.experience-tiles-item--right .experience-tiles-headline')!.tagName).toBe('H3');
+  });
+  it('keeps UE instrumentation on the promoted headline', () => {
+    const element = block([], 1);
+    const content = element.querySelector<HTMLElement>('[data-aue-model] > div:nth-child(2)')!;
+    content.innerHTML = '<p data-aue-prop="leftContent_headline" data-aue-type="text">Ubud</p>';
+    decorate(element);
+    const heading = element.querySelector('h2.experience-tiles-headline')!;
+    expect(heading.getAttribute('data-aue-prop')).toBe('leftContent_headline');
+    expect(heading.textContent).toBe('Ubud');
+  });
+  it('tells screen readers when a link opens a new tab', () => {
+    const element = block([], 1);
+    const ctas = element.querySelector<HTMLElement>('[data-aue-model] > div:nth-child(5)')!;
+    ctas.innerHTML = '<p><a href="/details">Details</a></p><p>true</p>';
+    decorate(element);
+    const link = element.querySelector<HTMLAnchorElement>('.experience-tiles-link')!;
+    expect(link.target).toBe('_blank');
+    expect(link.querySelector('.experience-tiles-sr-only')!.textContent).toBe(' (opens in new tab)');
   });
 });

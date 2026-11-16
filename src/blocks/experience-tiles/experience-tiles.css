@@ -222,6 +222,16 @@
     font-weight: var(--type-font-weight-heading);
     font-size: var(--typography-fontsize-heading-h1);
     line-height: var(--typography-line-height-heading-h1);
+    scroll-margin: 0;
+}
+
+.experience-tiles .experience-tiles-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 /* the right/detail panel renders the compact headline size */

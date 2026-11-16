@@ -61,9 +61,12 @@ function syncOverlay(overlay: HTMLElement): void {
   if (scrollable) {
     overlay.tabIndex = 0;
     overlay.setAttribute('role', 'group');
+    const heading = overlay.querySelector<HTMLElement>('.experience-tiles-headline');
+    if (heading?.id) overlay.setAttribute('aria-labelledby', heading.id);
   } else {
     overlay.removeAttribute('tabindex');
     overlay.removeAttribute('role');
+    overlay.removeAttribute('aria-labelledby');
   }
 }
 
@@ -154,9 +157,9 @@ export default function decorate(block: HTMLElement): void {
   const slides = parseSlides(itemRows);
   if (!slides.length) return;
 
-  const track = document.createElement('ul');
+  const track = document.createElement('div');
   track.className = 'experience-tiles-track';
-  slides.forEach((slide, index) => track.append(buildSlide(slide, index)));
+  slides.forEach((slide, index) => track.append(buildSlide(slide, index, slides.length)));
   // The instrumentation now belongs to the rendered slide; retain any unconsumed fields.
   itemRows.forEach((row) => {
     row.classList.add('experience-tiles-hidden');
