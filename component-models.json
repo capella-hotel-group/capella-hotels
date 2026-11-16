@@ -78,6 +78,19 @@
         "name": "cta2OpenInNewTab",
         "label": "CTA 2 Open in New Tab",
         "value": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "pageTitle",
+        "label": "Page Title"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "breadcrumbTitle",
+        "label": "Breadcrumb Title",
+        "description": "Overrides this page's label in breadcrumbs without changing the page heading"
       }
     ]
   },
@@ -573,6 +586,28 @@
         "valueType": "string",
         "required": true,
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "breadcrumb",
+    "fields": [
+      {
+        "component": "select",
+        "name": "classes",
+        "label": "Style",
+        "valueType": "string",
+        "value": "",
+        "options": [
+          {
+            "name": "Default",
+            "value": ""
+          },
+          {
+            "name": "Inverse",
+            "value": "inverse"
+          }
+        ]
       }
     ]
   },
