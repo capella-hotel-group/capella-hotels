@@ -3462,7 +3462,6 @@
         "label": "Card Image",
         "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {
