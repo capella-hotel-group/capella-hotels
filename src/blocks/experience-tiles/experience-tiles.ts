@@ -44,12 +44,20 @@ function holdEntrance(block: HTMLElement, editing: boolean): () => void {
   };
 }
 
+// Layout boxes, not scrollHeight: Windows font metrics overflow a tight line-height and inflate it.
+function contentHeight(overlay: HTMLElement): number {
+  return Math.max(
+    0,
+    ...[...overlay.children].map((child) => (child as HTMLElement).offsetTop + (child as HTMLElement).offsetHeight),
+  );
+}
+
 // Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard. A copy that fits
 // must stay out of the way: a scroll container would swallow page scrolling via overscroll containment.
 function syncCopyFocus(slides: HTMLElement[]): void {
   slides.forEach((slide) => {
     slide.querySelectorAll<HTMLElement>('.experience-tiles-overlay').forEach((overlay) => {
-      const scrollable = overlay.scrollHeight > overlay.clientHeight + 1;
+      const scrollable = contentHeight(overlay) > overlay.clientHeight + 1;
       overlay.classList.toggle('experience-tiles-overlay--scrollable', scrollable);
       if (scrollable) {
         overlay.tabIndex = 0;

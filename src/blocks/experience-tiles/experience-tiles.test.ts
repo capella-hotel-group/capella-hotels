@@ -110,25 +110,34 @@ describe('experience-tiles integration', () => {
     decorate(element);
     expect(element.querySelector('button')).toBeNull();
     expect(element.hasAttribute('tabindex')).toBe(false);
-    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
+    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      false,
+    );
   });
   it('claims the vertical touch axis only where it owns page scrolling', () => {
     const owned = block();
     decorate(owned);
-    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(true);
+    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      true,
+    );
 
     document.body.classList.add('adobe-ue-edit');
     const edited = block();
     decorate(edited);
-    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
+    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      false,
+    );
     document.body.classList.remove('adobe-ue-edit');
   });
   it('lets the keyboard reach copy that overflows its panel', () => {
     const element = block();
     decorate(element);
     const [overflowing, fitting] = [...element.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
-    Object.defineProperties(overflowing!, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
-    Object.defineProperties(fitting!, { scrollHeight: { value: 200 }, clientHeight: { value: 200 } });
+    Object.defineProperties(overflowing!, { clientHeight: { value: 200 } });
+    Object.defineProperties(overflowing!.firstElementChild!, { offsetHeight: { value: 600 } });
+    // Windows glyph overflow inflates scrollHeight on copy whose layout fits
+    Object.defineProperties(fitting!, { scrollHeight: { value: 205 }, clientHeight: { value: 200 } });
+    Object.defineProperties(fitting!.firstElementChild!, { offsetHeight: { value: 200 } });
 
     // the guard only reacts to a width change, and jsdom reports a zero-sized track
     const track = element.querySelector<HTMLElement>('.experience-tiles-track')!;
@@ -197,7 +206,9 @@ describe('experience-tiles integration', () => {
 
     decorate(element);
 
-    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe('Nature guide');
+    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe(
+      'Nature guide',
+    );
     expect(element.querySelector('.experience-tiles-description')?.textContent).toBe('Discover the island with Ketut.');
   });
 

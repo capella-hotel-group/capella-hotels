@@ -289,6 +289,7 @@ it('keeps a copy gesture in the copy after reaching the bottom', () => {
   const { block, controller } = setup();
   const copy = block.querySelector<HTMLElement>('.experience-tiles-overlay')!;
   Object.defineProperties(copy, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
+  copy.classList.add('experience-tiles-overlay--scrollable');
   copy.scrollTop = 380;
   wheel(80, copy);
   expect(copy.scrollTop).toBe(400);

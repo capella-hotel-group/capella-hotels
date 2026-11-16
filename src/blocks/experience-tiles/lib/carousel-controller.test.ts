@@ -12,7 +12,9 @@ function setup(animated = false, reduced = false, count = 3): void {
   slides = Array.from({ length: count }, () => {
     const slide = document.createElement('li');
     slide.innerHTML =
-      '<div class="experience-tiles-item"><div class="experience-tiles-overlay"><a href="#cta">CTA</a></div></div>'.repeat(2);
+      '<div class="experience-tiles-item"><div class="experience-tiles-overlay"><a href="#cta">CTA</a></div></div>'.repeat(
+        2,
+      );
     if (animated)
       slide.querySelectorAll<HTMLElement>('.experience-tiles-item, .experience-tiles-overlay').forEach((el) => {
         el.style.transitionProperty = 'transform';
