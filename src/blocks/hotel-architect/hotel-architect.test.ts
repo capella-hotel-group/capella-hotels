@@ -27,11 +27,19 @@ interface RitualOptions {
   imageOverlays?: boolean[];
 }
 
+// An entry holding only its image renders as a list item; once it also carries its alt
+// text or overlay flag the entries render flat, separated by <hr>.
 function multifield(prefix: string, count: number, instrumented: boolean, overlays: boolean[] = []): string {
+  if (overlays.length) {
+    const entries = Array.from({ length: count }, (_value, index) => {
+      const flag = index in overlays ? `<p>${overlays[index]}</p>` : '';
+      return `<picture><img src="${prefix}-${index + 1}.jpg" alt=""></picture><p>${prefix} alt ${index + 1}</p>${flag}`;
+    });
+    return count ? `<hr>${entries.join('<hr>')}<hr>` : '';
+  }
   const items = Array.from({ length: count }, (_value, index) => {
     const attribute = instrumented ? ` data-aue-resource="urn:${prefix}/item${index}"` : '';
-    const flag = index in overlays ? `<p>${overlays[index]}</p>` : '';
-    return `<li${attribute}><picture><img src="${prefix}-${index + 1}.jpg" alt="${prefix} ${index + 1}"></picture>${flag}</li>`;
+    return `<li${attribute}><picture><img src="${prefix}-${index + 1}.jpg" alt="${prefix} ${index + 1}"></picture></li>`;
   }).join('');
   return count ? `<ul>${items}</ul>` : '';
 }
@@ -195,6 +203,10 @@ describe('hotel-architect with a single ritual', () => {
     expect(tinted('.hotel-architect-thumb')).toEqual([false, true, false]);
     expect(tinted('.hotel-architect-slide')).toEqual([true, false]);
     expect(block.querySelector('.hotel-architect-thumb p, .hotel-architect-slide p')).toBeNull();
+    const alts = (selector: string): (string | null)[] =>
+      [...block.querySelectorAll(`${selector} img`)].map((img) => img.getAttribute('alt'));
+    expect(alts('.hotel-architect-thumb')).toEqual(['Resort-thumb alt 1', 'Resort-thumb alt 2', 'Resort-thumb alt 3']);
+    expect(alts('.hotel-architect-slide')).toEqual(['Resort alt 1', 'Resort alt 2']);
   });
 
   it('shows only the first architect card', () => {

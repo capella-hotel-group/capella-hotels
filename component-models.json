@@ -2669,7 +2669,7 @@
           },
           {
             "component": "text",
-            "name": "imageAlt",
+            "name": "altText",
             "label": "Image Alt Text",
             "valueType": "string",
             "value": "",
@@ -2742,7 +2742,7 @@
           },
           {
             "component": "text",
-            "name": "imageAlt",
+            "name": "altText",
             "label": "Image Alt Text",
             "valueType": "string",
             "value": "",
@@ -3462,7 +3462,6 @@
         "label": "Card Image",
         "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {

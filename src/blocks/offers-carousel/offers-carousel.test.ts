@@ -54,6 +54,15 @@ describe('offers-carousel image overlay', () => {
     expect(block.querySelectorAll('.offers-carousel-card-cta')).toHaveLength(2);
   });
 
+  it.each([false, true])('reads a flag that block decoration wrapped in a paragraph (legacy: %s)', (legacy) => {
+    const block = createBlock('<p>false</p>', false, legacy);
+    decorate(block);
+    expect(block.querySelector('.offers-carousel-card-media-no-overlay')).not.toBeNull();
+    expect(block.querySelector('.offers-carousel-hidden')?.textContent).toBe('false');
+    expect(block.querySelector('.offers-carousel-card-eyebrow')?.textContent).toBe('Stay longer');
+    expect(block.querySelectorAll('.offers-carousel-card-cta')).toHaveLength(2);
+  });
+
   it.each([undefined, '', 'true'])('preserves the existing shade for %s', (value) => {
     const block = createBlock(value);
     decorate(block);
