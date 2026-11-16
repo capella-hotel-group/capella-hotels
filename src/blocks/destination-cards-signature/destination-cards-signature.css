@@ -499,8 +499,8 @@
 
     /* Card Title */
     .destination-cards-signature .destination-cards-signature-card-title {
-        font-size: var(--typography-fontsize-heading-h2);
-        line-height: var(--typography-line-height-heading-h2);
+        font-size: 28px;
+        line-height: 28px;
         width: 100%;
     }
 
@@ -613,9 +613,9 @@
     flex: 0;
     margin: 0;
     font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h2);
+    font-size: 28px;
     font-weight: 400;
-    line-height: var(--typography-line-height-heading-h2);
+    line-height: 28px;
     letter-spacing: normal;
     text-transform: none;
     text-align: center;
@@ -626,6 +626,13 @@
     align-items: center;
     justify-content: center;
     min-height: 28px;
+}
+
+@media (width >= 1920px) {
+    .destination-cards-signature .destination-cards-signature-card-title {
+        font-size: var(--typography-fontsize-heading-h4);
+        line-height: var(--typography-line-height-heading-h4);
+    }
 }
 
 .destination-cards-signature .destination-cards-signature-card-description {
