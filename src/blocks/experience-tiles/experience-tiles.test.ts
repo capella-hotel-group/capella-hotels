@@ -20,16 +20,16 @@ jest.mock('@/utils/env', () => ({ isUniversalEditor: () => editor.active }));
 
 /** Stubs ResizeObserver, which jsdom lacks, and returns a trigger for its callback. */
 function observeResize(): (targets: Element[]) => void {
-  let notify: (records: { target: Element }[]) => void = () => {};
+  const callbacks: ((records: { target: Element }[]) => void)[] = [];
   globalThis.ResizeObserver = class {
     constructor(callback: (records: { target: Element }[]) => void) {
-      notify = callback;
+      callbacks.push(callback);
     }
     observe(): void {}
     unobserve(): void {}
     disconnect(): void {}
   } as unknown as typeof ResizeObserver;
-  return (targets) => notify(targets.map((target) => ({ target })));
+  return (targets) => callbacks.forEach((callback) => callback(targets.map((target) => ({ target }))));
 }
 
 function block(config: string[] = [], count = 3): HTMLElement {

@@ -174,8 +174,6 @@ export default function decorate(block: HTMLElement): void {
       scroll.resize();
     },
   });
-  // Constructed after the resize guard's own observer: order is otherwise inert, but the test
-  // double for ResizeObserver only tracks the most recently constructed instance's callback.
   const stopOverflowWatch = watchCopyOverflow(track);
   block.addEventListener(
     'aue:ui-select',
