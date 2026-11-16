@@ -24,9 +24,7 @@
     height: 100dvh;
     width: 100%;
     margin: 0;
-    padding: 0;
     overflow: hidden;
-    list-style: none;
 }
 
 /* Declared once and never swapped mid-gesture: the block drives every vertical movement itself — the
@@ -413,7 +411,7 @@
     gap: var(--dimension-spacing-general-xs);
 }
 
-.experience-tiles .experience-tiles-controls:not(:focus-within) {
+.experience-tiles .experience-tiles-controls:not(:has(:focus-visible)) {
     width: 1px;
     height: 1px;
     overflow: hidden;
@@ -440,6 +438,7 @@
 .experience-tiles .experience-tiles-control:focus-visible {
     outline: var(--stroke-weight-m) solid var(--color-text-main-inverse-heading);
     outline-offset: 2px;
+    box-shadow: 0 0 0 calc(2px + var(--stroke-weight-m)) var(--color-text-action-default);
 }
 
 .experience-tiles .experience-tiles-placeholder {
