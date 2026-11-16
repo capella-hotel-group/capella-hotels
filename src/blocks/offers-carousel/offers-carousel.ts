@@ -111,8 +111,9 @@ function decorateCtas(cell: HTMLElement): void {
 }
 
 // decoration happens in place so that every instrumented cell survives for the Universal Editor
+// decorateBlock wraps a bare text cell in a <p>, so the flag may sit one level down
 function isFlagCell(cell: HTMLElement | undefined, allowEmpty = false): cell is HTMLElement {
-  if (!cell || cell.children.length > 0) return false;
+  if (!cell || cell.querySelector('picture, img, a')) return false;
   return isBooleanFlag(cell) || (allowEmpty && !cell.textContent?.trim());
 }
 

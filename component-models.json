@@ -2669,7 +2669,7 @@
           },
           {
             "component": "text",
-            "name": "imageAlt",
+            "name": "altText",
             "label": "Image Alt Text",
             "valueType": "string",
             "value": "",
@@ -2742,7 +2742,7 @@
           },
           {
             "component": "text",
-            "name": "imageAlt",
+            "name": "altText",
             "label": "Image Alt Text",
             "valueType": "string",
             "value": "",
