@@ -95,7 +95,7 @@ export default function decorate(block: HTMLElement): void {
   const configRows = rows.filter((row) => !itemRows.includes(row));
   const { id, dataTestId } = parseBlockConfig(configRows);
   if (id) block.id = id.replace(/^#/, '');
-  if (dataTestId) block.dataset.testId = dataTestId;
+  if (dataTestId) block.dataset.automationKey = dataTestId;
   configRows.forEach((row) => row.classList.add('experience-tiles-hidden'));
   const slides = parseSlides(itemRows);
   if (!slides.length) return;

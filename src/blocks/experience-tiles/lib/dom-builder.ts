@@ -1,6 +1,6 @@
 // src/blocks/experience-tiles/lib/dom-builder.ts
 import { moveInstrumentation } from '@/app/scripts';
-import type { SplitMediaPanel, SplitMediaSlide } from './types';
+import type { ExperienceTilesPanel, ExperienceTilesSlide } from './types';
 
 function isEnabled(value: string): boolean {
   return ['true', 'yes', 'enabled'].includes(value.trim().toLowerCase());
@@ -81,7 +81,7 @@ function buildHeading(
 }
 
 // left/hero panel: media + optional eyebrow + headline only, no description or CTAs
-function buildLeftPanel(panel: SplitMediaPanel): HTMLDivElement {
+function buildLeftPanel(panel: ExperienceTilesPanel): HTMLDivElement {
   const item = document.createElement('div');
   item.className = 'experience-tiles-item experience-tiles-item--left';
 
@@ -110,7 +110,7 @@ function buildLeftPanel(panel: SplitMediaPanel): HTMLDivElement {
 }
 
 // right/detail panel: media + headline + description + up to two CTAs
-function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
+function buildRightPanel(panel: ExperienceTilesPanel): HTMLDivElement {
   const item = document.createElement('div');
   item.className = 'experience-tiles-item experience-tiles-item--right';
 
@@ -165,7 +165,7 @@ function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
 }
 
 // a slide is one authored row now — move its instrumentation onto the <li>, not the panels
-export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement {
+export function buildSlide(slide: ExperienceTilesSlide, index: number): HTMLLIElement {
   const li = document.createElement('li');
   li.className = 'experience-tiles-slide';
   li.setAttribute('aria-hidden', index === 0 ? 'false' : 'true');

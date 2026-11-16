@@ -454,21 +454,6 @@
           }
         },
         {
-          "title": "Experience Tile",
-          "id": "experience-tiles-item",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block/item",
-                "template": {
-                  "name": "Experience Tile",
-                  "model": "experience-tiles-item"
-                }
-              }
-            }
-          }
-        },
-        {
           "title": "Filters Grid",
           "id": "filters-grid",
           "plugins": {

@@ -12,7 +12,7 @@ function transformTime(element: HTMLElement): number {
   style.transitionProperty.split(',').forEach((property, index) => {
     if (!['all', 'transform'].includes(property.trim())) return;
     const duration = durations[index % durations.length] ?? 0;
-    time = duration > 0 ? Math.max(0, duration + (delays[index % delays.length] ?? 0)) : 0;
+    if (duration > 0) time = Math.max(time, duration + (delays[index % delays.length] ?? 0));
   });
   return time;
 }

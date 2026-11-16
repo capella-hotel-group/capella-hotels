@@ -6,17 +6,12 @@
 .experience-tiles {
     --experience-tiles-motion-easing: cubic-bezier(0.37, 0, 0.63, 1);
     --experience-tiles-text-offset: 8px;
-    /* --experience-tiles-panel-duration: 1200ms;
-    --experience-tiles-panel-stagger: 100ms;
-    --experience-tiles-text-duration: 500ms;
-    --experience-tiles-text-delay: 900ms;
-    --experience-tiles-text-exit-duration: 250ms; */
-
-    --experience-tiles-panel-duration: 900ms; /* 1200 */
-    --experience-tiles-panel-stagger: 80ms; /* 100 */
-    --experience-tiles-text-duration: 400ms; /* 500 */
-    --experience-tiles-text-delay: 680ms; /* 900 */
-    --experience-tiles-text-exit-duration: 200ms; /* 250 */
+    --experience-tiles-panel-duration: 900ms;
+    --experience-tiles-panel-stagger: 80ms;
+    --experience-tiles-text-duration: 400ms;
+    --experience-tiles-text-delay: 680ms;
+    --experience-tiles-text-exit-duration: 200ms;
+    --experience-tiles-link-underline-offset: 3px;
 
     position: relative;
     width: 100%;
@@ -276,14 +271,14 @@
     color: var(--color-text-action-inverse-default);
     text-decoration: underline;
     text-decoration-thickness: var(--stroke-weight-s);
-    text-underline-offset: 3px;
+    text-underline-offset: var(--experience-tiles-link-underline-offset);
     text-transform: uppercase;
 }
 
 .experience-tiles .experience-tiles-link-divider {
     flex: none;
     width: var(--stroke-weight-s);
-    height: 20px;
+    height: var(--dimension-spacing-general-l);
     background: var(--color-stroke-action-inverse-default);
 }
 
@@ -308,6 +303,7 @@
     }
 
     .experience-tiles .experience-tiles-media {
+        /* Figma 7806:55712 — copy baseline offsets (left 189px, right 135px) */
         --experience-tiles-media-padding-bottom: 189px;
 
         padding-bottom: var(--experience-tiles-media-padding-bottom);
@@ -434,7 +430,7 @@
     inset: 40% 10% auto;
     z-index: 1;
     padding: 1rem;
-    background: white;
-    color: black;
+    background: var(--color-surface-action-inverse-default);
+    color: var(--color-text-main-body);
     text-align: center;
 }

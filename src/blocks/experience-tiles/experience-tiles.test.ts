@@ -70,7 +70,8 @@ describe('experience-tiles integration', () => {
     jest.advanceTimersByTime(60000);
     expect(active(element)).toBe(0);
     expect(element.id).toBe('id');
-    expect(element.dataset.testId).toBe('qa');
+    expect(element.dataset.automationKey).toBe('qa');
+    expect(element.hasAttribute('data-test-id')).toBe(false);
     expect(element.dataset.testid).toBe('experience-tiles');
     expect(element.querySelector('button')).toBeNull();
     expect(element.hasAttribute('aria-keyshortcuts')).toBe(false);

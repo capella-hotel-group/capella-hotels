@@ -1,4 +1,4 @@
-import type { SplitMediaSlide } from './types';
+import type { ExperienceTilesSlide } from './types';
 
 export const ITEM_MODEL = 'experience-tiles-slide';
 
@@ -24,7 +24,7 @@ export function isItemRow(row: HTMLElement): boolean {
   return !!row.querySelector('picture, img');
 }
 
-export function parseSlides(itemRows: HTMLElement[]): SplitMediaSlide[] {
+export function parseSlides(itemRows: HTMLElement[]): ExperienceTilesSlide[] {
   return itemRows.map((row) => {
     const [leftMedia, leftContent, rightMedia, rightContent, rightCtas] = [...row.children] as HTMLElement[];
     return {
