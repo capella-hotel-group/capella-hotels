@@ -11,7 +11,7 @@ function metaContent(doc: Document, name: string): string {
 }
 
 export function labelFromDocument(doc: Document): string {
-  return metaContent(doc, 'breadcrumbtitle') || metaContent(doc, 'pagetitle') || doc.title.trim();
+  return metaContent(doc, 'breadcrumbtitle') || doc.title.trim();
 }
 
 const FETCH_TIMEOUT_MS = 5000;

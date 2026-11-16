@@ -17,19 +17,18 @@ function page(head: string, ok = true) {
 
 describe('labelFromDocument', () => {
   it('prefers the breadcrumb title override', () => {
-    const doc = htmlDoc(
-      '<meta name="breadcrumbtitle" content="Rooms"><meta name="pagetitle" content="Accommodation"><title>Acc</title>',
-    );
+    const doc = htmlDoc('<meta name="breadcrumbtitle" content="Rooms"><title>Acc</title>');
     expect(labelFromDocument(doc)).toBe('Rooms');
   });
 
-  it('falls back to the page title when the override is blank', () => {
-    const doc = htmlDoc('<meta name="breadcrumbtitle" content="  "><meta name="pagetitle" content="Accommodation">');
+  it('falls back to the document title when the override is blank', () => {
+    const doc = htmlDoc('<meta name="breadcrumbtitle" content="  "><title>Accommodation</title>');
     expect(labelFromDocument(doc)).toBe('Accommodation');
   });
 
-  it('falls back to the document title', () => {
-    expect(labelFromDocument(htmlDoc('<title>Acc</title>'))).toBe('Acc');
+  it('ignores a pagetitle meta tag', () => {
+    const doc = htmlDoc('<meta name="pagetitle" content="Old"><title>Accommodation</title>');
+    expect(labelFromDocument(doc)).toBe('Accommodation');
   });
 
   it('returns an empty string without any title', () => {
@@ -46,7 +45,7 @@ describe('resolveTrail', () => {
 
   it('drops failed ancestors and de-slugs an untitled current page', async () => {
     const fetchMock = jest.fn(async (url: string) =>
-      url === '/singapore/en' ? page('<meta name="pagetitle" content="Capella Singapore">') : page('', false),
+      url === '/singapore/en' ? page('<title>Capella Singapore</title>') : page('', false),
     );
 
     const crumbs = await resolveTrail(trail, false, htmlDoc(''), fetchMock as unknown as typeof fetch);
