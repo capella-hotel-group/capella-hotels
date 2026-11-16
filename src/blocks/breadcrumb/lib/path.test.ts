@@ -37,6 +37,18 @@ describe('breadcrumb path helpers', () => {
     expect(trailPaths(parsePagePath('/singapore/en/'))).toEqual([]);
   });
 
+  it('treats the home page as the root page', () => {
+    expect(trailPaths(parsePagePath('/singapore/en/home'))).toEqual([]);
+    expect(trailPaths(parsePagePath('/content/capella-hotels/Singapore/en/home.html'))).toEqual([]);
+  });
+
+  it('leaves the home page out of deeper trails', () => {
+    expect(trailPaths(parsePagePath('/singapore/en/home/offers'))).toEqual([
+      ['singapore', 'en'],
+      ['singapore', 'en', 'home', 'offers'],
+    ]);
+  });
+
   it('builds the trail from root to the current page', () => {
     expect(trailPaths(parsePagePath('/singapore/en/accommodation/colonial-manor'))).toEqual([
       ['singapore', 'en'],

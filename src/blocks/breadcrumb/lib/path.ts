@@ -25,10 +25,21 @@ export function rootDepth(segments: string[]): number {
   return index === -1 ? 1 : index + 1;
 }
 
+const HOME_SEGMENT = 'home';
+
+// The site's landing page lives at `{root}/home`; the root crumb stands for it,
+// so the home page shows no trail and is never listed as a separate ancestor.
 export function trailPaths(page: PagePath): string[][] {
   const root = rootDepth(page.segments);
   if (page.segments.length <= root) return [];
-  return page.segments.slice(root - 1).map((_, index) => page.segments.slice(0, root + index));
+  const isUnderHome = page.segments[root]?.toLowerCase() === HOME_SEGMENT;
+  if (isUnderHome && page.segments.length === root + 1) return [];
+  const trail = page.segments.slice(root - 1).map((_, index) => page.segments.slice(0, root + index));
+  return isUnderHome ? trail.filter((_, index) => index !== 1) : trail;
+}
+
+export function homeOf(root: string[]): string[] {
+  return [...root, HOME_SEGMENT];
 }
 
 export function toHref(segments: string[], isAuthor: boolean): string {

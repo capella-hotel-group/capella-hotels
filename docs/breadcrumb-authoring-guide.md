@@ -27,8 +27,11 @@ becomes `Colonial Manor`).
 
 ## What visitors see
 
-- The first item is the top-level page of the site and language, for example
-  `/singapore/en`. On that top-level page itself, no breadcrumb is shown.
+- The first item is the site's home page for that language, for example
+  `/singapore/en/home`. If a site has no `/home` page, the language root
+  (for example `/sanya/en`) is used instead. On the home page itself, no
+  breadcrumb is shown. To change the first item's label, set
+  **Breadcrumb Title** on that home page.
 - Parent pages are links; the current page is plain text.
 - A parent page that is unpublished, deleted or is only a folder is left out,
   so the breadcrumb never links to a missing page.
