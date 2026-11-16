@@ -18,15 +18,21 @@ const ITEM_MODEL = 'space-option';
 const ITEM = {
   label: 0,
   thumbnail: 1,
-  media: 2,
-  mediaAsset: 3,
-  mediaAssetMobile: 4,
-  eyebrow: 5,
-  title: 6,
-  description: 7,
-  primaryCta: 8,
-  secondaryCta: 9,
+  thumbnailDarkOverlay: 2,
+  media: 3,
+  mediaAsset: 4,
+  mediaDarkOverlay: 5,
+  mediaAssetMobile: 6,
+  eyebrow: 7,
+  title: 8,
+  description: 9,
+  primaryCta: 10,
+  secondaryCta: 11,
 } as const;
+type ItemField = keyof typeof ITEM;
+const OVERLAY_FIELDS: ItemField[] = ['thumbnailDarkOverlay', 'mediaDarkOverlay'];
+// items authored before the overlay toggles existed emit only the other cells
+const LEGACY_CELL_COUNT = Object.keys(ITEM).length - OVERLAY_FIELDS.length;
 
 const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
 
@@ -207,10 +213,22 @@ interface Space {
   video: HTMLVideoElement | null;
 }
 
-function buildSpace(row: Element, blockId: string, index: number): Space | null {
+function itemCells(row: Element): Partial<Record<ItemField, Element>> {
   const cells = [...row.children];
-  const label = textOf(cells[ITEM.label]);
-  const thumbnail = cells[ITEM.thumbnail]?.querySelector('picture');
+  const fields = (Object.keys(ITEM) as ItemField[]).filter(
+    (field) => cells.length > LEGACY_CELL_COUNT || !OVERLAY_FIELDS.includes(field),
+  );
+  return Object.fromEntries(fields.map((field, index) => [field, cells[index]]));
+}
+
+function isOn(cell?: Element | null): boolean {
+  return textOf(cell).toLowerCase() === 'true';
+}
+
+function buildSpace(row: Element, blockId: string, index: number): Space | null {
+  const cells = itemCells(row);
+  const label = textOf(cells.label);
+  const thumbnail = cells.thumbnail?.querySelector('picture');
   // a space just added in the editor has no content yet, but dropping it would
   // leave the author nothing to select and make the add look like it failed
   const authoring = (row as HTMLElement).dataset.aueModel === ITEM_MODEL;
@@ -230,31 +248,32 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
   // the authoring instrumentation; the tab deliberately carries none
   moveInstrumentation(row, panel);
 
-  const isVideo = textOf(cells[ITEM.media]).toLowerCase() === 'video';
+  const isVideo = textOf(cells.media).toLowerCase() === 'video';
   const posterImg = thumbnail?.querySelector('img');
   const media = isVideo
-    ? buildVideo(cells[ITEM.mediaAsset], cells[ITEM.mediaAssetMobile], posterImg?.getAttribute('src') || '')
-    : buildPicture(cells[ITEM.mediaAsset], cells[ITEM.mediaAssetMobile]);
+    ? buildVideo(cells.mediaAsset, cells.mediaAssetMobile, posterImg?.getAttribute('src') || '')
+    : buildPicture(cells.mediaAsset, cells.mediaAssetMobile);
 
   if (media) {
     const frame = document.createElement('div');
     frame.className = 'choose-space-panel-media';
+    frame.classList.toggle('has-dark-overlay', isOn(cells.mediaDarkOverlay));
     frame.append(media);
     panel.append(frame);
   }
 
   const body = document.createElement('div');
   body.className = 'choose-space-panel-body';
-  const eyebrow = buildText(cells[ITEM.eyebrow], 'p', 'choose-space-eyebrow');
-  const title = buildCopy(cells[ITEM.title], 'h3', 'choose-space-panel-title');
+  const eyebrow = buildText(cells.eyebrow, 'p', 'choose-space-eyebrow');
+  const title = buildCopy(cells.title, 'h3', 'choose-space-panel-title');
   if (title) buildHeadingLines(title);
-  const description = buildCopy(cells[ITEM.description], 'div', 'choose-space-panel-description');
+  const description = buildCopy(cells.description, 'div', 'choose-space-panel-description');
   if (eyebrow) body.append(eyebrow);
   if (title) body.append(title);
   if (description) body.append(description);
 
-  const primary = buildCta(cells[ITEM.primaryCta], 'primary');
-  const secondary = buildCta(cells[ITEM.secondaryCta], 'secondary');
+  const primary = buildCta(cells.primaryCta, 'primary');
+  const secondary = buildCta(cells.secondaryCta, 'secondary');
   if (primary || secondary) {
     const links = document.createElement('div');
     links.className = 'choose-space-panel-links';
@@ -298,6 +317,7 @@ function buildSpace(row: Element, blockId: string, index: number): Space | null 
     [clone, ...clone.querySelectorAll('*')].forEach((element) => moveInstrumentation(element, null));
     clone.classList.remove('choose-space-media');
     clone.classList.add('choose-space-tab-media');
+    clone.classList.toggle('has-dark-overlay', isOn(cells.thumbnailDarkOverlay));
     // the label already names the tab, so the thumbnail is decorative here
     clone.querySelector('img')?.setAttribute('alt', '');
     tab.append(clone);

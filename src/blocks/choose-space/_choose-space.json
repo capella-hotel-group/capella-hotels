@@ -100,7 +100,6 @@
           "label": "Tab Thumbnail",
           "description": "Still image. Doubles as the poster when the hero media is a video.",
           "valueType": "string",
-          "multi": false,
           "required": true
         },
         {
@@ -109,6 +108,14 @@
           "label": "Tab Thumbnail Alt Text",
           "valueType": "string",
           "value": ""
+        },
+        {
+          "component": "boolean",
+          "name": "thumbnailDarkOverlay",
+          "label": "Enable Dark Thumbnail Overlay",
+          "description": "Tints the tab thumbnail.",
+          "valueType": "boolean",
+          "value": false
         },
         {
           "component": "select",
@@ -128,7 +135,6 @@
           "name": "mediaAsset",
           "label": "Hero Media",
           "valueType": "string",
-          "multi": false,
           "required": true
         },
         {
@@ -139,12 +145,19 @@
           "value": ""
         },
         {
+          "component": "boolean",
+          "name": "mediaDarkOverlay",
+          "label": "Enable Dark Hero Overlay",
+          "description": "Tints the hero media so the white copy over it stays legible.",
+          "valueType": "boolean",
+          "value": false
+        },
+        {
           "component": "reference",
           "name": "mediaAssetMobile",
           "label": "Hero Media (Mobile)",
           "description": "Optional. Falls back to the hero media when empty.",
-          "valueType": "string",
-          "multi": false
+          "valueType": "string"
         },
         {
           "component": "text",

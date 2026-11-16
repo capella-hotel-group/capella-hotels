@@ -662,7 +662,6 @@
         "label": "Tab Thumbnail",
         "description": "Still image. Doubles as the poster when the hero media is a video.",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {
@@ -671,6 +670,14 @@
         "label": "Tab Thumbnail Alt Text",
         "valueType": "string",
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "thumbnailDarkOverlay",
+        "label": "Enable Dark Thumbnail Overlay",
+        "description": "Tints the tab thumbnail.",
+        "valueType": "boolean",
+        "value": false
       },
       {
         "component": "select",
@@ -696,7 +703,6 @@
         "name": "mediaAsset",
         "label": "Hero Media",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {
@@ -707,12 +713,19 @@
         "value": ""
       },
       {
+        "component": "boolean",
+        "name": "mediaDarkOverlay",
+        "label": "Enable Dark Hero Overlay",
+        "description": "Tints the hero media so the white copy over it stays legible.",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
         "component": "reference",
         "name": "mediaAssetMobile",
         "label": "Hero Media (Mobile)",
         "description": "Optional. Falls back to the hero media when empty.",
-        "valueType": "string",
-        "multi": false
+        "valueType": "string"
       },
       {
         "component": "text",
@@ -1446,6 +1459,14 @@
         "label": "Thumbnail Alt Text",
         "valueType": "string",
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "thumbnailDarkOverlay",
+        "label": "Enable Dark Thumbnail Overlay",
+        "description": "Tints the desktop thumbnail. Does not affect the main media.",
+        "valueType": "boolean",
+        "value": false
       },
       {
         "component": "select",
@@ -2653,6 +2674,14 @@
             "valueType": "string",
             "value": "",
             "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "darkOverlay",
+            "label": "Enable Dark Image Overlay",
+            "description": "Tints this thumbnail.",
+            "valueType": "boolean",
+            "value": false
           }
         ]
       },
@@ -2718,6 +2747,14 @@
             "valueType": "string",
             "value": "",
             "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "darkOverlay",
+            "label": "Enable Dark Image Overlay",
+            "description": "Tints this image, which also keeps the white carousel arrows legible.",
+            "valueType": "boolean",
+            "value": false
           }
         ]
       }
@@ -3437,6 +3474,13 @@
         "value": ""
       },
       {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Dark Image Overlay",
+        "valueType": "boolean",
+        "value": true
+      },
+      {
         "component": "text",
         "name": "content_cardEyebrow",
         "label": "Card Eyebrow",
@@ -3510,23 +3554,6 @@
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
         "value": false
-      },
-      {
-        "component": "select",
-        "name": "darkOverlay",
-        "label": "Dark Image Overlay",
-        "valueType": "string",
-        "value": "true",
-        "options": [
-          {
-            "name": "Enabled",
-            "value": "true"
-          },
-          {
-            "name": "Disabled",
-            "value": "false"
-          }
-        ]
       }
     ]
   },
