@@ -272,4 +272,21 @@ describe('experience-tiles integration', () => {
     expect(loading(1)).toBe('eager');
     expect(loading(2)).toBe('lazy');
   });
+
+  it('preloads the new neighbour after the active slide changes', () => {
+    const near = observeIntersection();
+    const element = block([], 4);
+    element.querySelectorAll('img').forEach((img) => img.setAttribute('loading', 'lazy'));
+    decorate(element);
+    const slides = [...element.querySelectorAll('.experience-tiles-slide')];
+    const loading = (index: number) => slides[index]!.querySelector('img')!.getAttribute('loading');
+    near([{ isIntersecting: true, intersectionRatio: 0.1 }]);
+    expect(loading(1)).toBe('eager');
+    expect(loading(2)).toBe('lazy');
+    expect(loading(3)).toBe('lazy');
+    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    expect(active(element)).toBe(1);
+    expect(loading(2)).toBe('eager');
+    expect(loading(3)).toBe('lazy');
+  });
 });
