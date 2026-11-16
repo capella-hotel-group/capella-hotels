@@ -51,6 +51,7 @@
       "page-listing",
       "booking-search",
       "separator",
+      "breadcrumb",
       "nav-top"
     ]
   },

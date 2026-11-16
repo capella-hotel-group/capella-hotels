@@ -1,0 +1,110 @@
+.breadcrumb {
+    --breadcrumb-current: #1b364b;
+    --breadcrumb-parent: #1b364b80;
+    --breadcrumb-chevron: #7d7d7d;
+
+    min-height: 62px;
+    padding: 24px var(--dimension-layout-module-padding-inline-s);
+    box-sizing: border-box;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-s);
+    font-weight: var(--type-font-weight-body-light);
+    line-height: var(--typography-line-height-body-sm);
+    color: var(--breadcrumb-current);
+}
+
+.breadcrumb.inverse {
+    --breadcrumb-current: #fff;
+    --breadcrumb-parent: #ebebeb80;
+    --breadcrumb-chevron: #d4d4d4;
+}
+
+.breadcrumb ol {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-layout-module-gutter-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.breadcrumb li {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-layout-module-gutter-xs);
+    flex-shrink: 0;
+}
+
+.breadcrumb li + li::before {
+    content: '';
+    width: 8px;
+    height: 14px;
+    flex-shrink: 0;
+    background-color: var(--breadcrumb-chevron);
+    mask: url('/icons/chevron-right.svg') center / 8px 14px no-repeat;
+}
+
+[dir='rtl'] .breadcrumb li + li::before {
+    transform: scaleX(-1);
+}
+
+.breadcrumb a {
+    color: var(--breadcrumb-parent);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.breadcrumb li:last-child {
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.breadcrumb [aria-current='page'] {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.breadcrumb .breadcrumb-ellipsis button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--breadcrumb-parent);
+    cursor: pointer;
+}
+
+.breadcrumb .breadcrumb-collapsible {
+    display: none;
+}
+
+.breadcrumb .is-expanded ol {
+    flex-wrap: wrap;
+}
+
+.breadcrumb .is-expanded .breadcrumb-collapsible {
+    display: flex;
+}
+
+.breadcrumb .is-expanded .breadcrumb-ellipsis {
+    display: none;
+}
+
+.breadcrumb .breadcrumb-placeholder {
+    margin: 0;
+    opacity: 0.6;
+}
+
+@media (min-width: 768px) {
+    .breadcrumb ol {
+        flex-wrap: wrap;
+    }
+
+    .breadcrumb .breadcrumb-collapsible {
+        display: flex;
+    }
+
+    .breadcrumb .breadcrumb-ellipsis {
+        display: none;
+    }
+}
