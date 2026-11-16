@@ -223,6 +223,9 @@ function buildModal(config: BlockConfig, childTitlesMap: Map<string, string>): H
     destinationItem.className = 'destination-cards-signature-destination-item';
     destinationItem.setAttribute('data-testid', `destination-cards-signature-destination-${index}`);
     destinationItem.setAttribute('data-destination', mapping.url);
+    destinationItem.setAttribute('tabindex', '0');
+    destinationItem.setAttribute('role', 'button');
+    destinationItem.setAttribute('aria-pressed', 'false');
 
     const destinationName = document.createElement('h3');
     destinationName.className = 'destination-cards-signature-destination-name';
@@ -337,10 +340,15 @@ function setupModalHandlers(block: Element, modal: HTMLElement): void {
     }
     // Remove modal-open class from body to restore scroll
     document.body.classList.remove('modal-open');
+    // Remove focus from any CTA button that opened the modal
+    const focusedElement = document.activeElement as HTMLElement;
+    if (focusedElement && focusedElement.classList.contains('destination-cards-signature-cta')) {
+      focusedElement.blur();
+    }
   };
 
   destinationItems.forEach((item: Element) => {
-    item.addEventListener('click', () => {
+    const handleItemSelection = () => {
       // Mark as clicked to persist selection
       clickedDestination = item as HTMLElement;
       selectedDestination = clickedDestination;
@@ -351,6 +359,17 @@ function setupModalHandlers(block: Element, modal: HTMLElement): void {
       (item as HTMLElement).classList.add('active');
       // Scroll to center
       (item as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    item.addEventListener('click', handleItemSelection);
+
+    // Keyboard support: Enter and Space to select
+    item.addEventListener('keydown', (e: Event) => {
+      const keyEvent = e as KeyboardEvent;
+      if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+        keyEvent.preventDefault();
+        handleItemSelection();
+      }
     });
 
     // Hover listener to update active state (always show hover preview)
