@@ -39,7 +39,9 @@ appears in the breadcrumb.
   the first item's label, set **Breadcrumb Title** on that page.
 - Parent pages are links; the current page is plain text.
 - A parent page that is unpublished, deleted or is only a folder is left out,
-  so the breadcrumb never links to a missing page.
+  so the breadcrumb never links to a missing page. To show a level (for
+  example "Offers"), place a real page at that exact path (`.../offers`)
+  rather than elsewhere (`.../offers-listing`).
 - A label change on a parent page appears in the breadcrumb once that parent
   page is published.
 - On mobile, a trail with more than three items shows
