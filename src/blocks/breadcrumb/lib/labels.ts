@@ -36,8 +36,11 @@ async function ancestorCrumb(segments: string[], isAuthor: boolean, fetchImpl: t
 }
 
 async function rootCrumb(root: string[], isAuthor: boolean, fetchImpl: typeof fetch): Promise<Crumb> {
-  const home = await ancestorCrumb(homeOf(root), isAuthor, fetchImpl);
-  return home.label ? home : ancestorCrumb(root, isAuthor, fetchImpl);
+  const [home, rootPage] = await Promise.all([
+    ancestorCrumb(homeOf(root), isAuthor, fetchImpl),
+    ancestorCrumb(root, isAuthor, fetchImpl),
+  ]);
+  return home.label ? home : rootPage;
 }
 
 export async function resolveTrail(

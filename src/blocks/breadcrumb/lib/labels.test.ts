@@ -98,7 +98,21 @@ describe('resolveTrail', () => {
     );
 
     expect(crumbs[0]).toEqual({ label: 'Singapore', href: '/singapore/en/home', current: false });
-    expect(fetchMock).not.toHaveBeenCalledWith('/singapore/en', expect.anything());
+  });
+
+  it('requests the home page and the root page at the same time', async () => {
+    const fetchMock = jest.fn(() => new Promise(() => {}));
+
+    void resolveTrail(
+      [trail[0]!, trail[2]!],
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledWith('/singapore/en/home', expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith('/singapore/en', expect.anything());
   });
 
   it('falls back to the language root when there is no home page', async () => {
