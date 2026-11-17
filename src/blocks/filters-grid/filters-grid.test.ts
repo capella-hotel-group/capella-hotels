@@ -1304,6 +1304,53 @@ describe('filters-grid authored filters', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it('uses one square-image carousel below desktop for Filters Grid popups', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          filterGridCardDetailsList: {
+            items: [
+              {
+                cardHeadline: 'Responsive Popup',
+                associatedFilterTags: ['capella-hotels:destination/bangkok'],
+                cardClickActionBehavior: 'popup',
+                modalDetails: {
+                  modalImageAspectRatioVariant: 'square',
+                  modalFeatureImageAsset: { _path: '/feature.jpg' },
+                  carouselImages: [{ _path: '/slide-one.jpg' }, { _path: '/slide-two.jpg' }],
+                },
+              },
+            ],
+          },
+        },
+      }),
+    });
+    const originalMatchMedia = window.matchMedia;
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: jest.fn().mockReturnValue({ matches: true }),
+    });
+    try {
+      const block = createItemBlock();
+      await decorate(block);
+      block.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!.click();
+      await flushModalOpen();
+      const modal = document.querySelector<HTMLElement>('.filters-grid-modal:not([hidden])')!;
+      expect(modal.querySelector('.filters-grid-modal-gallery')).toBeNull();
+      expect(modal.querySelector('.filters-grid-modal-feature .filters-grid-modal-carousel')).not.toBeNull();
+      expect(modal.querySelectorAll('.filters-grid-modal-carousel-viewport img')).toHaveLength(3);
+      expect(modal.querySelectorAll('.filters-grid-modal-carousel-viewport img:not([hidden])')).toHaveLength(1);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    } finally {
+      if (originalMatchMedia) {
+        Object.defineProperty(window, 'matchMedia', { configurable: true, value: originalMatchMedia });
+      } else {
+        Reflect.deleteProperty(window, 'matchMedia');
+      }
+    }
+  });
+
   it('uses a generic message when the cards response is empty', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
