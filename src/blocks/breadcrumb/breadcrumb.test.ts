@@ -127,7 +127,9 @@ describe('populate', () => {
 
     await populate(block, '/singapore/en/accommodation');
 
-    expect(block.querySelector('.breadcrumb-placeholder')).not.toBeNull();
+    expect(block.querySelector('.breadcrumb-placeholder')?.textContent).toBe(
+      'Breadcrumb — hidden on this page (top-level page or no published parent pages)',
+    );
     expect(block.hidden).toBe(false);
   });
 });

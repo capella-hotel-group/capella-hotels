@@ -49,6 +49,8 @@ appears in the breadcrumb.
 
 ## In the Universal Editor
 
-The breadcrumb shows the same trail as the live site. On a top-level page,
-where the live site shows nothing, the editor shows
-"Breadcrumb — hidden on top-level pages" so the block can still be selected.
+The breadcrumb shows the same trail as the live site. Where the live site shows
+nothing (a top-level page, or a page whose parents are all unpublished or
+folders), the editor shows
+"Breadcrumb — hidden on this page (top-level page or no published parent pages)"
+so the block can still be selected.
