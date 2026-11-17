@@ -1,7 +1,7 @@
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getPublishBaseUrl } from '@/utils/env.js';
 
-type ListingType = 'offers' | 'wellness' | 'experience' | 'dining';
+type ListingType = 'offers' | 'wellness' | 'experience' | 'dining' | 'accommodations';
 
 interface ListingRecord {
   path?: string;
@@ -19,6 +19,7 @@ const INDEX_PATHS: Record<ListingType, string> = {
   wellness: '/wellness/list-index.json',
   experience: '/experience/list-index.json',
   dining: '/dining/list-index.json',
+  accommodations: '/en/accommodations/list-index.json',
 };
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
@@ -35,8 +36,13 @@ function normalizeTag(value: string): string {
 function readTags(row?: Element): string[] {
   if (!row) return [];
   const items = row.querySelectorAll('li');
-  return [...new Set((items.length ? Array.from(items, (item) => textOf(item)) : textOf(row).split(','))
-    .map(normalizeTag).filter(Boolean))];
+  return [
+    ...new Set(
+      (items.length ? Array.from(items, (item) => textOf(item)) : textOf(row).split(','))
+        .map(normalizeTag)
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function tagTitle(tag: string): Promise<string> {
@@ -53,7 +59,7 @@ function tagTitle(tag: string): Promise<string> {
         headers: { Accept: 'application/json' },
       });
       if (!response.ok) return fallback;
-      const data = await response.json() as Record<string, unknown>;
+      const data = (await response.json()) as Record<string, unknown>;
       const title = data[`jcr:title.${document.documentElement.lang || 'en'}`] || data['jcr:title'];
       return typeof title === 'string' && title.trim() ? title.trim() : fallback;
     } catch {
@@ -67,17 +73,24 @@ function tagTitle(tag: string): Promise<string> {
 
 function setTagTitle(element: HTMLElement, tag: string): void {
   element.textContent = (tag.split('/').pop()?.split(':').pop() || tag).replace(/[-_]/g, ' ');
-  void tagTitle(tag).then((title) => { element.textContent = title; });
+  void tagTitle(tag).then((title) => {
+    element.textContent = title;
+  });
 }
 
 function readListingType(row?: HTMLElement): ListingType {
   const field = row?.querySelector('[data-aue-prop="listingType"]') || row?.firstElementChild || row;
   const value = textOf(field).toLowerCase();
-  return value === 'wellness' || value === 'experience' || value === 'dining' ? value : 'offers';
+  return value === 'wellness' || value === 'experience' || value === 'dining' || value === 'accommodations'
+    ? value
+    : 'offers';
 }
 
 function locationFromPath(path?: string): string {
-  const segments = (path || '').split('/').filter(Boolean).map((segment) => segment.toLowerCase());
+  const segments = (path || '')
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => segment.toLowerCase());
   const languageIndex = segments.lastIndexOf('en');
   if (languageIndex < 1) return '';
 
@@ -154,7 +167,9 @@ function createActions(parsed: Document, record: ListingRecord): HTMLElement {
       if (!anchor) return;
       const href = new URL(anchor.getAttribute('href') || '', base);
       if (!['http:', 'https:', 'mailto:', 'tel:'].includes(href.protocol)) return;
-      const label = group.find((element) => !element.querySelector('a') && !['true', 'false'].includes(textOf(element)));
+      const label = group.find(
+        (element) => !element.querySelector('a') && !['true', 'false'].includes(textOf(element)),
+      );
       const link = document.createElement('a');
       link.href = href.href;
       link.textContent = textOf(label) || textOf(anchor);
@@ -282,7 +297,7 @@ async function loadCategories(rootTag: string): Promise<CategoryTag[]> {
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`Category request failed: ${response.status}`);
-    const payload = await response.json() as { data?: Array<{ path?: string; title?: string }> };
+    const payload = (await response.json()) as { data?: Array<{ path?: string; title?: string }> };
     const categories: CategoryTag[] = [];
     for (const child of payload.data || []) {
       if (typeof child.path !== 'string' || typeof child.title !== 'string') continue;
@@ -305,7 +320,11 @@ interface LoadMoreConfig {
   label: string;
 }
 
-function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config: LoadMoreConfig): (category: string) => void {
+function createCardVisibility(
+  cards: HTMLElement[],
+  results: HTMLElement,
+  config: LoadMoreConfig,
+): (category: string) => void {
   let selectedCategory = '';
   let visibleCount = config.batchSize;
   const button = document.createElement('button');
@@ -323,7 +342,9 @@ function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config
     button.hidden = !config.enabled || matched <= visibleCount;
   };
   button.addEventListener('click', () => {
-    const firstHidden = cards.find((card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory));
+    const firstHidden = cards.find(
+      (card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory),
+    );
     visibleCount += config.batchSize;
     update();
     if (button.hidden) firstHidden?.querySelector<HTMLElement>('a, button')?.focus();
@@ -397,17 +418,13 @@ async function loadListings(
 
     const index = (await response.json()) as ListingIndex;
     const records = Array.isArray(index.data) ? index.data : [];
-    const matchingRecords = records.filter(
-      (record) => locationFromPath(record.path) === location,
-    );
+    const matchingRecords = records.filter((record) => locationFromPath(record.path) === location);
     const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
     const cards = matchingRecords.map(createCard);
     results.append(...cards);
     const selectCategory = createCardVisibility(cards, results, loadMore);
     if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
-    status.textContent = matchingRecords.length
-      ? ''
-      : `No listings are available for ${location}.`;
+    status.textContent = matchingRecords.length ? '' : `No listings are available for ${location}.`;
   } catch {
     status.textContent = 'Listings for this type are not available right now.';
   }

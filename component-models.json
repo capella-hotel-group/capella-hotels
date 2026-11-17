@@ -3572,6 +3572,10 @@
           {
             "name": "Dining",
             "value": "dining"
+          },
+          {
+            "name": "Accommodations",
+            "value": "accommodations"
           }
         ]
       },
