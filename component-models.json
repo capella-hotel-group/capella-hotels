@@ -1815,7 +1815,7 @@
         "component": "aem-content",
         "name": "cfRootPath",
         "label": "Content Fragment's Root Path",
-        "description": "Choose a Content Fragment folder or path prefix to request matching published cards. Leave blank for all cards.",
+        "description": "Select the folder containing the Content Fragments you want to display in this grid.",
         "valueType": "string",
         "required": true
       },
@@ -1823,7 +1823,7 @@
         "component": "boolean",
         "name": "showModeLabels",
         "label": "Show Filter Tab Labels",
-        "description": "Show or hide all tab labels. Multiple visible tabs need labels. When hidden, the default category and tab stay active.",
+        "description": "Toggle to display filter tabs above the grid. When hidden, cards from the default category are shown automatically",
         "valueType": "boolean",
         "value": true
       },
@@ -1831,6 +1831,7 @@
         "component": "text",
         "name": "revealMoreLabel",
         "label": "Reveal More CTA Text",
+        "description": "Label for the load-more button (defaults to 'Reveal More').",
         "valueType": "string",
         "value": "Reveal More"
       },
@@ -1838,7 +1839,7 @@
         "component": "boolean",
         "name": "showModalEyebrow",
         "label": "Show Modal Eyebrow",
-        "description": "Show the location eyebrow in all popups opened from this block, in both image layouts. Hiding it does not change filtering.",
+        "description": "Show or hide the eyebrow text inside detail popups.",
         "valueType": "boolean",
         "value": true
       },
@@ -1846,7 +1847,7 @@
         "component": "boolean",
         "name": "showModalCategoryTag",
         "label": "Show Modal Category Tag",
-        "description": "Show the selected category below the images in all popups opened from this block, in both image layouts. Hiding it removes its layout space without changing filtering.",
+        "description": "Show or hide category tags inside detail popups.",
         "valueType": "boolean",
         "value": true
       }

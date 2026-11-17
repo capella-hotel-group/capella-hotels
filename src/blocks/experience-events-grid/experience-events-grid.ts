@@ -2,6 +2,9 @@ import { createExperienceModal } from '@/components/experience-modal.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
 import { cardMatchesFilter, resolvePickerPath } from '@/blocks/filters-grid/filters-grid.js';
+import { buildCalendar } from './lib/calendar';
+import { fromIso, toIso } from './lib/dates';
+import type { Selection } from './lib/types';
 import { normalizeChoice, resolveCardHref } from '@/utils/experience-url.js';
 import { matchingEvents, prepareEvent, type DateRange, type EventCard, type ScheduledEvent } from './schedule';
 
@@ -14,7 +17,7 @@ const copy = () =>
     ? {
         from: 'من',
         to: 'إلى',
-        apply: 'تطبيق',
+        apply: 'تم',
         clear: 'مسح',
         categories: 'فئات التجارب',
         loading: 'جارٍ تحميل التجارب…',
@@ -29,7 +32,7 @@ const copy = () =>
     : {
         from: 'From',
         to: 'To',
-        apply: 'Apply',
+        apply: 'Done',
         clear: 'Clear',
         categories: 'Experience categories',
         loading: 'Loading experiences…',
@@ -165,35 +168,68 @@ function createDateFilter(placeholder: Element | undefined, change: (range?: Dat
   const toggle = button('date-toggle', text(placeholder) || 'Select event dates');
   const label = placeholder || element('span', 'date-placeholder', 'Select event dates');
   const selection = document.createElement('span');
+  selection.className = `${PREFIX}-date-selection`;
   selection.hidden = true;
-  toggle.replaceChildren(label, selection);
+  const labelGroup = element('span', 'date-label-group');
+  labelGroup.append(label, selection);
+  toggle.replaceChildren(labelGroup);
   toggle.setAttribute('aria-expanded', 'false');
   const panel = element('form', 'date-panel');
   panel.hidden = true;
   const fromLabel = element('label', 'date-label', strings.from);
   const toLabel = element('label', 'date-label', strings.to);
+  fromLabel.hidden = true;
+  toLabel.hidden = true;
   const from = element('input', 'date-from');
   const to = element('input', 'date-to');
-  for (const [input, label] of [
+  for (const [input, inputLabel] of [
     [from, fromLabel],
     [to, toLabel],
   ] as const) {
     input.type = 'date';
     input.required = true;
     input.dataset.testid = input.className;
-    label.append(input);
+    inputLabel.append(input);
   }
+  const calendarSelection: Selection = { adults: 0, children: 0 };
   const error = element('p', 'date-error');
   error.setAttribute('role', 'alert');
   error.hidden = true;
   const actions = element('div', 'date-actions');
-  const apply = button('date-apply', strings.apply);
-  apply.type = 'submit';
+  const done = button('date-apply', strings.apply);
+  done.type = 'submit';
   const clear = button('date-clear', strings.clear);
-  actions.append(apply, clear);
-  panel.append(fromLabel, toLabel, error, actions);
+  actions.append(done, clear);
+  const calendar = buildCalendar(
+    document.documentElement.lang || 'en',
+    calendarSelection,
+    () => {
+      from.value = calendarSelection.arrival ? toIso(calendarSelection.arrival) : '';
+      to.value = calendarSelection.departure ? toIso(calendarSelection.departure) : '';
+      to.min = from.value;
+      error.hidden = true;
+    },
+    {
+      classPrefix: PREFIX,
+      allowPastDates: true,
+      allowSameDayRange: true,
+      separateWeekdays: true,
+      showYear: true,
+    },
+  );
+  panel.append(calendar.root, fromLabel, toLabel, error, actions);
   panel.noValidate = true;
   let applied: DateRange | undefined;
+  const formatDate = (value: string) => {
+    const parts = new Intl.DateTimeFormat(document.documentElement.lang || 'en', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).formatToParts(new Date(`${value}T00:00:00Z`));
+    const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || '';
+    return { dayMonth: `${part('day')} ${part('month').toLocaleUpperCase()}`, year: part('year') };
+  };
   const close = () => {
     panel.hidden = true;
     toggle.setAttribute('aria-expanded', 'false');
@@ -203,16 +239,16 @@ function createDateFilter(placeholder: Element | undefined, change: (range?: Dat
       close();
       return;
     }
+    calendarSelection.arrival = applied ? fromIso(applied.from) : undefined;
+    calendarSelection.departure = applied ? fromIso(applied.to) : undefined;
     from.value = applied?.from || '';
     to.value = applied?.to || '';
     to.min = from.value;
     error.hidden = true;
+    calendar.sync();
     panel.hidden = false;
     toggle.setAttribute('aria-expanded', 'true');
-    from.focus();
-  });
-  from.addEventListener('change', () => {
-    to.min = from.value;
+    calendar.focusDay();
   });
   panel.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -222,15 +258,13 @@ function createDateFilter(placeholder: Element | undefined, change: (range?: Dat
       return;
     }
     applied = { from: from.value, to: to.value };
-    const format = (value: string) =>
-      new Intl.DateTimeFormat(document.documentElement.lang || 'en', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-      }).format(new Date(`${value}T00:00:00Z`));
+    const start = formatDate(applied.from);
+    const end = formatDate(applied.to);
+    selection.textContent =
+      start.year === end.year
+        ? `${start.dayMonth} - ${end.dayMonth}, ${end.year}`
+        : `${start.dayMonth}, ${start.year} - ${end.dayMonth}, ${end.year}`;
     label.setAttribute('hidden', '');
-    selection.textContent = `${format(applied.from)} – ${format(applied.to)}`;
     selection.hidden = false;
     close();
     toggle.focus();
@@ -238,8 +272,11 @@ function createDateFilter(placeholder: Element | undefined, change: (range?: Dat
   });
   clear.addEventListener('click', () => {
     applied = undefined;
+    calendarSelection.arrival = undefined;
+    calendarSelection.departure = undefined;
     from.value = '';
     to.value = '';
+    calendar.sync();
     label.removeAttribute('hidden');
     selection.hidden = true;
     close();
