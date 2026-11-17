@@ -7,12 +7,15 @@ import { createFlyouts } from './lib/flyouts';
 import { buildCounter } from './lib/guest-counter';
 import { buildDoneButton } from './lib/done-button';
 import { buildLocationList } from './lib/location-list';
+import { fetchLocations } from './lib/location-source';
 import { parseConfig } from './lib/parse';
 import { BLOCK, DEFAULT_ADULTS } from './lib/types';
 import type { Field, Selection } from './lib/types';
 
 export default function decorate(block: HTMLElement): void {
-  const { labels, locations, limits, bookingUrl, openInNewTab, showLocation, hotelId } = parseConfig(block);
+  const { labels, limits, bookingUrl, openInNewTab, showLocation, hotelId, locationsPath, ...parsed } =
+    parseConfig(block);
+  let { locations } = parsed;
   const lang = getPageLang();
   const urlOptions = { requireLocation: showLocation, hotelId, locale: toSynxisLocale(lang) };
   // Figma writes dates day-first ("30 Jul - 31 Jul 2026"), which plain `en` (US) would not.
@@ -55,14 +58,24 @@ export default function decorate(block: HTMLElement): void {
     flyouts.closeAll();
     locationField.trigger.focus();
   });
-  if (showLocation) locationField.panel.append(locationList.list, locationList.scrollbar);
+  if (showLocation) {
+    locationField.panel.append(locationList.list, locationList.scrollbar);
+    if (locationsPath) {
+      void fetchLocations(locationsPath).then((fetched) => {
+        if (!fetched.length) return;
+        locations = fetched;
+        locationList.setLocations(fetched);
+        locationList.updateScrollbar();
+      });
+    }
+  }
 
   const calendar = buildCalendar(lang, selection, () => {
     const { arrival, departure } = selection;
     const { label } = datesField;
     if (arrival && departure) {
       // The year is its own node so CSS can drop it where the bar is too narrow.
-      const year = el('span', `${BLOCK}-label-year`, ` ${yearFormat.format(departure)}`);
+      const year = el('span', `${BLOCK}-label-year`, `, ${yearFormat.format(departure)}`);
       label.replaceChildren(`${shortDate.format(arrival)} - ${shortDate.format(departure)}`, year);
     } else {
       label.textContent = arrival ? shortDate.format(arrival) : labels.dates;

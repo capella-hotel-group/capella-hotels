@@ -10,28 +10,7 @@ export interface Calendar {
   focusDay: () => void;
 }
 
-export interface CalendarOptions {
-  classPrefix?: string;
-  dayClassName?: string;
-  allowPastDates?: boolean;
-  allowSameDayRange?: boolean;
-  separateWeekdays?: boolean;
-  showYear?: boolean;
-}
-
-export function buildCalendar(
-  lang: string,
-  selection: Selection,
-  onChange: () => void,
-  options: CalendarOptions = {},
-): Calendar {
-  const className = (name: string) => `${options.classPrefix || BLOCK}-${name}`;
-  const dayClass = options.dayClassName || (options.classPrefix ? className('calendar-day') : className('day'));
-  const makeElement = <K extends keyof HTMLElementTagNameMap>(tag: K, name: string, text?: string) =>
-    el(tag, className(name), text);
-  const allowPastDates = options.allowPastDates ?? false;
-  const allowSameDayRange = options.allowSameDayRange ?? false;
-  const monthFormat = new Intl.DateTimeFormat(lang, { month: 'long' });
+export function buildCalendar(lang: string, selection: Selection, onChange: () => void): Calendar {
   const monthYearFormat = new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' });
   const weekdayFormat = new Intl.DateTimeFormat(lang, { weekday: 'short' });
   const dayLabelFormat = new Intl.DateTimeFormat(lang, { dateStyle: 'full' });
@@ -40,48 +19,38 @@ export function buildCalendar(
   const firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   let viewStart = firstMonth;
 
-  const root = makeElement('div', 'calendar');
+  const root = el('div', `${BLOCK}-calendar`);
   root.setAttribute('role', 'group');
 
-  const prev = makeElement('button', 'calendar-prev');
+  const prev = el('button', `${BLOCK}-calendar-prev`);
   prev.type = 'button';
   prev.setAttribute('aria-label', 'Previous month');
-  prev.dataset.testid = `${options.classPrefix || BLOCK}-calendar-previous`;
-  const next = makeElement('button', 'calendar-next');
+  prev.dataset.testid = `${BLOCK}-calendar-previous`;
+  const next = el('button', `${BLOCK}-calendar-next`);
   next.type = 'button';
   next.setAttribute('aria-label', 'Next month');
-  next.dataset.testid = `${options.classPrefix || BLOCK}-calendar-next`;
-  const title = makeElement('div', 'calendar-title');
-  const header = makeElement('div', 'calendar-header');
+  next.dataset.testid = `${BLOCK}-calendar-next`;
+  const title = el('div', `${BLOCK}-calendar-title`);
+  const header = el('div', `${BLOCK}-calendar-header`);
   header.append(prev, title, next);
 
-  const weekdaysRow = options.separateWeekdays ? makeElement('div', 'calendar-weekdays') : undefined;
-  const daysGrid = makeElement('div', 'calendar-grid');
-  const calendarBody = weekdaysRow ? makeElement('div', 'calendar-body') : undefined;
-  root.append(header);
-  if (calendarBody && weekdaysRow) {
-    calendarBody.append(weekdaysRow, daysGrid);
-    root.append(calendarBody);
-  } else {
-    root.append(daysGrid);
-  }
+  const grid = el('div', `${BLOCK}-calendar-grid`);
+  root.append(header, grid);
 
   // 2021-01-04 is a Monday, so the grid is Monday-first.
   const weekdays = Array.from({ length: 7 }, (_, i) => {
-    const weekday = makeElement('span', 'weekday', weekdayFormat.format(new Date(2021, 0, 4 + i)).slice(0, 2));
+    const weekday = el('span', `${BLOCK}-weekday`, weekdayFormat.format(new Date(2021, 0, 4 + i)).slice(0, 2));
     weekday.setAttribute('aria-hidden', 'true');
     return weekday;
   });
-  if (weekdaysRow) weekdaysRow.append(...weekdays);
-  else daysGrid.append(...weekdays);
 
   function renderDay(date: Date, month: number): HTMLButtonElement {
     const outside = date.getMonth() !== month;
-    const button = el('button', dayClass, String(date.getDate()));
+    const button = el('button', `${BLOCK}-day`, String(date.getDate()));
     button.type = 'button';
     button.dataset.date = toIso(date);
     button.setAttribute('aria-label', dayLabelFormat.format(date));
-    button.disabled = outside || (!allowPastDates && date < today);
+    button.disabled = outside || date < today;
     button.tabIndex = -1;
 
     const { arrival, departure } = selection;
@@ -99,9 +68,9 @@ export function buildCalendar(
   function render(focusIso?: string): void {
     const year = viewStart.getFullYear();
     const month = viewStart.getMonth();
-    title.textContent = (options.showYear ? monthYearFormat : monthFormat).format(viewStart);
-    root.setAttribute('aria-label', monthYearFormat.format(viewStart));
-    prev.disabled = !allowPastDates && viewStart <= firstMonth;
+    title.textContent = monthYearFormat.format(viewStart);
+    root.setAttribute('aria-label', title.textContent);
+    prev.disabled = viewStart <= firstMonth;
 
     // Pad to whole weeks with the neighbouring months' days.
     const offset = (viewStart.getDay() + 6) % 7;
@@ -109,7 +78,7 @@ export function buildCalendar(
     const cells = Math.ceil((offset + daysInMonth) / 7) * 7;
     const days = Array.from({ length: cells }, (_, i) => renderDay(new Date(year, month, 1 - offset + i), month));
 
-    daysGrid.replaceChildren(...(weekdaysRow ? days : [...weekdays, ...days]));
+    grid.replaceChildren(...weekdays, ...days);
 
     const enabled = days.filter((button) => !button.disabled);
     const target =
@@ -127,17 +96,12 @@ export function buildCalendar(
   prev.addEventListener('click', () => shiftView(-1));
   next.addEventListener('click', () => shiftView(1));
 
-  daysGrid.addEventListener('click', (event) => {
-    const button = (event.target as Element).closest<HTMLButtonElement>(`.${dayClass}`);
+  grid.addEventListener('click', (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>(`.${BLOCK}-day`);
     if (!button?.dataset.date) return;
     const date = fromIso(button.dataset.date);
 
-    if (
-      !selection.arrival ||
-      !!selection.departure ||
-      date < selection.arrival ||
-      (sameDay(date, selection.arrival) && !allowSameDayRange)
-    ) {
+    if (!selection.arrival || !!selection.departure || date <= selection.arrival) {
       selection.arrival = date;
       selection.departure = undefined;
     } else {
@@ -147,8 +111,8 @@ export function buildCalendar(
     onChange();
   });
 
-  daysGrid.addEventListener('keydown', (event) => {
-    const button = (event.target as Element).closest<HTMLButtonElement>(`.${dayClass}`);
+  grid.addEventListener('keydown', (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>(`.${BLOCK}-day`);
     if (!button?.dataset.date) return;
     const rtl = document.documentElement.dir === 'rtl';
     const steps: Record<string, number> = {
@@ -162,7 +126,7 @@ export function buildCalendar(
     event.preventDefault();
 
     const target = addDays(fromIso(button.dataset.date), step);
-    if (!allowPastDates && target < today) return;
+    if (target < today) return;
 
     viewStart = new Date(target.getFullYear(), target.getMonth(), 1);
     render(toIso(target));
@@ -176,6 +140,6 @@ export function buildCalendar(
       }
       render();
     },
-    focusDay: () => daysGrid.querySelector<HTMLButtonElement>(`.${dayClass}[tabindex="0"]`)?.focus(),
+    focusDay: () => grid.querySelector<HTMLButtonElement>(`.${BLOCK}-day[tabindex="0"]`)?.focus(),
   };
 }

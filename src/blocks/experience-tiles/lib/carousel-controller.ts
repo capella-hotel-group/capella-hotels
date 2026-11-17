@@ -3,6 +3,11 @@ import { waitForTransforms } from './transition';
 export type Direction = -1 | 1;
 export type StepResult = 'changed' | 'edge' | 'busy';
 
+export interface CarouselHooks {
+  onChange?: (index: number) => void;
+  focusTarget?: (direction: Direction) => HTMLElement | null;
+}
+
 interface SlideTransition {
   previous: HTMLElement;
   outgoingDone: boolean;
@@ -19,7 +24,10 @@ export class CarouselController {
   private resizing = false;
   private destroyed = false;
 
-  constructor(private readonly slides: HTMLElement[]) {}
+  constructor(
+    private readonly slides: HTMLElement[],
+    private readonly hooks: CarouselHooks = {},
+  ) {}
 
   get index(): number {
     return this.activeIndex;
@@ -107,9 +115,13 @@ export class CarouselController {
   };
 
   private updateActive(index: number): void {
+    const previous = this.activeIndex;
     const focused = document.activeElement;
-    if (!this.editing && index !== this.index && focused && this.slides[this.index]?.contains(focused)) {
-      this.slides[this.index]?.closest<HTMLElement>('.experience-tiles')?.focus({ preventScroll: true });
+    if (!this.editing && index !== previous && focused && this.slides[previous]?.contains(focused)) {
+      const target =
+        this.hooks.focusTarget?.(index > previous ? 1 : -1) ??
+        this.slides[previous]?.closest<HTMLElement>('.experience-tiles');
+      target?.focus({ preventScroll: true });
     }
     this.activeIndex = index;
     this.slides.forEach((slide, slideIndex) => {
@@ -117,6 +129,7 @@ export class CarouselController {
       else slide.setAttribute('aria-hidden', String(slideIndex !== index));
       slide.toggleAttribute('inert', !this.editing && slideIndex !== index);
     });
+    this.hooks.onChange?.(index);
   }
 
   private resetSlide(slide?: HTMLElement): void {

@@ -153,17 +153,38 @@ it('keeps your place when you come back up to a block you had already started', 
   expect(y).toBe(500);
   expect(controller.index).toBe(1);
 });
-it('restarts the story whenever the block is entered travelling downwards', () => {
+it('keeps your place when the block drifts off the top and you carry on scrolling down', () => {
   const { controller } = setup(500);
   y = 500;
   wheel(40);
   expect(controller.index).toBe(1);
-  y = 350;
+  // e.g. trackpad momentum after preventDefault nudges the page a few px
+  y = 480;
   fresh();
   wheel(40);
   settled();
   expect(y).toBe(500);
+  expect(controller.index).toBe(1);
+});
+it('catches a block that a fast scroll carried past the alignment point', () => {
+  const { controller } = setup(300);
+  y = 340;
+  window.dispatchEvent(new Event('scroll'));
+  settled();
+  expect(y).toBe(300);
   expect(controller.index).toBe(0);
+  fresh();
+  wheel(40);
+  expect(controller.index).toBe(1);
+});
+it('does not grab back a block you just left downwards', () => {
+  const { controller } = setup(0, 2);
+  controller.select(1);
+  wheel(40);
+  y = 60;
+  window.dispatchEvent(new Event('scroll'));
+  settled();
+  expect(y).toBe(60);
 });
 it('settles onto the alignment point with an animation instead of jumping', () => {
   window.matchMedia = jest
@@ -243,8 +264,10 @@ it('enters once per burst when alignment never settles', () => {
   expect(select).toHaveBeenCalledTimes(1);
   expect(controller.index).toBe(0);
   settled();
-  wheel(120);
-  expect(select).toHaveBeenCalledTimes(2);
+  // a new burst re-enters, but a block already visited keeps its slide
+  expect(wheel(120).defaultPrevented).toBe(true);
+  expect(select).toHaveBeenCalledTimes(1);
+  expect(controller.index).toBe(0);
 });
 it('re-settles instead of releasing when the browser keeps scrolling mid-burst', () => {
   const { controller } = setup(60);
@@ -289,6 +312,7 @@ it('keeps a copy gesture in the copy after reaching the bottom', () => {
   const { block, controller } = setup();
   const copy = block.querySelector<HTMLElement>('.experience-tiles-overlay')!;
   Object.defineProperties(copy, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
+  copy.classList.add('experience-tiles-overlay--scrollable');
   copy.scrollTop = 380;
   wheel(80, copy);
   expect(copy.scrollTop).toBe(400);
@@ -389,4 +413,35 @@ it('releases when a modal opens and cleans all listeners when unregistered', () 
   y = 0;
   fresh();
   expect(wheel(40).defaultPrevented).toBe(false);
+});
+it('watches for modals only while it owns the page', () => {
+  const observe = jest.spyOn(MutationObserver.prototype, 'observe');
+  const disconnect = jest.spyOn(MutationObserver.prototype, 'disconnect');
+  setup();
+  expect(observe).not.toHaveBeenCalled();
+  wheel(40);
+  expect(observe).toHaveBeenCalledTimes(1);
+  fresh();
+  y = 950;
+  window.dispatchEvent(new Event('scroll'));
+  expect(disconnect).toHaveBeenCalled();
+  observe.mockRestore();
+  disconnect.mockRestore();
+});
+it('does not query the document for wheel input far from any block', () => {
+  setup(3000);
+  const query = jest.spyOn(document, 'querySelector');
+  expect(wheel(40).defaultPrevented).toBe(false);
+  expect(query).not.toHaveBeenCalled();
+  query.mockRestore();
+});
+it('snaps a misaligned block to the top without changing the slide', () => {
+  const { block, controller, binding } = setup(100);
+  expect(binding.isAligned()).toBe(false);
+  binding.snap();
+  settled();
+  expect(y).toBe(100);
+  expect(binding.isAligned()).toBe(true);
+  expect(controller.index).toBe(0);
+  expect(block.isConnected).toBe(true);
 });

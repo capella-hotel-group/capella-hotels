@@ -39,6 +39,8 @@ export interface BookingConfig {
   openInNewTab: boolean;
   showLocation: boolean;
   hotelId: string;
+  /** Booking Locations Content Fragment path; when set it replaces the authored location items. */
+  locationsPath: string;
 }
 
 export interface Selection {

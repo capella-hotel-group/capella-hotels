@@ -12,7 +12,9 @@ function setup(animated = false, reduced = false, count = 3): void {
   slides = Array.from({ length: count }, () => {
     const slide = document.createElement('li');
     slide.innerHTML =
-      '<div class="experience-tiles-item"><div class="experience-tiles-overlay"><a href="#cta">CTA</a></div></div>'.repeat(2);
+      '<div class="experience-tiles-item"><div class="experience-tiles-overlay"><a href="#cta">CTA</a></div></div>'.repeat(
+        2,
+      );
     if (animated)
       slide.querySelectorAll<HTMLElement>('.experience-tiles-item, .experience-tiles-overlay').forEach((el) => {
         el.style.transitionProperty = 'transform';
@@ -131,4 +133,27 @@ it('leaves every slide accessible in the editor', () => {
     expect(slide.hasAttribute('inert')).toBe(false);
     expect(slide.hasAttribute('aria-hidden')).toBe(false);
   });
+});
+it('reports every active change and asks where focus should go', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const host = document.createElement('div');
+  const target = document.createElement('button');
+  const items = [0, 1].map(() => {
+    const slide = document.createElement('div');
+    slide.innerHTML = '<a href="#x">x</a>';
+    host.append(slide);
+    return slide;
+  });
+  host.append(target);
+  document.body.append(host);
+  const onChange = jest.fn();
+  controller = new CarouselController(items, { onChange, focusTarget: () => target });
+  controller.init();
+  expect(onChange).toHaveBeenLastCalledWith(0);
+  items[0]!.querySelector('a')!.focus();
+  controller.requestStep(1);
+  expect(onChange).toHaveBeenLastCalledWith(1);
+  expect(document.activeElement).toBe(target);
 });

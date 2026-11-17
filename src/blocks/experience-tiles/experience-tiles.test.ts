@@ -15,6 +15,23 @@ jest.mock(
   { virtual: true },
 );
 
+const editor = { active: false };
+jest.mock('@/utils/env', () => ({ isUniversalEditor: () => editor.active }));
+
+/** Stubs ResizeObserver, which jsdom lacks, and returns a trigger for its callback. */
+function observeResize(): (targets: Element[]) => void {
+  const callbacks: ((records: { target: Element }[]) => void)[] = [];
+  globalThis.ResizeObserver = class {
+    constructor(callback: (records: { target: Element }[]) => void) {
+      callbacks.push(callback);
+    }
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  } as unknown as typeof ResizeObserver;
+  return (targets) => callbacks.forEach((callback) => callback(targets.map((target) => ({ target }))));
+}
+
 function block(config: string[] = [], count = 3): HTMLElement {
   const element = document.createElement('div');
   element.className = 'experience-tiles';
@@ -33,12 +50,12 @@ function active(element: HTMLElement): number {
     (slide) => slide.getAttribute('aria-hidden') === 'false',
   );
 }
-/** Stubs IntersectionObserver, which jsdom does not provide, and returns its callback. */
+/** Stubs IntersectionObserver, which jsdom does not provide, and returns a trigger for every observer. */
 function observeIntersection(): (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void {
-  let notify: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void = () => {};
+  const callbacks: ((records: { isIntersecting: boolean; intersectionRatio: number }[]) => void)[] = [];
   globalThis.IntersectionObserver = class {
     constructor(callback: (records: { isIntersecting: boolean; intersectionRatio: number }[]) => void) {
-      notify = callback;
+      callbacks.push(callback);
     }
     observe(): void {}
     disconnect(): void {}
@@ -47,7 +64,7 @@ function observeIntersection(): (records: { isIntersecting: boolean; intersectio
       return [];
     }
   } as unknown as typeof IntersectionObserver;
-  return (records) => notify(records);
+  return (records) => callbacks.forEach((callback) => callback(records));
 }
 describe('experience-tiles integration', () => {
   beforeEach(() => {
@@ -60,41 +77,140 @@ describe('experience-tiles integration', () => {
   afterEach(async () => {
     document.body.replaceChildren();
     Reflect.deleteProperty(globalThis, 'IntersectionObserver');
+    Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    editor.active = false;
     await Promise.resolve();
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
   });
-  it('ignores legacy settings and renders no navigation or automatic changes', () => {
+  it('ignores legacy settings and never advances on its own', () => {
     const element = block(['id', 'qa', 'true', '6', 'true', 'true']);
     decorate(element);
     jest.advanceTimersByTime(60000);
     expect(active(element)).toBe(0);
     expect(element.id).toBe('id');
-    expect(element.dataset.testId).toBe('qa');
+    expect(element.dataset.automationKey).toBe('qa');
+    expect(element.hasAttribute('data-test-id')).toBe(false);
     expect(element.dataset.testid).toBe('experience-tiles');
-    expect(element.querySelector('button')).toBeNull();
+    expect(element.querySelectorAll('.experience-tiles-control')).toHaveLength(2);
     expect(element.hasAttribute('aria-keyshortcuts')).toBe(false);
   });
-  it('uses vertical keys only at the root, leaves boundary/default interaction intact', () => {
+  it('steps with vertical arrows from the controls only while the block is aligned', () => {
     const element = block();
     decorate(element);
-    const key = (name: string, target: Element = element) => {
+    const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
+    const key = (name: string, target: Element) => {
       const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
       target.dispatchEvent(event);
       return event;
     };
-    expect(key('ArrowUp').defaultPrevented).toBe(false);
-    expect(key('ArrowDown').defaultPrevented).toBe(true);
+    expect(key('ArrowUp', next).defaultPrevented).toBe(false);
+    expect(key('ArrowDown', next).defaultPrevented).toBe(true);
     expect(active(element)).toBe(1);
-    key('ArrowDown', element.querySelector('a')!);
+    key('ArrowDown', element.querySelector('.experience-tiles-slide a')!);
     expect(active(element)).toBe(1);
-    key('ArrowDown');
+    expect(key(' ', next).defaultPrevented).toBe(false);
+    element.getBoundingClientRect = () =>
+      ({
+        top: 300,
+        bottom: 1100,
+        height: 800,
+        width: 1000,
+        left: 0,
+        right: 1000,
+        x: 0,
+        y: 300,
+        toJSON() {},
+      }) as DOMRect;
+    expect(key('ArrowDown', next).defaultPrevented).toBe(false);
+    expect(active(element)).toBe(1);
+  });
+  it('exposes hidden previous/next controls that track the active slide', () => {
+    const element = block();
+    decorate(element);
+    const previous = element.querySelector<HTMLButtonElement>('.experience-tiles-control--previous')!;
+    const next = element.querySelector<HTMLButtonElement>('.experience-tiles-control--next')!;
+    const status = element.querySelector('.experience-tiles-status')!;
+    expect(element.firstElementChild).toBe(previous.parentElement);
+    expect(element.getAttribute('role')).toBe('region');
+    expect(element.getAttribute('aria-roledescription')).toBe('carousel');
+    expect(element.getAttribute('aria-label')).toBe('Experience tiles');
+    expect(element.getAttribute('tabindex')).toBe('-1');
+    expect(status.getAttribute('aria-live')).toBe('polite');
+    expect(previous.getAttribute('aria-disabled')).toBe('true');
+    expect(status.textContent).toBe('');
+    next.click();
+    expect(active(element)).toBe(1);
+    expect(previous.getAttribute('aria-disabled')).toBe('false');
+    expect(status.textContent).toBe('Slide 2 of 3');
+    next.click();
+    expect(next.getAttribute('aria-disabled')).toBe('true');
+    next.click();
     expect(active(element)).toBe(2);
-    expect(key('ArrowDown').defaultPrevented).toBe(false);
-    expect(key(' ').defaultPrevented).toBe(false);
-    expect(key('Tab').defaultPrevented).toBe(false);
+  });
+  it('aligns a half-visible block before stepping from a control', () => {
+    window.scrollTo = jest.fn();
+    const element = block();
+    decorate(element);
+    element.getBoundingClientRect = () =>
+      ({
+        top: 300,
+        bottom: 1100,
+        height: 800,
+        width: 1000,
+        left: 0,
+        right: 1000,
+        x: 0,
+        y: 300,
+        toJSON() {},
+      }) as DOMRect;
+    element.querySelector<HTMLButtonElement>('.experience-tiles-control--next')!.click();
+    jest.advanceTimersByTime(2000);
+    expect(window.scrollTo).toHaveBeenCalled();
+    expect(active(element)).toBe(1);
+  });
+  it('hands focus to the matching control when the focused slide leaves', () => {
+    const element = block();
+    decorate(element);
+    const original = Element.prototype.matches;
+    const matches = jest.spyOn(Element.prototype, 'matches').mockImplementation(function (
+      this: Element,
+      selector: string,
+    ) {
+      return selector === ':focus-visible' ? true : original.call(this, selector);
+    });
+    element.querySelector<HTMLElement>('.experience-tiles-slide a')!.focus();
+    const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
+    next.click();
+    expect(document.activeElement).toBe(next);
+    matches.mockRestore();
+  });
+  it('keeps focus on the block for a pointer-driven step', () => {
+    const element = block();
+    decorate(element);
+    const original = Element.prototype.matches;
+    const matches = jest.spyOn(Element.prototype, 'matches').mockImplementation(function (
+      this: Element,
+      selector: string,
+    ) {
+      return selector === ':focus-visible' ? false : original.call(this, selector);
+    });
+    element.querySelector<HTMLElement>('.experience-tiles-slide a')!.focus();
+    const next = element.querySelector<HTMLElement>('.experience-tiles-control--next')!;
+    next.click();
+    expect(document.activeElement).toBe(element);
+    expect(element.getAttribute('tabindex')).toBe('-1');
+    matches.mockRestore();
+  });
+  it('renders no controls in the editor', () => {
+    document.body.classList.add('adobe-ue-edit');
+    const element = block();
+    decorate(element);
+    expect(element.querySelector('.experience-tiles-controls')).toBeNull();
+    document.body.classList.remove('adobe-ue-edit');
   });
   it('retains instrumented config and cleans up when UE replaces the track', async () => {
+    editor.active = true;
     const element = block(['false']);
     const field = element.firstElementChild!.firstElementChild!;
     field.setAttribute('data-aue-prop', 'autoplay');
@@ -105,45 +221,62 @@ describe('experience-tiles integration', () => {
     window.dispatchEvent(new Event('resize'));
     expect(jest.getTimerCount()).toBe(0);
   });
+  it('does not watch the page for removals outside the editor', () => {
+    const observe = jest.spyOn(MutationObserver.prototype, 'observe');
+    const element = block();
+    decorate(element);
+    expect(observe).not.toHaveBeenCalledWith(document.body, { childList: true, subtree: true });
+    observe.mockRestore();
+  });
   it('keeps single slides free of carousel interaction', () => {
     const element = block([], 1);
     decorate(element);
     expect(element.querySelector('button')).toBeNull();
+    expect(element.querySelector('.experience-tiles-controls')).toBeNull();
     expect(element.hasAttribute('tabindex')).toBe(false);
-    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
+    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      false,
+    );
   });
   it('claims the vertical touch axis only where it owns page scrolling', () => {
     const owned = block();
     decorate(owned);
-    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(true);
+    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      true,
+    );
 
     document.body.classList.add('adobe-ue-edit');
     const edited = block();
     decorate(edited);
-    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
+    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      false,
+    );
     document.body.classList.remove('adobe-ue-edit');
   });
   it('lets the keyboard reach copy that overflows its panel', () => {
+    const resize = observeResize();
     const element = block();
     decorate(element);
     const [overflowing, fitting] = [...element.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
-    Object.defineProperties(overflowing!, { scrollHeight: { value: 600 }, clientHeight: { value: 200 } });
-    Object.defineProperties(fitting!, { scrollHeight: { value: 200 }, clientHeight: { value: 200 } });
+    const body = (overlay: HTMLElement) => overlay.querySelector<HTMLElement>('.experience-tiles-body')!;
+    Object.defineProperties(overflowing!, { clientHeight: { value: 200 } });
+    Object.defineProperties(body(overflowing!), { offsetHeight: { value: 600 } });
+    // Windows glyph overflow inflates scrollHeight on copy whose layout fits
+    Object.defineProperties(fitting!, { scrollHeight: { value: 205 }, clientHeight: { value: 200 } });
+    Object.defineProperties(body(fitting!), { offsetHeight: { value: 200 } });
 
-    // the guard only reacts to a width change, and jsdom reports a zero-sized track
-    const track = element.querySelector<HTMLElement>('.experience-tiles-track')!;
-    track.getBoundingClientRect = () =>
-      ({ width: 834, height: 900, top: 0, bottom: 0, left: 0, right: 0, x: 0, y: 0, toJSON() {} }) as DOMRect;
-    window.dispatchEvent(new Event('resize'));
-    jest.advanceTimersByTime(150);
+    // e.g. a web font finishing after decoration: no window resize involved
+    resize([body(overflowing!), body(fitting!)]);
+    jest.advanceTimersByTime(16);
 
     expect(overflowing!.tabIndex).toBe(0);
     expect(overflowing!.getAttribute('role')).toBe('group');
     expect(overflowing!.classList.contains('experience-tiles-overlay--scrollable')).toBe(true);
     expect(fitting!.hasAttribute('tabindex')).toBe(false);
-    // a non-overflowing overlay must not become a scroll container, or it takes focus and wheel input
-    // the page is better off keeping
     expect(fitting!.classList.contains('experience-tiles-overlay--scrollable')).toBe(false);
+    const heading = overflowing!.querySelector('.experience-tiles-headline')!;
+    expect(overflowing!.getAttribute('aria-labelledby')).toBe(heading.id);
+    expect(fitting!.hasAttribute('aria-labelledby')).toBe(false);
   });
   it('holds the entrance animation until the block is scrolled into view', () => {
     const element = block();
@@ -197,7 +330,9 @@ describe('experience-tiles integration', () => {
 
     decorate(element);
 
-    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe('Nature guide');
+    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe(
+      'Nature guide',
+    );
     expect(element.querySelector('.experience-tiles-description')?.textContent).toBe('Discover the island with Ketut.');
   });
 
@@ -222,5 +357,66 @@ describe('experience-tiles integration', () => {
     decorate(element);
     expect(element.querySelector('.experience-tiles-description')).toBe(description);
     expect(description.closest('.experience-tiles-hidden')).toBeNull();
+  });
+
+  it('preloads only the neighbouring slides once the block is near the viewport', () => {
+    const near = observeIntersection();
+    const element = block();
+    element.querySelectorAll('img').forEach((img) => img.setAttribute('loading', 'lazy'));
+    decorate(element);
+    const slides = [...element.querySelectorAll('.experience-tiles-slide')];
+    const loading = (index: number) => slides[index]!.querySelector('img')!.getAttribute('loading');
+    expect(loading(1)).toBe('lazy');
+    near([{ isIntersecting: true, intersectionRatio: 0.1 }]);
+    expect(loading(1)).toBe('eager');
+    expect(loading(2)).toBe('lazy');
+  });
+
+  it('preloads the new neighbour after the active slide changes', () => {
+    const near = observeIntersection();
+    const element = block([], 4);
+    element.querySelectorAll('img').forEach((img) => img.setAttribute('loading', 'lazy'));
+    decorate(element);
+    const slides = [...element.querySelectorAll('.experience-tiles-slide')];
+    const loading = (index: number) => slides[index]!.querySelector('img')!.getAttribute('loading');
+    near([{ isIntersecting: true, intersectionRatio: 0.1 }]);
+    expect(loading(1)).toBe('eager');
+    expect(loading(2)).toBe('lazy');
+    expect(loading(3)).toBe('lazy');
+    element.querySelector<HTMLElement>('.experience-tiles-control--next')!.click();
+    expect(active(element)).toBe(1);
+    expect(loading(2)).toBe('eager');
+    expect(loading(3)).toBe('lazy');
+  });
+
+  it('labels slides as groups and renders real headings', () => {
+    const element = block();
+    decorate(element);
+    const slides = [...element.querySelectorAll<HTMLElement>('.experience-tiles-slide')];
+    expect(element.querySelector('.experience-tiles-track')!.tagName).toBe('DIV');
+    expect(slides[1]!.tagName).toBe('DIV');
+    expect(slides[1]!.getAttribute('role')).toBe('group');
+    expect(slides[1]!.getAttribute('aria-roledescription')).toBe('slide');
+    expect(slides[1]!.getAttribute('aria-label')).toBe('2 of 3');
+    expect(slides[0]!.querySelector('.experience-tiles-item--left .experience-tiles-headline')!.tagName).toBe('H2');
+    expect(slides[0]!.querySelector('.experience-tiles-item--right .experience-tiles-headline')!.tagName).toBe('H3');
+  });
+  it('keeps UE instrumentation on the promoted headline', () => {
+    const element = block([], 1);
+    const content = element.querySelector<HTMLElement>('[data-aue-model] > div:nth-child(2)')!;
+    content.innerHTML = '<p data-aue-prop="leftContent_headline" data-aue-type="text">Ubud</p>';
+    decorate(element);
+    const heading = element.querySelector('h2.experience-tiles-headline')!;
+    expect(heading.getAttribute('data-aue-prop')).toBe('leftContent_headline');
+    expect(heading.textContent).toBe('Ubud');
+  });
+  it('tells screen readers when a link opens a new tab', () => {
+    const element = block([], 1);
+    const ctas = element.querySelector<HTMLElement>('[data-aue-model] > div:nth-child(5)')!;
+    ctas.innerHTML = '<p><a href="/details">Details</a></p><p>true</p>';
+    decorate(element);
+    const link = element.querySelector<HTMLAnchorElement>('.experience-tiles-link')!;
+    expect(link.target).toBe('_blank');
+    expect(link.querySelector('.experience-tiles-sr-only')!.textContent).toBe(' (opens in new tab)');
   });
 });

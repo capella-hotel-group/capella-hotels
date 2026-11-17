@@ -167,6 +167,13 @@
           "description": "SynXis Hotel ID used when the Location selector is hidden, e.g. 75985.",
           "valueType": "string",
           "value": ""
+        },
+        {
+          "component": "aem-content",
+          "name": "locationsPath",
+          "label": "Locations (Content Fragment path)",
+          "description": "Pick the Booking Locations Content Fragment listing the hotels. When set it replaces the Location items below; leave empty to use them.",
+          "valueType": "string"
         }
       ]
     },

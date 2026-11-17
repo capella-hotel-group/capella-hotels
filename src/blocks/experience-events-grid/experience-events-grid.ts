@@ -2,9 +2,9 @@ import { createExperienceModal } from '@/components/experience-modal.js';
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getPublishBaseUrl, resolveDAMUrl } from '@/utils/env.js';
 import { cardMatchesFilter, resolvePickerPath } from '@/blocks/filters-grid/filters-grid.js';
-import { buildCalendar } from '@/blocks/booking-search/lib/calendar.js';
-import { fromIso, toIso } from '@/blocks/booking-search/lib/dates.js';
-import type { Selection } from '@/blocks/booking-search/lib/types.js';
+import { buildCalendar } from './lib/calendar';
+import { fromIso, toIso } from './lib/dates';
+import type { Selection } from './lib/types';
 import { normalizeChoice, resolveCardHref } from '@/utils/experience-url.js';
 import { matchingEvents, prepareEvent, type DateRange, type EventCard, type ScheduledEvent } from './schedule';
 

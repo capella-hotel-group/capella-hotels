@@ -45,4 +45,21 @@ describe('waitForTransforms', () => {
     expect(complete).not.toHaveBeenCalled();
     expect(jest.getTimerCount()).toBe(0);
   });
+
+  it('waits for the longest transform transition when several are listed', () => {
+    jest.useFakeTimers();
+    const element = document.createElement('div');
+    element.style.transitionProperty = 'transform, all';
+    element.style.transitionDuration = '1s, 0s';
+    element.style.transitionDelay = '0s, 0s';
+    document.body.append(element);
+    const complete = jest.fn();
+    waitForTransforms([element], complete);
+    jest.advanceTimersByTime(1049);
+    expect(complete).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(1);
+    expect(complete).toHaveBeenCalledWith(false);
+    element.remove();
+    jest.useRealTimers();
+  });
 });
