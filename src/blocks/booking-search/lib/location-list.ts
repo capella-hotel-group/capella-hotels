@@ -9,12 +9,14 @@ export interface LocationList {
   updateScrollbar: () => void;
   /** Flags the picked location as `aria-selected`. */
   mark: (location?: Location) => void;
+  /** Replaces the listed options, e.g. once locations arrive from a Content Fragment. */
+  setLocations: (next: Location[]) => void;
 }
 
 const SCROLL_TOLERANCE = 6;
 
 export function buildLocationList(
-  locations: Location[],
+  initial: Location[],
   label: string,
   onSelect: (location: Location) => void,
 ): LocationList {
@@ -28,15 +30,22 @@ export function buildLocationList(
   const thumb = el('span', `${BLOCK}-location-scrollbar-thumb`);
   scrollbar.append(thumb);
 
-  const options = locations.map((location) => {
-    const item = el('li', `${BLOCK}-option`, location.label);
-    item.setAttribute('role', 'option');
-    item.setAttribute('aria-selected', 'false');
-    item.tabIndex = -1;
-    item.addEventListener('click', () => onSelect(location));
-    list.append(item);
-    return item;
-  });
+  let locations: Location[] = [];
+  let options: HTMLLIElement[] = [];
+
+  const setLocations = (next: Location[]): void => {
+    locations = next;
+    options = next.map((location) => {
+      const item = el('li', `${BLOCK}-option`, location.label);
+      item.setAttribute('role', 'option');
+      item.setAttribute('aria-selected', 'false');
+      item.tabIndex = -1;
+      item.addEventListener('click', () => onSelect(location));
+      return item;
+    });
+    list.replaceChildren(...options);
+  };
+  setLocations(initial);
 
   const focusOption = (index = 0): void => {
     options[Math.max(0, Math.min(index, options.length - 1))]?.focus();
@@ -95,5 +104,5 @@ export function buildLocationList(
     });
   };
 
-  return { list, scrollbar, focusOption, updateScrollbar, mark };
+  return { list, scrollbar, focusOption, updateScrollbar, mark, setLocations };
 }

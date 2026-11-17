@@ -20,8 +20,9 @@ const ROW = {
   maxChildren: 11,
   showLocation: 12,
   hotelId: 13,
+  locationsPath: 14,
 } as const;
-/** Trailing optional rows (`showLocation`, `hotelId`) are excluded, so pages authored without them keep their identity rows aligned. */
+/** Trailing optional rows (`showLocation`, `hotelId`, `locationsPath`) are excluded, so pages authored without them keep their identity rows aligned. */
 const CONTENT_ROWS = ROW.showLocation;
 
 /** Upper bound on an authored maximum, so a typo cannot build a huge counter. */
@@ -91,5 +92,8 @@ export function parseConfig(block: HTMLElement): BookingConfig {
     // Rows authored before this field existed are empty, so the selector stays visible.
     showLocation: cellText(contentRows[ROW.showLocation]).toLowerCase() !== 'false',
     hotelId: cellText(contentRows[ROW.hotelId]),
+    locationsPath:
+      contentRows[ROW.locationsPath]?.querySelector('a')?.getAttribute('href')?.trim() ||
+      cellText(contentRows[ROW.locationsPath]),
   };
 }
