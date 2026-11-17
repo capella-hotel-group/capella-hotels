@@ -16,7 +16,7 @@ function createBlock(className = 'breadcrumb block'): HTMLElement {
 function mockFetch(pages: Record<string, string>): jest.Mock {
   const fetchMock = jest.fn(async (url: string) => ({
     ok: url in pages,
-    text: async () => `<html><head>${pages[url] ?? ''}</head></html>`,
+    text: async () => `<html><head>${pages[url] ?? ''}</head><body><main></main></body></html>`,
   }));
   global.fetch = fetchMock as unknown as typeof fetch;
   return fetchMock;

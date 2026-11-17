@@ -6,8 +6,8 @@ function htmlDoc(head: string): Document {
   return doc;
 }
 
-function page(head: string, ok = true) {
-  return { ok, text: async () => `<html><head>${head}</head><body></body></html>` };
+function page(head: string, ok = true, body = '<main></main>') {
+  return { ok, text: async () => `<html><head>${head}</head><body>${body}</body></html>` };
 }
 
 describe('labelFromDocument', () => {
@@ -65,6 +65,23 @@ describe('resolveTrail', () => {
     );
 
     expect(crumbs).toEqual([{ label: 'Colonial', href: '/singapore/en/accommodation/colonial-manor', current: true }]);
+  });
+
+  it('drops an ancestor that answers without page content, like an author folder listing', async () => {
+    const fetchMock = jest.fn(async (url: string) =>
+      url === '/singapore/en/accommodation'
+        ? page('<title>accommodation</title>', true, '<ul><li>child</li></ul>')
+        : page('<title>Singapore</title>'),
+    );
+
+    const crumbs = await resolveTrail(
+      trail,
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(crumbs.map((crumb) => crumb.label)).toEqual(['Singapore', 'Colonial']);
   });
 
   it('requests author URLs in the editor', async () => {
