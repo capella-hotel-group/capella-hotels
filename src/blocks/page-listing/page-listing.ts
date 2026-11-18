@@ -195,18 +195,34 @@ function createDetails(parsed: Document): HTMLElement {
   const details = document.createElement('dl');
   details.className = 'page-listing-card-details';
   parsed.querySelectorAll('div').forEach((cell) => {
-    if (cell.querySelector('a, img') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
+    if (cell.querySelector('a') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
     let group: Element[] = [];
     const appendDetail = (): void => {
       const values = group.map((element) => textOf(element)).filter(Boolean);
-      if (values.length < 2) return;
+      if (values.length < 1) return;
       const pair = document.createElement('div');
       const label = document.createElement('dt');
       const value = document.createElement('dd');
-      label.textContent = values[0]!;
-      value.textContent = values.slice(1).join(' ');
-      pair.append(label, value);
-      details.append(pair);
+
+      // Look for picture/image element in the first group item
+      const firstElement = group[0];
+      const picture = firstElement?.querySelector('picture');
+      const img = firstElement?.querySelector('img');
+
+      if (picture || img) {
+        if (picture) {
+          const clonedPicture = picture.cloneNode(true) as HTMLElement;
+          label.append(clonedPicture);
+        } else if (img) {
+          const clonedImg = img.cloneNode(true) as HTMLImageElement;
+          label.append(clonedImg);
+        }
+        // Use all text values for the detail value
+        value.textContent = values.join(' ');
+        label.className = 'page-listing-card-detail-label';
+        pair.append(label, value);
+        details.append(pair);
+      }
     };
     Array.from(cell.children).forEach((element) => {
       if (element.tagName === 'HR') {
@@ -219,7 +235,7 @@ function createDetails(parsed: Document): HTMLElement {
   return details;
 }
 
-function createCard(record: ListingRecord): HTMLElement {
+function createCard(record: ListingRecord, enableCompare: boolean = false): HTMLElement {
   const card = document.createElement('article');
   card.className = 'page-listing-card';
   const parsed = new DOMParser().parseFromString(record.listHtml || '', 'text/html');
@@ -278,6 +294,23 @@ function createCard(record: ListingRecord): HTMLElement {
   if (details.childElementCount) content.append(details);
   const actions = createActions(parsed, record);
   if (actions.childElementCount) content.append(actions);
+
+  if (enableCompare) {
+    const compareCheckbox = document.createElement('div');
+    compareCheckbox.className = 'page-listing-card-compare';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'page-listing-compare-checkbox';
+    checkbox.dataset.testid = 'page-listing-compare-checkbox';
+    checkbox.setAttribute('aria-label', `Compare ${cardTitle}`);
+    const label = document.createElement('label');
+    label.className = 'page-listing-compare-label';
+    label.append(checkbox);
+    label.append(document.createTextNode('COMPARE'));
+    compareCheckbox.append(label);
+    card.append(compareCheckbox);
+  }
+
   card.append(content);
   return card;
 }
@@ -399,6 +432,7 @@ async function loadListings(
   enableCategoryFilters: boolean,
   categoryRootTag: string,
   loadMore: LoadMoreConfig,
+  enableCompare: boolean,
   status: HTMLElement,
   results: HTMLElement,
 ): Promise<void> {
@@ -420,7 +454,7 @@ async function loadListings(
     const records = Array.isArray(index.data) ? index.data : [];
     const matchingRecords = records.filter((record) => locationFromPath(record.path) === location);
     const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
-    const cards = matchingRecords.map(createCard);
+    const cards = matchingRecords.map((record) => createCard(record, enableCompare));
     results.append(...cards);
     const selectCategory = createCardVisibility(cards, results, loadMore);
     if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
@@ -438,7 +472,7 @@ export default function decorate(block: HTMLElement): void {
     contentRows: Math.max(1, rows.length - 2),
     hiddenClass: 'page-listing-config',
   });
-  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow] = configRows;
+  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow, compareRow] = configRows;
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
@@ -449,6 +483,7 @@ export default function decorate(block: HTMLElement): void {
     batchSize: Number.isFinite(count) && count >= 1 ? Math.floor(count) : 6,
     label: textOf(labelRow) || 'Load More',
   };
+  const enableCompare = textOf(compareRow).toLowerCase() === 'true';
   const location = locationFromPath(window.location.pathname);
 
   const status = document.createElement('p');
@@ -459,5 +494,5 @@ export default function decorate(block: HTMLElement): void {
   results.className = 'page-listing-results';
 
   block.append(status, results);
-  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, status, results);
+  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, enableCompare, status, results);
 }
