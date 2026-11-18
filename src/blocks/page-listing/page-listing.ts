@@ -476,7 +476,7 @@ export default function decorate(block: HTMLElement): void {
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
-  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accomodation';
+  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accommodations';
   const count = Number(textOf(countRow));
   const loadMore: LoadMoreConfig = {
     enabled: textOf(loadMoreRow).toLowerCase() === 'true',
