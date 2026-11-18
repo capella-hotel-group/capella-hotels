@@ -13,7 +13,7 @@ main .experience-events-grid .experience-events-grid-shell {
     gap: 32px;
     max-width: 1440px;
     margin-inline: auto;
-    padding: 96px 24px 48px;
+    padding: 96px 24px 176px;
 }
 
 main .experience-events-grid .experience-events-grid-heading {
@@ -76,7 +76,7 @@ main .experience-events-grid .experience-events-grid-date-toggle {
     width: min(345px, 100%);
     min-width: min(201px, 100%);
     height: 56px;
-    gap: 20px;
+    gap: 8px;
     padding: 16px 20px;
     color: var(--color-text-main-body);
     font-family: var(--type-font-family-heading);
@@ -89,9 +89,9 @@ main .experience-events-grid .experience-events-grid-date-label-group {
     display: flex;
     flex: 0 1 auto;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
     min-width: 0;
-    max-width: 187px;
+    max-width: 260px;
 }
 
 main .experience-events-grid .experience-events-grid-date-label-group::before {
@@ -416,7 +416,6 @@ main .experience-events-grid .experience-events-grid-metadata {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: auto;
 }
 
 main .experience-events-grid :is(.experience-events-grid-duration, .experience-events-grid-price) {
@@ -450,7 +449,7 @@ main .experience-events-grid .experience-events-grid-reveal-more {
     min-height: 44px;
     padding: 12px 0;
     color: var(--color-text-action-default);
-    font-size: 16px;
+    font-size: 18px;
     line-height: 18px;
     text-decoration: underline;
     text-transform: uppercase;
@@ -480,12 +479,30 @@ main .experience-events-grid :is(button, a, input):focus-visible {
         align-self: flex-start;
         width: min(345px, calc(100vw - 48px));
     }
+
+    main .experience-events-grid .experience-events-grid-duration {
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    main .experience-events-grid .experience-events-grid-metadata {
+        flex: 1;
+    }
+
+    main .experience-events-grid .experience-events-grid-price {
+        margin-block-start: auto;
+    }
+
+    main .experience-events-grid .experience-events-grid-price,
+    main .experience-events-grid .experience-events-grid-reveal-more {
+        line-height: 16px;
+    }
 }
 
 @media (min-width: 768px) {
     main .experience-events-grid .experience-events-grid-shell {
         gap: 40px;
-        padding: 112px 48px 48px;
+        padding: 112px 48px 176px;
     }
 
     main .experience-events-grid .experience-events-grid-heading {
@@ -494,7 +511,7 @@ main .experience-events-grid :is(button, a, input):focus-visible {
     }
 
     main .experience-events-grid .experience-events-grid-title {
-        font-size: 44px;
+        font-size: 40px;
         line-height: 44px;
     }
 
@@ -512,17 +529,17 @@ main .experience-events-grid :is(button, a, input):focus-visible {
     }
 
     main .experience-events-grid .experience-events-grid-date-toggle {
-        flex: 0 0 274px;
-        width: 274px;
+        flex: 0 0 322px;
+        width: 322px;
         justify-content: center;
-        gap: 12px;
-        padding: 16px;
+        gap: 8px;
+        padding: 8px;
         font-size: 18px;
         line-height: 18px;
     }
 
     main .experience-events-grid .experience-events-grid-date-label-group {
-        max-width: 206px;
+        max-width: 260px;
     }
 
     main .experience-events-grid .experience-events-grid-date-panel {
@@ -562,6 +579,7 @@ main .experience-events-grid :is(button, a, input):focus-visible {
         flex-direction: row;
         justify-content: space-between;
         gap: 16px;
+        margin-top: auto;
     }
 
     main .experience-events-grid :is(.experience-events-grid-duration, .experience-events-grid-price) {
@@ -577,19 +595,19 @@ main .experience-events-grid :is(button, a, input):focus-visible {
 @media (min-width: 1200px) {
     main .experience-events-grid .experience-events-grid-shell {
         gap: 48px;
-        padding: 120px 80px 48px;
+        padding: 120px 80px 176px;
     }
 
     main .experience-events-grid .experience-events-grid-date-toggle {
-        flex-basis: 306px;
-        width: 306px;
+        flex-basis: 322px;
+        width: 322px;
         justify-content: center;
-        gap: 20px;
-        padding: 16px 28px;
+        gap: 8px;
+        padding: 16px 8px;
     }
 
     main .experience-events-grid .experience-events-grid-date-label-group {
-        max-width: 206px;
+        max-width: 260px;
     }
 
     main .experience-events-grid .experience-events-grid-date-panel {
