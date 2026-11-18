@@ -115,6 +115,7 @@ function createMedia(record: ListingRecord, parsed: Document): HTMLElement | nul
   media.className = 'page-listing-card-media';
   const slides: HTMLImageElement[] = [];
   parsed.querySelectorAll<HTMLImageElement>('img[src]').forEach((source) => {
+    if (source.closest('dl') || source.closest('[data-detail-icon]')) return;
     const url = new URL(source.getAttribute('src') || '', new URL('.', pageUrl));
     if (!['https:', 'http:'].includes(url.protocol)) return;
     const image = document.createElement('img');
@@ -212,14 +213,17 @@ function createDetails(parsed: Document): HTMLElement {
       if (picture || img) {
         if (picture) {
           const clonedPicture = picture.cloneNode(true) as HTMLElement;
+          clonedPicture.setAttribute('data-detail-icon', 'true');
           label.append(clonedPicture);
         } else if (img) {
           const clonedImg = img.cloneNode(true) as HTMLImageElement;
+          clonedImg.setAttribute('data-detail-icon', 'true');
           label.append(clonedImg);
         }
         // Use all text values for the detail value
         value.textContent = values.join(' ');
         label.className = 'page-listing-card-detail-label';
+        label.setAttribute('data-detail-icon', 'true');
         pair.append(label, value);
         details.append(pair);
       }
@@ -476,7 +480,7 @@ export default function decorate(block: HTMLElement): void {
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
-  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accomodation';
+  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accommodations';
   const count = Number(textOf(countRow));
   const loadMore: LoadMoreConfig = {
     enabled: textOf(loadMoreRow).toLowerCase() === 'true',

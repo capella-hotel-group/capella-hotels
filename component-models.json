@@ -3561,7 +3561,7 @@
         "description": "Direct child tags define the category selection bar, including categories with no matching cards.",
         "valueType": "string",
         "multi": false,
-        "value": "/content/cq:tags/capella-hotels/accomodation"
+        "value": "/content/cq:tags/capella-hotels/accommodations"
       },
       {
         "component": "boolean",
