@@ -82,7 +82,7 @@ function readListingType(row?: HTMLElement): ListingType {
   const field = row?.querySelector('[data-aue-prop="listingType"]') || row?.firstElementChild || row;
   const value = textOf(field).toLowerCase();
   return value === 'wellness' || value === 'experience' || value === 'dining' || value === 'accommodations'
-    ? value
+    ? (value as ListingType)
     : 'offers';
 }
 
@@ -498,24 +498,34 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   const rows = [...block.children] as HTMLElement[];
 
-  // Count how many non-empty rows we have at the start (eyebrow, title, description)
-  let headerRowCount = 0;
-  for (let i = 0; i < Math.min(3, rows.length); i += 1) {
-    if (textOf(rows[i]).trim()) {
-      headerRowCount += 1;
-    } else {
-      break;
-    }
-  }
+  // Map each row directly by its position to its purpose (after applyBlockIdentity removes identity rows):
+  // Row 0: eyebrow (render if non-empty)
+  // Row 1: title (render if non-empty)
+  // Row 2: description (render if non-empty)
+  // Row 3: listingType (use if non-empty)
+  // Row 4: enableFilters (use if non-empty)
+  // Row 5: categoryRoot (use if non-empty)
+  // Row 6: enableLoadMore (use if non-empty)
+  // Row 7: count (use if non-empty)
+  // Row 8: label (use if non-empty)
+  // Row 9: enableCompare (use if non-empty)
 
   const configRows = applyBlockIdentity(block, rows, {
-    contentRows: Math.max(1, rows.length - 2 - headerRowCount),
+    contentRows: rows.length - 2,
     hiddenClass: 'page-listing-config',
   });
 
-  const headerRows = configRows.slice(0, headerRowCount);
-  const otherRows = configRows.slice(headerRowCount);
-  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow, compareRow] = otherRows;
+  // Map rows by direct index, only using non-empty values
+  const eyebrowRow = configRows[0];
+  const titleRow = configRows[1];
+  const descriptionRow = configRows[2];
+  const typeRow = configRows[3];
+  const filterRow = configRows[4];
+  const rootRow = configRows[5];
+  const loadMoreRow = configRows[6];
+  const countRow = configRows[7];
+  const labelRow = configRows[8];
+  const compareRow = configRows[9];
 
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
@@ -533,38 +543,39 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const header = document.createElement('div');
   header.className = 'page-listing-header';
 
-  for (let i = 0; i < headerRows.length; i += 1) {
-    const row = headerRows[i];
-    const text = textOf(row);
-    if (!text) continue;
+  // Render eyebrow if non-empty
+  const eyebrowText = textOf(eyebrowRow);
+  if (eyebrowText) {
+    const eyebrowEl = document.createElement('p');
+    eyebrowEl.className = 'page-listing-eyebrow';
+    eyebrowEl.textContent = eyebrowText;
+    header.append(eyebrowEl);
+  }
 
-    if (i === 0) {
-      // Eyebrow
-      const eyebrowEl = document.createElement('p');
-      eyebrowEl.className = 'page-listing-eyebrow';
-      eyebrowEl.textContent = text;
-      header.append(eyebrowEl);
-    } else if (i === 1) {
-      // Title - supports richtext HTML
-      const titleEl = document.createElement('h2');
-      titleEl.className = 'page-listing-title';
-      // Check if text contains HTML tags
-      if (text.includes('<') && text.includes('>')) {
-        // For richtext, use innerHTML after sanitizing
-        const { default: DOMPurify } = await import('dompurify');
-        titleEl.innerHTML = DOMPurify.sanitize(text);
-      } else {
-        // Plain text
-        titleEl.textContent = text;
-      }
-      header.append(titleEl);
-    } else if (i === 2) {
-      // Description
-      const descEl = document.createElement('p');
-      descEl.className = 'page-listing-description';
-      descEl.textContent = text;
-      header.append(descEl);
+  // Render title if non-empty - supports richtext HTML
+  const titleHtml = titleRow?.innerHTML?.trim() || '';
+  if (titleHtml) {
+    const titleEl = document.createElement('h2');
+    titleEl.className = 'page-listing-title';
+    // Check if HTML contains tags (for richtext structure like <p>...</p>)
+    if (titleHtml.includes('<') && titleHtml.includes('>')) {
+      // For richtext, use innerHTML after sanitizing
+      const { default: DOMPurify } = await import('dompurify');
+      titleEl.innerHTML = DOMPurify.sanitize(titleHtml);
+    } else {
+      // Plain text
+      titleEl.textContent = titleHtml;
     }
+    header.append(titleEl);
+  }
+
+  // Render description if non-empty
+  const descriptionText = textOf(descriptionRow);
+  if (descriptionText) {
+    const descEl = document.createElement('p');
+    descEl.className = 'page-listing-description';
+    descEl.textContent = descriptionText;
+    header.append(descEl);
   }
 
   const status = document.createElement('p');
