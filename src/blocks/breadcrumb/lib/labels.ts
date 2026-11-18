@@ -22,7 +22,9 @@ async function fetchLabel(href: string, fetchImpl: typeof fetch): Promise<string
   try {
     const response = await fetchImpl(href, { signal: controller.signal });
     if (!response.ok) return '';
-    return labelFromDocument(new DOMParser().parseFromString(await response.text(), 'text/html'));
+    const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+    // Real pages always render a <main>; author folder listings answer 200 without one.
+    return page.querySelector('main') ? labelFromDocument(page) : '';
   } catch {
     return '';
   } finally {
@@ -36,8 +38,11 @@ async function ancestorCrumb(segments: string[], isAuthor: boolean, fetchImpl: t
 }
 
 async function rootCrumb(root: string[], isAuthor: boolean, fetchImpl: typeof fetch): Promise<Crumb> {
-  const home = await ancestorCrumb(homeOf(root), isAuthor, fetchImpl);
-  return home.label ? home : ancestorCrumb(root, isAuthor, fetchImpl);
+  const [home, rootPage] = await Promise.all([
+    ancestorCrumb(homeOf(root), isAuthor, fetchImpl),
+    ancestorCrumb(root, isAuthor, fetchImpl),
+  ]);
+  return home.label ? home : rootPage;
 }
 
 export async function resolveTrail(

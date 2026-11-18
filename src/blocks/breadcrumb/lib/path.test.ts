@@ -1,9 +1,4 @@
-jest.mock('@/app/scripts.js', () => ({
-  LANG_MAP: { 'zh-cn': 'zh-CN', jp: 'ja' },
-  VALID_LANG_PRIMARIES: new Set(['ar', 'en', 'ja', 'ko', 'zh']),
-}));
-
-import { deslug, parsePagePath, rootDepth, toHref, trailPaths } from './path';
+import { deslug, parsePagePath, toHref, trailPaths } from './path';
 
 describe('breadcrumb path helpers', () => {
   it('parses delivery paths', () => {
@@ -24,17 +19,19 @@ describe('breadcrumb path helpers', () => {
     expect(parsePagePath('/singapore/en/')).toEqual({ segments: ['singapore', 'en'], isAuthor: false });
   });
 
-  it('finds the root at the first language segment', () => {
-    expect(rootDepth(['singapore', 'en', 'x'])).toBe(2);
-    expect(rootDepth(['en', 'x'])).toBe(1);
-    expect(rootDepth(['global', 'jp', 'x'])).toBe(2);
-    expect(rootDepth(['test-pages', 'qa', 'card'])).toBe(1);
-    expect(rootDepth([])).toBe(0);
-  });
-
-  it('builds no trail for the root page', () => {
+  it('builds no trail at or above the second URL level', () => {
     expect(trailPaths(parsePagePath('/singapore/en'))).toEqual([]);
     expect(trailPaths(parsePagePath('/singapore/en/'))).toEqual([]);
+    expect(trailPaths(parsePagePath('/en/capella-singapore'))).toEqual([]);
+    expect(trailPaths(parsePagePath('/en'))).toEqual([]);
+    expect(trailPaths(parsePagePath('/'))).toEqual([]);
+  });
+
+  it('roots production hotel pages at the hotel page', () => {
+    expect(trailPaths(parsePagePath('/en/capella-singapore/family-retreat'))).toEqual([
+      ['en', 'capella-singapore'],
+      ['en', 'capella-singapore', 'family-retreat'],
+    ]);
   });
 
   it('treats the home page as the root page', () => {

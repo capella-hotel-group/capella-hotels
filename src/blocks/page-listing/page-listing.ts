@@ -1,7 +1,7 @@
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getPublishBaseUrl } from '@/utils/env.js';
 
-type ListingType = 'offers' | 'wellness' | 'experience' | 'dining';
+type ListingType = 'offers' | 'wellness' | 'experience' | 'dining' | 'accommodations';
 
 interface ListingRecord {
   path?: string;
@@ -19,6 +19,7 @@ const INDEX_PATHS: Record<ListingType, string> = {
   wellness: '/wellness/list-index.json',
   experience: '/experience/list-index.json',
   dining: '/dining/list-index.json',
+  accommodations: '/en/accommodations/list-index.json',
 };
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
@@ -35,8 +36,13 @@ function normalizeTag(value: string): string {
 function readTags(row?: Element): string[] {
   if (!row) return [];
   const items = row.querySelectorAll('li');
-  return [...new Set((items.length ? Array.from(items, (item) => textOf(item)) : textOf(row).split(','))
-    .map(normalizeTag).filter(Boolean))];
+  return [
+    ...new Set(
+      (items.length ? Array.from(items, (item) => textOf(item)) : textOf(row).split(','))
+        .map(normalizeTag)
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function tagTitle(tag: string): Promise<string> {
@@ -53,7 +59,7 @@ function tagTitle(tag: string): Promise<string> {
         headers: { Accept: 'application/json' },
       });
       if (!response.ok) return fallback;
-      const data = await response.json() as Record<string, unknown>;
+      const data = (await response.json()) as Record<string, unknown>;
       const title = data[`jcr:title.${document.documentElement.lang || 'en'}`] || data['jcr:title'];
       return typeof title === 'string' && title.trim() ? title.trim() : fallback;
     } catch {
@@ -67,17 +73,24 @@ function tagTitle(tag: string): Promise<string> {
 
 function setTagTitle(element: HTMLElement, tag: string): void {
   element.textContent = (tag.split('/').pop()?.split(':').pop() || tag).replace(/[-_]/g, ' ');
-  void tagTitle(tag).then((title) => { element.textContent = title; });
+  void tagTitle(tag).then((title) => {
+    element.textContent = title;
+  });
 }
 
 function readListingType(row?: HTMLElement): ListingType {
   const field = row?.querySelector('[data-aue-prop="listingType"]') || row?.firstElementChild || row;
   const value = textOf(field).toLowerCase();
-  return value === 'wellness' || value === 'experience' || value === 'dining' ? value : 'offers';
+  return value === 'wellness' || value === 'experience' || value === 'dining' || value === 'accommodations'
+    ? value
+    : 'offers';
 }
 
 function locationFromPath(path?: string): string {
-  const segments = (path || '').split('/').filter(Boolean).map((segment) => segment.toLowerCase());
+  const segments = (path || '')
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => segment.toLowerCase());
   const languageIndex = segments.lastIndexOf('en');
   if (languageIndex < 1) return '';
 
@@ -154,7 +167,9 @@ function createActions(parsed: Document, record: ListingRecord): HTMLElement {
       if (!anchor) return;
       const href = new URL(anchor.getAttribute('href') || '', base);
       if (!['http:', 'https:', 'mailto:', 'tel:'].includes(href.protocol)) return;
-      const label = group.find((element) => !element.querySelector('a') && !['true', 'false'].includes(textOf(element)));
+      const label = group.find(
+        (element) => !element.querySelector('a') && !['true', 'false'].includes(textOf(element)),
+      );
       const link = document.createElement('a');
       link.href = href.href;
       link.textContent = textOf(label) || textOf(anchor);
@@ -180,18 +195,34 @@ function createDetails(parsed: Document): HTMLElement {
   const details = document.createElement('dl');
   details.className = 'page-listing-card-details';
   parsed.querySelectorAll('div').forEach((cell) => {
-    if (cell.querySelector('a, img') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
+    if (cell.querySelector('a') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
     let group: Element[] = [];
     const appendDetail = (): void => {
       const values = group.map((element) => textOf(element)).filter(Boolean);
-      if (values.length < 2) return;
+      if (values.length < 1) return;
       const pair = document.createElement('div');
       const label = document.createElement('dt');
       const value = document.createElement('dd');
-      label.textContent = values[0]!;
-      value.textContent = values.slice(1).join(' ');
-      pair.append(label, value);
-      details.append(pair);
+
+      // Look for picture/image element in the first group item
+      const firstElement = group[0];
+      const picture = firstElement?.querySelector('picture');
+      const img = firstElement?.querySelector('img');
+
+      if (picture || img) {
+        if (picture) {
+          const clonedPicture = picture.cloneNode(true) as HTMLElement;
+          label.append(clonedPicture);
+        } else if (img) {
+          const clonedImg = img.cloneNode(true) as HTMLImageElement;
+          label.append(clonedImg);
+        }
+        // Use all text values for the detail value
+        value.textContent = values.join(' ');
+        label.className = 'page-listing-card-detail-label';
+        pair.append(label, value);
+        details.append(pair);
+      }
     };
     Array.from(cell.children).forEach((element) => {
       if (element.tagName === 'HR') {
@@ -204,7 +235,7 @@ function createDetails(parsed: Document): HTMLElement {
   return details;
 }
 
-function createCard(record: ListingRecord): HTMLElement {
+function createCard(record: ListingRecord, enableCompare: boolean = false): HTMLElement {
   const card = document.createElement('article');
   card.className = 'page-listing-card';
   const parsed = new DOMParser().parseFromString(record.listHtml || '', 'text/html');
@@ -263,6 +294,23 @@ function createCard(record: ListingRecord): HTMLElement {
   if (details.childElementCount) content.append(details);
   const actions = createActions(parsed, record);
   if (actions.childElementCount) content.append(actions);
+
+  if (enableCompare) {
+    const compareCheckbox = document.createElement('div');
+    compareCheckbox.className = 'page-listing-card-compare';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'page-listing-compare-checkbox';
+    checkbox.dataset.testid = 'page-listing-compare-checkbox';
+    checkbox.setAttribute('aria-label', `Compare ${cardTitle}`);
+    const label = document.createElement('label');
+    label.className = 'page-listing-compare-label';
+    label.append(checkbox);
+    label.append(document.createTextNode('COMPARE'));
+    compareCheckbox.append(label);
+    card.append(compareCheckbox);
+  }
+
   card.append(content);
   return card;
 }
@@ -282,7 +330,7 @@ async function loadCategories(rootTag: string): Promise<CategoryTag[]> {
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`Category request failed: ${response.status}`);
-    const payload = await response.json() as { data?: Array<{ path?: string; title?: string }> };
+    const payload = (await response.json()) as { data?: Array<{ path?: string; title?: string }> };
     const categories: CategoryTag[] = [];
     for (const child of payload.data || []) {
       if (typeof child.path !== 'string' || typeof child.title !== 'string') continue;
@@ -305,7 +353,11 @@ interface LoadMoreConfig {
   label: string;
 }
 
-function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config: LoadMoreConfig): (category: string) => void {
+function createCardVisibility(
+  cards: HTMLElement[],
+  results: HTMLElement,
+  config: LoadMoreConfig,
+): (category: string) => void {
   let selectedCategory = '';
   let visibleCount = config.batchSize;
   const button = document.createElement('button');
@@ -323,7 +375,9 @@ function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config
     button.hidden = !config.enabled || matched <= visibleCount;
   };
   button.addEventListener('click', () => {
-    const firstHidden = cards.find((card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory));
+    const firstHidden = cards.find(
+      (card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory),
+    );
     visibleCount += config.batchSize;
     update();
     if (button.hidden) firstHidden?.querySelector<HTMLElement>('a, button')?.focus();
@@ -378,6 +432,7 @@ async function loadListings(
   enableCategoryFilters: boolean,
   categoryRootTag: string,
   loadMore: LoadMoreConfig,
+  enableCompare: boolean,
   status: HTMLElement,
   results: HTMLElement,
 ): Promise<void> {
@@ -397,17 +452,13 @@ async function loadListings(
 
     const index = (await response.json()) as ListingIndex;
     const records = Array.isArray(index.data) ? index.data : [];
-    const matchingRecords = records.filter(
-      (record) => locationFromPath(record.path) === location,
-    );
+    const matchingRecords = records.filter((record) => locationFromPath(record.path) === location);
     const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
-    const cards = matchingRecords.map(createCard);
+    const cards = matchingRecords.map((record) => createCard(record, enableCompare));
     results.append(...cards);
     const selectCategory = createCardVisibility(cards, results, loadMore);
     if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
-    status.textContent = matchingRecords.length
-      ? ''
-      : `No listings are available for ${location}.`;
+    status.textContent = matchingRecords.length ? '' : `No listings are available for ${location}.`;
   } catch {
     status.textContent = 'Listings for this type are not available right now.';
   }
@@ -421,7 +472,7 @@ export default function decorate(block: HTMLElement): void {
     contentRows: Math.max(1, rows.length - 2),
     hiddenClass: 'page-listing-config',
   });
-  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow] = configRows;
+  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow, compareRow] = configRows;
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
@@ -432,6 +483,7 @@ export default function decorate(block: HTMLElement): void {
     batchSize: Number.isFinite(count) && count >= 1 ? Math.floor(count) : 6,
     label: textOf(labelRow) || 'Load More',
   };
+  const enableCompare = textOf(compareRow).toLowerCase() === 'true';
   const location = locationFromPath(window.location.pathname);
 
   const status = document.createElement('p');
@@ -442,5 +494,5 @@ export default function decorate(block: HTMLElement): void {
   results.className = 'page-listing-results';
 
   block.append(status, results);
-  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, status, results);
+  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, enableCompare, status, results);
 }

@@ -61,7 +61,7 @@ export function renderTrail(crumbs: Crumb[]): HTMLElement {
 function renderPlaceholder(): HTMLParagraphElement {
   const placeholder = document.createElement('p');
   placeholder.className = 'breadcrumb-placeholder';
-  placeholder.textContent = 'Breadcrumb — hidden on top-level pages';
+  placeholder.textContent = 'Breadcrumb — hidden on this page (top-level page or no published parent pages)';
   return placeholder;
 }
 

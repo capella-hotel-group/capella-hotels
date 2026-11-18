@@ -1,7 +1,3 @@
-jest.mock('@/app/scripts.js', () => ({
-  LANG_MAP: {},
-  VALID_LANG_PRIMARIES: new Set(['en']),
-}));
 jest.mock('@/utils/env.js', () => ({ isUniversalEditor: jest.fn(() => false) }));
 
 import { isUniversalEditor } from '@/utils/env.js';
@@ -20,7 +16,7 @@ function createBlock(className = 'breadcrumb block'): HTMLElement {
 function mockFetch(pages: Record<string, string>): jest.Mock {
   const fetchMock = jest.fn(async (url: string) => ({
     ok: url in pages,
-    text: async () => `<html><head>${pages[url] ?? ''}</head></html>`,
+    text: async () => `<html><head>${pages[url] ?? ''}</head><body><main></main></body></html>`,
   }));
   global.fetch = fetchMock as unknown as typeof fetch;
   return fetchMock;
@@ -131,7 +127,9 @@ describe('populate', () => {
 
     await populate(block, '/singapore/en/accommodation');
 
-    expect(block.querySelector('.breadcrumb-placeholder')).not.toBeNull();
+    expect(block.querySelector('.breadcrumb-placeholder')?.textContent).toBe(
+      'Breadcrumb — hidden on this page (top-level page or no published parent pages)',
+    );
     expect(block.hidden).toBe(false);
   });
 });

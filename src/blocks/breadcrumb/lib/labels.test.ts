@@ -1,8 +1,3 @@
-jest.mock('@/app/scripts.js', () => ({
-  LANG_MAP: {},
-  VALID_LANG_PRIMARIES: new Set(['en']),
-}));
-
 import { labelFromDocument, resolveTrail } from './labels';
 
 function htmlDoc(head: string): Document {
@@ -11,8 +6,8 @@ function htmlDoc(head: string): Document {
   return doc;
 }
 
-function page(head: string, ok = true) {
-  return { ok, text: async () => `<html><head>${head}</head><body></body></html>` };
+function page(head: string, ok = true, body = '<main></main>') {
+  return { ok, text: async () => `<html><head>${head}</head><body>${body}</body></html>` };
 }
 
 describe('labelFromDocument', () => {
@@ -72,6 +67,23 @@ describe('resolveTrail', () => {
     expect(crumbs).toEqual([{ label: 'Colonial', href: '/singapore/en/accommodation/colonial-manor', current: true }]);
   });
 
+  it('drops an ancestor that answers without page content, like an author folder listing', async () => {
+    const fetchMock = jest.fn(async (url: string) =>
+      url === '/singapore/en/accommodation'
+        ? page('<title>accommodation</title>', true, '<ul><li>child</li></ul>')
+        : page('<title>Singapore</title>'),
+    );
+
+    const crumbs = await resolveTrail(
+      trail,
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(crumbs.map((crumb) => crumb.label)).toEqual(['Singapore', 'Colonial']);
+  });
+
   it('requests author URLs in the editor', async () => {
     const fetchMock = jest.fn(async () => page('<title>Root</title>'));
 
@@ -103,7 +115,21 @@ describe('resolveTrail', () => {
     );
 
     expect(crumbs[0]).toEqual({ label: 'Singapore', href: '/singapore/en/home', current: false });
-    expect(fetchMock).not.toHaveBeenCalledWith('/singapore/en', expect.anything());
+  });
+
+  it('requests the home page and the root page at the same time', async () => {
+    const fetchMock = jest.fn(() => new Promise(() => {}));
+
+    void resolveTrail(
+      [trail[0]!, trail[2]!],
+      false,
+      htmlDoc('<title>Colonial</title>'),
+      fetchMock as unknown as typeof fetch,
+    );
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledWith('/singapore/en/home', expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith('/singapore/en', expect.anything());
   });
 
   it('falls back to the language root when there is no home page', async () => {
