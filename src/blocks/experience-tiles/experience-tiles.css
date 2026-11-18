@@ -110,7 +110,11 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: linear-gradient(to bottom, rgb(0 0 0 / 0%), rgb(0 0 0 / 40%));
+    background: linear-gradient(180deg, rgb(0 0 0 / 0%) 0%, rgb(0 0 0 / 40%) 100%);
+}
+
+.experience-tiles .experience-tiles-media--no-overlay::after {
+    content: none;
 }
 
 .experience-tiles .experience-tiles-media picture,

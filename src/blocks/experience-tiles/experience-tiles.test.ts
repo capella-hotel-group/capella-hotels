@@ -410,6 +410,22 @@ describe('experience-tiles integration', () => {
     expect(heading.getAttribute('data-aue-prop')).toBe('leftContent_headline');
     expect(heading.textContent).toBe('Ubud');
   });
+  it('turns the image overlay off per panel only when authored as false', () => {
+    const element = block([], 1);
+    const cells = element.querySelectorAll<HTMLElement>('[data-aue-model] > div');
+    cells[0].insertAdjacentHTML('beforeend', '<p>false</p>');
+    cells[2].insertAdjacentHTML('beforeend', '<p>true</p>');
+    decorate(element);
+    const [left, right] = element.querySelectorAll('.experience-tiles-media');
+    expect(left.classList.contains('experience-tiles-media--no-overlay')).toBe(true);
+    expect(right.classList.contains('experience-tiles-media--no-overlay')).toBe(false);
+    expect(left.querySelector('p')!.classList.contains('experience-tiles-hidden')).toBe(true);
+  });
+  it('keeps the overlay on when the toggle was never authored', () => {
+    const element = block([], 1);
+    decorate(element);
+    expect(element.querySelector('.experience-tiles-media--no-overlay')).toBeNull();
+  });
   it('tells screen readers when a link opens a new tab', () => {
     const element = block([], 1);
     const ctas = element.querySelector<HTMLElement>('[data-aue-model] > div:nth-child(5)')!;
