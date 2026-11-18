@@ -3517,6 +3517,27 @@
         "value": ""
       },
       {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "textarea",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
+        "value": ""
+      },
+      {
         "component": "select",
         "name": "listingType",
         "label": "Listing Type",

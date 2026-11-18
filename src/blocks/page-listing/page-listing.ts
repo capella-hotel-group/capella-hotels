@@ -115,7 +115,12 @@ function createMedia(record: ListingRecord, parsed: Document): HTMLElement | nul
   media.className = 'page-listing-card-media';
   const slides: HTMLImageElement[] = [];
   parsed.querySelectorAll<HTMLImageElement>('img[src]').forEach((source) => {
-    if (source.closest('dl') || source.closest('[data-detail-icon]')) return;
+    if (
+      source.closest('dl') ||
+      source.closest('[data-detail-icon]') ||
+      source.parentElement?.closest('[data-detail-icon]')
+    )
+      return;
     const url = new URL(source.getAttribute('src') || '', new URL('.', pageUrl));
     if (!['https:', 'http:'].includes(url.protocol)) return;
     const image = document.createElement('img');
@@ -192,6 +197,16 @@ function createActions(parsed: Document, record: ListingRecord): HTMLElement {
   return actions;
 }
 
+function markDetailImages(parsed: Document): void {
+  parsed.querySelectorAll('div').forEach((cell) => {
+    if (cell.querySelector('a') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
+    // This is a detail cell, mark all images as detail icons
+    cell.querySelectorAll('picture, img').forEach((img) => {
+      img.setAttribute('data-detail-icon', 'true');
+    });
+  });
+}
+
 function createDetails(parsed: Document): HTMLElement {
   const details = document.createElement('dl');
   details.className = 'page-listing-card-details';
@@ -201,7 +216,6 @@ function createDetails(parsed: Document): HTMLElement {
     const appendDetail = (): void => {
       const values = group.map((element) => textOf(element)).filter(Boolean);
       if (values.length < 1) return;
-      const pair = document.createElement('div');
       const label = document.createElement('dt');
       const value = document.createElement('dd');
 
@@ -213,19 +227,16 @@ function createDetails(parsed: Document): HTMLElement {
       if (picture || img) {
         if (picture) {
           const clonedPicture = picture.cloneNode(true) as HTMLElement;
-          clonedPicture.setAttribute('data-detail-icon', 'true');
           label.append(clonedPicture);
         } else if (img) {
           const clonedImg = img.cloneNode(true) as HTMLImageElement;
-          clonedImg.setAttribute('data-detail-icon', 'true');
           label.append(clonedImg);
         }
         // Use all text values for the detail value
         value.textContent = values.join(' ');
         label.className = 'page-listing-card-detail-label';
         label.setAttribute('data-detail-icon', 'true');
-        pair.append(label, value);
-        details.append(pair);
+        details.append(label, value);
       }
     };
     Array.from(cell.children).forEach((element) => {
@@ -249,6 +260,10 @@ function createCard(record: ListingRecord, enableCompare: boolean = false): HTML
   const category = readTags(rows[2])[0] || '';
   card.dataset.category = category;
   const tags = readTags(rows[5]);
+
+  // Mark detail images BEFORE creating media so carousel skips them
+  markDetailImages(parsed);
+
   const media = createMedia({ ...record, title: cardTitle }, parsed);
   if (media) card.append(media);
 
@@ -295,25 +310,32 @@ function createCard(record: ListingRecord, enableCompare: boolean = false): HTML
   }
 
   const details = createDetails(parsed);
-  if (details.childElementCount) content.append(details);
+  if (details.childElementCount || enableCompare) {
+    const detailsRow = document.createElement('div');
+    detailsRow.className = 'page-listing-card-details-row';
+    if (details.childElementCount) detailsRow.append(details);
+
+    if (enableCompare) {
+      const compareCheckbox = document.createElement('div');
+      compareCheckbox.className = 'page-listing-card-compare';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'page-listing-compare-checkbox';
+      checkbox.dataset.testid = 'page-listing-compare-checkbox';
+      checkbox.setAttribute('aria-label', `Compare ${cardTitle}`);
+      const label = document.createElement('label');
+      label.className = 'page-listing-compare-label';
+      label.append(checkbox);
+      label.append(document.createTextNode('COMPARE'));
+      compareCheckbox.append(label);
+      detailsRow.append(compareCheckbox);
+    }
+
+    content.append(detailsRow);
+  }
+
   const actions = createActions(parsed, record);
   if (actions.childElementCount) content.append(actions);
-
-  if (enableCompare) {
-    const compareCheckbox = document.createElement('div');
-    compareCheckbox.className = 'page-listing-card-compare';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'page-listing-compare-checkbox';
-    checkbox.dataset.testid = 'page-listing-compare-checkbox';
-    checkbox.setAttribute('aria-label', `Compare ${cardTitle}`);
-    const label = document.createElement('label');
-    label.className = 'page-listing-compare-label';
-    label.append(checkbox);
-    label.append(document.createTextNode('COMPARE'));
-    compareCheckbox.append(label);
-    card.append(compareCheckbox);
-  }
 
   card.append(content);
   return card;
@@ -397,9 +419,9 @@ function createCardVisibility(
 
 function createFilters(
   cards: HTMLElement[],
-  results: HTMLElement,
   categories: CategoryTag[],
   selectCategory: (category: string) => void,
+  filtersContainer: HTMLElement,
 ): void {
   if (!categories.length) return;
   const filters = document.createElement('div');
@@ -427,7 +449,7 @@ function createFilters(
     const count = cards.filter((card) => card.dataset.category === category.id).length;
     addFilter(category.id, count, category.title);
   });
-  results.before(filters);
+  filtersContainer.append(filters);
 }
 
 async function loadListings(
@@ -439,6 +461,7 @@ async function loadListings(
   enableCompare: boolean,
   status: HTMLElement,
   results: HTMLElement,
+  filtersContainer: HTMLElement,
 ): Promise<void> {
   if (!location) {
     status.textContent = 'Location could not be determined from this page URL.';
@@ -456,27 +479,44 @@ async function loadListings(
 
     const index = (await response.json()) as ListingIndex;
     const records = Array.isArray(index.data) ? index.data : [];
-    const matchingRecords = records.filter((record) => locationFromPath(record.path) === location);
+    const matchingRecords = records.filter(
+      (record) => locationFromPath(record.path) === location && record.title?.trim() && record.listHtml?.trim(),
+    );
     const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
     const cards = matchingRecords.map((record) => createCard(record, enableCompare));
     results.append(...cards);
     const selectCategory = createCardVisibility(cards, results, loadMore);
-    if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
+    if (enableCategoryFilters) createFilters(cards, categories, selectCategory, filtersContainer);
     status.textContent = matchingRecords.length ? '' : `No listings are available for ${location}.`;
   } catch {
     status.textContent = 'Listings for this type are not available right now.';
   }
 }
 
-export default function decorate(block: HTMLElement): void {
+export default async function decorate(block: HTMLElement): Promise<void> {
   if (block.querySelector(':scope > .page-listing-results')) return;
 
   const rows = [...block.children] as HTMLElement[];
+
+  // Count how many non-empty rows we have at the start (eyebrow, title, description)
+  let headerRowCount = 0;
+  for (let i = 0; i < Math.min(3, rows.length); i += 1) {
+    if (textOf(rows[i]).trim()) {
+      headerRowCount += 1;
+    } else {
+      break;
+    }
+  }
+
   const configRows = applyBlockIdentity(block, rows, {
-    contentRows: Math.max(1, rows.length - 2),
+    contentRows: Math.max(1, rows.length - 2 - headerRowCount),
     hiddenClass: 'page-listing-config',
   });
-  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow, compareRow] = configRows;
+
+  const headerRows = configRows.slice(0, headerRowCount);
+  const otherRows = configRows.slice(headerRowCount);
+  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow, compareRow] = otherRows;
+
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
@@ -490,13 +530,64 @@ export default function decorate(block: HTMLElement): void {
   const enableCompare = textOf(compareRow).toLowerCase() === 'true';
   const location = locationFromPath(window.location.pathname);
 
+  const header = document.createElement('div');
+  header.className = 'page-listing-header';
+
+  for (let i = 0; i < headerRows.length; i += 1) {
+    const row = headerRows[i];
+    const text = textOf(row);
+    if (!text) continue;
+
+    if (i === 0) {
+      // Eyebrow
+      const eyebrowEl = document.createElement('p');
+      eyebrowEl.className = 'page-listing-eyebrow';
+      eyebrowEl.textContent = text;
+      header.append(eyebrowEl);
+    } else if (i === 1) {
+      // Title - supports richtext HTML
+      const titleEl = document.createElement('h2');
+      titleEl.className = 'page-listing-title';
+      // Check if text contains HTML tags
+      if (text.includes('<') && text.includes('>')) {
+        // For richtext, use innerHTML after sanitizing
+        const { default: DOMPurify } = await import('dompurify');
+        titleEl.innerHTML = DOMPurify.sanitize(text);
+      } else {
+        // Plain text
+        titleEl.textContent = text;
+      }
+      header.append(titleEl);
+    } else if (i === 2) {
+      // Description
+      const descEl = document.createElement('p');
+      descEl.className = 'page-listing-description';
+      descEl.textContent = text;
+      header.append(descEl);
+    }
+  }
+
   const status = document.createElement('p');
   status.className = 'page-listing-status';
   status.setAttribute('role', 'status');
 
+  const filters = document.createElement('div');
+  filters.className = 'page-listing-filters-container';
+
   const results = document.createElement('div');
   results.className = 'page-listing-results';
 
-  block.append(status, results);
-  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, enableCompare, status, results);
+  if (header.childElementCount) block.append(header);
+  block.append(filters, status, results);
+  void loadListings(
+    type,
+    location,
+    enableCategoryFilters,
+    categoryRootTag,
+    loadMore,
+    enableCompare,
+    status,
+    results,
+    filters,
+  );
 }
