@@ -1697,6 +1697,14 @@
         "value": ""
       },
       {
+        "component": "boolean",
+        "name": "leftMedia_overlay",
+        "label": "Left Panel Image Overlay",
+        "description": "Adds a dark gradient over the bottom of the image to keep the text legible.",
+        "valueType": "boolean",
+        "value": true
+      },
+      {
         "component": "text",
         "name": "leftContent_eyebrow",
         "label": "Left Panel Eyebrow",
@@ -1726,6 +1734,14 @@
         "valueType": "string",
         "required": true,
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "rightMedia_overlay",
+        "label": "Right Panel Image Overlay",
+        "description": "Adds a dark gradient over the bottom of the image to keep the text legible.",
+        "valueType": "boolean",
+        "value": true
       },
       {
         "component": "text",

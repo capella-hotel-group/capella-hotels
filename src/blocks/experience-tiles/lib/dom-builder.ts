@@ -68,11 +68,22 @@ function decorateLinks(cell: HTMLElement): void {
 }
 
 // "Element Grouping" (fields sharing a prefix before the second underscore segment) puts each
-// media field's own <picture> wrapper alone in its cell, so it can be appended as-is
+// media field's own <picture> wrapper alone in its cell, so it can be appended as-is.
+// The cell may also carry the overlay toggle as a bare "true"/"false" paragraph; a missing
+// toggle (content authored before the field existed) keeps the overlay on.
 function buildMedia(mediaCell?: HTMLElement): HTMLDivElement {
   const media = document.createElement('div');
   media.className = 'experience-tiles-media';
-  if (mediaCell) media.append(mediaCell);
+  if (mediaCell) {
+    const flag = [...mediaCell.querySelectorAll<HTMLElement>(':scope > p')].find(
+      (element) => !element.querySelector('picture, img') && isBooleanFlag(element),
+    );
+    if (flag) {
+      flag.classList.add('experience-tiles-hidden');
+      if (!isEnabled(flag.textContent || '')) media.classList.add('experience-tiles-media--no-overlay');
+    }
+    media.append(mediaCell);
+  }
   return media;
 }
 
