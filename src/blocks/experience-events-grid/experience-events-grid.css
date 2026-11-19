@@ -475,6 +475,10 @@ main .experience-events-grid :is(button, a, input):focus-visible {
 }
 
 @media (max-width: 767px) {
+    main .experience-events-grid .experience-events-grid-shell {
+        padding-block-end: 60px;
+    }
+
     main .experience-events-grid .experience-events-grid-dates {
         align-self: flex-start;
         width: min(345px, calc(100vw - 48px));
