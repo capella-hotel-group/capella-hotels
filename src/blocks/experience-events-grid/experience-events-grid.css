@@ -476,7 +476,7 @@ main .experience-events-grid :is(button, a, input):focus-visible {
 
 @media (max-width: 767px) {
     main .experience-events-grid .experience-events-grid-shell {
-        padding-block-end: 60px;
+        padding-block-end: 48px;
     }
 
     main .experience-events-grid .experience-events-grid-dates {
