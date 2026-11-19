@@ -1,6 +1,8 @@
 .page-listing {
     width: 100%;
     color: var(--color-text-main-heading);
+    padding-top: 64px;
+    padding-bottom: 64px;
 }
 
 .page-listing .page-listing-config {
@@ -30,16 +32,11 @@
 }
 
 .page-listing .page-listing-eyebrow {
-    margin: 0;
+    margin: 0 0 0 32px;
     font-family: var(--type-font-family-body);
     font-size: 12px;
     text-transform: uppercase;
     color: var(--color-text-main-body);
-}
-
-.page-listing .page-listing-header .page-listing-eyebrow {
-    text-indent: -32px;
-    padding-left: 32px;
 }
 
 .page-listing .page-listing-title {
@@ -50,8 +47,19 @@
     line-height: var(--typography-line-height-heading-h2);
     text-transform: uppercase;
     color: var(--color-text-main-heading);
-    text-indent: -32px;
-    padding-left: 32px;
+}
+
+.page-listing .page-listing-title > div {
+    display: contents;
+}
+
+.page-listing .page-listing-title p {
+    margin: 0;
+    display: block;
+}
+
+.page-listing .page-listing-title p:last-child {
+    margin-left: 32px;
 }
 
 .page-listing .page-listing-description {
