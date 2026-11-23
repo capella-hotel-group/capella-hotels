@@ -11,7 +11,6 @@ export interface Calendar {
 }
 
 export function buildCalendar(lang: string, selection: Selection, onChange: () => void): Calendar {
-  const monthFormat = new Intl.DateTimeFormat(lang, { month: 'long' });
   const monthYearFormat = new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' });
   const weekdayFormat = new Intl.DateTimeFormat(lang, { weekday: 'short' });
   const dayLabelFormat = new Intl.DateTimeFormat(lang, { dateStyle: 'full' });
@@ -69,8 +68,8 @@ export function buildCalendar(lang: string, selection: Selection, onChange: () =
   function render(focusIso?: string): void {
     const year = viewStart.getFullYear();
     const month = viewStart.getMonth();
-    title.textContent = monthFormat.format(viewStart);
-    root.setAttribute('aria-label', monthYearFormat.format(viewStart));
+    title.textContent = monthYearFormat.format(viewStart);
+    root.setAttribute('aria-label', title.textContent);
     prev.disabled = viewStart <= firstMonth;
 
     // Pad to whole weeks with the neighbouring months' days.

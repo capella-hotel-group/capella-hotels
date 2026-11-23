@@ -73,18 +73,20 @@
           "multi": true,
           "fields": [
             {
-              "component": "text",
-              "name": "label",
-              "label": "Detail Label",
+              "component": "reference",
+              "name": "icon",
+              "label": "Detail Icon",
               "valueType": "string",
-              "required": true
+              "required": true,
+              "description": "Icon/image to display for this detail"
             },
             {
               "component": "text",
               "name": "value",
               "label": "Detail Value",
               "valueType": "string",
-              "required": true
+              "required": true,
+              "description": "Text value to display next to the icon (e.g., 'Garden view', '2 adults, 1 child')"
             }
           ]
         },

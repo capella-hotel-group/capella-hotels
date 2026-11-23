@@ -80,7 +80,6 @@
           "label": "Card Image",
           "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
           "valueType": "string",
-          "multi": false,
           "required": true
         },
         {
@@ -90,6 +89,13 @@
           "valueType": "string",
           "required": true,
           "value": ""
+        },
+        {
+          "component": "boolean",
+          "name": "darkOverlay",
+          "label": "Dark Image Overlay",
+          "valueType": "boolean",
+          "value": true
         },
         {
           "component": "text",
@@ -161,17 +167,6 @@
           "label": "Secondary CTA Open in new tab",
           "valueType": "string",
           "value": false
-        },
-        {
-          "component": "select",
-          "name": "darkOverlay",
-          "label": "Dark Image Overlay",
-          "valueType": "string",
-          "value": "true",
-          "options": [
-            { "name": "Enabled", "value": "true" },
-            { "name": "Disabled", "value": "false" }
-          ]
         }
       ]
     }

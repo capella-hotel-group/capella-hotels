@@ -286,7 +286,8 @@
     }
 
     /* sits above the media but below the nav arrows, which the media positions */
-    .destination-introduction-slide.has-dark-overlay::after {
+    .destination-introduction-slide.has-dark-overlay::after,
+    .destination-introduction-thumb.has-dark-overlay::after {
         content: '';
         position: absolute;
         inset: 0;
@@ -358,6 +359,7 @@
     }
 
     .destination-introduction-thumb {
+        position: relative;
         display: block;
         width: 140px;
         aspect-ratio: 4 / 5;

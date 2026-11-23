@@ -7,7 +7,8 @@ interface TagChild {
 }
 
 interface ChildTagsResponse {
-  results: TagChild[];
+  data?: TagChild[];
+  results?: TagChild[];
 }
 
 const tagChildrenCache = new Map<string, Promise<Map<string, string>>>();
@@ -56,12 +57,14 @@ export function fetchTagChildren(parentPath: string): Promise<Map<string, string
       const data = (await response.json()) as ChildTagsResponse;
 
       // Build a map of tag path to title
-      if (Array.isArray(data.results)) {
-        data.results.forEach((tag: TagChild) => {
-          if (tag.name && tag.title) {
-            // Reconstruct the full tag path from parent and child name
-            const fullPath = `${parentPath}:${tag.name}`.replace(/\/content\/cq:tags\//g, '').replace(/\//g, ':');
-            titleMap.set(fullPath, tag.title);
+      // The servlet response uses 'data' array, not 'results'
+      const tags = data.data || data.results || [];
+      if (Array.isArray(tags)) {
+        tags.forEach((tag: TagChild) => {
+          if (tag.name && tag.title && tag.path) {
+            // Use the tag.path from servlet response to ensure correct format
+            const normalized = normalizeTag(tag.path);
+            titleMap.set(normalized, tag.title);
           }
         });
       }
@@ -80,17 +83,29 @@ export function fetchTagChildren(parentPath: string): Promise<Map<string, string
 export async function getTagTitle(tag: string, childTitlesMap: Map<string, string>): Promise<string> {
   const fallback = extractLastSegment(tag);
 
-  // Try to find the tag in the cached children map
-  const title = childTitlesMap.get(tag);
+  // Normalize the tag for lookup
+  const normalized = normalizeTag(tag);
+
+  // Try exact match
+  const title = childTitlesMap.get(normalized);
   if (title) {
     return title;
   }
 
-  // Also try matching without namespace prefix if it's a normalized tag
-  if (tag.includes(':')) {
-    const pathOnly = tag.split(':').slice(1).join(':');
-    for (const [key, value] of childTitlesMap) {
-      if (key.endsWith(pathOnly) || key === tag) {
+  // Try other key formats in the map (in case of different naming conventions)
+  for (const [key, value] of childTitlesMap) {
+    // Check if this key matches by comparing the path segments
+    if (key === normalized || key === tag) {
+      return value;
+    }
+
+    // Try partial matching - check if the ending segments match
+    const normalizedSegments = normalized.split(':');
+    const keySegments = key.split(':');
+    if (normalizedSegments.length > 0 && keySegments.length > 0) {
+      const normalizedEnd = normalizedSegments[normalizedSegments.length - 1];
+      const keyEnd = keySegments[keySegments.length - 1];
+      if (normalizedEnd && keyEnd && normalizedEnd === keyEnd && normalizedEnd.length > 2) {
         return value;
       }
     }

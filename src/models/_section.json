@@ -157,7 +157,6 @@
         "rte",
         "choose-space",
         "culturist-card",
-        "split-media",
         "footer",
         "footer-contact",
         "footer-social-link",
@@ -167,6 +166,7 @@
         "page-listing",
         "booking-search",
         "separator",
+        "breadcrumb",
         "nav-top"
       ]
     },

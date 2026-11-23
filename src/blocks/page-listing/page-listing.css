@@ -1,6 +1,8 @@
 .page-listing {
     width: 100%;
     color: var(--color-text-main-heading);
+    padding-top: 64px;
+    padding-bottom: 64px;
 }
 
 .page-listing .page-listing-config {
@@ -18,10 +20,62 @@
     display: none;
 }
 
+.page-listing .page-listing-header {
+    margin-block-end: var(--dimension-spacing-general-2xl);
+    padding-inline: 80px;
+}
+
+.page-listing .page-listing-filters-container {
+    margin-block-end: var(--dimension-spacing-general-l);
+    margin-block-start: 48px;
+    padding-inline: 80px;
+}
+
+.page-listing .page-listing-eyebrow {
+    margin: 0 0 0 32px;
+    font-family: var(--type-font-family-body);
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--color-text-main-body);
+}
+
+.page-listing .page-listing-title {
+    margin: 14px 0 0 0;
+    font-family: var(--type-font-family-heading);
+    font-size: var(--typography-fontsize-heading-h2);
+    font-weight: var(--type-font-weight-heading);
+    line-height: var(--typography-line-height-heading-h2);
+    text-transform: uppercase;
+    color: var(--color-text-main-heading);
+}
+
+.page-listing .page-listing-title > div {
+    display: contents;
+}
+
+.page-listing .page-listing-title p {
+    margin: 0;
+    display: block;
+}
+
+.page-listing .page-listing-title p:last-child {
+    margin-left: 32px;
+}
+
+.page-listing .page-listing-description {
+    margin: var(--dimension-spacing-general-m) 0 0 0;
+    font-family: var(--type-font-family-body);
+    font-size: var(--typography-fontsize-body-m);
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: var(--typography-line-height-body-md);
+    color: var(--color-text-main-body);
+}
+
 .page-listing .page-listing-results {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--dimension-spacing-general-xl);
+    margin-top: 48px;
 }
 
 .page-listing .page-listing-card {
@@ -48,9 +102,9 @@
 .page-listing .page-listing-filters {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px 16px;
-    margin-block-end: 24px;
+    margin-block-end: 0;
 }
 
 .page-listing .page-listing-filters button {
@@ -121,13 +175,27 @@
 
 .page-listing .page-listing-card-actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 16px;
+    align-items: center;
 }
 
 .page-listing .page-listing-card-actions a {
     color: inherit;
     text-underline-offset: 0.2em;
+    text-transform: uppercase;
+}
+
+.page-listing .page-listing-card-actions a:first-child {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 32px;
+    gap: 8px;
+    height: 40px;
+    border: 1px solid #1b364b;
+    border-radius: 2px;
+    text-decoration: none;
 }
 
 .page-listing .page-listing-card-eyebrow,
@@ -148,24 +216,48 @@
 }
 
 .page-listing .page-listing-card-details {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 16px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 0;
     margin: 0;
-    padding-block: 12px;
-    border-block: 1px solid rgb(0 0 0 / 15%);
+    padding: 0;
+    border: 0;
     font-family: var(--type-font-family-body);
+    flex: 1 1 auto;
+    font-size: 0;
 }
 
 .page-listing .page-listing-card-details dt {
     font-size: 11px;
     text-transform: uppercase;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.page-listing .page-listing-card-details dt picture,
+.page-listing .page-listing-card-details dt img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .page-listing .page-listing-card-details dd {
-    margin: 4px 0 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    white-space: nowrap;
     font-size: 14px;
+    display: inline;
+    margin: 0;
+    padding: 0 0 0 8px;
+    margin-right: 30px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -192,6 +284,17 @@
     display: grid;
     gap: var(--dimension-spacing-general-s);
     padding-block: var(--dimension-spacing-general-m);
+    padding-inline: var(--dimension-spacing-general-m);
+    overflow: hidden;
+}
+
+.page-listing .page-listing-card-details-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .page-listing .page-listing-card-title {
@@ -235,7 +338,65 @@
 }
 
 @media (width >= 1200px) {
-    .page-listing .page-listing-results {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .page-listing .page-listing-header {
+        padding-inline: 80px;
     }
+
+    .page-listing .page-listing-filters-container {
+        padding-inline: 80px;
+    }
+
+    .page-listing .page-listing-results {
+        grid-template-columns: repeat(2, 620px);
+        margin-inline: auto;
+        gap: 40px;
+        width: calc(100% - 160px);
+        max-width: 1280px;
+    }
+
+    .page-listing .page-listing-card-details-row {
+        flex-wrap: nowrap;
+    }
+}
+
+.page-listing .page-listing-card-compare {
+    display: flex;
+    flex-shrink: 0;
+    align-items: flex-end;
+}
+
+.page-listing .page-listing-compare-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    font-family: var(--type-font-family-body);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-text-main-heading);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.page-listing .page-listing-compare-label:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+.page-listing .page-listing-compare-label:focus-within {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
+}
+
+.page-listing .page-listing-compare-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--color-text-main-heading);
 }

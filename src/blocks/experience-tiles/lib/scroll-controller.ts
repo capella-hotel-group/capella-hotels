@@ -15,10 +15,9 @@ import { bindGestures } from './gesture';
  *                   scroll listener keeps ownership, and a boundary will not release the page. Must
  *                   outlast the gaps in macOS trackpad inertia or one swipe would skip slides.
  *                   lower: inertia leaks through and skips slides — raise: slower to let go.
- * SETTLE_MIN/MAX_MS bounds of the ease-out that lands the block on the viewport top. The duration
- *                   scales with the travel between them, so a few px of correction and a near-full
- *                   viewport jump do not share one timing. MAX also drives the x3 fallback timer,
- *                   since background tabs freeze animation frames.
+ * SETTLE_MIN/MAX_MS bounds of the ease-out that lands the block on the viewport top; between them the
+ * SETTLE_MS_PER_PX  duration is travel x SETTLE_MS_PER_PX, so the settle never starts faster than a
+ *                   trackpad scroll. The x3 fallback timer covers background tabs freezing frames.
  *                   lower: abrupt snap — raise: sluggish, user can out-scroll it.
  * FLING_DECAY       per-16ms survival of the touch momentum the block runs itself, because the track
  *                   suppresses native panning and there is no browser fling to inherit.
@@ -29,21 +28,24 @@ import { bindGestures } from './gesture';
  *                   wheel delta: trackpad deltas are a few px and the block slips past.
  *                   lower: user can park the block near the top and nothing ever snaps — raise:
  *                   grabs the page early, long involuntary jump.
- *                   0.25 claims a 100dvh block from 25% off the top, i.e. once ~75% of it is visible.
+ *                   0.35 claims a 100dvh block from 35% off the top, i.e. once ~65% of it is visible.
+ *                   A block carried across the alignment point between two events is caught too.
  */
 const ALIGN_TOLERANCE = 3;
 const WHEEL_THRESHOLD = 40;
 const WHEEL_IDLE_MS = 200;
-const SETTLE_MIN_MS = 220;
-const SETTLE_MAX_MS = 620;
+const SETTLE_MIN_MS = 360;
+const SETTLE_MAX_MS = 720;
+const SETTLE_MS_PER_PX = 2;
 const FLING_DECAY = 0.95;
 const FLING_MIN_SPEED = 0.02;
-export const SNAP_DISTANCE = 0.25;
+export const SNAP_DISTANCE = 0.35;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
   cancelGesture: () => void;
   visited: boolean;
+  lastTop?: number;
 }
 interface WheelBurst {
   time: number;
@@ -86,8 +88,8 @@ function edge(entry: Entry, direction: Direction): boolean {
   );
 }
 function copyAt(target: EventTarget | null, entry: Entry): HTMLElement | undefined {
-  const copy = target instanceof Element ? target.closest<HTMLElement>('.experience-tiles-overlay') : null;
-  return copy && entry.block.contains(copy) && copy.scrollHeight > copy.clientHeight + 1 ? copy : undefined;
+  const copy = target instanceof Element ? target.closest<HTMLElement>('.experience-tiles-overlay--scrollable') : null;
+  return copy && entry.block.contains(copy) ? copy : undefined;
 }
 function canScroll(copy: HTMLElement, delta: number): boolean {
   return delta > 0 ? copy.scrollTop < copy.scrollHeight - copy.clientHeight - 1 : copy.scrollTop > 1;
@@ -105,12 +107,35 @@ function stopScrollAnimation(): void {
   settleFrame = undefined;
   flingFrame = undefined;
   settleTimer = undefined;
+  syncWatch();
 }
 function settling(): boolean {
   return settleFrame !== undefined;
 }
 function flinging(): boolean {
   return flingFrame !== undefined;
+}
+function syncWatch(): void {
+  const needed = Boolean(owner) || settling() || flinging();
+  if (needed && !modalObserver) {
+    // Menus can open without a subsequent wheel event; release on their DOM update.
+    modalObserver = new MutationObserver(() => {
+      if (suspended()) reset();
+    });
+    modalObserver.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['class', 'open', 'style', 'aria-modal', 'aria-hidden', 'hidden'],
+    });
+  } else if (!needed && modalObserver) {
+    modalObserver.disconnect();
+    modalObserver = undefined;
+  }
+}
+function setOwner(entry: Entry | undefined): void {
+  owner = entry;
+  syncWatch();
 }
 function align(entry: Entry, animate = false): void {
   stopScrollAnimation();
@@ -121,16 +146,15 @@ function align(entry: Entry, animate = false): void {
     jump(start + distance);
     return;
   }
-  // Scale with the travel, otherwise a few px of correction reads as abrupt at the same duration
-  // that leaves a near-full-viewport jump feeling sluggish enough to be out-scrolled.
-  const viewport = window.innerHeight || 1;
-  const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, (Math.abs(distance) / viewport) * SETTLE_MAX_MS));
+  // Scale with the travel so the settle starts no faster than the reader was scrolling.
+  const duration = Math.min(SETTLE_MAX_MS, Math.max(SETTLE_MIN_MS, Math.abs(distance) * SETTLE_MS_PER_PX));
   const begin = performance.now();
   const step = (now: number): void => {
     const progress = Math.min((now - begin) / duration, 1);
     jump(start + distance * (1 - (1 - progress) ** 3));
     if (progress < 1) {
       settleFrame = requestAnimationFrame(step);
+      syncWatch();
       return;
     }
     stopScrollAnimation();
@@ -143,20 +167,18 @@ function align(entry: Entry, animate = false): void {
   }, duration * 3);
 }
 function claim(entry: Entry): void {
-  owner = entry;
+  setOwner(entry);
   entry.visited = true;
 }
 function enter(entry: Entry, direction: Direction): void {
-  // Downwards is the reading direction, so it always restarts the story. Upwards only rewinds to the
-  // end on a first encounter: coming back to a block you were half way through keeps your place.
-  if (direction > 0) entry.carousel.select(0);
-  else if (!entry.visited) entry.carousel.select(entry.carousel.count - 1);
+  // Only a first encounter picks the edge slide; coming back to a block you started keeps your place.
+  if (!entry.visited) entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
   claim(entry);
   align(entry, true);
 }
 function reset(): void {
   stopScrollAnimation();
-  owner = undefined;
+  setOwner(undefined);
   burst = undefined;
   entries.forEach((entry) => entry.cancelGesture());
 }
@@ -182,6 +204,21 @@ function candidate(delta: number, excluded?: Entry): Entry | undefined {
     bestDistance = Math.abs(rect.top);
   });
   return best;
+}
+// A fast wheel notch or native momentum can carry a block across the alignment point between two events.
+function crossed(): Entry | undefined {
+  let hit: Entry | undefined;
+  const reach = SNAP_DISTANCE * window.innerHeight;
+  entries.forEach((entry) => {
+    const { top } = entry.block.getBoundingClientRect();
+    const previous = entry.lastTop;
+    entry.lastTop = top;
+    if (hit || previous === undefined || Math.abs(top) > reach) return;
+    const down = previous > ALIGN_TOLERANCE && top < -ALIGN_TOLERANCE;
+    const up = previous < -ALIGN_TOLERANCE && top > ALIGN_TOLERANCE;
+    if (down || up) hit = entry;
+  });
+  return hit;
 }
 /**
  * Touch release. The track suppresses native panning, so there is no browser fling to inherit: the
@@ -215,27 +252,30 @@ function fling(velocity: number, excluded?: Entry): void {
     flingFrame = requestAnimationFrame(step);
   };
   flingFrame = requestAnimationFrame(step);
+  syncWatch();
 }
 function onWheel(event: WheelEvent): void {
-  if (suspended()) {
-    reset();
-    return;
-  }
   if (flinging()) stopScrollAnimation();
   if (event.defaultPrevented || !event.cancelable || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX))
     return;
   const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
+  if (owner && !owner.block.isConnected) setOwner(undefined);
+  // Most wheel input happens far from any block: settle that before touching the DOM.
+  if (!owner && !candidate(delta, wheeling() ? burst?.released : undefined)) return;
+  if (suspended()) {
+    reset();
+    return;
+  }
   const direction: Direction = delta > 0 ? 1 : -1;
   const time = performance.now();
   const fresh = !burst || time - burst.time >= WHEEL_IDLE_MS;
   if (fresh) burst = { time, total: 0, consumed: false };
   const current = burst!;
   current.time = time;
-  if (owner && !owner.block.isConnected) owner = undefined;
   // Chrome keeps animating its fling after preventDefault; re-settle rather than hand the page back mid-gesture.
-  else if (owner && !aligned(owner) && !settling()) {
+  if (owner && !aligned(owner) && !settling()) {
     if (current.consumed) align(owner, true);
-    else owner = undefined;
+    else setOwner(undefined);
   }
   let entry = owner;
   if (!entry) {
@@ -270,7 +310,7 @@ function onWheel(event: WheelEvent): void {
   }
   if (edge(entry, direction)) {
     current.released = entry;
-    owner = undefined;
+    setOwner(undefined);
     return;
   }
   event.preventDefault();
@@ -290,23 +330,18 @@ function attach(): void {
     () => {
       if (owner && !aligned(owner) && !wheeling() && !settling() && !flinging()) {
         owner.cancelGesture();
-        owner = undefined;
+        setOwner(undefined);
       }
+      const slipped = crossed();
+      if (!slipped || owner || settling() || (wheeling() && burst?.released === slipped) || suspended()) return;
+      enter(slipped, (slipped.lastTop ?? 0) < 0 ? 1 : -1);
+      // The rest of this burst is momentum that carried the page past; it must not also step slides.
+      if (burst) burst.consumed = true;
     },
     { passive: true, signal },
   );
   window.addEventListener('blur', reset, { signal });
   document.addEventListener('visibilitychange', reset, { signal });
-  // Menus can open without a subsequent wheel event. Release immediately on their DOM update.
-  modalObserver = new MutationObserver(() => {
-    if (suspended()) reset();
-  });
-  modalObserver.observe(document.body, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['class', 'open', 'style', 'aria-modal', 'aria-hidden', 'hidden'],
-  });
 }
 
 /** Shared wheel ownership; per-block gestures feed the same finite carousel controller. */
@@ -317,9 +352,18 @@ export function registerScrollController(
   cleanup: () => void;
   cancel: () => void;
   resize: () => void;
+  snap: () => void;
+  isAligned: () => boolean;
 } {
-  if (carousel.count < 2 || block.closest('.adobe-ue-edit')) return { cleanup() {}, cancel() {}, resize() {} };
-  const entry: Entry = { block, carousel, cancelGesture: () => {}, visited: false };
+  if (carousel.count < 2 || block.closest('.adobe-ue-edit'))
+    return { cleanup() {}, cancel() {}, resize() {}, snap() {}, isAligned: () => true };
+  const entry: Entry = {
+    block,
+    carousel,
+    cancelGesture: () => {},
+    visited: false,
+    lastTop: block.getBoundingClientRect().top,
+  };
   let gesture: 'slide' | 'copy' | 'entry' | 'page' | undefined;
   let copy: HTMLElement | undefined;
   let exited: Entry | undefined;
@@ -345,7 +389,7 @@ export function registerScrollController(
           gesture = 'slide';
           return true;
         }
-        owner = undefined;
+        setOwner(undefined);
         exited = entry;
       }
       // Nothing inside the block can consume this swipe, and the track suppresses native panning, so
@@ -390,12 +434,18 @@ export function registerScrollController(
       binding.cancel();
       if (owner === entry && !suspended()) align(entry);
     },
+    snap() {
+      if (suspended()) return;
+      claim(entry);
+      align(entry, true);
+    },
+    isAligned: () => aligned(entry),
     cleanup() {
       binding.cleanup();
       entries.delete(entry);
       if (owner === entry) {
         stopScrollAnimation();
-        owner = undefined;
+        setOwner(undefined);
       }
       if (burst?.released === entry || !entries.size) burst = undefined;
       if (!entries.size) {

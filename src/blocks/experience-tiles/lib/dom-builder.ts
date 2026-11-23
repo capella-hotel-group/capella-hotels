@@ -1,6 +1,9 @@
 // src/blocks/experience-tiles/lib/dom-builder.ts
 import { moveInstrumentation } from '@/app/scripts';
-import type { SplitMediaPanel, SplitMediaSlide } from './types';
+import { LABELS } from './a11y-controls';
+import type { ExperienceTilesPanel, ExperienceTilesSlide } from './types';
+
+let headingCount = 0;
 
 function isEnabled(value: string): boolean {
   return ['true', 'yes', 'enabled'].includes(value.trim().toLowerCase());
@@ -18,6 +21,22 @@ function applyTarget(anchor: HTMLAnchorElement, openInNewTab: boolean): void {
   if (!openInNewTab) return;
   anchor.target = '_blank';
   anchor.rel = 'noopener noreferrer';
+  const hint = document.createElement('span');
+  hint.className = 'experience-tiles-sr-only';
+  hint.textContent = ` ${LABELS.newTab}`;
+  anchor.append(hint);
+}
+
+// promotes an authored paragraph to a real heading so screen readers get document outline, not just visual styling
+function toHeading(source: HTMLElement, level: 2 | 3): HTMLElement {
+  const heading = document.createElement(`h${level}`);
+  moveInstrumentation(source, heading);
+  heading.append(...source.childNodes);
+  headingCount += 1;
+  heading.id = `experience-tiles-heading-${headingCount}`;
+  heading.className = 'experience-tiles-headline';
+  source.remove();
+  return heading;
 }
 
 // pairs each link with its trailing open-in-new-tab flag, lifts it out of its authoring
@@ -49,11 +68,22 @@ function decorateLinks(cell: HTMLElement): void {
 }
 
 // "Element Grouping" (fields sharing a prefix before the second underscore segment) puts each
-// media field's own <picture> wrapper alone in its cell, so it can be appended as-is
+// media field's own <picture> wrapper alone in its cell, so it can be appended as-is.
+// The cell may also carry the overlay toggle as a bare "true"/"false" paragraph; a missing
+// toggle (content authored before the field existed) keeps the overlay on.
 function buildMedia(mediaCell?: HTMLElement): HTMLDivElement {
   const media = document.createElement('div');
   media.className = 'experience-tiles-media';
-  if (mediaCell) media.append(mediaCell);
+  if (mediaCell) {
+    const flag = [...mediaCell.querySelectorAll<HTMLElement>(':scope > p')].find(
+      (element) => !element.querySelector('picture, img') && isBooleanFlag(element),
+    );
+    if (flag) {
+      flag.classList.add('experience-tiles-hidden');
+      if (!isEnabled(flag.textContent || '')) media.classList.add('experience-tiles-media--no-overlay');
+    }
+    media.append(mediaCell);
+  }
   return media;
 }
 
@@ -70,18 +100,13 @@ function buildHeading(
     heading.append(eyebrow);
   }
 
-  if (headline) {
-    headline.classList.add('experience-tiles-headline');
-    headline.setAttribute('role', 'heading');
-    headline.setAttribute('aria-level', isDetail ? '3' : '2');
-    heading.append(headline);
-  }
+  if (headline) heading.append(toHeading(headline, isDetail ? 3 : 2));
 
   return heading;
 }
 
 // left/hero panel: media + optional eyebrow + headline only, no description or CTAs
-function buildLeftPanel(panel: SplitMediaPanel): HTMLDivElement {
+function buildLeftPanel(panel: ExperienceTilesPanel): HTMLDivElement {
   const item = document.createElement('div');
   item.className = 'experience-tiles-item experience-tiles-item--left';
 
@@ -110,7 +135,7 @@ function buildLeftPanel(panel: SplitMediaPanel): HTMLDivElement {
 }
 
 // right/detail panel: media + headline + description + up to two CTAs
-function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
+function buildRightPanel(panel: ExperienceTilesPanel): HTMLDivElement {
   const item = document.createElement('div');
   item.className = 'experience-tiles-item experience-tiles-item--right';
 
@@ -164,12 +189,15 @@ function buildRightPanel(panel: SplitMediaPanel): HTMLDivElement {
   return item;
 }
 
-// a slide is one authored row now — move its instrumentation onto the <li>, not the panels
-export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement {
-  const li = document.createElement('li');
-  li.className = 'experience-tiles-slide';
-  li.setAttribute('aria-hidden', index === 0 ? 'false' : 'true');
-  if (slide.sourceRow) moveInstrumentation(slide.sourceRow, li);
+// a slide is one authored row now — move its instrumentation onto the slide group, not the panels
+export function buildSlide(slide: ExperienceTilesSlide, index: number, count: number): HTMLDivElement {
+  const element = document.createElement('div');
+  element.className = 'experience-tiles-slide';
+  element.setAttribute('role', 'group');
+  element.setAttribute('aria-roledescription', 'slide');
+  element.setAttribute('aria-label', LABELS.slide(index + 1, count));
+  element.setAttribute('aria-hidden', index === 0 ? 'false' : 'true');
+  if (slide.sourceRow) moveInstrumentation(slide.sourceRow, element);
 
   // Each slot clips its own incoming/outgoing pair. Mobile panels travel their own height,
   // so staggering them cannot expose the track or let an inactive panel cover its neighbour.
@@ -177,13 +205,13 @@ export function buildSlide(slide: SplitMediaSlide, index: number): HTMLLIElement
     const slot = document.createElement('div');
     slot.className = 'experience-tiles-slot';
     slot.append(panel);
-    li.append(slot);
+    element.append(slot);
   });
-  if (!li.querySelector('img') && !li.textContent?.trim()) {
+  if (!element.querySelector('img') && !element.textContent?.trim()) {
     const placeholder = document.createElement('p');
     placeholder.className = 'experience-tiles-placeholder';
     placeholder.textContent = 'Add images and text to this slide';
-    li.append(placeholder);
+    element.append(placeholder);
   }
-  return li;
+  return element;
 }

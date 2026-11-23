@@ -40,7 +40,7 @@ const ARROW_PATHS: Record<'prev' | 'next', string> = {
 
 let blockCount = 0;
 
-function textOf(node?: Element | null): string {
+function textOf(node?: Node | null): string {
   return node?.textContent?.trim() || '';
 }
 
@@ -74,7 +74,7 @@ function altOf(cell?: Element | null): string {
   const authored = cell?.querySelector('img')?.getAttribute('alt');
   if (authored) return authored;
   const sibling = [...(cell?.children || [])].find(
-    (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a'),
+    (element) => !element.matches('a, picture, img') && !element.querySelector('picture, img, a') && !isFlag(element),
   );
   return textOf(sibling);
 }
@@ -88,22 +88,46 @@ function buildPicture(cell: Element | null | undefined): HTMLElement | null {
 }
 
 /**
- * A multifield renders one `<li><picture>` per entry. A cell that arrives without
- * the list (for example while the multi-field flag is off) still yields one entry
- * per picture.
+ * A multifield renders one `<li><picture>` per entry while each entry holds a single
+ * element. Entries that also carry their alt text and overlay flag arrive as a flat run
+ * of elements separated by `<hr>`, which is regrouped here, moving the nodes so their
+ * editor instrumentation survives. A cell that arrives without either shape (for
+ * example while the multi-field flag is off) still yields one entry per picture.
  */
 function multifieldEntries(cell: Element | null | undefined): HTMLElement[] {
   if (!cell) return [];
+  if (cell.querySelector(':scope > hr')) {
+    const groups: HTMLElement[] = [document.createElement('div')];
+    [...cell.childNodes].forEach((node) => {
+      if (node instanceof HTMLElement && node.tagName === 'HR') groups.push(document.createElement('div'));
+      else groups[groups.length - 1]!.append(node);
+    });
+    return groups.filter((group) => group.querySelector('picture'));
+  }
   const listItems = [...cell.querySelectorAll<HTMLElement>('li')];
   return listItems.length ? listItems : [...cell.querySelectorAll<HTMLElement>('picture')];
+}
+
+/** An entry's alt text and overlay flag arrive as text beside its picture. */
+function entryTexts(entry: HTMLElement): string[] {
+  if (entry.matches('picture')) return [];
+  return [...entry.childNodes]
+    .filter((node) => !(node instanceof Element && (node.matches('picture, img') || node.querySelector('picture'))))
+    .map((node) => textOf(node))
+    .filter(Boolean);
 }
 
 /** Moves one multifield entry into a fresh list item, keeping its editor instrumentation. */
 function buildEntry(entry: HTMLElement, className: string): { item: HTMLLIElement; picture: HTMLElement | null } {
   const item = document.createElement('li');
   item.className = className;
+  const texts = entryTexts(entry);
+  item.classList.toggle('has-dark-overlay', texts.includes('true'));
   if (entry.matches('li')) moveInstrumentation(entry, item);
   const picture = entry.matches('picture') ? entry : buildPicture(entry);
+  // the authored alt outranks whatever the asset itself carries
+  const alt = texts.find((text) => !FLAGS.includes(text.toLowerCase()));
+  if (alt) picture?.querySelector('img')?.setAttribute('alt', alt);
   if (picture) item.append(picture);
   return { item, picture };
 }
@@ -623,7 +647,9 @@ function ritualCellsOf(row: HTMLElement): Partial<Record<RitualField, HTMLElemen
   const ctaCells = cells.filter(
     (cell) => isFlag(cell) || (isFlag(cell.lastElementChild) && !cell.querySelector('picture')),
   );
-  const lists = cells.filter((cell) => cell.querySelector('li picture'));
+  const lists = cells.filter(
+    (cell) => cell.querySelector('li picture') || (cell.querySelector(':scope > hr') && cell.querySelector('picture')),
+  );
   const media = lists[lists.length - 1];
   const thumbnails = lists.length > 1 ? lists[0] : undefined;
   const texts = cells.filter((cell) => !ctaCells.includes(cell) && !lists.includes(cell) && hasContent(cell));

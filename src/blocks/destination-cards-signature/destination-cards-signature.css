@@ -33,8 +33,13 @@
 
 .destination-cards-signature--default-light {
     background: var(--color-surface-page);
-    color: var(--color-text-main-body);
+    color: var(--color-text-main-heading);
     padding-block: var(--dimension-layout-module-padding-block);
+}
+
+.destination-cards-signature--default-light .destination-cards-signature-description,
+.destination-cards-signature--default-light .destination-cards-signature-card-description {
+    color: var(--color-text-main-body);
 }
 
 /* Intro Section */
@@ -494,8 +499,8 @@
 
     /* Card Title */
     .destination-cards-signature .destination-cards-signature-card-title {
-        font-size: var(--typography-fontsize-heading-h2);
-        line-height: var(--typography-line-height-heading-h2);
+        font-size: 28px;
+        line-height: 28px;
         width: 100%;
     }
 
@@ -608,9 +613,9 @@
     flex: 0;
     margin: 0;
     font-family: var(--type-font-family-heading);
-    font-size: var(--typography-fontsize-heading-h2);
+    font-size: 28px;
     font-weight: 400;
-    line-height: var(--typography-line-height-heading-h2);
+    line-height: 28px;
     letter-spacing: normal;
     text-transform: none;
     text-align: center;
@@ -621,6 +626,13 @@
     align-items: center;
     justify-content: center;
     min-height: 28px;
+}
+
+@media (width >= 1920px) {
+    .destination-cards-signature .destination-cards-signature-card-title {
+        font-size: var(--typography-fontsize-heading-h4);
+        line-height: var(--typography-line-height-heading-h4);
+    }
 }
 
 .destination-cards-signature .destination-cards-signature-card-description {
@@ -675,11 +687,16 @@
 }
 
 .destination-cards-signature .destination-cards-signature-cta:focus,
-.destination-cards-signature .destination-cards-signature-cta:focus-visible,
-.destination-cards-signature .destination-cards-signature-cta:active {
-    outline: none;
+.destination-cards-signature .destination-cards-signature-cta:focus-visible {
+    outline: 2px solid var(--color-surface-action-default);
+    outline-offset: 2px;
     border: none;
     box-shadow: none;
+}
+
+.destination-cards-signature .destination-cards-signature-cta:active {
+    outline: none;
+    opacity: 0.7;
 }
 
 /* Hide duplicate CTA text labels (keep only the button, not the text div before it) */
@@ -698,10 +715,6 @@
 .destination-cards-signature .destination-cards-signature-cta {
     text-decoration: underline;
     font-weight: 300;
-}
-
-.destination-cards-signature .destination-cards-signature-cta:focus {
-    outline: none;
 }
 
 /* Modal Wrapper and Dialog */
@@ -853,6 +866,16 @@
     color: var(--color-surface-action-default);
 }
 
+.destination-cards-signature .destination-cards-signature-destination-item:focus,
+.destination-cards-signature .destination-cards-signature-destination-item:focus-visible {
+    outline: 2px solid var(--color-surface-action-default);
+    outline-offset: 2px;
+}
+
+.destination-cards-signature .destination-cards-signature-destination-item:active {
+    outline: none;
+}
+
 /* Destination Name */
 .destination-cards-signature .destination-cards-signature-destination-name {
     margin: 0;
@@ -896,8 +919,10 @@
     opacity: 0.8;
 }
 
-.destination-cards-signature .destination-cards-signature-modal-submit:focus {
-    outline: none;
+.destination-cards-signature .destination-cards-signature-modal-submit:focus,
+.destination-cards-signature .destination-cards-signature-modal-submit:focus-visible {
+    outline: 2px solid var(--color-surface-action-default);
+    outline-offset: 2px;
 }
 
 .destination-cards-signature .destination-cards-signature-modal-submit:active {
@@ -923,8 +948,10 @@
     opacity: 0.6;
 }
 
-.destination-cards-signature .destination-cards-signature-modal-close:focus {
-    outline: none;
+.destination-cards-signature .destination-cards-signature-modal-close:focus,
+.destination-cards-signature .destination-cards-signature-modal-close:focus-visible {
+    outline: 2px solid var(--color-surface-action-default);
+    outline-offset: 2px;
 }
 
 .destination-cards-signature .destination-cards-signature-modal-close:active {

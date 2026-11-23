@@ -178,6 +178,21 @@
           }
         },
         {
+          "title": "Breadcrumb",
+          "id": "breadcrumb",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Breadcrumb",
+                  "model": "breadcrumb"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Cards",
           "id": "cards",
           "plugins": {
@@ -448,21 +463,6 @@
                 "template": {
                   "name": "Experience Tiles Slide",
                   "model": "experience-tiles-slide"
-                }
-              }
-            }
-          }
-        },
-        {
-          "title": "Experience Tile",
-          "id": "experience-tiles-item",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block/item",
-                "template": {
-                  "name": "Experience Tile",
-                  "model": "experience-tiles-item"
                 }
               }
             }
@@ -986,37 +986,6 @@
                 "template": {
                   "name": "Separator",
                   "model": "separator"
-                }
-              }
-            }
-          }
-        },
-        {
-          "title": "Split Media",
-          "id": "split-media",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block",
-                "template": {
-                  "name": "Split Media",
-                  "filter": "split-media",
-                  "model": "split-media"
-                }
-              }
-            }
-          }
-        },
-        {
-          "title": "Split Media Slide",
-          "id": "split-media-slide",
-          "plugins": {
-            "xwalk": {
-              "page": {
-                "resourceType": "core/franklin/components/block/v1/block/item",
-                "template": {
-                  "name": "Split Media Slide",
-                  "model": "split-media-slide"
                 }
               }
             }

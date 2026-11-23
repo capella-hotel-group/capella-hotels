@@ -78,6 +78,13 @@
         "name": "cta2OpenInNewTab",
         "label": "CTA 2 Open in New Tab",
         "value": false
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "breadcrumbTitle",
+        "label": "Breadcrumb Title",
+        "description": "Overrides this page's label in breadcrumbs without changing the page heading"
       }
     ]
   },
@@ -498,7 +505,7 @@
         "component": "text",
         "name": "bookingUrl",
         "label": "Booking Engine URL",
-        "description": "Absolute https URL. The selected dates, guests and location are appended as query parameters.",
+        "description": "SynXis booking engine URL, e.g. https://be.synxis.com/. Chain, hotel, dates and guests are appended as query parameters.",
         "valueType": "string",
         "required": true,
         "value": ""
@@ -539,9 +546,24 @@
         "component": "boolean",
         "name": "showLocation",
         "label": "Show Location Selector",
-        "description": "When off, the Location selector is hidden and no location is sent to the booking engine.",
+        "description": "When off, the Location selector is hidden and the Hotel ID below is sent to the booking engine.",
         "valueType": "boolean",
         "value": true
+      },
+      {
+        "component": "text",
+        "name": "hotelId",
+        "label": "Hotel ID",
+        "description": "SynXis Hotel ID used when the Location selector is hidden, e.g. 75985.",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "aem-content",
+        "name": "locationsPath",
+        "label": "Locations (Content Fragment path)",
+        "description": "Pick the Booking Locations Content Fragment listing the hotels. When set it replaces the Location items below; leave empty to use them.",
+        "valueType": "string"
       }
     ]
   },
@@ -560,10 +582,33 @@
       {
         "component": "text",
         "name": "code",
-        "label": "Property Code",
-        "description": "Sent to the booking engine for this location. Falls back to the name when empty.",
+        "label": "Hotel ID",
+        "description": "SynXis Hotel ID for this location, e.g. 75985. Locations without it are not listed.",
         "valueType": "string",
+        "required": true,
         "value": ""
+      }
+    ]
+  },
+  {
+    "id": "breadcrumb",
+    "fields": [
+      {
+        "component": "select",
+        "name": "classes",
+        "label": "Style",
+        "valueType": "string",
+        "value": "",
+        "options": [
+          {
+            "name": "Default",
+            "value": ""
+          },
+          {
+            "name": "Inverse",
+            "value": "inverse"
+          }
+        ]
       }
     ]
   },
@@ -653,7 +698,6 @@
         "label": "Tab Thumbnail",
         "description": "Still image. Doubles as the poster when the hero media is a video.",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {
@@ -662,6 +706,14 @@
         "label": "Tab Thumbnail Alt Text",
         "valueType": "string",
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "thumbnailDarkOverlay",
+        "label": "Enable Dark Thumbnail Overlay",
+        "description": "Tints the tab thumbnail.",
+        "valueType": "boolean",
+        "value": false
       },
       {
         "component": "select",
@@ -687,7 +739,6 @@
         "name": "mediaAsset",
         "label": "Hero Media",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {
@@ -698,12 +749,19 @@
         "value": ""
       },
       {
+        "component": "boolean",
+        "name": "mediaDarkOverlay",
+        "label": "Enable Dark Hero Overlay",
+        "description": "Tints the hero media so the white copy over it stays legible.",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
         "component": "reference",
         "name": "mediaAssetMobile",
         "label": "Hero Media (Mobile)",
         "description": "Optional. Falls back to the hero media when empty.",
-        "valueType": "string",
-        "multi": false
+        "valueType": "string"
       },
       {
         "component": "text",
@@ -844,18 +902,20 @@
         "multi": true,
         "fields": [
           {
-            "component": "text",
-            "name": "label",
-            "label": "Detail Label",
+            "component": "reference",
+            "name": "icon",
+            "label": "Detail Icon",
             "valueType": "string",
-            "required": true
+            "required": true,
+            "description": "Icon/image to display for this detail"
           },
           {
             "component": "text",
             "name": "value",
             "label": "Detail Value",
             "valueType": "string",
-            "required": true
+            "required": true,
+            "description": "Text value to display next to the icon (e.g., 'Garden view', '2 adults, 1 child')"
           }
         ]
       },
@@ -1439,6 +1499,14 @@
         "value": ""
       },
       {
+        "component": "boolean",
+        "name": "thumbnailDarkOverlay",
+        "label": "Enable Dark Thumbnail Overlay",
+        "description": "Tints the desktop thumbnail. Does not affect the main media.",
+        "valueType": "boolean",
+        "value": false
+      },
+      {
         "component": "select",
         "name": "media",
         "label": "Media Type",
@@ -1552,21 +1620,17 @@
             "component": "aem-tag",
             "name": "categoryTag",
             "label": "Category Tag",
-            "description": "Select one category tag, such as Culture, Wellness, Indulgence, or Family.",
+            "description": "Select one tag under Capella Hotels matching Associated Filter Tags on the experience Content Fragments. Complete before publishing.",
             "valueType": "string",
             "multi": false,
-            "required": true,
-            "validation": {
-              "rootPath": "/content/cq:tags/capella-hotels"
-            }
+            "required": false
           },
           {
             "component": "text",
             "name": "label",
             "label": "Category Tab Label",
             "description": "Visitor-facing label for this category, translated for the page language.",
-            "valueType": "string",
-            "required": true
+            "valueType": "string"
           }
         ]
       },
@@ -1606,10 +1670,10 @@
         "component": "text",
         "name": "dataTestId",
         "valueType": "string",
-        "label": "Data Test ID",
-        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
+        "label": "Automation Key",
+        "description": "Adds a data-automation-key attribute so QA can target this instance. Leave empty to omit it.",
         "value": "",
-        "placeholder": "experience-tiles"
+        "placeholder": "e.g., homepage-experiences"
       }
     ]
   },
@@ -1631,6 +1695,14 @@
         "valueType": "string",
         "required": true,
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "leftMedia_overlay",
+        "label": "Left Panel Image Overlay",
+        "description": "Adds a dark gradient over the bottom of the image to keep the text legible.",
+        "valueType": "boolean",
+        "value": true
       },
       {
         "component": "text",
@@ -1662,6 +1734,14 @@
         "valueType": "string",
         "required": true,
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "rightMedia_overlay",
+        "label": "Right Panel Image Overlay",
+        "description": "Adds a dark gradient over the bottom of the image to keep the text legible.",
+        "valueType": "boolean",
+        "value": true
       },
       {
         "component": "text",
@@ -1722,120 +1802,6 @@
     ]
   },
   {
-    "id": "experience-tiles-item",
-    "fields": [
-      {
-        "component": "text",
-        "name": "visualEyebrow",
-        "label": "Location Eyebrow",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "richtext",
-        "name": "headline",
-        "label": "Experience Title",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "name": "visualImage",
-        "label": "Tile Image",
-        "valueType": "string",
-        "required": true,
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "visualImageAlt",
-        "label": "Tile Image Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "detailTitle",
-        "label": "Guide / Activity Title",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "richtext",
-        "name": "description",
-        "label": "Experience Description",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "name": "detailsImage",
-        "label": "Details Tile Image",
-        "valueType": "string",
-        "required": true,
-        "multi": false
-      },
-      {
-        "component": "text",
-        "name": "detailsImageAlt",
-        "label": "Details Image Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "enquireLabel",
-        "label": "Enquire CTA Label",
-        "valueType": "string",
-        "required": true,
-        "value": "ENQUIRE"
-      },
-      {
-        "component": "aem-content",
-        "name": "enquireModalPath",
-        "label": "Enquire Modal Fragment Path",
-        "description": "Path to the fragment holding the enquiry form modal content.",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "boolean",
-        "name": "enquireOpenInNewTab",
-        "label": "Enquire Opens in New Tab",
-        "valueType": "boolean",
-        "value": false
-      },
-      {
-        "component": "text",
-        "name": "detailsLabel",
-        "label": "Details CTA Label",
-        "valueType": "string",
-        "required": true,
-        "value": "DETAILS"
-      },
-      {
-        "component": "aem-content",
-        "name": "detailsUrl",
-        "label": "Details Destination URL",
-        "valueType": "string",
-        "required": true
-      },
-      {
-        "component": "boolean",
-        "name": "detailsOpenInNewTab",
-        "label": "Details Opens in New Tab",
-        "valueType": "boolean",
-        "value": false
-      }
-    ]
-  },
-  {
     "id": "filters-grid",
     "fields": [
       {
@@ -1867,7 +1833,7 @@
         "component": "aem-content",
         "name": "cfRootPath",
         "label": "Content Fragment's Root Path",
-        "description": "Choose a Content Fragment folder or path prefix to request matching published cards. Leave blank for all cards.",
+        "description": "Select the folder containing the Content Fragments you want to display in this grid.",
         "valueType": "string",
         "required": true
       },
@@ -1875,7 +1841,7 @@
         "component": "boolean",
         "name": "showModeLabels",
         "label": "Show Filter Tab Labels",
-        "description": "Show or hide all tab labels. Multiple visible tabs need labels. When hidden, the default category and tab stay active.",
+        "description": "Toggle to display filter tabs above the grid. When hidden, cards from the default category are shown automatically",
         "valueType": "boolean",
         "value": true
       },
@@ -1883,6 +1849,7 @@
         "component": "text",
         "name": "revealMoreLabel",
         "label": "Reveal More CTA Text",
+        "description": "Label for the load-more button (defaults to 'Reveal More').",
         "valueType": "string",
         "value": "Reveal More"
       },
@@ -1890,7 +1857,7 @@
         "component": "boolean",
         "name": "showModalEyebrow",
         "label": "Show Modal Eyebrow",
-        "description": "Show the location eyebrow in all popups opened from this block, in both image layouts. Hiding it does not change filtering.",
+        "description": "Show or hide the eyebrow text inside detail popups.",
         "valueType": "boolean",
         "value": true
       },
@@ -1898,7 +1865,7 @@
         "component": "boolean",
         "name": "showModalCategoryTag",
         "label": "Show Modal Category Tag",
-        "description": "Show the selected category below the images in all popups opened from this block, in both image layouts. Hiding it removes its layout space without changing filtering.",
+        "description": "Show or hide category tags inside detail popups.",
         "valueType": "boolean",
         "value": true
       }
@@ -2643,11 +2610,19 @@
           },
           {
             "component": "text",
-            "name": "imageAlt",
+            "name": "altText",
             "label": "Image Alt Text",
             "valueType": "string",
             "value": "",
             "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "darkOverlay",
+            "label": "Enable Dark Image Overlay",
+            "description": "Tints this thumbnail.",
+            "valueType": "boolean",
+            "value": false
           }
         ]
       },
@@ -2708,11 +2683,19 @@
           },
           {
             "component": "text",
-            "name": "imageAlt",
+            "name": "altText",
             "label": "Image Alt Text",
             "valueType": "string",
             "value": "",
             "required": true
+          },
+          {
+            "component": "boolean",
+            "name": "darkOverlay",
+            "label": "Enable Dark Image Overlay",
+            "description": "Tints this image, which also keeps the white carousel arrows legible.",
+            "valueType": "boolean",
+            "value": false
           }
         ]
       }
@@ -3420,7 +3403,6 @@
         "label": "Card Image",
         "description": "The stack shows three cards; a fourth item and beyond are not rendered.",
         "valueType": "string",
-        "multi": false,
         "required": true
       },
       {
@@ -3430,6 +3412,13 @@
         "valueType": "string",
         "required": true,
         "value": ""
+      },
+      {
+        "component": "boolean",
+        "name": "darkOverlay",
+        "label": "Dark Image Overlay",
+        "valueType": "boolean",
+        "value": true
       },
       {
         "component": "text",
@@ -3505,23 +3494,6 @@
         "label": "Secondary CTA Open in new tab",
         "valueType": "string",
         "value": false
-      },
-      {
-        "component": "select",
-        "name": "darkOverlay",
-        "label": "Dark Image Overlay",
-        "valueType": "string",
-        "value": "true",
-        "options": [
-          {
-            "name": "Enabled",
-            "value": "true"
-          },
-          {
-            "name": "Disabled",
-            "value": "false"
-          }
-        ]
       }
     ]
   },
@@ -3542,6 +3514,27 @@
         "valueType": "string",
         "label": "Data Test ID",
         "description": "Adds a data-test-id attribute for QA automation. Leave empty to omit it.",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "name": "eyebrow",
+        "label": "Eyebrow",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "name": "title",
+        "label": "Title",
+        "valueType": "string",
+        "value": ""
+      },
+      {
+        "component": "textarea",
+        "name": "description",
+        "label": "Description",
+        "valueType": "string",
         "value": ""
       },
       {
@@ -3567,6 +3560,10 @@
           {
             "name": "Dining",
             "value": "dining"
+          },
+          {
+            "name": "Accommodations",
+            "value": "accommodations"
           }
         ]
       },
@@ -3585,7 +3582,7 @@
         "description": "Direct child tags define the category selection bar, including categories with no matching cards.",
         "valueType": "string",
         "multi": false,
-        "value": "/content/cq:tags/capella-hotels/accomodation"
+        "value": "/content/cq:tags/capella-hotels/accommodations"
       },
       {
         "component": "boolean",
@@ -3611,6 +3608,14 @@
         "label": "Load More Label",
         "valueType": "string",
         "value": "Load More"
+      },
+      {
+        "component": "boolean",
+        "name": "enableCompare",
+        "label": "Enable Compare",
+        "description": "Show a compare checkbox on each card.",
+        "valueType": "boolean",
+        "value": false
       }
     ]
   },
@@ -3768,137 +3773,6 @@
         "component": "boolean",
         "name": "visibleSeparator",
         "label": "Visible Separator",
-        "valueType": "boolean",
-        "value": false
-      }
-    ]
-  },
-  {
-    "id": "split-media",
-    "fields": [
-      {
-        "component": "text",
-        "name": "id",
-        "valueType": "string",
-        "label": "Block ID",
-        "description": "Sets the id attribute on the block, usable as an anchor target.",
-        "value": "",
-        "placeholder": "e.g., split-media"
-      },
-      {
-        "component": "text",
-        "name": "dataTestId",
-        "valueType": "string",
-        "label": "Data Test ID",
-        "description": "Adds a data-test-id attribute on the block for QA automation. Leave empty to omit it.",
-        "value": "",
-        "placeholder": "split-media"
-      }
-    ]
-  },
-  {
-    "id": "split-media-slide",
-    "fields": [
-      {
-        "component": "reference",
-        "name": "leftMedia_image",
-        "label": "Left Panel Image",
-        "valueType": "string",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "leftMedia_imageAlt",
-        "label": "Left Panel Asset Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "leftContent_eyebrow",
-        "label": "Left Panel Eyebrow",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "leftContent_headline",
-        "label": "Left Panel Headline",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "reference",
-        "name": "rightMedia_image",
-        "label": "Right Panel Image",
-        "valueType": "string",
-        "multi": false,
-        "required": true
-      },
-      {
-        "component": "text",
-        "name": "rightMedia_imageAlt",
-        "label": "Right Panel Asset Alt Text",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "text",
-        "name": "rightContent_headline",
-        "label": "Right Panel Headline",
-        "valueType": "string",
-        "required": true,
-        "value": ""
-      },
-      {
-        "component": "richtext",
-        "name": "rightContent_description",
-        "label": "Right Panel Description",
-        "description": "Leave empty for a panel that shows only a headline.",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "aem-content",
-        "name": "rightCtas_primaryCta",
-        "label": "Right Panel Primary Link URL",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "rightCtas_primaryCtaText",
-        "label": "Right Panel Primary Link Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "boolean",
-        "name": "rightCtas_primaryCtaOpenInNewTab",
-        "label": "Right Panel Primary Link Open in new tab",
-        "valueType": "boolean",
-        "value": false
-      },
-      {
-        "component": "aem-content",
-        "name": "rightCtas_secondaryCta",
-        "label": "Right Panel Secondary Link URL",
-        "valueType": "string"
-      },
-      {
-        "component": "text",
-        "name": "rightCtas_secondaryCtaText",
-        "label": "Right Panel Secondary Link Label",
-        "valueType": "string",
-        "value": ""
-      },
-      {
-        "component": "boolean",
-        "name": "rightCtas_secondaryCtaOpenInNewTab",
-        "label": "Right Panel Secondary Link Open in new tab",
         "valueType": "boolean",
         "value": false
       }

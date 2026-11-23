@@ -284,8 +284,17 @@ body.newsletter-modal-open {
     margin-inline: 0;
     padding: 0;
     background-color: transparent;
-    gap: var(--dimension-spacing-general-l);
+    gap: var(--dimension-spacing-general-m);
     min-width: 0;
+}
+
+.newsletter-inline .newsletter-title-info {
+    gap: var(--dimension-spacing-title-to-content);
+    margin-block-end: var(--dimension-spacing-general-2xs);
+}
+
+.newsletter-inline .newsletter-info-text {
+    display: block;
 }
 
 .newsletter-inline .newsletter-message:empty {
@@ -301,21 +310,21 @@ body.newsletter-modal-open {
     letter-spacing: normal;
     color: var(--color-text-main-heading);
     text-transform: uppercase;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 @media (width >= 768px) {
-    .newsletter-inline .newsletter-title {
-        margin-block-end: 3px;
+    .newsletter-inline .newsletter-form-element {
+        gap: var(--dimension-spacing-general-l);
     }
 
     .newsletter-inline .newsletter-title-info {
-        margin-block-end: 6px;
+        margin-block-end: var(--dimension-spacing-general-s);
     }
 
     .newsletter-inline .newsletter-inline-submit {
-        min-height: 40px;
-        margin-block-start: 9px;
-        padding-block: 0;
+        margin-block-start: var(--dimension-spacing-general-s);
     }
 }
 
@@ -370,7 +379,7 @@ body.newsletter-modal-open {
     outline-offset: 2px;
 }
 
-.newsletter-inline-field-select select {
+.newsletter-inline .newsletter-inline-field-select select {
     padding-inline-end: 24px;
 }
 
@@ -386,8 +395,6 @@ body.newsletter-modal-open {
     display: flex;
     align-items: flex-start;
     gap: var(--dimension-spacing-general-s);
-    /* Figma measures the gap to the consent text's cap height, not its line box */
-    margin-block-start: -3px;
 }
 
 .newsletter-inline-consent input[type='checkbox'] {
@@ -395,7 +402,7 @@ body.newsletter-modal-open {
     flex-shrink: 0;
     width: 16px;
     height: 16px;
-    margin: 2px 0 0;
+    margin: 0;
     padding: 0;
     border: var(--stroke-weight-m) solid var(--color-stroke-main-primary);
     border-radius: var(--component-checkbox-corner);
@@ -426,16 +433,15 @@ body.newsletter-modal-open {
     outline-offset: 2px;
 }
 
-/* Centres the box on the first text line; the fixed 2px above only fits a 20px line-height. */
-.newsletter-inline .newsletter-inline-consent input[type='checkbox'] {
-    margin-block-start: calc((var(--typography-line-height-body-sm) - 16px) / 2);
-}
-
-.newsletter-inline-consent label {
+.newsletter-inline-consent label,
+.newsletter-inline-consent label p {
+    margin: 0;
     font-family: var(--type-font-family-body);
     font-size: var(--typography-fontsize-body-s);
     line-height: var(--typography-line-height-body-sm);
     color: var(--color-text-main-body);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .newsletter-inline-consent label a {
@@ -447,7 +453,10 @@ body.newsletter-modal-open {
     display: inline-flex;
     align-items: center;
     align-self: flex-start;
-    padding: var(--dimension-spacing-general-2xs) var(--component-button-padding-inline);
+    min-height: var(--component-button-height);
+    margin-block-start: var(--dimension-spacing-general-2xs);
+    padding-block: 0;
+    padding-inline: calc(var(--component-button-padding-inline) - var(--stroke-weight-s));
     border: var(--stroke-weight-s) solid var(--color-stroke-action-default);
     border-radius: var(--component-button-corner-standard);
     background: none;
@@ -487,22 +496,6 @@ body.newsletter-modal-open {
     overflow-x: auto;
 }
 
-@media (width <=767px) {
-    .newsletter-inline .newsletter-form-element {
-        padding: 0;
-        gap: 16px;
-    }
-
-    .newsletter-inline .newsletter-title {
-        margin-block-end: 2px;
-    }
-
-    .newsletter-inline .newsletter-inline-submit {
-        min-height: 40px;
-        margin-block-start: 1px;
-        padding-block: 0;
-    }
-}
 .newsletter-form button[type='submit'][aria-busy='true']::after {
     display: inline-block;
     width: 12px;
@@ -532,7 +525,7 @@ body.newsletter-modal-open {
 .newsletter-inline .newsletter-inline-field-group {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-spacing-general-2xs);
+    gap: var(--dimension-spacing-general-xs);
     min-width: 0;
 }
 
@@ -555,6 +548,8 @@ body.newsletter-modal-open {
     font-weight: var(--type-font-weight-body-reg);
     line-height: var(--typography-line-height-body-sm);
     text-align: start;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .newsletter-inline .newsletter-inline-field-error[hidden] {
@@ -565,14 +560,10 @@ body.newsletter-modal-open {
     border-block-end-color: var(--color-text-main-error);
 }
 
-.newsletter-inline .newsletter-inline-consent input[type='checkbox'][aria-invalid='true'] {
-    border-color: var(--color-text-main-error);
-}
-
 /* Inline thank-you modal */
 .newsletter-inline .newsletter-modal {
     box-sizing: border-box;
-    width: min(560px, calc(100% - 48px));
+    width: min(344px, calc(100% - 48px));
     max-width: none;
     max-height: calc(100% - 48px);
     padding: 0;
@@ -686,4 +677,20 @@ body.newsletter-modal-open {
     border: 0;
     background: url('/icons/close-28.svg') center / 28px 28px no-repeat;
     cursor: pointer;
+}
+
+@media (width >= 768px) {
+    .newsletter-inline .newsletter-modal {
+        width: min(560px, calc(100% - 48px));
+    }
+}
+
+@media (width >= 1200px) {
+    .newsletter-inline .newsletter-modal {
+        /* Reuse the 1440px modal typography on wider desktop screens. */
+        --typography-fontsize-heading-h1: 48px;
+        --typography-line-height-heading-h1: 48px;
+        --typography-line-height-body-md: 18px;
+        --typography-line-height-body-eyebrow: 16px;
+    }
 }

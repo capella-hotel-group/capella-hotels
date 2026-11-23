@@ -14,6 +14,7 @@ const STYLE_ENTRIES: Record<string, string> = {
   'styles/styles': 'src/styles/styles.css',
   'styles/lazy-styles': 'src/styles/lazy-styles.css',
   'styles/fonts': 'src/styles/fonts.css',
+  'styles/experience-modal': 'src/styles/experience-modal.css',
 };
 
 /** Stable (non-hashed) chunk names, so head.html can modulepreload them directly. */

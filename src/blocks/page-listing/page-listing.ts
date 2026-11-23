@@ -1,7 +1,7 @@
 import { applyBlockIdentity } from '@/utils/block-identity.js';
 import { getPublishBaseUrl } from '@/utils/env.js';
 
-type ListingType = 'offers' | 'wellness' | 'experience' | 'dining';
+type ListingType = 'offers' | 'wellness' | 'experience' | 'dining' | 'accommodations';
 
 interface ListingRecord {
   path?: string;
@@ -19,6 +19,7 @@ const INDEX_PATHS: Record<ListingType, string> = {
   wellness: '/wellness/list-index.json',
   experience: '/experience/list-index.json',
   dining: '/dining/list-index.json',
+  accommodations: '/en/accommodations/list-index.json',
 };
 
 const textOf = (element?: Element | null): string => element?.textContent?.trim() || '';
@@ -35,8 +36,13 @@ function normalizeTag(value: string): string {
 function readTags(row?: Element): string[] {
   if (!row) return [];
   const items = row.querySelectorAll('li');
-  return [...new Set((items.length ? Array.from(items, (item) => textOf(item)) : textOf(row).split(','))
-    .map(normalizeTag).filter(Boolean))];
+  return [
+    ...new Set(
+      (items.length ? Array.from(items, (item) => textOf(item)) : textOf(row).split(','))
+        .map(normalizeTag)
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function tagTitle(tag: string): Promise<string> {
@@ -53,7 +59,7 @@ function tagTitle(tag: string): Promise<string> {
         headers: { Accept: 'application/json' },
       });
       if (!response.ok) return fallback;
-      const data = await response.json() as Record<string, unknown>;
+      const data = (await response.json()) as Record<string, unknown>;
       const title = data[`jcr:title.${document.documentElement.lang || 'en'}`] || data['jcr:title'];
       return typeof title === 'string' && title.trim() ? title.trim() : fallback;
     } catch {
@@ -67,17 +73,24 @@ function tagTitle(tag: string): Promise<string> {
 
 function setTagTitle(element: HTMLElement, tag: string): void {
   element.textContent = (tag.split('/').pop()?.split(':').pop() || tag).replace(/[-_]/g, ' ');
-  void tagTitle(tag).then((title) => { element.textContent = title; });
+  void tagTitle(tag).then((title) => {
+    element.textContent = title;
+  });
 }
 
 function readListingType(row?: HTMLElement): ListingType {
   const field = row?.querySelector('[data-aue-prop="listingType"]') || row?.firstElementChild || row;
   const value = textOf(field).toLowerCase();
-  return value === 'wellness' || value === 'experience' || value === 'dining' ? value : 'offers';
+  return value === 'wellness' || value === 'experience' || value === 'dining' || value === 'accommodations'
+    ? (value as ListingType)
+    : 'offers';
 }
 
 function locationFromPath(path?: string): string {
-  const segments = (path || '').split('/').filter(Boolean).map((segment) => segment.toLowerCase());
+  const segments = (path || '')
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => segment.toLowerCase());
   const languageIndex = segments.lastIndexOf('en');
   if (languageIndex < 1) return '';
 
@@ -102,6 +115,12 @@ function createMedia(record: ListingRecord, parsed: Document): HTMLElement | nul
   media.className = 'page-listing-card-media';
   const slides: HTMLImageElement[] = [];
   parsed.querySelectorAll<HTMLImageElement>('img[src]').forEach((source) => {
+    if (
+      source.closest('dl') ||
+      source.closest('[data-detail-icon]') ||
+      source.parentElement?.closest('[data-detail-icon]')
+    )
+      return;
     const url = new URL(source.getAttribute('src') || '', new URL('.', pageUrl));
     if (!['https:', 'http:'].includes(url.protocol)) return;
     const image = document.createElement('img');
@@ -154,7 +173,9 @@ function createActions(parsed: Document, record: ListingRecord): HTMLElement {
       if (!anchor) return;
       const href = new URL(anchor.getAttribute('href') || '', base);
       if (!['http:', 'https:', 'mailto:', 'tel:'].includes(href.protocol)) return;
-      const label = group.find((element) => !element.querySelector('a') && !['true', 'false'].includes(textOf(element)));
+      const label = group.find(
+        (element) => !element.querySelector('a') && !['true', 'false'].includes(textOf(element)),
+      );
       const link = document.createElement('a');
       link.href = href.href;
       link.textContent = textOf(label) || textOf(anchor);
@@ -176,22 +197,47 @@ function createActions(parsed: Document, record: ListingRecord): HTMLElement {
   return actions;
 }
 
+function markDetailImages(parsed: Document): void {
+  parsed.querySelectorAll('div').forEach((cell) => {
+    if (cell.querySelector('a') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
+    // This is a detail cell, mark all images as detail icons
+    cell.querySelectorAll('picture, img').forEach((img) => {
+      img.setAttribute('data-detail-icon', 'true');
+    });
+  });
+}
+
 function createDetails(parsed: Document): HTMLElement {
   const details = document.createElement('dl');
   details.className = 'page-listing-card-details';
   parsed.querySelectorAll('div').forEach((cell) => {
-    if (cell.querySelector('a, img') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
+    if (cell.querySelector('a') || !Array.from(cell.children).some((child) => child.tagName === 'HR')) return;
     let group: Element[] = [];
     const appendDetail = (): void => {
       const values = group.map((element) => textOf(element)).filter(Boolean);
-      if (values.length < 2) return;
-      const pair = document.createElement('div');
+      if (values.length < 1) return;
       const label = document.createElement('dt');
       const value = document.createElement('dd');
-      label.textContent = values[0]!;
-      value.textContent = values.slice(1).join(' ');
-      pair.append(label, value);
-      details.append(pair);
+
+      // Look for picture/image element in the first group item
+      const firstElement = group[0];
+      const picture = firstElement?.querySelector('picture');
+      const img = firstElement?.querySelector('img');
+
+      if (picture || img) {
+        if (picture) {
+          const clonedPicture = picture.cloneNode(true) as HTMLElement;
+          label.append(clonedPicture);
+        } else if (img) {
+          const clonedImg = img.cloneNode(true) as HTMLImageElement;
+          label.append(clonedImg);
+        }
+        // Use all text values for the detail value
+        value.textContent = values.join(' ');
+        label.className = 'page-listing-card-detail-label';
+        label.setAttribute('data-detail-icon', 'true');
+        details.append(label, value);
+      }
     };
     Array.from(cell.children).forEach((element) => {
       if (element.tagName === 'HR') {
@@ -204,7 +250,7 @@ function createDetails(parsed: Document): HTMLElement {
   return details;
 }
 
-function createCard(record: ListingRecord): HTMLElement {
+function createCard(record: ListingRecord, enableCompare: boolean = false): HTMLElement {
   const card = document.createElement('article');
   card.className = 'page-listing-card';
   const parsed = new DOMParser().parseFromString(record.listHtml || '', 'text/html');
@@ -214,6 +260,10 @@ function createCard(record: ListingRecord): HTMLElement {
   const category = readTags(rows[2])[0] || '';
   card.dataset.category = category;
   const tags = readTags(rows[5]);
+
+  // Mark detail images BEFORE creating media so carousel skips them
+  markDetailImages(parsed);
+
   const media = createMedia({ ...record, title: cardTitle }, parsed);
   if (media) card.append(media);
 
@@ -260,9 +310,33 @@ function createCard(record: ListingRecord): HTMLElement {
   }
 
   const details = createDetails(parsed);
-  if (details.childElementCount) content.append(details);
+  if (details.childElementCount || enableCompare) {
+    const detailsRow = document.createElement('div');
+    detailsRow.className = 'page-listing-card-details-row';
+    if (details.childElementCount) detailsRow.append(details);
+
+    if (enableCompare) {
+      const compareCheckbox = document.createElement('div');
+      compareCheckbox.className = 'page-listing-card-compare';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'page-listing-compare-checkbox';
+      checkbox.dataset.testid = 'page-listing-compare-checkbox';
+      checkbox.setAttribute('aria-label', `Compare ${cardTitle}`);
+      const label = document.createElement('label');
+      label.className = 'page-listing-compare-label';
+      label.append(checkbox);
+      label.append(document.createTextNode('COMPARE'));
+      compareCheckbox.append(label);
+      detailsRow.append(compareCheckbox);
+    }
+
+    content.append(detailsRow);
+  }
+
   const actions = createActions(parsed, record);
   if (actions.childElementCount) content.append(actions);
+
   card.append(content);
   return card;
 }
@@ -282,7 +356,7 @@ async function loadCategories(rootTag: string): Promise<CategoryTag[]> {
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`Category request failed: ${response.status}`);
-    const payload = await response.json() as { data?: Array<{ path?: string; title?: string }> };
+    const payload = (await response.json()) as { data?: Array<{ path?: string; title?: string }> };
     const categories: CategoryTag[] = [];
     for (const child of payload.data || []) {
       if (typeof child.path !== 'string' || typeof child.title !== 'string') continue;
@@ -305,7 +379,11 @@ interface LoadMoreConfig {
   label: string;
 }
 
-function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config: LoadMoreConfig): (category: string) => void {
+function createCardVisibility(
+  cards: HTMLElement[],
+  results: HTMLElement,
+  config: LoadMoreConfig,
+): (category: string) => void {
   let selectedCategory = '';
   let visibleCount = config.batchSize;
   const button = document.createElement('button');
@@ -323,7 +401,9 @@ function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config
     button.hidden = !config.enabled || matched <= visibleCount;
   };
   button.addEventListener('click', () => {
-    const firstHidden = cards.find((card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory));
+    const firstHidden = cards.find(
+      (card) => card.hidden && (!selectedCategory || card.dataset.category === selectedCategory),
+    );
     visibleCount += config.batchSize;
     update();
     if (button.hidden) firstHidden?.querySelector<HTMLElement>('a, button')?.focus();
@@ -339,9 +419,9 @@ function createCardVisibility(cards: HTMLElement[], results: HTMLElement, config
 
 function createFilters(
   cards: HTMLElement[],
-  results: HTMLElement,
   categories: CategoryTag[],
   selectCategory: (category: string) => void,
+  filtersContainer: HTMLElement,
 ): void {
   if (!categories.length) return;
   const filters = document.createElement('div');
@@ -369,7 +449,7 @@ function createFilters(
     const count = cards.filter((card) => card.dataset.category === category.id).length;
     addFilter(category.id, count, category.title);
   });
-  results.before(filters);
+  filtersContainer.append(filters);
 }
 
 async function loadListings(
@@ -378,8 +458,10 @@ async function loadListings(
   enableCategoryFilters: boolean,
   categoryRootTag: string,
   loadMore: LoadMoreConfig,
+  enableCompare: boolean,
   status: HTMLElement,
   results: HTMLElement,
+  filtersContainer: HTMLElement,
 ): Promise<void> {
   if (!location) {
     status.textContent = 'Location could not be determined from this page URL.';
@@ -398,49 +480,125 @@ async function loadListings(
     const index = (await response.json()) as ListingIndex;
     const records = Array.isArray(index.data) ? index.data : [];
     const matchingRecords = records.filter(
-      (record) => locationFromPath(record.path) === location,
+      (record) => locationFromPath(record.path) === location && record.title?.trim() && record.listHtml?.trim(),
     );
     const categories = enableCategoryFilters ? await loadCategories(categoryRootTag) : [];
-    const cards = matchingRecords.map(createCard);
+    const cards = matchingRecords.map((record) => createCard(record, enableCompare));
     results.append(...cards);
     const selectCategory = createCardVisibility(cards, results, loadMore);
-    if (enableCategoryFilters) createFilters(cards, results, categories, selectCategory);
-    status.textContent = matchingRecords.length
-      ? ''
-      : `No listings are available for ${location}.`;
+    if (enableCategoryFilters) createFilters(cards, categories, selectCategory, filtersContainer);
+    status.textContent = matchingRecords.length ? '' : `No listings are available for ${location}.`;
   } catch {
     status.textContent = 'Listings for this type are not available right now.';
   }
 }
 
-export default function decorate(block: HTMLElement): void {
+export default async function decorate(block: HTMLElement): Promise<void> {
   if (block.querySelector(':scope > .page-listing-results')) return;
 
   const rows = [...block.children] as HTMLElement[];
+
+  // Map each row directly by its position to its purpose (after applyBlockIdentity removes identity rows):
+  // Row 0: eyebrow (render if non-empty)
+  // Row 1: title (render if non-empty)
+  // Row 2: description (render if non-empty)
+  // Row 3: listingType (use if non-empty)
+  // Row 4: enableFilters (use if non-empty)
+  // Row 5: categoryRoot (use if non-empty)
+  // Row 6: enableLoadMore (use if non-empty)
+  // Row 7: count (use if non-empty)
+  // Row 8: label (use if non-empty)
+  // Row 9: enableCompare (use if non-empty)
+
   const configRows = applyBlockIdentity(block, rows, {
-    contentRows: Math.max(1, rows.length - 2),
+    contentRows: rows.length - 2,
     hiddenClass: 'page-listing-config',
   });
-  const [typeRow, filterRow, rootRow, loadMoreRow, countRow, labelRow] = configRows;
+
+  // Map rows by direct index, only using non-empty values
+  const eyebrowRow = configRows[0];
+  const titleRow = configRows[1];
+  const descriptionRow = configRows[2];
+  const typeRow = configRows[3];
+  const filterRow = configRows[4];
+  const rootRow = configRows[5];
+  const loadMoreRow = configRows[6];
+  const countRow = configRows[7];
+  const labelRow = configRows[8];
+  const compareRow = configRows[9];
+
   const type = readListingType(typeRow);
   configRows.forEach((row) => row.classList.add('page-listing-config'));
   const enableCategoryFilters = textOf(filterRow).toLowerCase() !== 'false';
-  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accomodation';
+  const categoryRootTag = readTags(rootRow)[0] || '/content/cq:tags/capella-hotels/accommodations';
   const count = Number(textOf(countRow));
   const loadMore: LoadMoreConfig = {
     enabled: textOf(loadMoreRow).toLowerCase() === 'true',
     batchSize: Number.isFinite(count) && count >= 1 ? Math.floor(count) : 6,
     label: textOf(labelRow) || 'Load More',
   };
+  const enableCompare = textOf(compareRow).toLowerCase() === 'true';
   const location = locationFromPath(window.location.pathname);
+
+  const header = document.createElement('div');
+  header.className = 'page-listing-header';
+
+  // Render eyebrow if non-empty
+  const eyebrowText = textOf(eyebrowRow);
+  if (eyebrowText) {
+    const eyebrowEl = document.createElement('p');
+    eyebrowEl.className = 'page-listing-eyebrow';
+    eyebrowEl.textContent = eyebrowText;
+    header.append(eyebrowEl);
+  }
+
+  // Render title if non-empty - supports richtext HTML
+  const titleHtml = titleRow?.innerHTML?.trim() || '';
+  if (titleHtml) {
+    const titleEl = document.createElement('h2');
+    titleEl.className = 'page-listing-title';
+    // Check if HTML contains tags (for richtext structure like <p>...</p>)
+    if (titleHtml.includes('<') && titleHtml.includes('>')) {
+      // For richtext, use innerHTML after sanitizing
+      const { default: DOMPurify } = await import('dompurify');
+      titleEl.innerHTML = DOMPurify.sanitize(titleHtml);
+    } else {
+      // Plain text
+      titleEl.textContent = titleHtml;
+    }
+    header.append(titleEl);
+  }
+
+  // Render description if non-empty
+  const descriptionText = textOf(descriptionRow);
+  if (descriptionText) {
+    const descEl = document.createElement('p');
+    descEl.className = 'page-listing-description';
+    descEl.textContent = descriptionText;
+    header.append(descEl);
+  }
 
   const status = document.createElement('p');
   status.className = 'page-listing-status';
   status.setAttribute('role', 'status');
 
+  const filters = document.createElement('div');
+  filters.className = 'page-listing-filters-container';
+
   const results = document.createElement('div');
   results.className = 'page-listing-results';
 
-  block.append(status, results);
-  void loadListings(type, location, enableCategoryFilters, categoryRootTag, loadMore, status, results);
+  if (header.childElementCount) block.append(header);
+  block.append(filters, status, results);
+  void loadListings(
+    type,
+    location,
+    enableCategoryFilters,
+    categoryRootTag,
+    loadMore,
+    enableCompare,
+    status,
+    results,
+    filters,
+  );
 }

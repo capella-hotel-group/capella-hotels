@@ -41,7 +41,6 @@
       "rte",
       "choose-space",
       "culturist-card",
-      "split-media",
       "footer",
       "footer-contact",
       "footer-social-link",
@@ -51,6 +50,7 @@
       "page-listing",
       "booking-search",
       "separator",
+      "breadcrumb",
       "nav-top"
     ]
   },
@@ -204,14 +204,6 @@
     "minItems": 1,
     "maxItems": 3,
     "customErrorMsg": "Add between 1 and 3 offer cards."
-  },
-  {
-    "id": "split-media",
-    "components": [
-      "split-media-slide"
-    ],
-    "minItems": 1,
-    "customErrorMsg": "Add at least 1 slide."
   },
   {
     "id": "text-with-cta",
