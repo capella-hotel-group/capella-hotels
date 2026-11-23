@@ -283,6 +283,21 @@ describe('experience-tiles integration', () => {
     expect(overflowing!.getAttribute('aria-labelledby')).toBe(heading.id);
     expect(fitting!.hasAttribute('aria-labelledby')).toBe(false);
   });
+  it('publishes the tallest copy of a slide so both panels can start on the same line', () => {
+    const resize = observeResize();
+    const element = block();
+    decorate(element);
+    const slide = element.querySelector<HTMLElement>('.experience-tiles-slide')!;
+    const [short, tall] = [...slide.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
+    const body = (overlay: HTMLElement) => overlay.querySelector<HTMLElement>('.experience-tiles-body')!;
+    Object.defineProperties(body(short!), { offsetHeight: { value: 119 } });
+    Object.defineProperties(body(tall!), { offsetHeight: { value: 144 } });
+
+    resize([body(short!), body(tall!)]);
+    jest.advanceTimersByTime(16);
+
+    expect(slide.style.getPropertyValue('--experience-tiles-copy-height')).toBe('144px');
+  });
   it('holds the entrance animation until the block is scrolled into view', () => {
     const element = block();
     const reveal = observeIntersection();

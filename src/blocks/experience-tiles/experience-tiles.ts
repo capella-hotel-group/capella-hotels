@@ -62,9 +62,22 @@ function contentHeight(overlay: HTMLElement): number {
   );
 }
 
+// The desktop panels are separate boxes, so CSS cannot see the taller copy next door. Publishing the
+// tallest copy of the slide lets both panels start their copy on the same line.
+function syncCopyHeight(overlay: HTMLElement): void {
+  const slide = overlay.closest<HTMLElement>('.experience-tiles-slide');
+  if (!slide) return;
+  const tallest = Math.max(
+    0,
+    ...[...slide.querySelectorAll<HTMLElement>('.experience-tiles-overlay')].map(contentHeight),
+  );
+  slide.style.setProperty('--experience-tiles-copy-height', `${tallest}px`);
+}
+
 // Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard. A copy that fits
 // must stay out of the way: a scroll container would swallow page scrolling via overscroll containment.
 function syncOverlay(overlay: HTMLElement): void {
+  syncCopyHeight(overlay);
   const scrollable = contentHeight(overlay) > overlay.clientHeight + 1;
   overlay.classList.toggle('experience-tiles-overlay--scrollable', scrollable);
   if (scrollable) {

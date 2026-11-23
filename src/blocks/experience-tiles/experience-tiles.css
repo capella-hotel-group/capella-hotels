@@ -105,6 +105,13 @@
     padding: var(--dimension-layout-module-padding-inline-s);
 }
 
+@media (width >= 768px) {
+    /* tablet: Figma uses the block-s token (40px) under the copy instead of the inline padding */
+    .experience-tiles .experience-tiles-media {
+        padding-block-end: var(--dimension-layout-module-padding-block-s);
+    }
+}
+
 .experience-tiles .experience-tiles-media::after {
     content: '';
     position: absolute;
@@ -250,9 +257,12 @@
 .experience-tiles .experience-tiles-description {
     margin: 0;
     font-family: var(--type-font-family-body);
+    max-width: 600px;
     font-size: var(--typography-fontsize-body-m);
     font-weight: var(--type-font-weight-body-reg);
     line-height: var(--typography-line-height-body-md);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .experience-tiles .experience-tiles-eyebrow > *,
@@ -266,7 +276,7 @@
 .experience-tiles .experience-tiles-links {
     display: flex;
     align-items: center;
-    gap: var(--dimension-spacing-general-m);
+    gap: var(--dimension-spacing-general-xl);
     flex-wrap: wrap;
 }
 
@@ -287,7 +297,7 @@
     line-height: var(--typography-line-height-body-md);
     color: var(--color-text-action-inverse-default);
     text-decoration: underline;
-    text-decoration-thickness: var(--stroke-weight-s);
+    text-decoration-thickness: 7%;
     text-underline-offset: var(--experience-tiles-link-underline-offset);
     text-transform: uppercase;
 }
@@ -296,6 +306,9 @@
     flex: none;
     width: var(--stroke-weight-s);
     height: var(--dimension-spacing-general-l);
+
+    /* Figma's divider has zero layout width and paints its 1px stroke outside the box */
+    margin-inline-end: calc(var(--stroke-weight-s) * -1);
     background: var(--color-stroke-action-inverse-default);
 }
 
@@ -315,13 +328,26 @@
     }
 
     .experience-tiles .experience-tiles-media {
-        --experience-tiles-media-padding-bottom: 160px;
-
-        padding-bottom: var(--experience-tiles-media-padding-bottom);
+        justify-content: flex-start;
+        padding-block-end: var(--dimension-layout-module-padding-inline-s);
     }
 
-    .experience-tiles .experience-tiles-item--right .experience-tiles-media {
-        --experience-tiles-media-padding-bottom: 135px;
+    /* Figma starts the copy 640px down a 900px frame. The spacer asks for that share of the viewport
+       (minus the top padding it sits under) but never more than leaves room for the slide's tallest
+       copy (published by JS) above the bottom padding, so both panels start on the same line and the
+       bottom padding is always respected. Shrinking is the fallback while the copy height is unknown. */
+    .experience-tiles .experience-tiles-media::before {
+        content: '';
+        flex: 0 1000
+            clamp(
+                0px,
+                calc(71.11dvh - var(--dimension-layout-module-padding-inline-s)),
+                calc(
+                    100dvh - 2 * var(--dimension-layout-module-padding-inline-s) -
+                        var(--experience-tiles-copy-height, 0px)
+                )
+            );
+        min-height: 0;
     }
 
     .experience-tiles .experience-tiles-item--left .experience-tiles-overlay {
