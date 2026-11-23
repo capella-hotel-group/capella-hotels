@@ -7,10 +7,10 @@
     --experience-tiles-motion-easing: cubic-bezier(0.37, 0, 0.63, 1);
     --experience-tiles-text-easing: cubic-bezier(0.22, 1, 0.36, 1);
     --experience-tiles-text-offset: 16px;
-    --experience-tiles-panel-duration: 900ms;
+    --experience-tiles-panel-duration: 1100ms;
     --experience-tiles-panel-stagger: 80ms;
-    --experience-tiles-text-duration: 700ms;
-    --experience-tiles-text-delay: 680ms;
+    --experience-tiles-text-duration: 1200ms;
+    --experience-tiles-text-delay: 1150ms;
     --experience-tiles-text-exit-duration: 200ms;
     --experience-tiles-link-underline-offset: 3px;
 
@@ -143,6 +143,10 @@
     transform: translateY(var(--experience-tiles-text-offset));
     will-change: opacity, transform;
     transition: none;
+}
+
+.experience-tiles .experience-tiles-item--right .experience-tiles-overlay {
+    --experience-tiles-text-offset: 0px;
 }
 
 /* Added by JS only while the copy really overflows. A permanent scroll container would swallow page
@@ -311,8 +315,7 @@
     }
 
     .experience-tiles .experience-tiles-media {
-        /* Figma 7806:55712 — copy baseline offsets (left 189px, right 135px) */
-        --experience-tiles-media-padding-bottom: 189px;
+        --experience-tiles-media-padding-bottom: 160px;
 
         padding-bottom: var(--experience-tiles-media-padding-bottom);
     }
@@ -338,19 +341,29 @@
         transform: translateY(-100%);
     }
 
+    /* the right panel does not travel: it stays in place and fades in/out */
     .experience-tiles .experience-tiles-item--right {
-        transform: translateY(100%);
+        opacity: 0;
+        transform: translateY(0);
+        transition:
+            opacity var(--experience-tiles-panel-duration) var(--experience-tiles-motion-easing),
+            transform var(--experience-tiles-panel-duration) var(--experience-tiles-motion-easing);
     }
 
-    /* desktop mirrors each slot's own entrance side (left drops from above, so it keeps falling
-       below; right rises from below, so it keeps rising above) for the same contiguous-strip
-       reason as the mobile/tablet rule above */
+    .experience-tiles:not(.experience-tiles-pending)
+        .experience-tiles-slide[aria-hidden='false']
+        .experience-tiles-item--right {
+        opacity: 1;
+    }
+
+    /* the left panel keeps falling below, mirroring its entrance side, as a contiguous strip */
     .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--left {
         transform: translateY(100%);
     }
 
     .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--right {
-        transform: translateY(-100%);
+        opacity: 0;
+        transform: translateY(0);
     }
 }
 
