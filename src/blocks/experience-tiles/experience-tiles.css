@@ -413,11 +413,10 @@
 
 /* Reset/reuse a slide without animating it back across the track. Include text so a
    cancelled transition can finish at its final opacity/position too.
-   The `:not()` only matches the specificity the active state gained from the same guard — without
-   it these suppressions silently stop applying to the overlay. Same for the two rules below. */
-.experience-tiles:not(.experience-tiles-pending)
-    .experience-tiles-slide.experience-tiles-slide--settling
-    .experience-tiles-item,
+   Panels are never held by `--pending`, so their half must apply while it is set. The overlay half
+   carries the `:not()` only to match the specificity its active state gained from the same guard.
+   Same for the rule below. */
+.experience-tiles .experience-tiles-slide.experience-tiles-slide--settling .experience-tiles-item,
 .experience-tiles:not(.experience-tiles-pending)
     .experience-tiles-slide.experience-tiles-slide--settling
     .experience-tiles-overlay {
@@ -426,9 +425,7 @@
 
 /* crossing a breakpoint mid-page-life recomputes each item's enter/exit transform; without this,
    hidden slides would visibly sweep through the frame while the media query switches */
-.experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending)
-    .experience-tiles-slide
-    .experience-tiles-item,
+.experience-tiles.experience-tiles-resizing .experience-tiles-slide .experience-tiles-item,
 .experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending)
     .experience-tiles-slide
     .experience-tiles-overlay {

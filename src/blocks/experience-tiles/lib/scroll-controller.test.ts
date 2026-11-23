@@ -367,6 +367,18 @@ it('parks the first slide while the block waits below and the last while it wait
   window.dispatchEvent(new Event('scroll'));
   expect(controller.index).toBe(2);
 });
+it('never swaps the slide a reader has already seen when entering from below', () => {
+  const { controller } = setup(1000);
+  window.dispatchEvent(new Event('scroll'));
+  // a keyboard page-down leaves the block mostly on screen, above the alignment point, never claimed
+  y = 1300;
+  window.dispatchEvent(new Event('scroll'));
+  wheel(-40);
+  wheel(-40);
+  settled();
+  expect(y).toBe(1000);
+  expect(controller.index).toBe(0);
+});
 it('keeps your place off screen once you have used the block', () => {
   const { controller } = setup();
   wheel(40);

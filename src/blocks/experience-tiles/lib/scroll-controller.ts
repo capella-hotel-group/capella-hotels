@@ -49,6 +49,8 @@ interface Entry {
   // Side of the alignment point the block was last seen on, outside the tolerance; 0 once it has been
   // claimed, so leaving a block you used never reads as carrying the page past it.
   side: -1 | 0 | 1;
+  // Some of the block has been on screen since it was last fully off it: its slide has been seen.
+  seen: boolean;
 }
 interface WheelBurst {
   time: number;
@@ -95,13 +97,20 @@ function stepped(result: StepResult): boolean {
 }
 // While the block is fully off screen and unused, show the slide the reader will meet first, so the
 // swap to the edge slide on entry never happens in view.
-function prime(entry: Entry): void {
+// Only scroll events record `seen`: the layout a block reports while the page is still being built
+// (registration) is not where the reader actually is.
+function prime(entry: Entry, scrolled = true): void {
   if (entry.visited || entry.carousel.isBusy || !entry.block.isConnected) return;
   const { top, bottom, height } = entry.block.getBoundingClientRect();
   // A block without layout (hidden, not yet rendered) has no side of the viewport to wait on.
   if (height <= 0) return;
+  if (scrolled) entry.seen = top < window.innerHeight && bottom > 0;
   if (top >= window.innerHeight) entry.carousel.select(0);
   else if (bottom <= 0) entry.carousel.select(entry.carousel.count - 1);
+}
+// The edge slide is picked off screen; a slide the reader has already looked at is never swapped.
+function pickEdge(entry: Entry, direction: Direction): void {
+  if (!entry.visited && !entry.seen) entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
 }
 function copyAt(target: EventTarget | null, entry: Entry): HTMLElement | undefined {
   const copy = target instanceof Element ? target.closest<HTMLElement>('.experience-tiles-overlay--scrollable') : null;
@@ -189,7 +198,7 @@ function claim(entry: Entry): void {
 }
 function enter(entry: Entry, direction: Direction): void {
   // Only a first encounter picks the edge slide; coming back to a block you started keeps your place.
-  if (!entry.visited) entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
+  pickEdge(entry, direction);
   claim(entry);
   align(entry, true);
 }
@@ -256,7 +265,7 @@ function crossingIn(delta: number, excluded?: Entry): Entry | undefined {
 }
 /** A finger carrying the page stops on the block like a detent instead of dragging it past. */
 function land(entry: Entry, direction: Direction): void {
-  if (!entry.visited) entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
+  pickEdge(entry, direction);
   claim(entry);
   align(entry);
 }
@@ -370,7 +379,7 @@ function attach(): void {
   window.addEventListener(
     'scroll',
     () => {
-      entries.forEach(prime);
+      entries.forEach((entry) => prime(entry));
       if (owner && !aligned(owner) && !wheeling() && !settling() && !flinging()) {
         owner.cancelGesture();
         setOwner(undefined);
@@ -408,6 +417,7 @@ export function registerScrollController(
     visited: false,
     lastTop: initialTop,
     side: initialTop > ALIGN_TOLERANCE ? 1 : initialTop < -ALIGN_TOLERANCE ? -1 : 0,
+    seen: false,
   };
   let gesture: 'slide' | 'copy' | 'entry' | 'page' | 'held' | undefined;
   let copy: HTMLElement | undefined;
@@ -480,7 +490,7 @@ export function registerScrollController(
   });
   entry.cancelGesture = binding.cancel;
   entries.add(entry);
-  prime(entry);
+  prime(entry, false);
   attach();
   return {
     cancel: binding.cancel,
