@@ -83,6 +83,11 @@ describe('experience-tiles integration', () => {
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
   });
+  it('declares the overlay header theme', () => {
+    const element = block();
+    decorate(element);
+    expect(element.dataset.headerTheme).toBe('overlay');
+  });
   it('ignores legacy settings and never advances on its own', () => {
     const element = block(['id', 'qa', 'true', '6', 'true', 'true']);
     decorate(element);

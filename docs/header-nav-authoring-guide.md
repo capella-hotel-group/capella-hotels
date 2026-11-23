@@ -23,6 +23,9 @@ Add these components in order:
 
 - **Image** — the white/default logo. Set its alt text.
 - **Image** — the black/active logo shown while the menu is open. Set its alt text.
+- **Image** (optional) — the icon-only logo for the compact/sticky header, without the
+  Capella wordmark. It must be the third image in this section. If omitted, the header
+  inherits the third image from the shared `/nav` page.
 - **Button** — the logo link destination and accessible label. Append a target marker if needed.
 - **Text** — the language dropdown. Use an RTE bullet list with one top-level item and a
   nested list of linked languages. The top-level label is not displayed. For example:
@@ -40,6 +43,11 @@ last non-Close button link supplies the Book CTA's label, destination, and targe
 labeled **Close** are ignored. The menu uses its built-in **CLOSE** control. If no
 logo-link Button is authored, the logo falls back to the active language URL and default
 accessible label.
+
+The compact icon is recoloured white with CSS when the header overlays a full-screen block.
+This changes its colour, not its shape: a full logo containing a wordmark is not an icon-only
+asset. If neither the local nav nor shared `/nav` supplies the icon, the header logs a warning
+and retains its previous menu-logo fallback.
 
 ## 3. Section 2 — Menu
 
@@ -131,8 +139,9 @@ rendered label.
 
 ## 6. Pre-publish Checklist
 
-- [ ] Section 1 has a white logo Image, black logo Image, logo-link Button, linked
+- [ ] Section 1 has a white logo Image, black logo Image, optional icon-only Image, logo-link Button, linked
       language RTE list, and Book Button in that order
+- [ ] An icon-only logo is available as the third Image in this nav or shared `/nav`
 - [ ] Section 2 has one Text RTE and one following Hero block per destination/category
 - [ ] Each Hero has its promo image and CTA label/link
 - [ ] Every category has at least one working destination link
