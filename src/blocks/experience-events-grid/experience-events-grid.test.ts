@@ -327,7 +327,9 @@ describe('Experience Events Grid', () => {
     const root = block();
     await decorate(root);
     expect(names(root)).toEqual(['Experience 02']);
-    expect(root.querySelector<HTMLElement>('.experience-events-grid-warning')!.hidden).toBe(false);
+    const warning = root.querySelector<HTMLElement>('.experience-events-grid-warning')!;
+    expect(warning.hidden).toBe(false);
+    expect([...warning.querySelectorAll('strong')].map((node) => node.textContent)).toContain('Experience 01');
     expect(console.warn).toHaveBeenCalled();
   });
 
