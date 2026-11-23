@@ -379,6 +379,27 @@ it('never swaps the slide a reader has already seen when entering from below', (
   expect(y).toBe(1000);
   expect(controller.index).toBe(0);
 });
+it('lines a block it owned back up after a rotation reflows the page', () => {
+  const { controller, binding } = setup();
+  wheel(40);
+  expect(controller.index).toBe(1);
+  binding.beginResize();
+  y = 120;
+  window.dispatchEvent(new Event('scroll'));
+  binding.resize();
+  expect(y).toBe(0);
+  fresh();
+  wheel(40);
+  expect(controller.index).toBe(2);
+});
+it('leaves a block it did not own alone after a resize', () => {
+  const { binding } = setup(500);
+  binding.beginResize();
+  y = 120;
+  window.dispatchEvent(new Event('scroll'));
+  binding.resize();
+  expect(y).toBe(120);
+});
 it('keeps your place off screen once you have used the block', () => {
   const { controller } = setup();
   wheel(40);
@@ -400,6 +421,14 @@ it('keeps a copy gesture in the copy after reaching the bottom', () => {
   expect(y).toBe(0);
   fresh();
   wheel(40, copy);
+  expect(controller.index).toBe(1);
+});
+it('does not spend a swipe on copy that overflows by only a few pixels', () => {
+  const { block, controller } = setup();
+  const copy = block.querySelector<HTMLElement>('.experience-tiles-overlay')!;
+  Object.defineProperties(copy, { scrollHeight: { value: 202 }, clientHeight: { value: 200 } });
+  copy.classList.add('experience-tiles-overlay--scrollable');
+  swipe(copy, 120);
   expect(controller.index).toBe(1);
 });
 it('carries the page itself when a touch swipe has nowhere left to go in the block', () => {

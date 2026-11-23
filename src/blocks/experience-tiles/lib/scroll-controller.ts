@@ -116,8 +116,12 @@ function copyAt(target: EventTarget | null, entry: Entry): HTMLElement | undefin
   const copy = target instanceof Element ? target.closest<HTMLElement>('.experience-tiles-overlay--scrollable') : null;
   return copy && entry.block.contains(copy) ? copy : undefined;
 }
+// Copy left with only a sliver to scroll (a landscape phone can clip a few pixels) must not swallow a
+// whole gesture; the sliver stays reachable by keyboard.
+const COPY_MIN_TRAVEL = 8;
 function canScroll(copy: HTMLElement, delta: number): boolean {
-  return delta > 0 ? copy.scrollTop < copy.scrollHeight - copy.clientHeight - 1 : copy.scrollTop > 1;
+  const remaining = delta > 0 ? copy.scrollHeight - copy.clientHeight - copy.scrollTop : copy.scrollTop;
+  return remaining > COPY_MIN_TRAVEL;
 }
 function scrollCopy(copy: HTMLElement, delta: number): void {
   copy.scrollTop = Math.max(0, Math.min(copy.scrollHeight - copy.clientHeight, copy.scrollTop + delta));
@@ -403,12 +407,13 @@ export function registerScrollController(
 ): {
   cleanup: () => void;
   cancel: () => void;
+  beginResize: () => void;
   resize: () => void;
   snap: () => void;
   isAligned: () => boolean;
 } {
   if (carousel.count < 2 || block.closest('.adobe-ue-edit'))
-    return { cleanup() {}, cancel() {}, resize() {}, snap() {}, isAligned: () => true };
+    return { cleanup() {}, cancel() {}, beginResize() {}, resize() {}, snap() {}, isAligned: () => true };
   const initialTop = block.getBoundingClientRect().top;
   const entry: Entry = {
     block,
@@ -492,11 +497,22 @@ export function registerScrollController(
   entries.add(entry);
   prime(entry, false);
   attach();
+  // A rotation reflows the page and fires scroll events that drop ownership before the resize settles;
+  // remember whether the reader was in the block so it can be lined back up afterwards.
+  let pinned = false;
   return {
     cancel: binding.cancel,
+    beginResize() {
+      binding.cancel();
+      pinned = pinned || owner === entry;
+    },
     resize() {
       binding.cancel();
-      if (owner === entry && !suspended()) align(entry);
+      const realign = pinned || owner === entry;
+      pinned = false;
+      if (!realign || suspended()) return;
+      claim(entry);
+      align(entry);
     },
     snap() {
       if (suspended()) return;

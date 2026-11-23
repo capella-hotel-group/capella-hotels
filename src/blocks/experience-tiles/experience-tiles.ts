@@ -247,7 +247,7 @@ export default function decorate(block: HTMLElement): void {
   const clearResize = suppressTransitionsDuringResize(block, {
     onStart: () => {
       carousel.beginResize();
-      scroll.cancel();
+      scroll.beginResize();
     },
     onEnd: () => {
       carousel.endResize();
