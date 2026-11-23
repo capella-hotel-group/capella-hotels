@@ -44,18 +44,31 @@ export const SNAP_DISTANCE = 0.35;
  * Continuous input. A burst is swallowed after it has done something (entered, stepped) so momentum
  * cannot skip slides — but a hand that keeps scrolling must keep the slides moving.
  *
- * INTENT_WINDOW     wheel samples looked at. Momentum only ever decays; a delta that grows again, or a
- *                   steady run of whole mouse notches (>= NOTCH_DELTA), means the hand is still there.
+ * INTENT_WINDOW_MS  wheel speed (per ms and per event) of the latest window of this length is compared
+ * INTENT_HISTORY_MS with the window just before it (>= INTENT_RATIO) and with the first window of this
+ *                   longer history (>= INTENT_TREND). Momentum always loses speed and keeps losing it; a
+ *                   hand — trackpad or a mouse wheel turned notch after notch — holds it. Speed over
+ *                   windows, never single deltas or runs of equal ones: Chrome coalesces frames (one
+ *                   event carries two frames of travel) and quantises deltas, so a slow momentum tail
+ *                   repeats a value for a while and only the longer trend still shows it decaying.
+ *                   lower ratios: momentum reads as a hand and flings the block out — raise: a hand
+ *                   that slows a little stops stepping.
+ * INTENT_MIN_SPEED  px/ms below which the stream is a momentum tail whatever its shape.
  * REARM_MIN_MS      shortest gap between two actions of one burst, for when nothing is animating
  *                   (reduced motion); otherwise the panel animation already spaces them.
  * TOUCH_STEP        finger travel that steps the slides while the finger is still down.
  * TOUCH_CONTINUE    further travel in the same drag that asks for the next step (queued if needed).
  */
-const INTENT_WINDOW = 6;
-const NOTCH_DELTA = 50;
+const INTENT_WINDOW_MS = 150;
+const INTENT_HISTORY_MS = 600;
+const INTENT_RATIO = 0.94;
+const INTENT_TREND = 0.95;
+const INTENT_MIN_SPEED = 0.15;
 const REARM_MIN_MS = 600;
 const TOUCH_STEP = 40;
 const TOUCH_CONTINUE = 160;
+// How long after a finger lifts the browser may still be running its own fling.
+const TOUCH_MOMENTUM_MS = 3000;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
@@ -73,7 +86,7 @@ interface WheelBurst {
   total: number;
   consumed: boolean;
   actedAt: number;
-  samples: number[];
+  samples: { delta: number; time: number; span: number }[];
   copy?: HTMLElement;
   released?: Entry;
 }
@@ -85,6 +98,8 @@ let modalObserver: MutationObserver | undefined;
 let settleFrame: number | undefined;
 let settleTimer: ReturnType<typeof setTimeout> | undefined;
 let flingFrame: number | undefined;
+let lastTouchEnd = -Infinity;
+let haltedOverflow: string | undefined;
 
 function reducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -236,13 +251,34 @@ function act(current: WheelBurst, time: number): void {
   current.actedAt = time;
   current.samples = [];
 }
-function intentional(samples: number[]): boolean {
-  if (samples.length < INTENT_WINDOW) return false;
-  const recent = samples.slice(-INTENT_WINDOW);
-  const latest = recent.slice(-3);
-  const grew = recent.some((value, index) => index > 0 && value > recent[index - 1]! * 1.1 + 0.5);
-  const notches = latest.every((value) => value >= NOTCH_DELTA && value === latest[0]);
-  return (grew && Math.max(...latest) >= 4) || notches;
+// Two readings of how fast a window scrolled: per millisecond, and per event. Momentum always shows up
+// decaying in at least one of them — per millisecond when Chrome coalesces events (one carries two
+// frames of travel), per event when events arrive at an uneven rate — while a hand holds both.
+function speedsBetween(samples: WheelBurst['samples'], from: number, to: number): [number, number] {
+  let travel = 0;
+  let covered = 0;
+  let count = 0;
+  samples.forEach(({ delta, time, span }) => {
+    if (time <= from || time > to) return;
+    travel += delta;
+    covered += span;
+    count += 1;
+  });
+  return count ? [travel / covered, travel / count] : [0, 0];
+}
+function intentional(samples: WheelBurst['samples'], now: number): boolean {
+  if (!samples.length || now - samples[0]!.time < INTENT_HISTORY_MS - 10) return false;
+  const recent = speedsBetween(samples, now - INTENT_WINDOW_MS, now);
+  const before = speedsBetween(samples, now - 2 * INTENT_WINDOW_MS, now - INTENT_WINDOW_MS);
+  const start = speedsBetween(samples, now - INTENT_HISTORY_MS, now - INTENT_HISTORY_MS + INTENT_WINDOW_MS);
+  if (recent[0] < INTENT_MIN_SPEED) return false;
+  return [0, 1].every(
+    (reading) =>
+      before[reading]! > 0 &&
+      start[reading]! > 0 &&
+      recent[reading]! >= before[reading]! * INTENT_RATIO &&
+      recent[reading]! >= start[reading]! * INTENT_TREND,
+  );
 }
 function wheeling(): boolean {
   return Boolean(burst && performance.now() - burst.time < WHEEL_IDLE_MS);
@@ -268,6 +304,24 @@ function candidate(delta: number, excluded?: Entry): Entry | undefined {
   return best;
 }
 // A fast wheel notch or native momentum can carry a block across the alignment point between two events.
+/**
+ * A browser touch fling cannot be cancelled from script and would carry the page straight past a block
+ * that just caught it. Making the root unscrollable for a frame ends the fling; the scroll position
+ * stays where it is.
+ */
+function haltMomentum(): void {
+  if (haltedOverflow !== undefined || performance.now() - lastTouchEnd > TOUCH_MOMENTUM_MS) return;
+  const root = document.documentElement;
+  haltedOverflow = root.style.overflow;
+  root.style.overflow = 'hidden';
+  const restore = (): void => {
+    if (haltedOverflow === undefined) return;
+    root.style.overflow = haltedOverflow;
+    haltedOverflow = undefined;
+  };
+  requestAnimationFrame(() => requestAnimationFrame(restore));
+  setTimeout(restore, 50);
+}
 function crossed(): Entry | undefined {
   let hit: Entry | undefined;
   const reach = SNAP_DISTANCE * window.innerHeight;
@@ -357,8 +411,14 @@ function onWheel(event: WheelEvent): void {
   if (fresh) burst = { time, total: 0, consumed: false, actedAt: time, samples: [] };
   const current = burst!;
   current.time = time;
-  current.samples.push(Math.abs(delta));
-  if (current.samples.length > INTENT_WINDOW) current.samples.shift();
+  const previous = current.samples[current.samples.length - 1];
+  // each sample stands for the time since the last one (capped: a pause is not slow scrolling)
+  current.samples.push({
+    delta: Math.abs(delta),
+    time,
+    span: previous ? Math.min(50, Math.max(1, time - previous.time)) : 16,
+  });
+  while (current.samples.length && current.samples[0]!.time <= time - INTENT_HISTORY_MS - 50) current.samples.shift();
   // Chrome keeps animating its fling after preventDefault; re-settle rather than hand the page back mid-gesture.
   if (owner && !aligned(owner) && !settling()) {
     if (current.consumed) align(owner, true);
@@ -372,7 +432,7 @@ function onWheel(event: WheelEvent): void {
     !settling() &&
     !owner.carousel.isBusy &&
     time - current.actedAt >= (reducedMotion() ? REARM_MIN_MS : 0) &&
-    intentional(current.samples)
+    intentional(current.samples, time)
   ) {
     current.consumed = false;
     current.total = 0;
@@ -438,9 +498,17 @@ function attach(): void {
       }
       const slipped = crossed();
       if (!slipped || owner || settling() || (wheeling() && burst?.released === slipped) || suspended()) return;
+      haltMomentum();
       enter(slipped, (slipped.lastTop ?? 0) < 0 ? 1 : -1);
       // The rest of this burst is momentum that carried the page past; it must not also step slides.
       if (burst) act(burst, performance.now());
+    },
+    { passive: true, signal },
+  );
+  window.addEventListener(
+    'touchend',
+    () => {
+      lastTouchEnd = performance.now();
     },
     { passive: true, signal },
   );
@@ -611,6 +679,7 @@ export function registerScrollController(
         stopScrollAnimation();
         listeners?.abort();
         listeners = undefined;
+        lastTouchEnd = -Infinity;
         modalObserver?.disconnect();
         modalObserver = undefined;
       }

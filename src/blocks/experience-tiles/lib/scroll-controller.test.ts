@@ -355,6 +355,79 @@ it('still swallows trackpad inertia that outlasts the animation', () => {
   expect(y).toBe(0);
   restore();
 });
+it('swallows noisy momentum (coalesced events) after the block snaps instead of flinging out', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  let delta = 160;
+  for (let frame = 0; frame < 200; frame += 1) {
+    // Chrome coalesces frames: every fourth event carries two frames' worth after a short gap
+    const doubled = frame % 4 === 3;
+    wheel(Math.max(1, Math.round(delta)) * (doubled ? 2 : 1));
+    jest.advanceTimersByTime(frame % 4 === 2 ? 8 : 16);
+    delta *= 0.965;
+  }
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+it('swallows momentum whose deltas the browser quantises into runs of equal values', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  let delta = 160;
+  for (let frame = 0; frame < 160; frame += 1) {
+    // Chrome hands out even, doubled deltas: a slow decay repeats the same value several times
+    wheel(Math.max(2, 2 * Math.round(delta / 4) * 2));
+    jest.advanceTimersByTime(25);
+    delta *= 0.985;
+  }
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+// Recorded in Chrome after a trackpad flick snapped the block: per-event deltas keep decaying while the
+// gaps between events wander, so speed per millisecond alone briefly reads as a hand speeding up.
+const RECORDED_MOMENTUM = {
+  gaps: [
+    33, 33, 34, 34, 33, 34, 33, 35, 33, 33, 33, 33, 33, 35, 36, 39, 41, 32, 32, 34, 25, 26, 24, 28, 22, 26, 25, 25, 25,
+    25, 24, 28, 23, 24, 26, 22, 29, 24, 23, 26, 26, 24, 27, 24, 25, 24, 26, 25, 25, 26, 23, 29, 23, 24, 26, 25, 25, 24,
+    24, 25, 27, 26, 25, 24, 27, 25, 30, 26, 25, 25, 26, 25, 26, 25, 25, 26, 24, 23, 27, 23, 26, 28, 22, 24, 25, 24, 27,
+    26, 25, 26, 23, 26, 26, 23, 25, 28, 24, 29, 28, 22, 28, 25, 25, 25, 25, 25, 26, 22, 26, 25, 26, 28, 23, 27, 26, 23,
+    26, 24, 25, 25, 26, 24, 26, 25, 25, 26, 24, 24, 26, 26, 24, 24, 26, 25, 24, 26, 21, 28, 26, 24, 21, 26, 27, 24, 24,
+    28, 23, 25, 33, 20, 19, 28, 24, 26, 25, 25, 27, 25, 25, 25, 24, 23, 27, 25, 26, 22, 28, 25, 21, 28, 26, 24, 26, 25,
+    26, 24, 22, 37, 18, 21, 25, 22, 25, 28, 25, 24, 25, 26, 25, 32, 20, 21, 24, 24, 27, 26, 26, 23, 25, 25, 26, 25, 26,
+    24, 22, 21, 25, 26, 23, 28, 21, 22, 21, 25,
+  ],
+  deltas: [
+    292, 288, 284, 280, 276, 270, 266, 262, 258, 256, 252, 248, 244, 240, 236, 232, 230, 226, 222, 220, 216, 212, 210,
+    206, 204, 200, 198, 194, 192, 188, 186, 182, 180, 178, 174, 172, 170, 168, 164, 162, 160, 158, 154, 152, 150, 148,
+    146, 144, 142, 140, 138, 136, 134, 132, 130, 128, 126, 124, 122, 120, 118, 116, 114, 112, 112, 110, 108, 106, 104,
+    104, 102, 100, 98, 96, 96, 94, 92, 92, 90, 88, 88, 86, 84, 84, 82, 80, 80, 78, 78, 76, 74, 74, 72, 72, 70, 70, 68,
+    68, 66, 66, 64, 64, 62, 62, 60, 60, 58, 58, 58, 56, 56, 54, 54, 52, 52, 52, 50, 50, 50, 48, 48, 46, 46, 46, 44, 44,
+    44, 42, 42, 42, 40, 40, 40, 40, 38, 38, 38, 36, 36, 36, 36, 34, 34, 34, 34, 32, 32, 32, 32, 30, 30, 30, 30, 28, 28,
+    28, 28, 28, 26, 26, 26, 26, 26, 24, 24, 24, 24, 24, 24, 22, 22, 22, 22, 22, 22, 20, 20, 20, 20, 20, 20, 18, 18, 18,
+    18, 18, 18, 18, 18, 16, 16, 16, 16, 16, 16, 16, 16, 14, 14, 14, 14, 14, 14, 14, 14, 14, 12, 12, 12, 12, 12, 12, 12,
+    12,
+  ],
+};
+it('swallows recorded momentum that arrives at an uneven rate', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const computed = window.getComputedStyle;
+  window.getComputedStyle = jest.fn().mockReturnValue({
+    transitionProperty: 'transform',
+    transitionDuration: '600ms',
+    transitionDelay: '0ms',
+  }) as unknown as typeof window.getComputedStyle;
+  const { controller } = setup(0, 3);
+  RECORDED_MOMENTUM.deltas.forEach((delta, index) => {
+    wheel(delta);
+    jest.advanceTimersByTime(RECORDED_MOMENTUM.gaps[index]!);
+  });
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  window.getComputedStyle = computed;
+});
 it('steps as soon as the finger has travelled far enough, without waiting for release', () => {
   const { block, controller } = setup();
   touch(block, 'touchstart', 400);
@@ -412,6 +485,28 @@ it('catches a block that native scrolling carries past through a sample inside t
   fresh();
   wheel(40);
   expect(controller.index).toBe(1);
+});
+it('stops native touch momentum when it carries the page onto the block', () => {
+  setup(100);
+  const root = document.documentElement;
+  touch(document.body, 'touchend', 0);
+  y = 60;
+  window.dispatchEvent(new Event('scroll'));
+  y = 130;
+  window.dispatchEvent(new Event('scroll'));
+  expect(root.style.overflow).toBe('hidden');
+  jest.advanceTimersByTime(50);
+  expect(root.style.overflow).toBe('');
+  settled();
+  expect(y).toBe(100);
+});
+it('leaves page scrolling alone when no touch is carrying the page', () => {
+  setup(100);
+  y = 60;
+  window.dispatchEvent(new Event('scroll'));
+  y = 130;
+  window.dispatchEvent(new Event('scroll'));
+  expect(document.documentElement.style.overflow).toBe('');
 });
 it('parks the first slide while the block waits below and the last while it waits above', () => {
   const { controller } = setup(2000);
