@@ -1,4 +1,4 @@
-import type { CarouselController, Direction } from './carousel-controller';
+import type { CarouselController, Direction, StepResult } from './carousel-controller';
 import { bindGestures } from './gesture';
 
 /*
@@ -46,6 +46,9 @@ interface Entry {
   cancelGesture: () => void;
   visited: boolean;
   lastTop?: number;
+  // Side of the alignment point the block was last seen on, outside the tolerance; 0 once it has been
+  // claimed, so leaving a block you used never reads as carrying the page past it.
+  side: -1 | 0 | 1;
 }
 interface WheelBurst {
   time: number;
@@ -86,6 +89,19 @@ function edge(entry: Entry, direction: Direction): boolean {
     !entry.carousel.isBusy &&
     (direction < 0 ? entry.carousel.index === 0 : entry.carousel.index === entry.carousel.count - 1)
   );
+}
+function stepped(result: StepResult): boolean {
+  return result === 'changed' || result === 'queued';
+}
+// While the block is fully off screen and unused, show the slide the reader will meet first, so the
+// swap to the edge slide on entry never happens in view.
+function prime(entry: Entry): void {
+  if (entry.visited || entry.carousel.isBusy || !entry.block.isConnected) return;
+  const { top, bottom, height } = entry.block.getBoundingClientRect();
+  // A block without layout (hidden, not yet rendered) has no side of the viewport to wait on.
+  if (height <= 0) return;
+  if (top >= window.innerHeight) entry.carousel.select(0);
+  else if (bottom <= 0) entry.carousel.select(entry.carousel.count - 1);
 }
 function copyAt(target: EventTarget | null, entry: Entry): HTMLElement | undefined {
   const copy = target instanceof Element ? target.closest<HTMLElement>('.experience-tiles-overlay--scrollable') : null;
@@ -169,6 +185,7 @@ function align(entry: Entry, animate = false): void {
 function claim(entry: Entry): void {
   setOwner(entry);
   entry.visited = true;
+  entry.side = 0;
 }
 function enter(entry: Entry, direction: Direction): void {
   // Only a first encounter picks the edge slide; coming back to a block you started keeps your place.
@@ -211,14 +228,37 @@ function crossed(): Entry | undefined {
   const reach = SNAP_DISTANCE * window.innerHeight;
   entries.forEach((entry) => {
     const { top } = entry.block.getBoundingClientRect();
-    const previous = entry.lastTop;
     entry.lastTop = top;
-    if (hit || previous === undefined || Math.abs(top) > reach) return;
-    const down = previous > ALIGN_TOLERANCE && top < -ALIGN_TOLERANCE;
-    const up = previous < -ALIGN_TOLERANCE && top > ALIGN_TOLERANCE;
-    if (down || up) hit = entry;
+    // A sample can land inside the tolerance on the way through, so compare sides, not neighbours.
+    const side = top > ALIGN_TOLERANCE ? 1 : top < -ALIGN_TOLERANCE ? -1 : 0;
+    const previous = entry.side;
+    if (side !== 0) entry.side = side;
+    if (hit || side === 0 || previous === 0 || side === previous || Math.abs(top) > reach) return;
+    hit = entry;
   });
   return hit;
+}
+// The page is about to move by `delta`: the nearest block whose top would pass the alignment point.
+function crossingIn(delta: number, excluded?: Entry): Entry | undefined {
+  let hit: Entry | undefined;
+  let best = Infinity;
+  entries.forEach((entry) => {
+    if (entry === excluded || !entry.block.isConnected) return;
+    const { top, height } = entry.block.getBoundingClientRect();
+    if (height <= 0) return;
+    const reaches = delta > 0 ? top > 0 && top - delta <= 0 : top < 0 && top - delta >= 0;
+    if (reaches && Math.abs(top) < best) {
+      hit = entry;
+      best = Math.abs(top);
+    }
+  });
+  return hit;
+}
+/** A finger carrying the page stops on the block like a detent instead of dragging it past. */
+function land(entry: Entry, direction: Direction): void {
+  if (!entry.visited) entry.carousel.select(direction > 0 ? 0 : entry.carousel.count - 1);
+  claim(entry);
+  align(entry);
 }
 /**
  * Touch release. The track suppresses native panning, so there is no browser fling to inherit: the
@@ -294,12 +334,14 @@ function onWheel(event: WheelEvent): void {
     entry = found;
   }
   if (current.released === entry) return;
-  if (settling() || current.consumed || entry.carousel.isBusy) {
+  // A fresh gesture during a slide animation is kept as the next step; resizing still drops input.
+  const animating = entry.carousel.isAnimating;
+  if (settling() || current.consumed || (entry.carousel.isBusy && !animating)) {
     event.preventDefault();
     current.consumed = true;
     return;
   }
-  if (fresh || current.total === 0) {
+  if (!animating && (fresh || current.total === 0)) {
     const copy = copyAt(event.target, entry);
     if (copy && canScroll(copy, delta)) current.copy = copy;
   }
@@ -328,6 +370,7 @@ function attach(): void {
   window.addEventListener(
     'scroll',
     () => {
+      entries.forEach(prime);
       if (owner && !aligned(owner) && !wheeling() && !settling() && !flinging()) {
         owner.cancelGesture();
         setOwner(undefined);
@@ -357,14 +400,16 @@ export function registerScrollController(
 } {
   if (carousel.count < 2 || block.closest('.adobe-ue-edit'))
     return { cleanup() {}, cancel() {}, resize() {}, snap() {}, isAligned: () => true };
+  const initialTop = block.getBoundingClientRect().top;
   const entry: Entry = {
     block,
     carousel,
     cancelGesture: () => {},
     visited: false,
-    lastTop: block.getBoundingClientRect().top,
+    lastTop: initialTop,
+    side: initialTop > ALIGN_TOLERANCE ? 1 : initialTop < -ALIGN_TOLERANCE ? -1 : 0,
   };
-  let gesture: 'slide' | 'copy' | 'entry' | 'page' | undefined;
+  let gesture: 'slide' | 'copy' | 'entry' | 'page' | 'held' | undefined;
   let copy: HTMLElement | undefined;
   let exited: Entry | undefined;
   const binding = bindGestures(block, {
@@ -401,7 +446,15 @@ export function registerScrollController(
     },
     move(delta) {
       if (gesture === 'copy' && copy) scrollCopy(copy, delta);
-      if (gesture === 'page') scrollPage(delta);
+      if (gesture !== 'page') return;
+      const caught = crossingIn(delta, exited);
+      if (caught && !suspended()) {
+        land(caught, delta > 0 ? 1 : -1);
+        // The rest of this touch is spent; the next swipe steps the slides.
+        gesture = 'held';
+        return;
+      }
+      scrollPage(delta);
     },
     end(direction, velocity) {
       const current = gesture;
@@ -412,11 +465,11 @@ export function registerScrollController(
         return false;
       }
       return (
-        current === 'slide' &&
+        (current === 'slide' || current === 'entry') &&
         direction !== null &&
         !suspended() &&
         aligned(entry) &&
-        carousel.requestStep(direction) === 'changed'
+        stepped(carousel.requestStep(direction))
       );
     },
     cancel() {
@@ -427,6 +480,7 @@ export function registerScrollController(
   });
   entry.cancelGesture = binding.cancel;
   entries.add(entry);
+  prime(entry);
   attach();
   return {
     cancel: binding.cancel,

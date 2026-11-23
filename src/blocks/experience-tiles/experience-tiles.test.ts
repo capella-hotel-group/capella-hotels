@@ -308,6 +308,11 @@ describe('experience-tiles integration', () => {
     expect(element.classList.contains('experience-tiles-pending')).toBe(true);
     reveal([{ isIntersecting: true, intersectionRatio: 0.5 }]);
     expect(element.classList.contains('experience-tiles-pending')).toBe(false);
+    // the first reveal plays the copy quickly; the first step hands timing back to the slide transition
+    expect(element.classList.contains('experience-tiles-intro')).toBe(true);
+    element.querySelector<HTMLButtonElement>('.experience-tiles-control:last-child')!.click();
+    expect(active(element)).toBe(1);
+    expect(element.classList.contains('experience-tiles-intro')).toBe(false);
   });
   it('releases a block that is already on screen on the very first observation', () => {
     const element = block();

@@ -19,9 +19,9 @@ function isFocusVisible(element: Element | null): boolean {
 const instances = new Map<HTMLElement, { track: HTMLElement; cleanup: () => void }>();
 let removalObserver: MutationObserver | undefined;
 
-// The entrance is driven by the active slide's own CSS, so it would otherwise play at decoration
-// time, far above the fold where nobody sees it. Hold the active state back until the block is
-// actually on screen and the normal transitions do the rest.
+// The panels always sit in place, so the block scrolls in like any picture; only the copy is held
+// back until the block is on screen, then fades in quickly (`--intro`) instead of waiting for panels
+// that are already there. The first slide change hands the copy timing back to the slide transition.
 function holdEntrance(block: HTMLElement, editing: boolean): () => void {
   if (
     editing ||
@@ -44,13 +44,14 @@ function holdEntrance(block: HTMLElement, editing: boolean): () => void {
       if (!visible) return;
       observer.disconnect();
       block.classList.remove('experience-tiles-pending');
+      block.classList.add('experience-tiles-intro');
     },
     { threshold: 0.5 },
   );
   observer.observe(block);
   return () => {
     observer.disconnect();
-    block.classList.remove('experience-tiles-pending');
+    block.classList.remove('experience-tiles-pending', 'experience-tiles-intro');
   };
 }
 
@@ -200,6 +201,7 @@ export default function decorate(block: HTMLElement): void {
   let controls: CarouselControls | undefined;
   const carousel = new CarouselController(slideEls, {
     onChange: (index) => {
+      block.classList.remove('experience-tiles-intro');
       controls?.update(index);
       if (near && !editing) preloadNeighbours(slideEls, index);
     },

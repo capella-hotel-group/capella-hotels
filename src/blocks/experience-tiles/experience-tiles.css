@@ -10,7 +10,7 @@
     --experience-tiles-panel-duration: 900ms;
     --experience-tiles-panel-stagger: 80ms;
     --experience-tiles-text-duration: 1200ms;
-    --experience-tiles-text-delay: 1150ms;
+    --experience-tiles-text-delay: 600ms;
     --experience-tiles-text-exit-duration: 200ms;
     --experience-tiles-link-underline-offset: 3px;
 
@@ -26,6 +26,14 @@
     width: 100%;
     margin: 0;
     overflow: hidden;
+
+    /* slides layer with z-index during a step; keep that inside the track, under the controls */
+    isolation: isolate;
+}
+
+/* The block's first reveal: panels are already in place, so the copy follows almost at once. */
+.experience-tiles.experience-tiles-intro {
+    --experience-tiles-text-delay: 150ms;
 }
 
 /* Declared once and never swapped mid-gesture: the block drives every vertical movement itself — the
@@ -44,8 +52,23 @@
 .experience-tiles .experience-tiles-slide {
     position: absolute;
     inset: 0;
+    z-index: 0;
     display: grid;
     grid-template-rows: 1fr 1fr;
+}
+
+/* Stacking order of a step: the incoming slide covers the outgoing one going forward; going back the
+   outgoing slide lifts off on top and uncovers the previous one. Resting slides wait underneath. */
+.experience-tiles .experience-tiles-slide--leaving {
+    z-index: 1;
+}
+
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] {
+    z-index: 2;
+}
+
+.experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-slide--leaving {
+    z-index: 3;
 }
 
 .experience-tiles .experience-tiles-slot {
@@ -59,24 +82,32 @@
     pointer-events: none;
 }
 
-/* Each panel travels one slot height. Matching incoming/outgoing transforms meet exactly
-   at the slot edge, including when the right slot starts later on mobile/tablet. */
+/* Mobile/tablet stack: going forward the incoming panel slides up over the outgoing one, which drifts
+   a little upwards underneath it; going back plays exactly in reverse. `--rest` is where a resting
+   panel waits (and the incoming one starts), `--exit` is where the outgoing one ends. Panels are
+   opaque so a slide underneath never shows through while an image is still loading. */
 .experience-tiles .experience-tiles-item {
+    --experience-tiles-rest: 100%;
+    --experience-tiles-exit: -30%;
+
     position: absolute;
     inset: 0;
     overflow: hidden;
-    transform: translateY(100%);
+    background-color: var(--color-surface-brand-default);
+    transform: translateY(var(--experience-tiles-rest));
     backface-visibility: hidden;
     will-change: transform;
     transition: transform var(--experience-tiles-panel-duration) var(--experience-tiles-motion-easing);
 }
 
-/* entrance: both panels rise from below, the right one a stagger behind the left so the pair reads
-   as sequential rather than simultaneous — replays every time this slide becomes active.
-   `--pending` suppresses the whole active state rather than pinning a transform of its own: the
-   resting position differs per breakpoint (desktop parks the left panel above, not below), so
-   letting the base rules apply is the only way to be correct everywhere. */
-.experience-tiles:not(.experience-tiles-pending) .experience-tiles-slide[aria-hidden='false'] .experience-tiles-item {
+/* `data-direction` is written by the carousel (resting slides re-parked without animating). */
+.experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-item {
+    --experience-tiles-rest: -30%;
+    --experience-tiles-exit: 100%;
+}
+
+/* The right panel follows a stagger behind the left so the pair reads as sequential. */
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] .experience-tiles-item {
     transform: translateY(0);
 }
 
@@ -84,11 +115,8 @@
     transition-delay: var(--experience-tiles-panel-stagger);
 }
 
-/* the slide JS just deactivated keeps moving the SAME direction it was already travelling (up,
-   past center) instead of reversing back to its entrance side — this is what makes it read as
-   one continuous strip with the incoming slide instead of leaving a gap between them */
 .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item {
-    transform: translateY(-100%);
+    transform: translateY(var(--experience-tiles-exit));
 }
 
 .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--right {
@@ -359,25 +387,27 @@
         grid-template-rows: 1fr;
     }
 
-    /* desktop: items are full track height (one grid row, two columns) — left rests above,
-       right rests below (their off-screen resting positions, no exit animation, matches the
-       base rule); both animate in simultaneously (no stagger) since they already enter from
-       opposite directions. */
-    .experience-tiles .experience-tiles-item--left {
-        transform: translateY(-100%);
+    /* desktop strip: the two full-height columns travel in opposite directions (left down, right up
+       going forward) and the outgoing pair carries on past centre, so incoming and outgoing panels
+       meet edge to edge. Going back mirrors every position. */
+    .experience-tiles .experience-tiles-item.experience-tiles-item--left {
+        --experience-tiles-rest: -100%;
+        --experience-tiles-exit: 100%;
     }
 
-    .experience-tiles .experience-tiles-item--right {
-        transform: translateY(100%);
+    .experience-tiles .experience-tiles-item.experience-tiles-item--right {
+        --experience-tiles-rest: 100%;
+        --experience-tiles-exit: -100%;
     }
 
-    /* Each panel continues past center in its entrance direction. */
-    .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--left {
-        transform: translateY(100%);
+    .experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-item--left {
+        --experience-tiles-rest: 100%;
+        --experience-tiles-exit: -100%;
     }
 
-    .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--right {
-        transform: translateY(-100%);
+    .experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-item--right {
+        --experience-tiles-rest: -100%;
+        --experience-tiles-exit: 100%;
     }
 }
 
