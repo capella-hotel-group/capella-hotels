@@ -20,6 +20,35 @@ const PANEL_ID = 'header-menu-panel';
 const SCROLLED_VIEWPORT_RATIO = 0.45;
 const LANGUAGE_LABEL = 'Language';
 
+function watchHeaderTheme(header: HTMLElement): void {
+  let frame = 0;
+  const update = (): void => {
+    frame = 0;
+    const probe = header.getBoundingClientRect().bottom - 1;
+    const match = [...document.querySelectorAll<HTMLElement>('[data-header-theme]')].find((element) => {
+      const { top, bottom } = element.getBoundingClientRect();
+      return top <= probe && probe < bottom;
+    });
+    const theme = match?.dataset.headerTheme;
+    if (header.dataset.theme === theme) return;
+    if (theme) header.dataset.theme = theme;
+    else delete header.dataset.theme;
+  };
+  const schedule = (): void => {
+    if (!frame) frame = requestAnimationFrame(update);
+  };
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  new MutationObserver(schedule).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['data-header-theme'],
+  });
+  schedule();
+}
+
 // Marks a link as opening a new tab and tells assistive technology about it.
 function applyNewTab(anchor: HTMLAnchorElement): void {
   anchor.target = '_blank';
@@ -837,10 +866,14 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     headerElement.style.display = 'none';
   };
 
+  let loadedNavPath = navPath;
   let fragment = navPath ? await loadFragment(navPath) : null;
   const fallbackPaths = [...new Set([getSiblingNavPath(), `${getFragmentBasePath()}/nav`, '/nav'])];
   for (const path of fallbackPaths) {
-    if (!fragment) fragment = await loadFragment(path);
+    if (!fragment) {
+      fragment = await loadFragment(path);
+      if (fragment) loadedNavPath = path;
+    }
   }
   if (!fragment) {
     hide();
@@ -870,6 +903,16 @@ export default async function decorate(block: HTMLElement): Promise<void> {
 
   // Image order in /nav: default logo, menu-open logo, scroll icon.
   const [logoImg, logoImgDark, scrollIcon] = chromeSection.querySelectorAll('picture img');
+  let scrollLogoSrc = scrollIcon?.getAttribute('src') ?? '';
+  if (logoImg && !scrollLogoSrc) {
+    const sharedNav = loadedNavPath === '/nav' ? fragment : await loadFragment('/nav');
+    const sharedChrome = sharedNav?.querySelector('.nav-top') ? null : sharedNav?.querySelector(':scope > div.section');
+    scrollLogoSrc = sharedChrome?.querySelectorAll('picture img')[2]?.getAttribute('src') ?? '';
+    if (!scrollLogoSrc) {
+      console.warn('[header] Icon-only logo missing. Add a third logo image to the nav or shared /nav.');
+      scrollLogoSrc = logoImgDark?.getAttribute('src') ?? '';
+    }
+  }
   const chromeLinks = [...chromeSection.querySelectorAll<HTMLAnchorElement>('.default-content-wrapper > p > a')];
   const logoLinkAnchor = chromeLinks[0];
   const { label: logoLinkLabel, marker: logoLinkMarker } = splitMarker(logoLinkAnchor?.textContent ?? '');
@@ -886,8 +929,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     logoImg?.getAttribute('alt') ?? '',
     logoImgDark?.getAttribute('src') ?? '',
     logoImgDark?.getAttribute('alt') ?? '',
-    // The scrolled header sits on a cream surface; falls back to the menu-open logo.
-    (scrollIcon ?? logoImgDark)?.getAttribute('src') ?? '',
+    scrollLogoSrc,
     logoLinkAnchor?.getAttribute('href') || activeLang.href,
     logoLinkLabel,
   );
@@ -959,5 +1001,6 @@ export default async function decorate(block: HTMLElement): Promise<void> {
       headerElement.classList.toggle('is-scrolled', window.scrollY > window.innerHeight * SCROLLED_VIEWPORT_RATIO);
     window.addEventListener('scroll', updateScrolled, { passive: true });
     updateScrolled();
+    watchHeaderTheme(headerElement);
   }
 }

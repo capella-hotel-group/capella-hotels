@@ -92,6 +92,7 @@ export default function decorate(block: HTMLElement): void {
   const slides = parseSlides(itemRows);
   if (!slides.length) return;
 
+  block.dataset.headerTheme = 'overlay';
   const track = document.createElement('ul');
   track.className = 'experience-tiles-track';
   slides.forEach((slide, index) => track.append(buildSlide(slide, index)));

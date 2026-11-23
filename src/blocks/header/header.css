@@ -1043,6 +1043,44 @@ header.is-scrolled .header-cta {
     background: var(--color-surface-action-default, #1b364b);
 }
 
+body:not([data-hero-intro='intro']) header.is-scrolled[data-theme='overlay']:not(:has(.header-menu-panel.is-open)) {
+    --site-header-focus: #fff;
+
+    background: transparent;
+
+    .header-menu-toggle,
+    .header-lang-trigger,
+    .header-logo {
+        color: var(--color-text-action-inverse-default, #fff);
+    }
+
+    .header-lang-trigger:hover,
+    .header-lang-trigger[aria-expanded='true'] {
+        color: var(--color-text-action-inverse-hover, #f7f7f7);
+    }
+
+    .header-logo img {
+        filter: brightness(0) invert(1);
+    }
+
+    .header-cta {
+        color: var(--color-text-on-action-inverse-default, #1b364b);
+        background: var(--color-surface-action-inverse-default, #fff);
+    }
+
+    .header-cta:hover {
+        background: var(--color-surface-action-inverse-hover, #efeeef);
+    }
+
+    .header-cta:focus-visible {
+        background: var(--color-surface-action-inverse-focused, #dad9da);
+    }
+
+    .header-cta:active {
+        background: var(--color-surface-action-inverse-pressed, #deddde);
+    }
+}
+
 /* Cinematic hero intro (hero-destination video variant): the off-white intro surface would hide
    the white header, so mirror the open-menu theme until the hero has expanded ("done"). */
 body[data-hero-intro='intro'] header .header-menu-toggle,

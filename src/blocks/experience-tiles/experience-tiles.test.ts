@@ -64,6 +64,11 @@ describe('experience-tiles integration', () => {
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
   });
+  it('declares the overlay header theme', () => {
+    const element = block();
+    decorate(element);
+    expect(element.dataset.headerTheme).toBe('overlay');
+  });
   it('ignores legacy settings and renders no navigation or automatic changes', () => {
     const element = block(['id', 'qa', 'true', '6', 'true', 'true']);
     decorate(element);
@@ -110,17 +115,23 @@ describe('experience-tiles integration', () => {
     decorate(element);
     expect(element.querySelector('button')).toBeNull();
     expect(element.hasAttribute('tabindex')).toBe(false);
-    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
+    expect(element.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      false,
+    );
   });
   it('claims the vertical touch axis only where it owns page scrolling', () => {
     const owned = block();
     decorate(owned);
-    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(true);
+    expect(owned.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      true,
+    );
 
     document.body.classList.add('adobe-ue-edit');
     const edited = block();
     decorate(edited);
-    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(false);
+    expect(edited.querySelector('.experience-tiles-track')!.classList.contains('experience-tiles-track--scroll')).toBe(
+      false,
+    );
     document.body.classList.remove('adobe-ue-edit');
   });
   it('lets the keyboard reach copy that overflows its panel', () => {
@@ -197,7 +208,9 @@ describe('experience-tiles integration', () => {
 
     decorate(element);
 
-    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe('Nature guide');
+    expect(element.querySelector('.experience-tiles-item--right .experience-tiles-headline')?.textContent).toBe(
+      'Nature guide',
+    );
     expect(element.querySelector('.experience-tiles-description')?.textContent).toBe('Discover the island with Ketut.');
   });
 
