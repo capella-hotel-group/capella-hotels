@@ -40,6 +40,22 @@ const SETTLE_MS_PER_PX = 2;
 const FLING_DECAY = 0.95;
 const FLING_MIN_SPEED = 0.02;
 export const SNAP_DISTANCE = 0.35;
+/*
+ * Continuous input. A burst is swallowed after it has done something (entered, stepped) so momentum
+ * cannot skip slides — but a hand that keeps scrolling must keep the slides moving.
+ *
+ * INTENT_WINDOW     wheel samples looked at. Momentum only ever decays; a delta that grows again, or a
+ *                   steady run of whole mouse notches (>= NOTCH_DELTA), means the hand is still there.
+ * REARM_MIN_MS      shortest gap between two actions of one burst, for when nothing is animating
+ *                   (reduced motion); otherwise the panel animation already spaces them.
+ * TOUCH_STEP        finger travel that steps the slides while the finger is still down.
+ * TOUCH_CONTINUE    further travel in the same drag that asks for the next step (queued if needed).
+ */
+const INTENT_WINDOW = 6;
+const NOTCH_DELTA = 50;
+const REARM_MIN_MS = 600;
+const TOUCH_STEP = 40;
+const TOUCH_CONTINUE = 160;
 interface Entry {
   block: HTMLElement;
   carousel: CarouselController;
@@ -56,6 +72,8 @@ interface WheelBurst {
   time: number;
   total: number;
   consumed: boolean;
+  actedAt: number;
+  samples: number[];
   copy?: HTMLElement;
   released?: Entry;
 }
@@ -212,6 +230,20 @@ function reset(): void {
   burst = undefined;
   entries.forEach((entry) => entry.cancelGesture());
 }
+// The burst just did something: whatever follows is momentum until the hand proves otherwise.
+function act(current: WheelBurst, time: number): void {
+  current.consumed = true;
+  current.actedAt = time;
+  current.samples = [];
+}
+function intentional(samples: number[]): boolean {
+  if (samples.length < INTENT_WINDOW) return false;
+  const recent = samples.slice(-INTENT_WINDOW);
+  const latest = recent.slice(-3);
+  const grew = recent.some((value, index) => index > 0 && value > recent[index - 1]! * 1.1 + 0.5);
+  const notches = latest.every((value) => value >= NOTCH_DELTA && value === latest[0]);
+  return (grew && Math.max(...latest) >= 4) || notches;
+}
 function wheeling(): boolean {
   return Boolean(burst && performance.now() - burst.time < WHEEL_IDLE_MS);
 }
@@ -322,13 +354,29 @@ function onWheel(event: WheelEvent): void {
   const direction: Direction = delta > 0 ? 1 : -1;
   const time = performance.now();
   const fresh = !burst || time - burst.time >= WHEEL_IDLE_MS;
-  if (fresh) burst = { time, total: 0, consumed: false };
+  if (fresh) burst = { time, total: 0, consumed: false, actedAt: time, samples: [] };
   const current = burst!;
   current.time = time;
+  current.samples.push(Math.abs(delta));
+  if (current.samples.length > INTENT_WINDOW) current.samples.shift();
   // Chrome keeps animating its fling after preventDefault; re-settle rather than hand the page back mid-gesture.
   if (owner && !aligned(owner) && !settling()) {
     if (current.consumed) align(owner, true);
     else setOwner(undefined);
+  }
+  // A hand still scrolling once the block is ready again takes the next step (or leaves at the edge).
+  if (
+    current.consumed &&
+    owner &&
+    aligned(owner) &&
+    !settling() &&
+    !owner.carousel.isBusy &&
+    time - current.actedAt >= (reducedMotion() ? REARM_MIN_MS : 0) &&
+    intentional(current.samples)
+  ) {
+    current.consumed = false;
+    current.total = 0;
+    current.samples = [];
   }
   let entry = owner;
   if (!entry) {
@@ -339,7 +387,7 @@ function onWheel(event: WheelEvent): void {
       // One alignment per gesture: a scroll that cannot settle must not keep re-selecting the edge slide.
       if (!current.consumed) {
         enter(found, direction);
-        current.consumed = true;
+        act(current, time);
       }
       return;
     }
@@ -373,7 +421,7 @@ function onWheel(event: WheelEvent): void {
   current.total += delta;
   if (Math.abs(current.total) < WHEEL_THRESHOLD) return;
   entry.carousel.requestStep(direction);
-  current.consumed = true;
+  act(current, time);
 }
 function attach(): void {
   if (listeners) return;
@@ -392,7 +440,7 @@ function attach(): void {
       if (!slipped || owner || settling() || (wheeling() && burst?.released === slipped) || suspended()) return;
       enter(slipped, (slipped.lastTop ?? 0) < 0 ? 1 : -1);
       // The rest of this burst is momentum that carried the page past; it must not also step slides.
-      if (burst) burst.consumed = true;
+      if (burst) act(burst, performance.now());
     },
     { passive: true, signal },
   );
@@ -427,11 +475,36 @@ export function registerScrollController(
   let gesture: 'slide' | 'copy' | 'entry' | 'page' | 'held' | undefined;
   let copy: HTMLElement | undefined;
   let exited: Entry | undefined;
+  let touching = false;
+  // Finger travel since the last step of this drag, and whether the drag has stepped yet.
+  let travel = 0;
+  let fired = false;
+  // A drag steps the slides as it goes; out of slides, it carries the page on instead of stalling.
+  const drive = (delta: number): void => {
+    travel += delta;
+    if (Math.abs(travel) < (fired ? TOUCH_CONTINUE : TOUCH_STEP)) return;
+    const direction: Direction = travel > 0 ? 1 : -1;
+    travel = 0;
+    if (suspended() || !aligned(entry)) return;
+    const result = carousel.requestStep(direction);
+    if (stepped(result)) {
+      fired = true;
+      return;
+    }
+    if (result !== 'edge' || !touching) return;
+    setOwner(undefined);
+    exited = entry;
+    stopScrollAnimation();
+    gesture = 'page';
+  };
   const binding = bindGestures(block, {
     begin(target, direction, touch) {
       gesture = undefined;
       copy = undefined;
       exited = undefined;
+      touching = touch;
+      travel = 0;
+      fired = false;
       if (suspended()) return false;
       const blocked = Boolean(owner && owner !== entry && aligned(owner));
       if (!blocked && aligned(entry)) {
@@ -461,6 +534,10 @@ export function registerScrollController(
     },
     move(delta) {
       if (gesture === 'copy' && copy) scrollCopy(copy, delta);
+      if (gesture === 'slide' || gesture === 'entry') {
+        drive(delta);
+        return;
+      }
       if (gesture !== 'page') return;
       const caught = crossingIn(delta, exited);
       if (caught && !suspended()) {
@@ -479,6 +556,8 @@ export function registerScrollController(
         fling(velocity, exited);
         return false;
       }
+      // The drag already stepped while the finger was down; the lift only has to swallow the tap.
+      if ((current === 'slide' || current === 'entry') && fired) return true;
       return (
         (current === 'slide' || current === 'entry') &&
         direction !== null &&

@@ -326,6 +326,61 @@ it('queues one fresh wheel gesture while a step is animating and swallows its in
   expect(controller.index).toBe(3);
   restore();
 });
+it('keeps stepping while the wheel keeps turning, then hands the page back at the last slide', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  const steps: number[] = [];
+  let elapsed = 0;
+  // one uninterrupted burst: a mouse wheel spun for 4s, never quiet for WHEEL_IDLE_MS
+  while (elapsed < 4000) {
+    wheel(100);
+    jest.advanceTimersByTime(60);
+    elapsed += 60;
+    if (steps[steps.length - 1] !== controller.index) steps.push(controller.index);
+  }
+  expect(steps).toEqual([1, 2]);
+  expect(y).toBeGreaterThan(0);
+  restore();
+});
+it('still swallows trackpad inertia that outlasts the animation', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  let delta = 70;
+  for (let frame = 0; frame < 160; frame += 1) {
+    wheel(Math.max(1, Math.round(delta)));
+    jest.advanceTimersByTime(16);
+    delta *= 0.97;
+  }
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+it('steps as soon as the finger has travelled far enough, without waiting for release', () => {
+  const { block, controller } = setup();
+  touch(block, 'touchstart', 400);
+  touch(block, 'touchmove', 380);
+  touch(block, 'touchmove', 350);
+  expect(controller.index).toBe(1);
+  touch(block, 'touchend', 350);
+  expect(controller.index).toBe(1);
+});
+it('keeps stepping during one long drag and carries the page once the slides run out', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 3);
+  let position = 800;
+  touch(block, 'touchstart', position);
+  const seen: number[] = [];
+  for (let move = 0; move < 120; move += 1) {
+    position -= 6;
+    touch(block, 'touchmove', position);
+    jest.advanceTimersByTime(25);
+    if (seen[seen.length - 1] !== controller.index) seen.push(controller.index);
+  }
+  touch(block, 'touchend', position);
+  expect(seen).toEqual([0, 1, 2]);
+  expect(y).toBeGreaterThan(0);
+  restore();
+});
 it('turns a swipe made during an animation into the next step', () => {
   const restore = animated();
   const { block, controller } = setup();
