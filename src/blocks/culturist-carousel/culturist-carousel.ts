@@ -213,135 +213,454 @@ function buildCarouselCard(card: Record<string, any>): HTMLLIElement {
   return slide;
 }
 
-async function renderGalleryCarousel(carouselCol: HTMLElement, cfPath: string): Promise<void> {
+const CARD_SELECTOR = '.culturist-carousel-carousel-card';
+const REAL_CARD_SELECTOR = `${CARD_SELECTOR}:not([data-clone])`;
+const SETTLE_DELAY_MS = 120;
+const INTERACTION_RESUME_MS = 4000;
+
+interface CarouselNavigator {
+  reset: () => void;
+}
+
+const navigators = new WeakMap<HTMLElement, CarouselNavigator>();
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+}
+
+// Includes loop clones: they are scroll positions the track can rest on
+function getSlides(track: HTMLElement): HTMLElement[] {
+  return [...track.querySelectorAll<HTMLElement>(CARD_SELECTOR)];
+}
+
+function getRealSlides(track: HTMLElement): HTMLElement[] {
+  return [...track.querySelectorAll<HTMLElement>(REAL_CARD_SELECTOR)];
+}
+
+// Loop clones are visual copies: hidden from assistive tech and the tab order, but still clickable
+function cloneSlide(slide: HTMLElement): HTMLElement {
+  const clone = slide.cloneNode(true) as HTMLElement;
+  clone.dataset.clone = '';
+  clone.setAttribute('aria-hidden', 'true');
+  clone.classList.remove('is-active');
+  clone.querySelectorAll('a').forEach((link) => link.setAttribute('tabindex', '-1'));
+  return clone;
+}
+
+function slideOffset(track: HTMLElement, slide: HTMLElement): number {
+  const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+  const offset = slide.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+  return Math.min(Math.max(0, Math.round(offset)), maxScrollLeft);
+}
+
+function nearestSlideIndex(track: HTMLElement, slides: HTMLElement[]): number {
+  let nearest = 0;
+  let closestDistance = Infinity;
+  slides.forEach((slide, index) => {
+    const distance = Math.abs(slideOffset(track, slide) - track.scrollLeft);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      nearest = index;
+    }
+  });
+  return nearest;
+}
+
+// Mobile has no hover, so the leftmost card shows its description by default (design request CAP-114)
+function markActiveSlide(track: HTMLElement, activeSlide?: HTMLElement): void {
+  track.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach((slide) => {
+    slide.classList.toggle('is-active', slide === activeSlide);
+  });
+}
+
+// Scrolls without smooth animation or snap interference, used for resets and re-alignment
+function setScrollInstant(track: HTMLElement, left: number): void {
+  track.style.scrollSnapType = 'none';
+  track.style.scrollBehavior = 'auto';
+  track.scrollLeft = left;
+  track.style.scrollSnapType = '';
+  track.style.scrollBehavior = '';
+}
+
+interface CarouselOptions {
+  loop: boolean;
+  autoplayMs: number;
+}
+
+// Author toggles arrive as block classes (classes_loop -> "loop", classes_autoplay -> "autoplay-6s"), never as rows
+function readCarouselOptions(block: Element): CarouselOptions {
+  const classes = [...block.classList];
+  const autoplayClass = classes.map((name) => /^autoplay-(\d+)s$/.exec(name)).find(Boolean);
+  const seconds = autoplayClass ? Number(autoplayClass[1]) : 0;
+  return {
+    loop: classes.includes('loop'),
+    autoplayMs: seconds > 0 ? seconds * 1000 : 0,
+  };
+}
+
+function createNavigator(
+  track: HTMLElement,
+  prevBtn: HTMLButtonElement,
+  nextBtn: HTMLButtonElement,
+  options: CarouselOptions,
+): CarouselNavigator {
+  const carouselCol = track.parentElement as HTMLElement;
+  // Index into getSlides() (clones included) of the slide the carousel is at, or animating towards
+  let currentIndex = 0;
+  // Loop clones before the first real card; 0 when not looping
+  let lead = 0;
+  let isProgrammatic = false;
+  let isTouching = false;
+  let settleTimer: number | undefined;
+  let frame = 0;
+
+  const realCount = () => getRealSlides(track).length;
+  const loops = () => lead > 0;
+  const realIndex = () => {
+    const count = realCount();
+    return count ? (((currentIndex - lead) % count) + count) % count : 0;
+  };
+  const atStart = () => realIndex() === 0;
+  const atEnd = () => realIndex() >= realCount() - 1;
+
+  const updateButtons = () => {
+    prevBtn.disabled = !loops() && atStart();
+    nextBtn.disabled = !loops() && atEnd();
+  };
+
+  // Loop mode surrounds the real cards with whole copies of the set, enough to fill the visible width on each side
+  const syncClones = () => {
+    const real = getRealSlides(track);
+    const count = real.length;
+    const logicalIndex = realIndex();
+    let perSide = 0;
+    if (options.loop && count > 1) {
+      const stride = real[1]!.getBoundingClientRect().left - real[0]!.getBoundingClientRect().left;
+      const visible = stride > 0 ? Math.ceil(track.clientWidth / stride) : 0;
+      perSide = count * Math.ceil((visible + 2) / count);
+    }
+    const clones = track.querySelectorAll(`${CARD_SELECTOR}[data-clone]`);
+    if (clones.length !== perSide * 2) {
+      clones.forEach((clone) => clone.remove());
+      const before: HTMLElement[] = [];
+      const after: HTMLElement[] = [];
+      for (let i = 0; i < perSide; i += 1) {
+        before.push(cloneSlide(real[i % count]!));
+        after.push(cloneSlide(real[i % count]!));
+      }
+      track.prepend(...before);
+      track.append(...after);
+    }
+    lead = perSide;
+    currentIndex = lead + logicalIndex;
+    track.classList.toggle('is-looping', loops());
+  };
+
+  // Swaps a clone for its identical real card by shifting scrollLeft; the visible picture doesn't change
+  const recenter = () => {
+    if (!loops()) return;
+    const target = lead + realIndex();
+    if (target === currentIndex) return;
+    const slides = getSlides(track);
+    const from = slides[currentIndex];
+    const to = slides[target];
+    if (!from || !to) return;
+    const shift = to.getBoundingClientRect().left - from.getBoundingClientRect().left;
+    track.classList.add('is-jumping');
+    setScrollInstant(track, track.scrollLeft + shift);
+    currentIndex = target;
+    markActiveSlide(track, to);
+    // Flush styles so the moved is-active state doesn't replay the description fade
+    track.getBoundingClientRect();
+    track.classList.remove('is-jumping');
+  };
+
+  const goTo = (index: number, smooth = true) => {
+    const slides = getSlides(track);
+    if (!slides.length) return;
+    const instant = !smooth || prefersReducedMotion();
+    currentIndex = Math.min(Math.max(index, 0), slides.length - 1);
+    // Nothing animates on an instant move, so land straight on the real card rather than a clone
+    if (instant && loops()) currentIndex = lead + realIndex();
+    const slide = slides[currentIndex]!;
+    const target = slideOffset(track, slide);
+    markActiveSlide(track, slide);
+    updateButtons();
+    if (instant) {
+      setScrollInstant(track, target);
+      return;
+    }
+    if (Math.abs(track.scrollLeft - target) < 1) return;
+    isProgrammatic = true;
+    track.scrollTo({ left: target, behavior: 'smooth' });
+  };
+
+  // Returns false when the step is blocked (bounded carousel at an end)
+  const step = (direction: 1 | -1): boolean => {
+    const count = realCount();
+    if (count < 2) return false;
+    if (loops()) {
+      // Rapid clicks can outrun the settle; re-anchor on the real cards so the clones never run out
+      recenter();
+      goTo(currentIndex + direction);
+      return true;
+    }
+    const nextIndex = currentIndex + direction;
+    if (nextIndex < 0 || nextIndex >= count) return false;
+    goTo(nextIndex);
+    return true;
+  };
+
+  // ---- Autoplay -------------------------------------------------------------
+  // Autoplay runs only while no pause reason is active; each reason is tracked independently
+  const pauseReasons = new Set<string>();
+  let autoplayTimer: number | undefined;
+  let interactionTimer: number | undefined;
+  let userPaused = false;
+  let autoplayEnded = false;
+  let autoplayBtn: HTMLButtonElement | null = null;
+
+  const autoplayAvailable = () => options.autoplayMs > 0 && realCount() > 1 && !prefersReducedMotion();
+
+  const updateAutoplayButton = () => {
+    if (!autoplayBtn) return;
+    autoplayBtn.hidden = !autoplayAvailable();
+    const playing = !userPaused && !autoplayEnded;
+    autoplayBtn.classList.toggle('is-paused', !playing);
+    autoplayBtn.setAttribute('aria-label', playing ? 'Pause carousel autoplay' : 'Play carousel autoplay');
+  };
+
+  const stopAutoplayTimer = () => {
+    window.clearTimeout(autoplayTimer);
+    autoplayTimer = undefined;
+  };
+
+  const scheduleAutoplay = () => {
+    stopAutoplayTimer();
+    if (!autoplayAvailable() || userPaused || autoplayEnded || pauseReasons.size) return;
+    autoplayTimer = window.setTimeout(() => {
+      autoplayTimer = undefined;
+      if (!step(1)) {
+        // Bounded carousel: autoplay finishes on the last card
+        autoplayEnded = true;
+        updateAutoplayButton();
+        return;
+      }
+      if (!loops() && atEnd()) {
+        autoplayEnded = true;
+        updateAutoplayButton();
+        return;
+      }
+      scheduleAutoplay();
+    }, options.autoplayMs);
+  };
+
+  const pause = (reason: string) => {
+    pauseReasons.add(reason);
+    stopAutoplayTimer();
+  };
+
+  const resume = (reason: string) => {
+    pauseReasons.delete(reason);
+    scheduleAutoplay();
+  };
+
+  // Swipes, drags and wheel scrolling pause autoplay until the user has been idle for a moment
+  const noteInteraction = () => {
+    if (!options.autoplayMs) return;
+    pause('interaction');
+    window.clearTimeout(interactionTimer);
+    interactionTimer = window.setTimeout(() => resume('interaction'), INTERACTION_RESUME_MS);
+  };
+
+  if (options.autoplayMs > 0) {
+    autoplayBtn = document.createElement('button');
+    autoplayBtn.type = 'button';
+    autoplayBtn.className = 'culturist-carousel-carousel-autoplay';
+    autoplayBtn.addEventListener('click', () => {
+      if (autoplayEnded) {
+        // Restart a finished bounded autoplay from the first card
+        autoplayEnded = false;
+        userPaused = false;
+        goTo(0);
+      } else {
+        userPaused = !userPaused;
+      }
+      updateAutoplayButton();
+      scheduleAutoplay();
+    });
+    carouselCol.append(autoplayBtn);
+
+    carouselCol.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'mouse') pause('hover');
+    });
+    carouselCol.addEventListener('pointerleave', (event) => {
+      if (event.pointerType === 'mouse') resume('hover');
+    });
+    // Keyboard focus inside the carousel pauses; the play/pause button itself must not, or "Play" could never resume
+    carouselCol.addEventListener('focusin', (event) => {
+      const target = event.target as HTMLElement;
+      if (target === autoplayBtn) resume('focus');
+      else if (target.matches(':focus-visible')) pause('focus');
+    });
+    carouselCol.addEventListener('focusout', (event) => {
+      if (!carouselCol.contains(event.relatedTarget as Node | null)) resume('focus');
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause('hidden');
+      else resume('hidden');
+    });
+    if ('IntersectionObserver' in window) {
+      // Start paused until the observer confirms the carousel is on screen
+      pauseReasons.add('offscreen');
+      new IntersectionObserver(([entry]) => {
+        if (entry?.isIntersecting) resume('offscreen');
+        else pause('offscreen');
+      }).observe(carouselCol);
+    }
+  }
+
+  // ---- Native scroll sync (tablet + mobile scroll natively, desktop via the arrows) ----
+  const settle = () => {
+    isProgrammatic = false;
+    const slides = getSlides(track);
+    currentIndex = nearestSlideIndex(track, slides);
+    markActiveSlide(track, slides[currentIndex]);
+    // Moving scrollLeft under a finger fights the gesture on iOS, so wait for touchend
+    if (!isTouching) recenter();
+    updateButtons();
+  };
+
+  track.addEventListener(
+    'scroll',
+    () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        if (isProgrammatic) return;
+        const slides = getSlides(track);
+        markActiveSlide(track, slides[nearestSlideIndex(track, slides)]);
+      });
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(settle, SETTLE_DELAY_MS);
+    },
+    { passive: true },
+  );
+
+  track.addEventListener(
+    'touchstart',
+    () => {
+      isTouching = true;
+      noteInteraction();
+    },
+    { passive: true },
+  );
+
+  const endTouch = () => {
+    isTouching = false;
+    noteInteraction();
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(settle, SETTLE_DELAY_MS);
+  };
+  track.addEventListener('touchend', endTouch, { passive: true });
+  track.addEventListener('touchcancel', endTouch, { passive: true });
+
+  track.addEventListener(
+    'wheel',
+    (event) => {
+      // Vertical wheel scrolls the page, it isn't carousel interaction
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) noteInteraction();
+    },
+    { passive: true },
+  );
+
+  // Tabbing to an off-screen card lets the browser scroll the clipped track; snap back onto the card grid
+  track.addEventListener('focusin', (event) => {
+    const slide = (event.target as HTMLElement).closest<HTMLElement>(CARD_SELECTOR);
+    const index = slide ? getSlides(track).indexOf(slide) : -1;
+    if (index >= 0 && index !== currentIndex) goTo(index);
+  });
+
+  // Card widths change across breakpoints (and the block is laid out only after decorate),
+  // so re-size the clone sets and re-align to the current card without animating
+  const realign = () => {
+    syncClones();
+    goTo(currentIndex, false);
+  };
+  let resizeFrame = 0;
+  const scheduleRealign = () => {
+    window.cancelAnimationFrame(resizeFrame);
+    resizeFrame = window.requestAnimationFrame(realign);
+  };
+  if (typeof ResizeObserver === 'function') new ResizeObserver(scheduleRealign).observe(track);
+  else window.addEventListener('resize', scheduleRealign);
+
+  // A manual step restarts the autoplay countdown so the next auto-advance never comes right after a click
+  prevBtn.addEventListener('click', () => {
+    step(-1);
+    scheduleAutoplay();
+  });
+  nextBtn.addEventListener('click', () => {
+    step(1);
+    scheduleAutoplay();
+  });
+
+  return {
+    reset: () => {
+      window.clearTimeout(settleTimer);
+      isProgrammatic = false;
+      autoplayEnded = false;
+      lead = 0;
+      currentIndex = 0;
+      realign();
+      updateButtons();
+      updateAutoplayButton();
+      scheduleAutoplay();
+    },
+  };
+}
+
+async function renderGalleryCarousel(
+  carouselCol: HTMLElement,
+  cfPath: string,
+  options: CarouselOptions,
+): Promise<void> {
   const track = carouselCol.querySelector<HTMLElement>('.culturist-carousel-carousel-track');
   const prevBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-prev');
   const nextBtn = carouselCol.querySelector<HTMLButtonElement>('.culturist-carousel-carousel-next');
   if (!track || !prevBtn || !nextBtn) return;
+
+  let navigator = navigators.get(track);
+  if (!navigator) {
+    navigator = createNavigator(track, prevBtn, nextBtn, options);
+    navigators.set(track, navigator);
+  }
 
   const cfData = await fetchCFDetails(cfPath);
   track.innerHTML = '';
 
   // Skip any null/empty entries so one bad card doesn't break the rest
   const cards: Record<string, any>[] = (cfData?.cardContentReference || []).filter(Boolean);
-  if (!cards.length) {
-    track.textContent = 'No content';
-    carouselCol.classList.add('culturist-carousel-carousel--empty');
-    return;
-  }
-
-  carouselCol.classList.remove('culturist-carousel-carousel--empty');
+  const slides: HTMLLIElement[] = [];
   cards.forEach((card) => {
     try {
-      track.append(buildCarouselCard(card));
+      const slide = buildCarouselCard(card);
+      // A card with no image and no text would be an empty grey tile
+      if (slide.querySelector('.culturist-carousel-card-content')?.childElementCount) slides.push(slide);
     } catch (error) {
       console.error('[culturist-carousel] Skipping malformed card', card, error);
     }
   });
-  track.scrollLeft = 0;
+  carouselCol.classList.toggle('culturist-carousel-carousel--empty', !slides.length);
+  if (slides.length) track.append(...slides);
+  else track.textContent = 'No content';
 
-  const hasMultiple = cards.length > 2;
+  // Even two cards overflow on desktop (the second only peeks), so arrows are needed from two up
+  const hasMultiple = slides.length > 1;
   prevBtn.hidden = !hasMultiple;
   nextBtn.hidden = !hasMultiple;
 
-  const jumpToBoundary = (position: number) => {
-    const previousSnapType = track.style.scrollSnapType;
-    const previousScrollBehavior = track.style.scrollBehavior;
-    track.style.scrollSnapType = 'none';
-    track.style.scrollBehavior = 'auto';
-    track.scrollLeft = position;
-    track.style.scrollSnapType = previousSnapType;
-    track.style.scrollBehavior = previousScrollBehavior;
-  };
-
-  const scrollByCard = (direction: number) => {
-    const card = track.querySelector('.culturist-carousel-carousel-card');
-    if (!card) return;
-    const amount = card.getBoundingClientRect().width + 4;
-    const maxScrollLeft = track.scrollWidth - track.clientWidth;
-    if (direction > 0 && track.scrollLeft >= maxScrollLeft - 1) {
-      jumpToBoundary(0);
-      return;
-    }
-    if (direction < 0 && track.scrollLeft <= 0) {
-      jumpToBoundary(maxScrollLeft);
-      return;
-    }
-    track.scrollBy({ left: direction * amount, behavior: 'smooth' });
-  };
-
-  // Desktop navigates via the prev/next arrows only; wheel/drag scrolling is a tablet/mobile-only affordance
-  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
-  if (!isDesktop && track.dataset.loopEvents !== 'true') {
-    let touchStartX: number | null = null;
-    let touchStartedAtBoundary = false;
-    let isScrollSettled = true;
-    let boundaryTimer: number | undefined;
-    track.dataset.loopEvents = 'true';
-
-    const wrapAtBoundary = (direction: number): boolean => {
-      const maxScrollLeft = track.scrollWidth - track.clientWidth;
-      const atEnd = track.scrollLeft >= maxScrollLeft - 1;
-      const atStart = track.scrollLeft <= 0;
-      if (!isScrollSettled) return false;
-      if (direction > 0 && atEnd) {
-        jumpToBoundary(0);
-        isScrollSettled = false;
-        return true;
-      }
-      if (direction < 0 && atStart) {
-        jumpToBoundary(maxScrollLeft);
-        isScrollSettled = false;
-        return true;
-      }
-      return false;
-    };
-
-    const updateBoundary = () => {
-      isScrollSettled = true;
-    };
-
-    track.addEventListener('scroll', () => {
-      isScrollSettled = false;
-      window.clearTimeout(boundaryTimer);
-      boundaryTimer = window.setTimeout(updateBoundary, 200);
-    });
-
-    track.addEventListener(
-      'wheel',
-      (event) => {
-        if (wrapAtBoundary(event.deltaX || event.deltaY)) event.preventDefault();
-      },
-      { passive: false },
-    );
-
-    track.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'touch') {
-        touchStartX = event.clientX;
-        const maxScrollLeft = track.scrollWidth - track.clientWidth;
-        touchStartedAtBoundary = isScrollSettled && (track.scrollLeft <= 0 || track.scrollLeft >= maxScrollLeft - 1);
-      }
-    });
-
-    track.addEventListener('pointerup', (event) => {
-      if (touchStartX === null) return;
-      const direction = touchStartX - event.clientX;
-      touchStartX = null;
-      if (touchStartedAtBoundary && Math.abs(direction) > 30) wrapAtBoundary(direction);
-      touchStartedAtBoundary = false;
-    });
-
-    track.addEventListener('pointercancel', () => {
-      touchStartX = null;
-    });
-
-    track.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowRight' && wrapAtBoundary(1)) event.preventDefault();
-      if (event.key === 'ArrowLeft' && wrapAtBoundary(-1)) event.preventDefault();
-    });
-  }
-  prevBtn.onclick = () => scrollByCard(-1);
-  nextBtn.onclick = () => scrollByCard(1);
+  // Also runs for the empty state so a previous destination's autoplay stops
+  navigator.reset();
 }
 
 export default async function decorate(block: HTMLElement): Promise<void> {
@@ -372,6 +691,8 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   if (!itemRows.length) return;
 
   const hasMultipleDestinations = itemRows.length > 1;
+  // Read before decoration: the carousel column isn't attached to the block until the end of decorate
+  const carouselOptions = readCarouselOptions(block);
   const instanceId = (blockInstanceCount += 1);
   const destinationListId = `culturist-carousel-destination-list-${instanceId}`;
   const destinationOptionId = (index: number) => `culturist-carousel-destination-option-${instanceId}-${index}`;
@@ -509,7 +830,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     if (generation !== selectTabGeneration) return;
 
     await renderCulturistInfo(infoSlot, cfRef);
-    await renderGalleryCarousel(carouselCol, cfRef);
+    await renderGalleryCarousel(carouselCol, cfRef, carouselOptions);
     if (generation !== selectTabGeneration) return;
 
     applyOverlay(currentTabIndex);
@@ -702,7 +1023,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
   const initialCfRef = itemRows[0]?.querySelectorAll(':scope > div')[1]?.textContent?.trim() || '';
   if (initialCfRef) {
     await renderCulturistInfo(infoSlot, initialCfRef);
-    await renderGalleryCarousel(carouselCol, initialCfRef);
+    await renderGalleryCarousel(carouselCol, initialCfRef, carouselOptions);
   }
 
   moveInstrumentation(block, wrapper);

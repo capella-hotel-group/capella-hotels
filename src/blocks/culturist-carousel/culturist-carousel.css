@@ -621,11 +621,38 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
-    gap: 4px;
+    gap: var(--culturist-carousel-card-gap);
+
+    /* Figma fixes card widths to literal px (200 mobile / 360 tablet / 589 desktop) */
+    --culturist-carousel-card-gap: 4px;
+    --culturist-carousel-card-width: 200px;
 }
 
 .culturist-carousel-carousel-track::-webkit-scrollbar {
     display: none;
+}
+
+/* Trailing room so every card, including the last, can snap flush left; loop clones fill it instead */
+.culturist-carousel-carousel-track:not(.is-looping)::after {
+    content: '';
+    flex: 0 0 max(0px, calc(100% - var(--culturist-carousel-card-width) - var(--culturist-carousel-card-gap)));
+}
+
+/* Swapping a loop clone for its real card must not replay the description reveal */
+.culturist-carousel-carousel-track.is-jumping * {
+    transition: none !important;
+}
+
+@media (width >= 768px) and (width < 1024px) {
+    .culturist-carousel-carousel-track {
+        --culturist-carousel-card-width: 360px;
+    }
+}
+
+@media (width >= 1024px) {
+    .culturist-carousel-carousel-track {
+        --culturist-carousel-card-width: min(589px, calc(100% - 24px));
+    }
 }
 
 /* Desktop navigates via the prev/next arrows only, no wheel/drag scrolling */
@@ -636,12 +663,10 @@
     }
 }
 
-/* First card shows in full, second card peeks partially as a scroll affordance.
-   Figma fixes these to literal px (200 mobile / 360 tablet), not a % of the
-   viewport - matches the desktop tier's existing fixed-px pattern below. */
+/* First card shows in full, second card peeks partially as a scroll affordance */
 .culturist-carousel-carousel-card {
     position: relative;
-    flex: 0 0 200px;
+    flex: 0 0 var(--culturist-carousel-card-width);
     /* mobile's carousel-col keeps a min-height floor (no explicit height), so a
        stretched cross-size would otherwise inflate width past 200px via aspect-ratio */
     align-self: flex-start;
@@ -650,16 +675,9 @@
     scroll-snap-stop: always;
 }
 
-@media (width >= 768px) and (width < 1024px) {
-    .culturist-carousel-carousel-card {
-        flex: 0 0 360px;
-    }
-}
-
 /* Figma 1024px spec: first card fixed at 589px, remaining space peeks the next card */
 @media (width >= 1024px) {
     .culturist-carousel-carousel-card {
-        flex: 0 0 min(589px, calc(100% - 24px));
         min-width: 0;
         aspect-ratio: auto;
         height: 100%;
@@ -735,6 +753,13 @@
     transform: scale(1.05);
 }
 
+/* Mobile: the leftmost visible card (tracked in JS) shows its description by default */
+@media (width < 768px) {
+    .culturist-carousel-carousel-card.is-active .culturist-carousel-card-content {
+        --culturist-carousel-card-reveal: 1;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .culturist-carousel-card-slot-img,
     .culturist-carousel-card-description {
@@ -783,6 +808,13 @@
     opacity: 1;
 }
 
+/* First card can't go back, last card can't go forward */
+.culturist-carousel-carousel-prev:disabled,
+.culturist-carousel-carousel-next:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
 .culturist-carousel-carousel-prev::before {
     content: '';
     width: 28px;
@@ -804,8 +836,65 @@
 }
 
 .culturist-carousel-carousel--empty .culturist-carousel-carousel-prev,
-.culturist-carousel-carousel--empty .culturist-carousel-carousel-next {
+.culturist-carousel-carousel--empty .culturist-carousel-carousel-next,
+.culturist-carousel-carousel--empty .culturist-carousel-carousel-autoplay {
     display: none;
+}
+
+/* Autoplay pause/play toggle; sub-1024 it sits on the light strip below the cards */
+.culturist-carousel-carousel-autoplay {
+    position: absolute;
+    right: var(--culturist-carousel-tablet-inline-inset, 24px);
+    bottom: 8px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-text-main-heading);
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+}
+
+.culturist-carousel-carousel-autoplay[hidden] {
+    display: none;
+}
+
+.culturist-carousel-carousel-autoplay:hover {
+    opacity: 1;
+}
+
+.culturist-carousel-carousel-autoplay:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
+}
+
+.culturist-carousel-carousel-autoplay::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    background-color: currentcolor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='3' y='2' width='3.5' height='12'/%3E%3Crect x='9.5' y='2' width='3.5' height='12'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+}
+
+.culturist-carousel-carousel-autoplay.is-paused::before {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 2l10 6-10 6z'/%3E%3C/svg%3E");
+}
+
+/* Desktop has no strip below the cards, so the toggle sits over the image in white like the arrows */
+@media (width >= 1024px) {
+    .culturist-carousel-carousel-autoplay {
+        right: 20px;
+        bottom: 20px;
+        color: var(--color-icon-on-action-default);
+        filter: drop-shadow(0 1px 4px rgb(0 0 0 / 50%));
+    }
 }
 
 /* Card Text Overlay (location eyebrow + title + hover description) */
@@ -959,9 +1048,4 @@
     .culturist-carousel-info-slot {
         gap: 40px;
     }
-}
-
-/* Authored cards with no image and no title would render as an empty grey tile */
-.culturist-carousel-carousel-card:has(> .culturist-carousel-card-content:empty) {
-    display: none;
 }

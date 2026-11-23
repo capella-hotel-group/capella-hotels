@@ -7,6 +7,10 @@ The Culturist Carousel groups culturist profiles by destination. Add the block t
 - **Section Title Prefix**: Required text before the destination selector.
 - **Section Title Suffix**: Optional text after the destination selector.
 - **Block ID**: Optional anchor ID.
+- **Loop slides**: Off by default. When on, the experience cards wrap around endlessly: after the last card the first one follows, in both directions. Needs at least two cards.
+- **Autoplay**: Off by default, or advance every 4, 6 or 8 seconds. A pause/play button appears; autoplay also pauses on hover, keyboard focus, swipe and while the block is off-screen. Without **Loop slides**, autoplay stops on the last card. Autoplay is disabled for visitors who prefer reduced motion.
+
+On mobile, the leftmost card always shows its description, since there is no hover.
 
 ## Destination items
 

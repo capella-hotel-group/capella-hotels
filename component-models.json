@@ -1063,6 +1063,40 @@
         "label": "Block ID",
         "value": "",
         "placeholder": "e.g., culturists"
+      },
+      {
+        "component": "boolean",
+        "valueType": "boolean",
+        "name": "classes_loop",
+        "label": "Loop slides",
+        "description": "After the last card, next returns to the first card (and prev from the first goes to the last).",
+        "value": false
+      },
+      {
+        "component": "select",
+        "valueType": "string",
+        "name": "classes_autoplay",
+        "label": "Autoplay",
+        "description": "Automatically advances the cards. Pauses on hover, focus, swipe and when off-screen; a pause button is shown.",
+        "value": "",
+        "options": [
+          {
+            "name": "Off",
+            "value": ""
+          },
+          {
+            "name": "Every 4 seconds",
+            "value": "autoplay-4s"
+          },
+          {
+            "name": "Every 6 seconds",
+            "value": "autoplay-6s"
+          },
+          {
+            "name": "Every 8 seconds",
+            "value": "autoplay-8s"
+          }
+        ]
       }
     ]
   },
