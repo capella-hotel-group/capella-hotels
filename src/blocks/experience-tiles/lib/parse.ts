@@ -24,13 +24,50 @@ export function isItemRow(row: HTMLElement): boolean {
   return !!row.querySelector('picture, img');
 }
 
+const SLIDE_CELL_COUNT = 5;
+
+/** An authored anchor name as a valid, selector-safe element id; empty when nothing usable is left. */
+export function toElementId(value: string): string {
+  return value
+    .trim()
+    .replace(/^#+/, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^\p{L}\p{N}_-]/gu, '');
+}
+
+const hasMedia = (cell: HTMLElement): boolean => !!cell.querySelector('picture, img');
+
+// The CTA cell holds only links and their open-in-new-tab flags; a richtext description may carry
+// links too, but always alongside text of its own.
+function isCtaCell(cell: HTMLElement): boolean {
+  if (!cell.querySelector('a')) return false;
+  return [...cell.children].every(
+    (child) => child.querySelector('a') || /^(true|false)$/i.test(child.textContent?.trim() ?? ''),
+  );
+}
+
+/**
+ * A full row is mapped by position. A row with dropped cells (empty optional fields are omitted in
+ * delivered HTML, and not always the same ones) is mapped by what each cell holds instead.
+ */
+function panelsOf(cells: HTMLElement[]): Pick<ExperienceTilesSlide, 'left' | 'right'> {
+  const [leftMedia, rightMedia] = cells.filter(hasMedia);
+  if (cells.length === SLIDE_CELL_COUNT || !leftMedia || !rightMedia) {
+    const [lm, lc, rm, rc, rCta] = cells;
+    return { left: { mediaCell: lm, contentCell: lc }, right: { mediaCell: rm, contentCell: rc, ctaCell: rCta } };
+  }
+  const leftIndex = cells.indexOf(leftMedia);
+  const rightIndex = cells.indexOf(rightMedia);
+  const leftContent = cells.slice(leftIndex + 1, rightIndex)[0];
+  const rest = cells.slice(rightIndex + 1);
+  const last = rest[rest.length - 1];
+  const ctaCell = last && isCtaCell(last) ? rest.pop() : undefined;
+  return {
+    left: { mediaCell: leftMedia, contentCell: leftContent },
+    right: { mediaCell: rightMedia, contentCell: rest[0], ctaCell },
+  };
+}
+
 export function parseSlides(itemRows: HTMLElement[]): ExperienceTilesSlide[] {
-  return itemRows.map((row) => {
-    const [leftMedia, leftContent, rightMedia, rightContent, rightCtas] = [...row.children] as HTMLElement[];
-    return {
-      left: { mediaCell: leftMedia, contentCell: leftContent },
-      right: { mediaCell: rightMedia, contentCell: rightContent, ctaCell: rightCtas },
-      sourceRow: row,
-    };
-  });
+  return itemRows.map((row) => ({ ...panelsOf([...row.children] as HTMLElement[]), sourceRow: row }));
 }

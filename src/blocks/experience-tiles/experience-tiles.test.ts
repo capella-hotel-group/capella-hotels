@@ -100,6 +100,14 @@ describe('experience-tiles integration', () => {
     expect(element.querySelectorAll('.experience-tiles-control')).toHaveLength(2);
     expect(element.hasAttribute('aria-keyshortcuts')).toBe(false);
   });
+  it('turns an authored anchor name into a safe id and skips one with nothing usable', () => {
+    const spaced = block(['#Our Experiences', '']);
+    decorate(spaced);
+    expect(spaced.id).toBe('Our-Experiences');
+    const unusable = block(['!!!', '']);
+    decorate(unusable);
+    expect(unusable.id).toBe('');
+  });
   it('steps with vertical arrows from the controls only while the block is aligned', () => {
     const element = block();
     decorate(element);

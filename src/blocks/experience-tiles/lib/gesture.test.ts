@@ -97,3 +97,36 @@ it('cancels touch recognition for pinch and leaves a declined gesture to the bro
   binding.cleanup();
   surface.remove();
 });
+it('never registers a blocking touchmove listener on the window', () => {
+  const spy = jest.spyOn(window, 'addEventListener');
+  const surface = document.createElement('div');
+  document.body.append(surface);
+  const binding = bindGestures(surface, {
+    begin: jest.fn(() => true),
+    move: jest.fn(),
+    end: jest.fn(() => true),
+    cancel: jest.fn(),
+  });
+  const blocking = spy.mock.calls.filter(
+    ([type, , options]) => type === 'touchmove' && (options as AddEventListenerOptions)?.passive === false,
+  );
+  expect(blocking).toHaveLength(0);
+  spy.mockRestore();
+  binding.cleanup();
+  surface.remove();
+});
+it('ignores touch moves that belong to the rest of the page', () => {
+  const surface = document.createElement('div');
+  const outside = document.createElement('div');
+  document.body.append(surface, outside);
+  const actions = { begin: jest.fn(() => true), move: jest.fn(), end: jest.fn(() => true), cancel: jest.fn() };
+  const binding = bindGestures(surface, actions);
+  touch(outside, 'touchstart', 200);
+  expect(touch(outside, 'touchmove', 100).defaultPrevented).toBe(false);
+  touch(outside, 'touchend', 100);
+  expect(actions.begin).not.toHaveBeenCalled();
+  expect(actions.move).not.toHaveBeenCalled();
+  binding.cleanup();
+  surface.remove();
+  outside.remove();
+});

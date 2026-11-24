@@ -95,8 +95,6 @@
     overflow: hidden;
     background-color: var(--color-surface-brand-default);
     transform: translateY(var(--experience-tiles-rest));
-    backface-visibility: hidden;
-    will-change: transform;
     transition: transform var(--experience-tiles-panel-duration) var(--experience-tiles-motion-easing);
 }
 
@@ -176,8 +174,20 @@
     color: var(--color-text-main-inverse-heading);
     opacity: 0;
     transform: translateY(var(--experience-tiles-text-offset));
-    will-change: opacity, transform;
     transition: none;
+}
+
+/* Only the slides on screen (or leaving it) keep compositor layers; every resting panel would
+   otherwise hold full-viewport layers (backface-visibility promotes just like will-change). */
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] .experience-tiles-item,
+.experience-tiles .experience-tiles-slide--leaving .experience-tiles-item {
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] .experience-tiles-overlay,
+.experience-tiles .experience-tiles-slide--leaving .experience-tiles-overlay {
+    will-change: opacity, transform;
 }
 
 .experience-tiles .experience-tiles-item--right .experience-tiles-overlay {

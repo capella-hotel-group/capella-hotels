@@ -56,8 +56,7 @@ export const SNAP_DISTANCE = 0.35;
  * INTENT_MIN_SPEED  px/ms below which the stream is a momentum tail whatever its shape.
  * REARM_MIN_MS      shortest gap between two actions of one burst, for when nothing is animating
  *                   (reduced motion); otherwise the panel animation already spaces them.
- * TOUCH_STEP        finger travel that steps the slides while the finger is still down.
- * TOUCH_CONTINUE    further travel in the same drag that asks for the next step (queued if needed).
+ * TOUCH_STEP        finger travel that steps the slides while the finger is still down; one step per drag.
  */
 const INTENT_WINDOW_MS = 150;
 const INTENT_HISTORY_MS = 600;
@@ -66,7 +65,6 @@ const INTENT_TREND = 0.95;
 const INTENT_MIN_SPEED = 0.15;
 const REARM_MIN_MS = 600;
 const TOUCH_STEP = 40;
-const TOUCH_CONTINUE = 160;
 // How long after a finger lifts the browser may still be running its own fling.
 const TOUCH_MOMENTUM_MS = 3000;
 interface Entry {
@@ -177,12 +175,17 @@ function settling(): boolean {
 function flinging(): boolean {
   return flingFrame !== undefined;
 }
+// The blocks' own slide classes and inline styles change constantly while stepping; only the rest of
+// the page can open a menu or modal.
+function outsideBlocks(record: MutationRecord): boolean {
+  return ![...entries].some((entry) => entry.block.contains(record.target));
+}
 function syncWatch(): void {
   const needed = Boolean(owner) || settling() || flinging();
   if (needed && !modalObserver) {
     // Menus can open without a subsequent wheel event; release on their DOM update.
-    modalObserver = new MutationObserver(() => {
-      if (suspended()) reset();
+    modalObserver = new MutationObserver((records) => {
+      if (records.some(outsideBlocks) && suspended()) reset();
     });
     modalObserver.observe(document.body, {
       subtree: true,
@@ -303,7 +306,6 @@ function candidate(delta: number, excluded?: Entry): Entry | undefined {
   });
   return best;
 }
-// A fast wheel notch or native momentum can carry a block across the alignment point between two events.
 /**
  * A browser touch fling cannot be cancelled from script and would carry the page straight past a block
  * that just caught it. Making the root unscrollable for a frame ends the fling; the scroll position
@@ -322,6 +324,7 @@ function haltMomentum(): void {
   requestAnimationFrame(() => requestAnimationFrame(restore));
   setTimeout(restore, 50);
 }
+// A fast wheel notch or native momentum can carry a block across the alignment point between two events.
 function crossed(): Entry | undefined {
   let hit: Entry | undefined;
   const reach = SNAP_DISTANCE * window.innerHeight;
@@ -547,10 +550,12 @@ export function registerScrollController(
   // Finger travel since the last step of this drag, and whether the drag has stepped yet.
   let travel = 0;
   let fired = false;
-  // A drag steps the slides as it goes; out of slides, it carries the page on instead of stalling.
+  // One drag is one step, however far the finger goes: a swipe that stepped must neither run on to
+  // the next slide nor, at the last one, carry the page out. Leaving is a fresh swipe from the edge.
   const drive = (delta: number): void => {
+    if (fired) return;
     travel += delta;
-    if (Math.abs(travel) < (fired ? TOUCH_CONTINUE : TOUCH_STEP)) return;
+    if (Math.abs(travel) < TOUCH_STEP) return;
     const direction: Direction = travel > 0 ? 1 : -1;
     travel = 0;
     if (suspended() || !aligned(entry)) return;

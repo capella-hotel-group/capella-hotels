@@ -437,21 +437,47 @@ it('steps as soon as the finger has travelled far enough, without waiting for re
   touch(block, 'touchend', 350);
   expect(controller.index).toBe(1);
 });
-it('keeps stepping during one long drag and carries the page once the slides run out', () => {
-  const restore = animated();
-  const { block, controller } = setup(0, 3);
+function drag(target: Element, distance: number, step = 6): void {
   let position = 800;
-  touch(block, 'touchstart', position);
-  const seen: number[] = [];
-  for (let move = 0; move < 120; move += 1) {
-    position -= 6;
-    touch(block, 'touchmove', position);
+  touch(target, 'touchstart', position);
+  for (let moved = 0; moved < Math.abs(distance); moved += step) {
+    position -= Math.sign(distance) * step;
+    touch(target, 'touchmove', position);
     jest.advanceTimersByTime(25);
-    if (seen[seen.length - 1] !== controller.index) seen.push(controller.index);
   }
-  touch(block, 'touchend', position);
-  expect(seen).toEqual([0, 1, 2]);
+  touch(target, 'touchend', position);
+}
+it('steps one slide per drag however far the finger travels', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 4);
+  drag(block, 720);
+  expect(controller.index).toBe(1);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  drag(block, 720);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(2);
+  restore();
+});
+it('does not carry the page out of the block in the drag that reached the last slide', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 2);
+  drag(block, 720);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+it('leaves the block with the next swipe once the last slide is showing', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 2);
+  drag(block, 300);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(1);
+  drag(block, 300);
   expect(y).toBeGreaterThan(0);
+  expect(controller.index).toBe(1);
   restore();
 });
 it('turns a swipe made during an animation into the next step', () => {
@@ -685,6 +711,55 @@ it('watches for modals only while it owns the page', () => {
   expect(disconnect).toHaveBeenCalled();
   observe.mockRestore();
   disconnect.mockRestore();
+});
+async function flushMutations(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  jest.advanceTimersByTime(20);
+}
+it('stops a settle when a menu opens elsewhere on the page', async () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  setup(200);
+  wheel(40);
+  jest.advanceTimersByTime(100);
+  const parked = y;
+  expect(parked).toBeGreaterThan(0);
+  expect(parked).toBeLessThan(200);
+  const dialog = document.createElement('dialog');
+  dialog.open = true;
+  document.body.append(dialog);
+  await flushMutations();
+  const stopped = y;
+  jest.advanceTimersByTime(1000);
+  expect(y).toBe(stopped);
+  expect(y).toBeLessThan(200);
+  dialog.remove();
+});
+it('ignores the blocks own class and style churn while it owns the page', async () => {
+  const { block } = setup();
+  wheel(40);
+  const query = jest.spyOn(document, 'querySelector');
+  const track = block.querySelector('.experience-tiles-track') as HTMLElement;
+  track.classList.add('experience-tiles-slide--settling');
+  track.style.setProperty('--experience-tiles-copy-height', '10px');
+  block.setAttribute('aria-hidden', 'false');
+  await flushMutations();
+  expect(query).not.toHaveBeenCalled();
+  query.mockRestore();
+});
+it('checks the page once per batch however many elements mutate outside the blocks', async () => {
+  setup();
+  wheel(40);
+  const query = jest.spyOn(document, 'querySelector');
+  const other = document.createElement('div');
+  document.body.append(other);
+  for (let index = 0; index < 10; index += 1) other.className = `menu-${index}`;
+  await flushMutations();
+  expect(query).toHaveBeenCalledTimes(1);
+  query.mockRestore();
+  other.remove();
 });
 it('does not query the document for wheel input far from any block', () => {
   setup(3000);

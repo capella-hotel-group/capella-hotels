@@ -1,7 +1,7 @@
 import { buildControls, LABELS, type CarouselControls } from './lib/a11y-controls';
 import { CarouselController } from './lib/carousel-controller';
 import { buildSlide } from './lib/dom-builder';
-import { isItemRow, parseBlockConfig, parseSlides } from './lib/parse';
+import { isItemRow, parseBlockConfig, parseSlides, toElementId } from './lib/parse';
 import { registerScrollController } from './lib/scroll-controller';
 import { suppressTransitionsDuringResize } from './lib/resize-guard';
 import { isUniversalEditor } from '@/utils/env';
@@ -174,7 +174,8 @@ export default function decorate(block: HTMLElement): void {
   const itemRows = rows.filter(isItemRow);
   const configRows = rows.filter((row) => !itemRows.includes(row));
   const { id, dataTestId } = parseBlockConfig(configRows);
-  if (id) block.id = id.replace(/^#/, '');
+  const blockId = toElementId(id);
+  if (blockId) block.id = blockId;
   if (dataTestId) block.dataset.automationKey = dataTestId;
   configRows.forEach((row) => row.classList.add('experience-tiles-hidden'));
   const slides = parseSlides(itemRows);
