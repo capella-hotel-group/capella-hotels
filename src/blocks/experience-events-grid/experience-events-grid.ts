@@ -377,7 +377,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const reveal = button('reveal-more', text(config.revealLabel) || 'REVEAL MORE');
     if (config.revealLabel) reveal.replaceChildren(config.revealLabel);
     reveal.hidden = true;
-    const warning = element('p', 'warning');
+    const warning = element('div', 'warning');
     warning.setAttribute('role', 'status');
     warning.hidden = true;
     const announce = element('p', 'announcement');
@@ -476,7 +476,7 @@ export default async function decorate(block: HTMLElement): Promise<void> {
     const data = await response.json();
     const cards: (EventCard | null)[] | undefined = data?.data?.filterGridCardDetailsList?.items;
     if (data.errors?.length || !Array.isArray(cards)) throw new Error('Experience query returned an invalid response.');
-    let invalid = 0;
+    const invalid: { title: string; hint: string }[] = [];
     events = cards.flatMap((card) => {
       try {
         if (!card) throw new Error('Empty Content Fragment in query results.');
@@ -485,13 +485,22 @@ export default async function decorate(block: HTMLElement): Promise<void> {
         }
         return [prepareEvent(card)];
       } catch (error) {
-        invalid += 1;
+        const hint = error instanceof Error ? error.message : String(error);
+        invalid.push({ title: card?.cardHeadline || card?._path || 'Unknown experience', hint });
         console.warn(`Experience Events Grid: invalid CF ${card?._path || card?.cardHeadline || ''}.`, error);
         return [];
       }
     });
-    if (invalid) {
-      warning.textContent = copy().invalidSchedule;
+    if (invalid.length) {
+      const list = document.createElement('ul');
+      for (const { title, hint } of invalid) {
+        const item = document.createElement('li');
+        const name = document.createElement('strong');
+        name.textContent = title;
+        item.append(name, ` - ${hint}`);
+        list.append(item);
+      }
+      warning.replaceChildren(copy().invalidSchedule, list);
       warning.hidden = false;
     }
     render();

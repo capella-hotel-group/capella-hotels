@@ -469,6 +469,11 @@ main
     margin: 0;
 }
 
+main .experience-events-grid .experience-events-grid-warning ul {
+    margin: 8px 0 0;
+    padding-inline-start: 20px;
+}
+
 main .experience-events-grid :is(button, a, input):focus-visible {
     outline: 2px solid var(--color-text-action-default);
     outline-offset: 3px;
