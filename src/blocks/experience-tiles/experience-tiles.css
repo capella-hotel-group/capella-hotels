@@ -9,8 +9,8 @@
     --experience-tiles-text-offset: 16px;
     --experience-tiles-panel-duration: 900ms;
     --experience-tiles-panel-stagger: 80ms;
-    --experience-tiles-text-duration: 1200ms;
-    --experience-tiles-text-delay: 600ms;
+    --experience-tiles-text-duration: 1400ms;
+    --experience-tiles-text-delay: var(--experience-tiles-panel-duration);
     --experience-tiles-text-exit-duration: 200ms;
     --experience-tiles-link-underline-offset: 3px;
 
@@ -31,9 +31,9 @@
     isolation: isolate;
 }
 
-/* The block's first reveal: panels are already in place, so the copy follows almost at once. */
+/* On first reveal, hold the copy until the panels finish sliding into place. */
 .experience-tiles.experience-tiles-intro {
-    --experience-tiles-text-delay: 150ms;
+    --experience-tiles-text-delay: var(--experience-tiles-panel-duration);
 }
 
 /* Declared once and never swapped mid-gesture: the block drives every vertical movement itself — the
