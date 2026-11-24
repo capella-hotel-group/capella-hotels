@@ -100,6 +100,14 @@ describe('experience-tiles integration', () => {
     expect(element.querySelectorAll('.experience-tiles-control')).toHaveLength(2);
     expect(element.hasAttribute('aria-keyshortcuts')).toBe(false);
   });
+  it('turns an authored anchor name into a safe id and skips one with nothing usable', () => {
+    const spaced = block(['#Our Experiences', '']);
+    decorate(spaced);
+    expect(spaced.id).toBe('Our-Experiences');
+    const unusable = block(['!!!', '']);
+    decorate(unusable);
+    expect(unusable.id).toBe('');
+  });
   it('steps with vertical arrows from the controls only while the block is aligned', () => {
     const element = block();
     decorate(element);
@@ -283,6 +291,21 @@ describe('experience-tiles integration', () => {
     expect(overflowing!.getAttribute('aria-labelledby')).toBe(heading.id);
     expect(fitting!.hasAttribute('aria-labelledby')).toBe(false);
   });
+  it('publishes the tallest copy of a slide so both panels can start on the same line', () => {
+    const resize = observeResize();
+    const element = block();
+    decorate(element);
+    const slide = element.querySelector<HTMLElement>('.experience-tiles-slide')!;
+    const [short, tall] = [...slide.querySelectorAll<HTMLElement>('.experience-tiles-overlay')];
+    const body = (overlay: HTMLElement) => overlay.querySelector<HTMLElement>('.experience-tiles-body')!;
+    Object.defineProperties(body(short!), { offsetHeight: { value: 119 } });
+    Object.defineProperties(body(tall!), { offsetHeight: { value: 144 } });
+
+    resize([body(short!), body(tall!)]);
+    jest.advanceTimersByTime(16);
+
+    expect(slide.style.getPropertyValue('--experience-tiles-copy-height')).toBe('144px');
+  });
   it('holds the entrance animation until the block is scrolled into view', () => {
     const element = block();
     const reveal = observeIntersection();
@@ -293,6 +316,11 @@ describe('experience-tiles integration', () => {
     expect(element.classList.contains('experience-tiles-pending')).toBe(true);
     reveal([{ isIntersecting: true, intersectionRatio: 0.5 }]);
     expect(element.classList.contains('experience-tiles-pending')).toBe(false);
+    // the first reveal plays the copy quickly; the first step hands timing back to the slide transition
+    expect(element.classList.contains('experience-tiles-intro')).toBe(true);
+    element.querySelector<HTMLButtonElement>('.experience-tiles-control:last-child')!.click();
+    expect(active(element)).toBe(1);
+    expect(element.classList.contains('experience-tiles-intro')).toBe(false);
   });
   it('releases a block that is already on screen on the very first observation', () => {
     const element = block();

@@ -10,7 +10,7 @@
     --experience-tiles-panel-duration: 900ms;
     --experience-tiles-panel-stagger: 80ms;
     --experience-tiles-text-duration: 1200ms;
-    --experience-tiles-text-delay: 1150ms;
+    --experience-tiles-text-delay: 600ms;
     --experience-tiles-text-exit-duration: 200ms;
     --experience-tiles-link-underline-offset: 3px;
 
@@ -26,6 +26,14 @@
     width: 100%;
     margin: 0;
     overflow: hidden;
+
+    /* slides layer with z-index during a step; keep that inside the track, under the controls */
+    isolation: isolate;
+}
+
+/* The block's first reveal: panels are already in place, so the copy follows almost at once. */
+.experience-tiles.experience-tiles-intro {
+    --experience-tiles-text-delay: 150ms;
 }
 
 /* Declared once and never swapped mid-gesture: the block drives every vertical movement itself — the
@@ -44,8 +52,23 @@
 .experience-tiles .experience-tiles-slide {
     position: absolute;
     inset: 0;
+    z-index: 0;
     display: grid;
     grid-template-rows: 1fr 1fr;
+}
+
+/* Stacking order of a step: the incoming slide covers the outgoing one going forward; going back the
+   outgoing slide lifts off on top and uncovers the previous one. Resting slides wait underneath. */
+.experience-tiles .experience-tiles-slide--leaving {
+    z-index: 1;
+}
+
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] {
+    z-index: 2;
+}
+
+.experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-slide--leaving {
+    z-index: 3;
 }
 
 .experience-tiles .experience-tiles-slot {
@@ -59,24 +82,30 @@
     pointer-events: none;
 }
 
-/* Each panel travels one slot height. Matching incoming/outgoing transforms meet exactly
-   at the slot edge, including when the right slot starts later on mobile/tablet. */
+/* Mobile/tablet stack: going forward the incoming panel slides up over the outgoing one, which drifts
+   a little upwards underneath it; going back plays exactly in reverse. `--rest` is where a resting
+   panel waits (and the incoming one starts), `--exit` is where the outgoing one ends. Panels are
+   opaque so a slide underneath never shows through while an image is still loading. */
 .experience-tiles .experience-tiles-item {
+    --experience-tiles-rest: 100%;
+    --experience-tiles-exit: -30%;
+
     position: absolute;
     inset: 0;
     overflow: hidden;
-    transform: translateY(100%);
-    backface-visibility: hidden;
-    will-change: transform;
+    background-color: var(--color-surface-brand-default);
+    transform: translateY(var(--experience-tiles-rest));
     transition: transform var(--experience-tiles-panel-duration) var(--experience-tiles-motion-easing);
 }
 
-/* entrance: both panels rise from below, the right one a stagger behind the left so the pair reads
-   as sequential rather than simultaneous — replays every time this slide becomes active.
-   `--pending` suppresses the whole active state rather than pinning a transform of its own: the
-   resting position differs per breakpoint (desktop parks the left panel above, not below), so
-   letting the base rules apply is the only way to be correct everywhere. */
-.experience-tiles:not(.experience-tiles-pending) .experience-tiles-slide[aria-hidden='false'] .experience-tiles-item {
+/* `data-direction` is written by the carousel (resting slides re-parked without animating). */
+.experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-item {
+    --experience-tiles-rest: -30%;
+    --experience-tiles-exit: 100%;
+}
+
+/* The right panel follows a stagger behind the left so the pair reads as sequential. */
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] .experience-tiles-item {
     transform: translateY(0);
 }
 
@@ -84,11 +113,8 @@
     transition-delay: var(--experience-tiles-panel-stagger);
 }
 
-/* the slide JS just deactivated keeps moving the SAME direction it was already travelling (up,
-   past center) instead of reversing back to its entrance side — this is what makes it read as
-   one continuous strip with the incoming slide instead of leaving a gap between them */
 .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item {
-    transform: translateY(-100%);
+    transform: translateY(var(--experience-tiles-exit));
 }
 
 .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--right {
@@ -103,6 +129,13 @@
     flex-direction: column;
     justify-content: flex-end;
     padding: var(--dimension-layout-module-padding-inline-s);
+}
+
+@media (width >= 768px) {
+    /* tablet: Figma uses the block-s token (40px) under the copy instead of the inline padding */
+    .experience-tiles .experience-tiles-media {
+        padding-block-end: var(--dimension-layout-module-padding-block-s);
+    }
 }
 
 .experience-tiles .experience-tiles-media::after {
@@ -141,8 +174,20 @@
     color: var(--color-text-main-inverse-heading);
     opacity: 0;
     transform: translateY(var(--experience-tiles-text-offset));
-    will-change: opacity, transform;
     transition: none;
+}
+
+/* Only the slides on screen (or leaving it) keep compositor layers; every resting panel would
+   otherwise hold full-viewport layers (backface-visibility promotes just like will-change). */
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] .experience-tiles-item,
+.experience-tiles .experience-tiles-slide--leaving .experience-tiles-item {
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+.experience-tiles .experience-tiles-slide[aria-hidden='false'] .experience-tiles-overlay,
+.experience-tiles .experience-tiles-slide--leaving .experience-tiles-overlay {
+    will-change: opacity, transform;
 }
 
 .experience-tiles .experience-tiles-item--right .experience-tiles-overlay {
@@ -250,9 +295,12 @@
 .experience-tiles .experience-tiles-description {
     margin: 0;
     font-family: var(--type-font-family-body);
+    max-width: 600px;
     font-size: var(--typography-fontsize-body-m);
     font-weight: var(--type-font-weight-body-reg);
     line-height: var(--typography-line-height-body-md);
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 .experience-tiles .experience-tiles-eyebrow > *,
@@ -266,7 +314,7 @@
 .experience-tiles .experience-tiles-links {
     display: flex;
     align-items: center;
-    gap: var(--dimension-spacing-general-m);
+    gap: var(--dimension-spacing-general-xl);
     flex-wrap: wrap;
 }
 
@@ -287,7 +335,7 @@
     line-height: var(--typography-line-height-body-md);
     color: var(--color-text-action-inverse-default);
     text-decoration: underline;
-    text-decoration-thickness: var(--stroke-weight-s);
+    text-decoration-thickness: 7%;
     text-underline-offset: var(--experience-tiles-link-underline-offset);
     text-transform: uppercase;
 }
@@ -296,6 +344,9 @@
     flex: none;
     width: var(--stroke-weight-s);
     height: var(--dimension-spacing-general-l);
+
+    /* Figma's divider has zero layout width and paints its 1px stroke outside the box */
+    margin-inline-end: calc(var(--stroke-weight-s) * -1);
     background: var(--color-stroke-action-inverse-default);
 }
 
@@ -315,13 +366,26 @@
     }
 
     .experience-tiles .experience-tiles-media {
-        --experience-tiles-media-padding-bottom: 160px;
-
-        padding-bottom: var(--experience-tiles-media-padding-bottom);
+        justify-content: flex-start;
+        padding-block-end: var(--dimension-layout-module-padding-inline-s);
     }
 
-    .experience-tiles .experience-tiles-item--right .experience-tiles-media {
-        --experience-tiles-media-padding-bottom: 135px;
+    /* Figma starts the copy 640px down a 900px frame. The spacer asks for that share of the viewport
+       (minus the top padding it sits under) but never more than leaves room for the slide's tallest
+       copy (published by JS) above the bottom padding, so both panels start on the same line and the
+       bottom padding is always respected. Shrinking is the fallback while the copy height is unknown. */
+    .experience-tiles .experience-tiles-media::before {
+        content: '';
+        flex: 0 1000
+            clamp(
+                0px,
+                calc(71.11dvh - var(--dimension-layout-module-padding-inline-s)),
+                calc(
+                    100dvh - 2 * var(--dimension-layout-module-padding-inline-s) -
+                        var(--experience-tiles-copy-height, 0px)
+                )
+            );
+        min-height: 0;
     }
 
     .experience-tiles .experience-tiles-item--left .experience-tiles-overlay {
@@ -333,35 +397,36 @@
         grid-template-rows: 1fr;
     }
 
-    /* desktop: items are full track height (one grid row, two columns) — left rests above,
-       right rests below (their off-screen resting positions, no exit animation, matches the
-       base rule); both animate in simultaneously (no stagger) since they already enter from
-       opposite directions. */
-    .experience-tiles .experience-tiles-item--left {
-        transform: translateY(-100%);
+    /* desktop strip: the two full-height columns travel in opposite directions (left down, right up
+       going forward) and the outgoing pair carries on past centre, so incoming and outgoing panels
+       meet edge to edge. Going back mirrors every position. */
+    .experience-tiles .experience-tiles-item.experience-tiles-item--left {
+        --experience-tiles-rest: -100%;
+        --experience-tiles-exit: 100%;
     }
 
-    .experience-tiles .experience-tiles-item--right {
-        transform: translateY(100%);
+    .experience-tiles .experience-tiles-item.experience-tiles-item--right {
+        --experience-tiles-rest: 100%;
+        --experience-tiles-exit: -100%;
     }
 
-    /* Each panel continues past center in its entrance direction. */
-    .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--left {
-        transform: translateY(100%);
+    .experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-item--left {
+        --experience-tiles-rest: 100%;
+        --experience-tiles-exit: -100%;
     }
 
-    .experience-tiles .experience-tiles-slide--leaving .experience-tiles-item--right {
-        transform: translateY(-100%);
+    .experience-tiles .experience-tiles-track[data-direction='backward'] .experience-tiles-item--right {
+        --experience-tiles-rest: -100%;
+        --experience-tiles-exit: 100%;
     }
 }
 
 /* Reset/reuse a slide without animating it back across the track. Include text so a
    cancelled transition can finish at its final opacity/position too.
-   The `:not()` only matches the specificity the active state gained from the same guard — without
-   it these suppressions silently stop applying to the overlay. Same for the two rules below. */
-.experience-tiles:not(.experience-tiles-pending)
-    .experience-tiles-slide.experience-tiles-slide--settling
-    .experience-tiles-item,
+   Panels are never held by `--pending`, so their half must apply while it is set. The overlay half
+   carries the `:not()` only to match the specificity its active state gained from the same guard.
+   Same for the rule below. */
+.experience-tiles .experience-tiles-slide.experience-tiles-slide--settling .experience-tiles-item,
 .experience-tiles:not(.experience-tiles-pending)
     .experience-tiles-slide.experience-tiles-slide--settling
     .experience-tiles-overlay {
@@ -370,9 +435,7 @@
 
 /* crossing a breakpoint mid-page-life recomputes each item's enter/exit transform; without this,
    hidden slides would visibly sweep through the frame while the media query switches */
-.experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending)
-    .experience-tiles-slide
-    .experience-tiles-item,
+.experience-tiles.experience-tiles-resizing .experience-tiles-slide .experience-tiles-item,
 .experience-tiles.experience-tiles-resizing:not(.experience-tiles-pending)
     .experience-tiles-slide
     .experience-tiles-overlay {

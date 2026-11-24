@@ -8,7 +8,9 @@ function setup(top = 0, count = 3) {
   block.className = 'experience-tiles';
   block.innerHTML =
     '<ul class="experience-tiles-track">' +
-    '<li><div class="experience-tiles-overlay"><p>Copy</p></div></li>'.repeat(count) +
+    '<li><div class="experience-tiles-item"><div class="experience-tiles-overlay"><p>Copy</p></div></div></li>'.repeat(
+      count,
+    ) +
     '</ul>';
   document.body.append(block);
   block.getBoundingClientRect = () => ({
@@ -282,7 +284,7 @@ it('re-settles instead of releasing when the browser keeps scrolling mid-burst',
   wheel(60);
   expect(controller.index).toBe(1);
 });
-it('consumes wheel input until an animated transition and the burst both finish', () => {
+function animated(): () => void {
   window.matchMedia = jest
     .fn()
     .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
@@ -292,21 +294,295 @@ it('consumes wheel input until an animated transition and the burst both finish'
     transitionDuration: '1200ms',
     transitionDelay: '0ms',
   }) as unknown as typeof window.getComputedStyle;
-  const { controller } = setup();
+  return () => {
+    window.getComputedStyle = computed;
+  };
+}
+it('queues one fresh wheel gesture while a step is animating and swallows its inertia', () => {
+  const restore = animated();
+  const { controller } = setup(0, 4);
 
   wheel(60);
   expect(controller.index).toBe(1);
   expect(controller.isBusy).toBe(true);
-  fresh();
-  expect(wheel(60).defaultPrevented).toBe(true);
+  for (const delta of [40, 20, 10]) {
+    jest.advanceTimersByTime(50);
+    expect(wheel(delta).defaultPrevented).toBe(true);
+  }
+  jest.advanceTimersByTime(1100);
   expect(controller.index).toBe(1);
-
-  jest.advanceTimersByTime(1250);
   expect(controller.isBusy).toBe(false);
-  fresh();
+
   wheel(60);
   expect(controller.index).toBe(2);
+  fresh();
+  expect(wheel(60).defaultPrevented).toBe(true);
+  fresh();
+  expect(wheel(60).defaultPrevented).toBe(true);
+  expect(controller.index).toBe(2);
+  jest.advanceTimersByTime(1250);
+  expect(controller.index).toBe(3);
+  jest.advanceTimersByTime(1250);
+  expect(controller.index).toBe(3);
+  restore();
+});
+it('keeps stepping while the wheel keeps turning, then hands the page back at the last slide', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  const steps: number[] = [];
+  let elapsed = 0;
+  // one uninterrupted burst: a mouse wheel spun for 4s, never quiet for WHEEL_IDLE_MS
+  while (elapsed < 4000) {
+    wheel(100);
+    jest.advanceTimersByTime(60);
+    elapsed += 60;
+    if (steps[steps.length - 1] !== controller.index) steps.push(controller.index);
+  }
+  expect(steps).toEqual([1, 2]);
+  expect(y).toBeGreaterThan(0);
+  restore();
+});
+it('still swallows trackpad inertia that outlasts the animation', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  let delta = 70;
+  for (let frame = 0; frame < 160; frame += 1) {
+    wheel(Math.max(1, Math.round(delta)));
+    jest.advanceTimersByTime(16);
+    delta *= 0.97;
+  }
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+it('swallows noisy momentum (coalesced events) after the block snaps instead of flinging out', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  let delta = 160;
+  for (let frame = 0; frame < 200; frame += 1) {
+    // Chrome coalesces frames: every fourth event carries two frames' worth after a short gap
+    const doubled = frame % 4 === 3;
+    wheel(Math.max(1, Math.round(delta)) * (doubled ? 2 : 1));
+    jest.advanceTimersByTime(frame % 4 === 2 ? 8 : 16);
+    delta *= 0.965;
+  }
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+it('swallows momentum whose deltas the browser quantises into runs of equal values', () => {
+  const restore = animated();
+  const { controller } = setup(0, 3);
+  let delta = 160;
+  for (let frame = 0; frame < 160; frame += 1) {
+    // Chrome hands out even, doubled deltas: a slow decay repeats the same value several times
+    wheel(Math.max(2, 2 * Math.round(delta / 4) * 2));
+    jest.advanceTimersByTime(25);
+    delta *= 0.985;
+  }
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+// Recorded in Chrome after a trackpad flick snapped the block: per-event deltas keep decaying while the
+// gaps between events wander, so speed per millisecond alone briefly reads as a hand speeding up.
+const RECORDED_MOMENTUM = {
+  gaps: [
+    33, 33, 34, 34, 33, 34, 33, 35, 33, 33, 33, 33, 33, 35, 36, 39, 41, 32, 32, 34, 25, 26, 24, 28, 22, 26, 25, 25, 25,
+    25, 24, 28, 23, 24, 26, 22, 29, 24, 23, 26, 26, 24, 27, 24, 25, 24, 26, 25, 25, 26, 23, 29, 23, 24, 26, 25, 25, 24,
+    24, 25, 27, 26, 25, 24, 27, 25, 30, 26, 25, 25, 26, 25, 26, 25, 25, 26, 24, 23, 27, 23, 26, 28, 22, 24, 25, 24, 27,
+    26, 25, 26, 23, 26, 26, 23, 25, 28, 24, 29, 28, 22, 28, 25, 25, 25, 25, 25, 26, 22, 26, 25, 26, 28, 23, 27, 26, 23,
+    26, 24, 25, 25, 26, 24, 26, 25, 25, 26, 24, 24, 26, 26, 24, 24, 26, 25, 24, 26, 21, 28, 26, 24, 21, 26, 27, 24, 24,
+    28, 23, 25, 33, 20, 19, 28, 24, 26, 25, 25, 27, 25, 25, 25, 24, 23, 27, 25, 26, 22, 28, 25, 21, 28, 26, 24, 26, 25,
+    26, 24, 22, 37, 18, 21, 25, 22, 25, 28, 25, 24, 25, 26, 25, 32, 20, 21, 24, 24, 27, 26, 26, 23, 25, 25, 26, 25, 26,
+    24, 22, 21, 25, 26, 23, 28, 21, 22, 21, 25,
+  ],
+  deltas: [
+    292, 288, 284, 280, 276, 270, 266, 262, 258, 256, 252, 248, 244, 240, 236, 232, 230, 226, 222, 220, 216, 212, 210,
+    206, 204, 200, 198, 194, 192, 188, 186, 182, 180, 178, 174, 172, 170, 168, 164, 162, 160, 158, 154, 152, 150, 148,
+    146, 144, 142, 140, 138, 136, 134, 132, 130, 128, 126, 124, 122, 120, 118, 116, 114, 112, 112, 110, 108, 106, 104,
+    104, 102, 100, 98, 96, 96, 94, 92, 92, 90, 88, 88, 86, 84, 84, 82, 80, 80, 78, 78, 76, 74, 74, 72, 72, 70, 70, 68,
+    68, 66, 66, 64, 64, 62, 62, 60, 60, 58, 58, 58, 56, 56, 54, 54, 52, 52, 52, 50, 50, 50, 48, 48, 46, 46, 46, 44, 44,
+    44, 42, 42, 42, 40, 40, 40, 40, 38, 38, 38, 36, 36, 36, 36, 34, 34, 34, 34, 32, 32, 32, 32, 30, 30, 30, 30, 28, 28,
+    28, 28, 28, 26, 26, 26, 26, 26, 24, 24, 24, 24, 24, 24, 22, 22, 22, 22, 22, 22, 20, 20, 20, 20, 20, 20, 18, 18, 18,
+    18, 18, 18, 18, 18, 16, 16, 16, 16, 16, 16, 16, 16, 14, 14, 14, 14, 14, 14, 14, 14, 14, 12, 12, 12, 12, 12, 12, 12,
+    12,
+  ],
+};
+it('swallows recorded momentum that arrives at an uneven rate', () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  const computed = window.getComputedStyle;
+  window.getComputedStyle = jest.fn().mockReturnValue({
+    transitionProperty: 'transform',
+    transitionDuration: '600ms',
+    transitionDelay: '0ms',
+  }) as unknown as typeof window.getComputedStyle;
+  const { controller } = setup(0, 3);
+  RECORDED_MOMENTUM.deltas.forEach((delta, index) => {
+    wheel(delta);
+    jest.advanceTimersByTime(RECORDED_MOMENTUM.gaps[index]!);
+  });
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
   window.getComputedStyle = computed;
+});
+it('steps as soon as the finger has travelled far enough, without waiting for release', () => {
+  const { block, controller } = setup();
+  touch(block, 'touchstart', 400);
+  touch(block, 'touchmove', 380);
+  touch(block, 'touchmove', 350);
+  expect(controller.index).toBe(1);
+  touch(block, 'touchend', 350);
+  expect(controller.index).toBe(1);
+});
+function drag(target: Element, distance: number, step = 6): void {
+  let position = 800;
+  touch(target, 'touchstart', position);
+  for (let moved = 0; moved < Math.abs(distance); moved += step) {
+    position -= Math.sign(distance) * step;
+    touch(target, 'touchmove', position);
+    jest.advanceTimersByTime(25);
+  }
+  touch(target, 'touchend', position);
+}
+it('steps one slide per drag however far the finger travels', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 4);
+  drag(block, 720);
+  expect(controller.index).toBe(1);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  drag(block, 720);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(2);
+  restore();
+});
+it('does not carry the page out of the block in the drag that reached the last slide', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 2);
+  drag(block, 720);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  restore();
+});
+it('leaves the block with the next swipe once the last slide is showing', () => {
+  const restore = animated();
+  const { block, controller } = setup(0, 2);
+  drag(block, 300);
+  jest.advanceTimersByTime(1500);
+  expect(controller.index).toBe(1);
+  drag(block, 300);
+  expect(y).toBeGreaterThan(0);
+  expect(controller.index).toBe(1);
+  restore();
+});
+it('turns a swipe made during an animation into the next step', () => {
+  const restore = animated();
+  const { block, controller } = setup();
+  controller.requestStep(1);
+  swipe(block, 120);
+  expect(controller.index).toBe(1);
+  expect(y).toBe(0);
+  jest.advanceTimersByTime(1250);
+  expect(controller.index).toBe(2);
+  restore();
+});
+it('stops a finger-dragged page exactly where the block lines up instead of dragging it past', () => {
+  const { block, controller } = setup(300);
+  swipe(block, 500);
+  expect(y).toBe(300);
+  expect(controller.index).toBe(0);
+  swipe(block, 120);
+  expect(controller.index).toBe(1);
+  expect(y).toBe(300);
+});
+it('catches a block that native scrolling carries past through a sample inside the tolerance', () => {
+  const { controller } = setup(100);
+  y = 98;
+  window.dispatchEvent(new Event('scroll'));
+  y = 130;
+  window.dispatchEvent(new Event('scroll'));
+  settled();
+  expect(y).toBe(100);
+  fresh();
+  wheel(40);
+  expect(controller.index).toBe(1);
+});
+it('stops native touch momentum when it carries the page onto the block', () => {
+  setup(100);
+  const root = document.documentElement;
+  touch(document.body, 'touchend', 0);
+  y = 60;
+  window.dispatchEvent(new Event('scroll'));
+  y = 130;
+  window.dispatchEvent(new Event('scroll'));
+  expect(root.style.overflow).toBe('hidden');
+  jest.advanceTimersByTime(50);
+  expect(root.style.overflow).toBe('');
+  settled();
+  expect(y).toBe(100);
+});
+it('leaves page scrolling alone when no touch is carrying the page', () => {
+  setup(100);
+  y = 60;
+  window.dispatchEvent(new Event('scroll'));
+  y = 130;
+  window.dispatchEvent(new Event('scroll'));
+  expect(document.documentElement.style.overflow).toBe('');
+});
+it('parks the first slide while the block waits below and the last while it waits above', () => {
+  const { controller } = setup(2000);
+  controller.select(1);
+  window.dispatchEvent(new Event('scroll'));
+  expect(controller.index).toBe(0);
+  y = 3000;
+  window.dispatchEvent(new Event('scroll'));
+  expect(controller.index).toBe(2);
+});
+it('never swaps the slide a reader has already seen when entering from below', () => {
+  const { controller } = setup(1000);
+  window.dispatchEvent(new Event('scroll'));
+  // a keyboard page-down leaves the block mostly on screen, above the alignment point, never claimed
+  y = 1300;
+  window.dispatchEvent(new Event('scroll'));
+  wheel(-40);
+  wheel(-40);
+  settled();
+  expect(y).toBe(1000);
+  expect(controller.index).toBe(0);
+});
+it('lines a block it owned back up after a rotation reflows the page', () => {
+  const { controller, binding } = setup();
+  wheel(40);
+  expect(controller.index).toBe(1);
+  binding.beginResize();
+  y = 120;
+  window.dispatchEvent(new Event('scroll'));
+  binding.resize();
+  expect(y).toBe(0);
+  fresh();
+  wheel(40);
+  expect(controller.index).toBe(2);
+});
+it('leaves a block it did not own alone after a resize', () => {
+  const { binding } = setup(500);
+  binding.beginResize();
+  y = 120;
+  window.dispatchEvent(new Event('scroll'));
+  binding.resize();
+  expect(y).toBe(120);
+});
+it('keeps your place off screen once you have used the block', () => {
+  const { controller } = setup();
+  wheel(40);
+  expect(controller.index).toBe(1);
+  y = 3000;
+  window.dispatchEvent(new Event('scroll'));
+  expect(controller.index).toBe(1);
 });
 it('keeps a copy gesture in the copy after reaching the bottom', () => {
   const { block, controller } = setup();
@@ -321,6 +597,14 @@ it('keeps a copy gesture in the copy after reaching the bottom', () => {
   expect(y).toBe(0);
   fresh();
   wheel(40, copy);
+  expect(controller.index).toBe(1);
+});
+it('does not spend a swipe on copy that overflows by only a few pixels', () => {
+  const { block, controller } = setup();
+  const copy = block.querySelector<HTMLElement>('.experience-tiles-overlay')!;
+  Object.defineProperties(copy, { scrollHeight: { value: 202 }, clientHeight: { value: 200 } });
+  copy.classList.add('experience-tiles-overlay--scrollable');
+  swipe(copy, 120);
   expect(controller.index).toBe(1);
 });
 it('carries the page itself when a touch swipe has nowhere left to go in the block', () => {
@@ -427,6 +711,55 @@ it('watches for modals only while it owns the page', () => {
   expect(disconnect).toHaveBeenCalled();
   observe.mockRestore();
   disconnect.mockRestore();
+});
+async function flushMutations(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  jest.advanceTimersByTime(20);
+}
+it('stops a settle when a menu opens elsewhere on the page', async () => {
+  window.matchMedia = jest
+    .fn()
+    .mockReturnValue({ matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() });
+  setup(200);
+  wheel(40);
+  jest.advanceTimersByTime(100);
+  const parked = y;
+  expect(parked).toBeGreaterThan(0);
+  expect(parked).toBeLessThan(200);
+  const dialog = document.createElement('dialog');
+  dialog.open = true;
+  document.body.append(dialog);
+  await flushMutations();
+  const stopped = y;
+  jest.advanceTimersByTime(1000);
+  expect(y).toBe(stopped);
+  expect(y).toBeLessThan(200);
+  dialog.remove();
+});
+it('ignores the blocks own class and style churn while it owns the page', async () => {
+  const { block } = setup();
+  wheel(40);
+  const query = jest.spyOn(document, 'querySelector');
+  const track = block.querySelector('.experience-tiles-track') as HTMLElement;
+  track.classList.add('experience-tiles-slide--settling');
+  track.style.setProperty('--experience-tiles-copy-height', '10px');
+  block.setAttribute('aria-hidden', 'false');
+  await flushMutations();
+  expect(query).not.toHaveBeenCalled();
+  query.mockRestore();
+});
+it('checks the page once per batch however many elements mutate outside the blocks', async () => {
+  setup();
+  wheel(40);
+  const query = jest.spyOn(document, 'querySelector');
+  const other = document.createElement('div');
+  document.body.append(other);
+  for (let index = 0; index < 10; index += 1) other.className = `menu-${index}`;
+  await flushMutations();
+  expect(query).toHaveBeenCalledTimes(1);
+  query.mockRestore();
+  other.remove();
 });
 it('does not query the document for wheel input far from any block', () => {
   setup(3000);

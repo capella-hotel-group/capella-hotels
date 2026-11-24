@@ -134,7 +134,9 @@ export function bindGestures(
     },
     { signal, passive: true },
   );
-  window.addEventListener(
+  // Touch events keep the touchstart target, so the surface sees every move of its own gestures; a
+  // non-passive window listener would instead hold back native scrolling everywhere on the page.
+  surface.addEventListener(
     'touchmove',
     (event) => {
       if (event.touches.length !== 1) {

@@ -1,7 +1,7 @@
 import { buildControls, LABELS, type CarouselControls } from './lib/a11y-controls';
 import { CarouselController } from './lib/carousel-controller';
 import { buildSlide } from './lib/dom-builder';
-import { isItemRow, parseBlockConfig, parseSlides } from './lib/parse';
+import { isItemRow, parseBlockConfig, parseSlides, toElementId } from './lib/parse';
 import { registerScrollController } from './lib/scroll-controller';
 import { suppressTransitionsDuringResize } from './lib/resize-guard';
 import { isUniversalEditor } from '@/utils/env';
@@ -19,9 +19,9 @@ function isFocusVisible(element: Element | null): boolean {
 const instances = new Map<HTMLElement, { track: HTMLElement; cleanup: () => void }>();
 let removalObserver: MutationObserver | undefined;
 
-// The entrance is driven by the active slide's own CSS, so it would otherwise play at decoration
-// time, far above the fold where nobody sees it. Hold the active state back until the block is
-// actually on screen and the normal transitions do the rest.
+// The panels always sit in place, so the block scrolls in like any picture; only the copy is held
+// back until the block is on screen, then fades in quickly (`--intro`) instead of waiting for panels
+// that are already there. The first slide change hands the copy timing back to the slide transition.
 function holdEntrance(block: HTMLElement, editing: boolean): () => void {
   if (
     editing ||
@@ -44,13 +44,14 @@ function holdEntrance(block: HTMLElement, editing: boolean): () => void {
       if (!visible) return;
       observer.disconnect();
       block.classList.remove('experience-tiles-pending');
+      block.classList.add('experience-tiles-intro');
     },
     { threshold: 0.5 },
   );
   observer.observe(block);
   return () => {
     observer.disconnect();
-    block.classList.remove('experience-tiles-pending');
+    block.classList.remove('experience-tiles-pending', 'experience-tiles-intro');
   };
 }
 
@@ -62,9 +63,22 @@ function contentHeight(overlay: HTMLElement): number {
   );
 }
 
+// The desktop panels are separate boxes, so CSS cannot see the taller copy next door. Publishing the
+// tallest copy of the slide lets both panels start their copy on the same line.
+function syncCopyHeight(overlay: HTMLElement): void {
+  const slide = overlay.closest<HTMLElement>('.experience-tiles-slide');
+  if (!slide) return;
+  const tallest = Math.max(
+    0,
+    ...[...slide.querySelectorAll<HTMLElement>('.experience-tiles-overlay')].map(contentHeight),
+  );
+  slide.style.setProperty('--experience-tiles-copy-height', `${tallest}px`);
+}
+
 // Copy that outgrows its panel scrolls, so it also has to be reachable by keyboard. A copy that fits
 // must stay out of the way: a scroll container would swallow page scrolling via overscroll containment.
 function syncOverlay(overlay: HTMLElement): void {
+  syncCopyHeight(overlay);
   const scrollable = contentHeight(overlay) > overlay.clientHeight + 1;
   overlay.classList.toggle('experience-tiles-overlay--scrollable', scrollable);
   if (scrollable) {
@@ -160,7 +174,8 @@ export default function decorate(block: HTMLElement): void {
   const itemRows = rows.filter(isItemRow);
   const configRows = rows.filter((row) => !itemRows.includes(row));
   const { id, dataTestId } = parseBlockConfig(configRows);
-  if (id) block.id = id.replace(/^#/, '');
+  const blockId = toElementId(id);
+  if (blockId) block.id = blockId;
   if (dataTestId) block.dataset.automationKey = dataTestId;
   configRows.forEach((row) => row.classList.add('experience-tiles-hidden'));
   const slides = parseSlides(itemRows);
@@ -187,6 +202,7 @@ export default function decorate(block: HTMLElement): void {
   let controls: CarouselControls | undefined;
   const carousel = new CarouselController(slideEls, {
     onChange: (index) => {
+      block.classList.remove('experience-tiles-intro');
       controls?.update(index);
       if (near && !editing) preloadNeighbours(slideEls, index);
     },
@@ -232,7 +248,7 @@ export default function decorate(block: HTMLElement): void {
   const clearResize = suppressTransitionsDuringResize(block, {
     onStart: () => {
       carousel.beginResize();
-      scroll.cancel();
+      scroll.beginResize();
     },
     onEnd: () => {
       carousel.endResize();

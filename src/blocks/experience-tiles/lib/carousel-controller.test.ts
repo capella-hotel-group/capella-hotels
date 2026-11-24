@@ -67,46 +67,94 @@ it('stops at either edge without looping and never advances by time alone', () =
   jest.advanceTimersByTime(60000);
   expect(controller.index).toBe(2);
 });
-it('waits for panels AND incoming text and discards input while busy', () => {
+/** Slides that passed through `--settling` (transitions off) between now and the returned call. */
+function settledSlides(track: HTMLElement): () => Element[] {
+  const observer = new MutationObserver(() => {});
+  observer.observe(track, { attributes: true, attributeOldValue: true, subtree: true, attributeFilter: ['class'] });
+  return () => {
+    const records = observer.takeRecords();
+    observer.disconnect();
+    return records
+      .filter((record) => (record.oldValue ?? '').includes('experience-tiles-slide--settling'))
+      .map((record) => record.target as Element);
+  };
+}
+function land(slide: HTMLElement): void {
+  slide.querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
+}
+it('waits only for the panels, then plays the one step queued meanwhile', () => {
   setup(true);
   controller.requestStep(1);
-  expect(controller.requestStep(1)).toBe('busy');
-  slides[0].querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
-  slides[1].querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
-  expect(controller.isBusy).toBe(true);
-  slides[1].querySelectorAll('.experience-tiles-overlay').forEach((el) => end(el));
+  expect(controller.requestStep(1)).toBe('queued');
+  expect(controller.requestStep(1)).toBe('queued');
+  land(slides[0]);
+  land(slides[1]);
+  expect(controller.index).toBe(2);
+  expect(controller.isAnimating).toBe(true);
+  land(slides[1]);
+  land(slides[2]);
   expect(controller.isBusy).toBe(false);
-  expect(controller.index).toBe(1);
+  expect(controller.index).toBe(2);
+});
+it('lets the incoming copy keep animating after the panels land', () => {
+  setup(true);
+  controller.requestStep(1);
+  const track = slides[0].parentElement!;
+  const watch = settledSlides(track);
+  land(slides[0]);
+  land(slides[1]);
+  expect(controller.isBusy).toBe(false);
+  expect(watch()).not.toContain(slides[1]);
+});
+it('marks the travel direction on the track and re-parks the resting slides without animating', () => {
+  setup(true);
+  const track = slides[0].parentElement!;
+  controller.requestStep(1);
+  expect(track.dataset.direction).toBe('forward');
+  jest.runAllTimers();
+  const watch = settledSlides(track);
+  controller.requestStep(-1);
+  const settled = watch();
+  expect(track.dataset.direction).toBe('backward');
+  expect(settled).toEqual(expect.arrayContaining([slides[0], slides[2]]));
+  expect(settled).not.toContain(slides[1]);
 });
 it('checks busy before the last-slide edge and uses the computed fallback', () => {
   setup(true, false, 2);
   controller.requestStep(1);
-  expect(controller.requestStep(1)).toBe('busy');
-  jest.advanceTimersByTime(1549);
+  expect(controller.requestStep(1)).toBe('queued');
+  jest.advanceTimersByTime(1249);
   expect(controller.isBusy).toBe(true);
   jest.advanceTimersByTime(1);
+  expect(controller.isBusy).toBe(false);
   expect(controller.requestStep(1)).toBe('edge');
 });
 it('selection interrupts a transition without stale callbacks or queued navigation', () => {
   setup(true);
   controller.requestStep(1);
+  expect(controller.requestStep(-1)).toBe('queued');
   controller.select(2);
   expect(controller.index).toBe(2);
   expect(controller.isBusy).toBe(false);
   expect(jest.getTimerCount()).toBe(0);
-  slides[1].querySelectorAll('.experience-tiles-item').forEach((el) => end(el));
+  land(slides[1]);
   controller.select(99);
+  jest.runAllTimers();
   expect(controller.index).toBe(2);
 });
 it('settles cancelled transitions and resize without playing discarded requests', () => {
   setup(true);
   controller.requestStep(1);
+  controller.requestStep(1);
   end(slides[1].firstElementChild!, 'transitioncancel');
   expect(controller.isBusy).toBe(false);
+  expect(controller.index).toBe(1);
   controller.requestStep(1);
+  controller.requestStep(-1);
   controller.beginResize();
   expect(controller.requestStep(-1)).toBe('busy');
   controller.endResize();
+  jest.runAllTimers();
   expect(controller.index).toBe(2);
   expect(controller.isBusy).toBe(false);
 });
