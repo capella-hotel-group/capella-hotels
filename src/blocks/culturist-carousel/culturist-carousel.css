@@ -753,8 +753,8 @@
     transform: scale(1.05);
 }
 
-/* Mobile: the leftmost visible card (tracked in JS) shows its description by default */
-@media (width < 768px) {
+/* Mobile and tablet (swipe, no hover): the leftmost visible card (tracked in JS) shows its description by default */
+@media (width < 1024px) {
     .culturist-carousel-carousel-card.is-active .culturist-carousel-card-content {
         --culturist-carousel-card-reveal: 1;
     }
