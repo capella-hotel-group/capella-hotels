@@ -140,13 +140,17 @@ footer.footer-theme-clean-white {
         width: min(100%, 100px);
     }
 
-    /* Non-equal CSS Grid columns (not equal fractions): the Figma desktop frame
-       gives nav columns 1/2 a fixed hug-width, contact a narrower hug-width, and
-       lets newsletter grow widest to fill the row. Named `grid-area`s place items
+    /* All four columns scale with the Figma 1440 frame widths (contact 217, nav 280,
+       nav 280, newsletter 383), so 1440 matches Figma exactly and narrower desktops
+       shrink every column evenly instead of squeezing only contact + newsletter.
+       The `min-content` floor lets a column grow past its share rather than
+       overflow when it holds an unbreakable word. Named `grid-area`s place items
        independently of DOM order (see design.md's "display: contents reflow"). */
     .footer-inner {
         display: grid;
-        grid-template-columns: minmax(0, 0.56658fr) 280px 280px minmax(0, 1fr);
+        grid-template-columns:
+            minmax(min-content, 217fr) minmax(min-content, 280fr)
+            minmax(min-content, 280fr) minmax(min-content, 383fr);
         grid-template-areas:
             'brand brand brand brand'
             'contact nav1 nav2 newsletter'
