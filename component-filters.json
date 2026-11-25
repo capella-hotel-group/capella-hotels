@@ -36,6 +36,7 @@
       "experience-events-grid",
       "offers-carousel",
       "text-with-cta",
+      "accordion",
       "hero-video",
       "hero-destination",
       "rte",
@@ -71,6 +72,12 @@
     "components": [
       "nav-region",
       "nav-region-rte"
+    ]
+  },
+  {
+    "id": "accordion",
+    "components": [
+      "accordion-item"
     ]
   },
   {
