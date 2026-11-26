@@ -1,0 +1,260 @@
+/* FAQ list: heading on the start side (stacked above on tablet/mobile), numbered toggle rows on the end side. */
+
+.accordion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 48px;
+    padding-block: var(--dimension-layout-module-padding-top);
+    padding-inline: var(--dimension-layout-module-padding-inline-s);
+    background-color: var(--color-surface-general-light);
+
+    /* shared by the question row and the answer so the answer lines up with the question text */
+    --accordion-question-size: 22px;
+    --accordion-number-width: calc(var(--accordion-question-size) * 1.5);
+}
+
+.accordion .accordion-hidden {
+    display: none;
+}
+
+.accordion .accordion-heading,
+.accordion .accordion-heading > div,
+.accordion .accordion-heading :is(p, h1, h2, h3, h4, h5, h6) {
+    margin: 0;
+    color: var(--color-text-main-heading);
+    font-family: var(--type-font-family-heading);
+    font-size: 36px;
+    font-weight: var(--type-font-weight-heading);
+    line-height: 40px;
+    text-align: start;
+    text-transform: uppercase;
+}
+
+/* every line after the first is indented by the 2xl spacing: wrapped lines of the first paragraph hang, later paragraphs start indented */
+.accordion .accordion-heading :is(p, h1, h2, h3, h4, h5, h6) {
+    padding-inline-start: var(--dimension-spacing-general-2xl);
+    text-indent: calc(-1 * var(--dimension-spacing-general-2xl));
+}
+
+.accordion .accordion-heading :is(p, h1, h2, h3, h4, h5, h6) + :is(p, h1, h2, h3, h4, h5, h6) {
+    text-indent: 0;
+}
+
+/* numbering is generated, so it follows the list as items are added, removed or reordered */
+.accordion .accordion-items {
+    counter-reset: accordion-item;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.accordion .accordion-item {
+    counter-increment: accordion-item;
+    border-block-end: var(--stroke-weight-s) solid var(--color-stroke-main-secondary);
+}
+
+.accordion .accordion-question {
+    margin: 0;
+}
+
+.accordion .accordion-trigger {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--dimension-spacing-general-s);
+    width: 100%;
+    padding-block: var(--dimension-spacing-general-l);
+    padding-inline: 0;
+    border: 0;
+    background: none;
+    color: #000;
+    font-family: var(--type-font-family-subtitle);
+    font-size: var(--accordion-question-size);
+    font-weight: var(--type-font-weight-subtitle);
+    line-height: 24px;
+    text-align: start;
+    cursor: pointer;
+    transition: padding-block-end 0.3s ease;
+}
+
+.accordion .accordion-trigger::before {
+    content: counter(accordion-item, decimal-leading-zero) '.';
+
+    /* fixed number column so a wrapped question aligns with its first line */
+    flex: none;
+    min-width: var(--accordion-number-width);
+}
+
+.accordion .accordion-question-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.accordion .accordion-icon {
+    flex: none;
+    width: var(--dimension-spacing-general-l);
+    height: var(--dimension-spacing-general-l);
+    margin-block-start: 0.15em;
+    background: url('/icons/chevron-down-20.svg') center / 20px 20px no-repeat;
+    transition: transform 0.2s ease;
+}
+
+.accordion .accordion-item.is-open .accordion-icon {
+    transform: rotate(180deg);
+}
+
+.accordion .accordion-trigger:focus-visible {
+    outline: var(--stroke-weight-m) solid var(--color-stroke-action-default);
+    outline-offset: 2px;
+}
+
+/* answer sits under the question text, past the number column */
+.accordion .accordion-answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    padding-block-end: 0;
+    padding-inline-start: calc(var(--accordion-number-width) + var(--dimension-spacing-general-s));
+    padding-inline-end: 0;
+    visibility: hidden;
+    transition:
+        grid-template-rows 0.3s ease,
+        padding-block-end 0.3s ease,
+        visibility 0s linear 0.3s;
+}
+
+.accordion .accordion-item.is-open .accordion-answer {
+    grid-template-rows: 1fr;
+    padding-block-end: var(--dimension-spacing-general-l);
+    visibility: visible;
+    transition-delay: 0s;
+}
+
+.accordion .accordion-item.is-open .accordion-trigger {
+    padding-block-end: var(--dimension-spacing-general-s);
+}
+
+.accordion .accordion-answer > * {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.accordion .accordion-answer-content,
+.accordion .accordion-answer-content p {
+    margin: 0;
+    color: var(--color-text-main-body);
+    font-family: var(--type-font-family-body);
+    font-size: 16px;
+    font-weight: var(--type-font-weight-body-reg);
+    line-height: 16px;
+}
+
+.accordion .accordion-answer-content > * + * {
+    margin-block-start: var(--dimension-spacing-general-s);
+}
+
+.accordion .accordion-answer-content :is(ul, ol) {
+    padding-inline-start: 1.5em;
+}
+
+.accordion .accordion-answer-content a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+/* Tablet */
+@media (768px <= width < 1200px) {
+    .accordion {
+        --accordion-question-size: 28px;
+
+        padding-inline: 17%; /* 142px at 834px wide */
+    }
+
+    .accordion .accordion-heading,
+    .accordion .accordion-heading > div,
+    .accordion .accordion-heading :is(p, h1, h2, h3, h4, h5, h6) {
+        font-size: 40px;
+        line-height: 44px;
+    }
+
+    .accordion .accordion-trigger {
+        font-size: 28px;
+        line-height: 28px;
+    }
+
+    .accordion .accordion-answer-content,
+    .accordion .accordion-answer-content p {
+        font-size: 18px;
+        line-height: 18px;
+    }
+
+    .accordion .accordion-item.is-open .accordion-trigger {
+        padding-block-end: 14px;
+    }
+}
+
+/* Desktop */
+@media (width >= 1200px) {
+    .accordion {
+        --accordion-question-size: 28px;
+
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+        column-gap: 0;
+        align-items: start;
+        padding-inline: 0;
+    }
+
+    /* the title block centres horizontally in its column; its lines stay start-aligned so the second-line indent reads */
+    .accordion .accordion-heading {
+        display: flex;
+        justify-content: center;
+    }
+
+    .accordion .accordion-heading,
+    .accordion .accordion-heading > div,
+    .accordion .accordion-heading :is(p, h1, h2, h3, h4, h5, h6) {
+        font-size: 48px;
+        line-height: 48px;
+    }
+
+    /* 184px of the 864px right column at 1440 (~21.3%), so the gap scales with the viewport instead of staying fixed */
+    .accordion .accordion-items {
+        padding-inline-end: 21.3%;
+    }
+
+    .accordion .accordion-trigger {
+        font-size: 28px;
+        line-height: 28px;
+    }
+
+    .accordion .accordion-answer {
+        padding-inline-end: calc(var(--dimension-spacing-general-l) + var(--dimension-spacing-general-s));
+    }
+
+    .accordion .accordion-answer-content,
+    .accordion .accordion-answer-content p {
+        font-size: 18px;
+        line-height: 18px;
+    }
+
+    .accordion .accordion-item.is-open .accordion-trigger {
+        padding-block-end: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .accordion .accordion-icon,
+    .accordion .accordion-trigger,
+    .accordion .accordion-answer {
+        transition: none;
+    }
+}
+
+/* Authoring: every answer stays reachable on the canvas. */
+.adobe-ue-edit .accordion .accordion-answer {
+    grid-template-rows: 1fr;
+    padding-block-end: var(--dimension-spacing-general-m);
+    visibility: visible;
+}
+
+.adobe-ue-edit .accordion .accordion-hidden {
+    display: block;
+}
